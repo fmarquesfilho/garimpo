@@ -1,0 +1,13 @@
+id,name,category,price,commission,sales_30d,rating
+P01,Sérum Vitamina C 30ml,cosméticos,89.90,0.12,320,4.8
+P02,Perfume Floral Feminino 100ml,perfumaria,159.90,0.10,210,4.7
+P03,Kit Skincare Noturno,cosméticos,129.90,0.15,180,4.9
+P04,Massageador Facial Recarregável,bem-estar,79.90,0.09,260,4.5
+P05,Fone Bluetooth TWS,eletrônicos,99.90,0.08,1500,4.4
+P06,Smartwatch Fitness,eletrônicos,199.90,0.10,900,4.3
+P07,Batom Matte Longa Duração,cosméticos,39.90,0.18,140,4.6
+P08,Difusor de Aromaterapia,bem-estar,119.90,0.11,95,4.7
+P09,Carregador Turbo 30W,eletrônicos,59.90,0.06,2000,4.5
+P10,Creme Anti-idade Premium,cosméticos,149.90,0.05,300,4.8
+P11,Escova Alisadora Profissional,bem-estar,189.90,0.13,420,4.6
+P12,Máscara Capilar Nutritiva,cosméticos,69.90,0.14,260,4.7

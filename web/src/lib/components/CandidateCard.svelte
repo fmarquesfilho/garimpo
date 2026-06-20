@@ -1,0 +1,170 @@
+<script>
+	import ScoreMeter from './ScoreMeter.svelte';
+
+	let { candidato, posicao = null, destaque = false, onselecionar = null } = $props();
+
+	const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+	const pct = (v) => `${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
+
+	let copiado = $state(false);
+	async function copiarLink() {
+		if (!candidato.link) return;
+		try {
+			await navigator.clipboard.writeText(candidato.link);
+			copiado = true;
+			setTimeout(() => (copiado = false), 1600);
+		} catch {
+			copiado = false;
+		}
+	}
+</script>
+
+<article class="cartao" class:destaque>
+	{#if posicao != null}
+		<div class="posicao dado">{posicao}</div>
+	{/if}
+
+	<header>
+		<span class="cat">{candidato.categoria}</span>
+		<h3>{candidato.nome}</h3>
+	</header>
+
+	<dl class="laudo">
+		<div>
+			<dt class="rotulo">preço</dt>
+			<dd class="dado">{brl(candidato.preco)}</dd>
+		</div>
+		<div>
+			<dt class="rotulo">comissão</dt>
+			<dd class="dado ouro">{pct(candidato.comissao)}</dd>
+		</div>
+		<div>
+			<dt class="rotulo">vendas</dt>
+			<dd class="dado">{candidato.vendas.toLocaleString('pt-BR')}</dd>
+		</div>
+		<div>
+			<dt class="rotulo">nota</dt>
+			<dd class="dado">{candidato.avaliacao.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</dd>
+		</div>
+	</dl>
+
+	<ScoreMeter score={candidato.score} componentes={candidato.componentes} animar={destaque} />
+
+	<footer>
+		{#if onselecionar}
+			<button class="primario" onclick={() => onselecionar(candidato)}>Garimpar</button>
+		{/if}
+		<button class="secundario" onclick={copiarLink} disabled={!candidato.link}>
+			{copiado ? 'Copiado' : 'Copiar link'}
+		</button>
+	</footer>
+</article>
+
+<style>
+	.cartao {
+		position: relative;
+		background: var(--nevoa);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio);
+		padding: var(--r6);
+		display: flex;
+		flex-direction: column;
+		gap: var(--r4);
+		box-shadow: var(--sombra);
+		transition:
+			transform 0.18s ease,
+			box-shadow 0.18s ease;
+	}
+	.cartao:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 1px 2px rgba(43, 29, 46, 0.05), 0 18px 40px -18px rgba(43, 29, 46, 0.3);
+	}
+	.destaque {
+		border-color: var(--ouro-claro);
+		background: linear-gradient(180deg, #fffaf1, var(--nevoa));
+	}
+	.posicao {
+		position: absolute;
+		top: var(--r4);
+		right: var(--r4);
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--tinta-suave);
+		opacity: 0.5;
+	}
+	.cat {
+		font-size: 0.72rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: var(--rosa);
+		text-transform: lowercase;
+	}
+	h3 {
+		font-size: 1.35rem;
+		margin-top: 4px;
+		max-width: 22ch;
+	}
+	.destaque h3 {
+		font-size: 1.7rem;
+	}
+	.laudo {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: var(--r3);
+		margin: 0;
+		padding: var(--r3) 0;
+		border-top: 1px solid var(--linha);
+		border-bottom: 1px solid var(--linha);
+	}
+	.laudo div {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+	.laudo dd {
+		margin: 0;
+		font-size: 0.95rem;
+		font-weight: 700;
+	}
+	.laudo dd.ouro {
+		color: var(--ouro);
+	}
+	footer {
+		display: flex;
+		gap: var(--r2);
+		margin-top: auto;
+	}
+	button {
+		border-radius: 10px;
+		padding: 10px 16px;
+		font-size: 0.9rem;
+		font-weight: 600;
+		border: 1px solid transparent;
+		transition: background 0.15s ease, border-color 0.15s ease;
+	}
+	.primario {
+		background: var(--ouro);
+		color: #fff;
+		flex: 1;
+	}
+	.primario:hover {
+		background: #a3782f;
+	}
+	.secundario {
+		background: transparent;
+		border-color: var(--linha);
+		color: var(--tinta);
+	}
+	.secundario:hover:not(:disabled) {
+		border-color: var(--tinta-suave);
+	}
+	.secundario:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+	@media (max-width: 420px) {
+		.laudo {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+</style>
