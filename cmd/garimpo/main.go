@@ -1,13 +1,15 @@
 // Comando garimpo: gera a lista priorizada de candidatos do dia.
 //
 // Fonte CSV (padrão):
-//   go run ./cmd/garimpo
-//   go run ./cmd/garimpo -estrategia diversificada -top 8
+//
+//	go run ./cmd/garimpo
+//	go run ./cmd/garimpo -estrategia diversificada -top 8
 //
 // Fonte Shopee (API de afiliados): exige credenciais no ambiente.
-//   export SHOPEE_APP_ID=...
-//   export SHOPEE_SECRET=...
-//   go run ./cmd/garimpo -fonte shopee -cat 100017 -categoria "cosméticos"
+//
+//	export SHOPEE_APP_ID=...
+//	export SHOPEE_SECRET=...
+//	go run ./cmd/garimpo -fonte shopee -cat 100017 -categoria "cosméticos"
 package main
 
 import (

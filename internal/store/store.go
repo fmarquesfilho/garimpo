@@ -58,6 +58,6 @@ type Snapshot struct {
 // NopStore descarta eventos — usado localmente e quando o BigQuery não está ligado.
 type NopStore struct{}
 
-func (NopStore) Registrar(context.Context, Evento) error         { return nil }
+func (NopStore) Registrar(context.Context, Evento) error           { return nil }
 func (NopStore) RegistrarSnapshot(context.Context, Snapshot) error { return nil }
-func (NopStore) Nome() string                                    { return "nop" }
+func (NopStore) Nome() string                                      { return "nop" }

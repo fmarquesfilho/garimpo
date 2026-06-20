@@ -9,9 +9,10 @@ import (
 )
 
 // Novo (gcp) cria o BigQueryStore a partir do ambiente:
-//   GOOGLE_CLOUD_PROJECT  projeto GCP
-//   BQ_DATASET            dataset (ex.: garimpo)
-//   BQ_TABELA             tabela de eventos (ex.: eventos)
+//
+//	GOOGLE_CLOUD_PROJECT  projeto GCP
+//	BQ_DATASET            dataset (ex.: garimpo)
+//	BQ_TABELA             tabela de eventos (ex.: eventos)
 func Novo(ctx context.Context) (EventoStore, error) {
 	projeto := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	dataset := os.Getenv("BQ_DATASET")

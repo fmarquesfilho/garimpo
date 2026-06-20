@@ -5,10 +5,12 @@
 //	go run ./cmd/garimpo-api -addr :9000
 //
 // Fonte ao vivo (front passa a receber dados reais sem nenhuma mudança):
+//
 //	export SHOPEE_APP_ID=... SHOPEE_SECRET=...
 //	go run ./cmd/garimpo-api -fonte shopee -keyword "skincare" -categoria cosméticos
 //
 // Endpoints:
+//
 //	GET /api/health
 //	GET /api/candidatos?estrategia=nicho|diversificada&top=10&comissao_min=0.07
 //	GET /api/comparar?top=8

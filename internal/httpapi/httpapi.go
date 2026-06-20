@@ -69,6 +69,9 @@ type Server struct {
 	// Publicador envia a oferta para um canal (Telegram). Se nil, vira o Mock.
 	Publicador publish.Publicador
 
+	// FonteFactory permite injetar a fonte (testes). Se nil, usa buildSource.
+	FonteFactory func(q url.Values) (source.ProductSource, string)
+
 	mu    sync.Mutex
 	cache map[string]*cacheEntry
 }
@@ -202,7 +205,7 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 		estrategia = v
 	}
 
-	src, chave := srv.buildSource(q)
+	src, chave := srv.fonte(q)
 	produtos, err := srv.fetchCacheado(src, chave)
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -269,6 +272,14 @@ func (srv *Server) fonteAtiva(q url.Values) string {
 		return srv.Fonte
 	}
 	return "csv"
+}
+
+// fonte resolve a fonte: usa a injetada (testes) ou a padrão (buildSource).
+func (srv *Server) fonte(q url.Values) (source.ProductSource, string) {
+	if srv.FonteFactory != nil {
+		return srv.FonteFactory(q)
+	}
+	return srv.buildSource(q)
 }
 
 // buildSource monta a fonte (csv ou shopee) usando a query OU os padrões do
@@ -359,7 +370,7 @@ func topN(q url.Values) int {
 }
 
 // rankear aplica elegibilidade + scoring + ordenação sobre um pool já buscado.
-func rankear(produtos []domain.Product, st strategy.Strategy, elig strategy.Elegibilidade, n int) []candidatoDTO {
+func rankearDTO(produtos []domain.Product, st strategy.Strategy, elig strategy.Elegibilidade, n int) []candidatoDTO {
 	scored := engine.Rankear(produtos, st, elig)
 	if n > len(scored) {
 		n = len(scored)
@@ -378,14 +389,14 @@ func (srv *Server) candidatos(w http.ResponseWriter, r *http.Request) {
 		estrategia = v
 	}
 
-	src, chave := srv.buildSource(q)
+	src, chave := srv.fonte(q)
 	produtos, err := srv.fetchCacheado(src, chave)
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
 
-	out := rankear(produtos, strategyDe(estrategia), srv.elegibilidade(q), topN(q))
+	out := rankearDTO(produtos, strategyDe(estrategia), srv.elegibilidade(q), topN(q))
 	writeJSON(w, http.StatusOK, map[string]any{
 		"fonte":      src.Name(),
 		"estrategia": estrategia,
@@ -395,7 +406,7 @@ func (srv *Server) candidatos(w http.ResponseWriter, r *http.Request) {
 
 func (srv *Server) comparar(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	src, chave := srv.buildSource(q)
+	src, chave := srv.fonte(q)
 	produtos, err := srv.fetchCacheado(src, chave) // busca uma vez, ranqueia duas
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -405,8 +416,8 @@ func (srv *Server) comparar(w http.ResponseWriter, r *http.Request) {
 	elig := srv.elegibilidade(q)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"fonte":         src.Name(),
-		"nicho":         rankear(produtos, strategy.NewNiche(), elig, n),
-		"diversificada": rankear(produtos, strategy.Diversified{}, elig, n),
+		"nicho":         rankearDTO(produtos, strategy.NewNiche(), elig, n),
+		"diversificada": rankearDTO(produtos, strategy.Diversified{}, elig, n),
 	})
 }
 

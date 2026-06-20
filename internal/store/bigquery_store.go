@@ -11,7 +11,9 @@ import (
 
 // BigQueryStore grava eventos via streaming insert. Volume é baixo (decisões de
 // curadoria), então inserts diretos bastam. Requer:
-//   go get cloud.google.com/go/bigquery
+//
+//	go get cloud.google.com/go/bigquery
+//
 // e credenciais (ADC) — no Cloud Run, a service account da revisão.
 type BigQueryStore struct {
 	client     *bigquery.Client

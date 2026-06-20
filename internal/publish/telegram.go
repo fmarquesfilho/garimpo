@@ -16,6 +16,9 @@ type TelegramPublicador struct {
 	token  string
 	chatID string
 	http   *http.Client
+
+	// apiBase permite apontar para outro host (testes). Vazio = oficial.
+	apiBase string
 }
 
 func NovoTelegram(token, chatID string) *TelegramPublicador {
@@ -28,6 +31,13 @@ func NovoTelegram(token, chatID string) *TelegramPublicador {
 
 func (t *TelegramPublicador) Nome() string { return "telegram" }
 
+func (t *TelegramPublicador) base() string {
+	if t.apiBase != "" {
+		return t.apiBase
+	}
+	return "https://api.telegram.org"
+}
+
 func (t *TelegramPublicador) Publicar(ctx context.Context, o Oferta) (Resultado, error) {
 	msg := o.Mensagem()
 	corpo, _ := json.Marshal(map[string]any{
@@ -35,7 +45,7 @@ func (t *TelegramPublicador) Publicar(ctx context.Context, o Oferta) (Resultado,
 		"text":                     msg,
 		"disable_web_page_preview": false,
 	})
-	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", t.token)
+	url := fmt.Sprintf("%s/bot%s/sendMessage", t.base(), t.token)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
 	if err != nil {

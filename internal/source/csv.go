@@ -15,7 +15,8 @@ import (
 // que destrava o teste de viabilidade sem depender da API.
 //
 // Cabeçalho esperado:
-//   id,name,category,price,commission,sales_30d,rating
+//
+//	id,name,category,price,commission,sales_30d,rating
 type CSVSource struct {
 	Path string
 }

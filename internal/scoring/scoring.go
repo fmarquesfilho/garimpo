@@ -6,7 +6,9 @@ package scoring
 import "github.com/fmarquesfilho/garimpo/internal/domain"
 
 // EV é um proxy do valor esperado bruto de comissão de um produto:
-//   comissão (taxa) * preço * vendas no período.
+//
+//	comissão (taxa) * preço * vendas no período.
+//
 // Aproxima "quanto de comissão esse produto tende a gerar" se anunciado.
 func EV(p domain.Product) float64 {
 	return p.Commission * p.Price * float64(p.Sales30d)

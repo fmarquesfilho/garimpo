@@ -63,6 +63,9 @@ type ShopeeAPISource struct {
 	// para a estratégia de nicho funcionar (ex.: "cosméticos").
 	CategoryLabel string
 
+	// Endpoint permite apontar para outro host (testes). Vazio = endpoint oficial.
+	Endpoint string
+
 	HTTPClient *http.Client
 }
 
@@ -142,6 +145,10 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 	if maxPages <= 0 {
 		maxPages = 1
 	}
+	endpoint := s.Endpoint
+	if endpoint == "" {
+		endpoint = shopeeEndpoint
+	}
 
 	var produtos []domain.Product
 	for page := 1; page <= maxPages; page++ {
@@ -154,7 +161,7 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 		sum := sha256.Sum256([]byte(s.AppID + ts + string(body) + s.Secret))
 		sig := hex.EncodeToString(sum[:])
 
-		req, err := http.NewRequest(http.MethodPost, shopeeEndpoint, bytes.NewReader(body))
+		req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(body))
 		if err != nil {
 			return nil, err
 		}

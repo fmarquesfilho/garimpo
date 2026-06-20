@@ -11,8 +11,8 @@ import (
 // nem de API, só da porta source.ProductSource.
 type fakeSource struct{ produtos []domain.Product }
 
-func (f fakeSource) Name() string                         { return "fake" }
-func (f fakeSource) Fetch() ([]domain.Product, error)     { return f.produtos, nil }
+func (f fakeSource) Name() string                     { return "fake" }
+func (f fakeSource) Fetch() ([]domain.Product, error) { return f.produtos, nil }
 
 func TestRankFiltraInelegiveisEOrdena(t *testing.T) {
 	produtos := []domain.Product{
@@ -63,5 +63,27 @@ func TestTopLimita(t *testing.T) {
 	}
 	if len(top) != 2 {
 		t.Fatalf("Top(2) deveria devolver 2, veio %d", len(top))
+	}
+}
+func TestRankearPoolVazio(t *testing.T) {
+	// Todos abaixo do piso -> ranking vazio, sem panic na normalização.
+	produtos := []domain.Product{
+		{ID: "a", Commission: 0.03, Sales30d: 10, Rating: 4.0},
+		{ID: "b", Commission: 0.05, Sales30d: 20, Rating: 4.5},
+	}
+	got := Rankear(produtos, strategy.NewNiche(), strategy.Elegibilidade{ComissaoMin: 0.07})
+	if len(got) != 0 {
+		t.Fatalf("esperava 0 elegíveis, veio %d", len(got))
+	}
+}
+
+func TestRankearUmProdutoNaoQuebra(t *testing.T) {
+	// Pool de 1 -> min==max em todas as métricas (MinMax devolve 0.5). Não pode panic.
+	produtos := []domain.Product{
+		{ID: "unico", Category: "cosméticos", Price: 80, Commission: 0.12, Sales30d: 40, Rating: 4.6},
+	}
+	got := Rankear(produtos, strategy.NewNiche(), strategy.Elegibilidade{ComissaoMin: 0.07})
+	if len(got) != 1 || got[0].Product.ID != "unico" {
+		t.Fatalf("esperava o único produto, veio %+v", got)
 	}
 }
