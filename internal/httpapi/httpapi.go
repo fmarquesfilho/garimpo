@@ -13,7 +13,9 @@ import (
 
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/engine"
+	"github.com/fmarquesfilho/garimpo/internal/publish"
 	"github.com/fmarquesfilho/garimpo/internal/source"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 	"github.com/fmarquesfilho/garimpo/internal/strategy"
 )
 
@@ -60,6 +62,13 @@ type Server struct {
 	// ajuste de estratégia/piso no front e nas duas buscas do modo "comparar".
 	CacheTTL time.Duration
 
+	// Eventos registra decisões de curadoria (seleções) para análise no BigQuery.
+	// Se nil, vira NopStore (não persiste).
+	Eventos store.EventoStore
+
+	// Publicador envia a oferta para um canal (Telegram). Se nil, vira o Mock.
+	Publicador publish.Publicador
+
 	mu    sync.Mutex
 	cache map[string]*cacheEntry
 }
@@ -74,25 +83,172 @@ func (srv *Server) Handler() http.Handler {
 	if srv.CacheTTL == 0 {
 		srv.CacheTTL = 60 * time.Second
 	}
+	if srv.Eventos == nil {
+		srv.Eventos = store.NopStore{}
+	}
+	if srv.Publicador == nil {
+		srv.Publicador = publish.NovoMock("telegram")
+	}
 	srv.cache = map[string]*cacheEntry{}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", srv.health)
 	mux.HandleFunc("/api/candidatos", srv.candidatos)
 	mux.HandleFunc("/api/comparar", srv.comparar)
+	mux.HandleFunc("/api/eventos", srv.eventos)
+	mux.HandleFunc("/api/publicar", srv.publicar)
+	mux.HandleFunc("/api/coletar", srv.coletar)
 	return cors(mux)
 }
 
 func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+// eventos registra uma decisão de curadoria (ex.: produto selecionado) no store.
+func (srv *Server) eventos(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeErr(w, http.StatusMethodNotAllowed, "use POST")
+		return
+	}
+	var e store.Evento
+	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
+		writeErr(w, http.StatusBadRequest, "json inválido")
+		return
+	}
+	if e.Tipo == "" {
+		e.Tipo = "selecao"
+	}
+	if err := srv.Eventos.Registrar(r.Context(), e); err != nil {
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusAccepted, map[string]string{"status": "registrado"})
+}
+
+// publicar envia a oferta para o canal (Telegram/Mock) e registra a publicação.
+func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeErr(w, http.StatusMethodNotAllowed, "use POST")
+		return
+	}
+	var c struct {
+		ID         string  `json:"id"`
+		Nome       string  `json:"nome"`
+		Categoria  string  `json:"categoria"`
+		Preco      float64 `json:"preco"`
+		Comissao   float64 `json:"comissao"`
+		Link       string  `json:"link"`
+		Estrategia string  `json:"estrategia"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
+		writeErr(w, http.StatusBadRequest, "json inválido")
+		return
+	}
+
+	res, err := srv.Publicador.Publicar(r.Context(), publish.Oferta{
+		ProdutoID: c.ID, Nome: c.Nome, Categoria: c.Categoria,
+		Preco: c.Preco, Comissao: c.Comissao, Link: c.Link, Estrategia: c.Estrategia,
+	})
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	// Registra a publicação (best-effort) para análise por canal no BigQuery.
+	_ = srv.Eventos.Registrar(r.Context(), store.Evento{
+		Tipo: "publicacao", Canal: res.Canal, ProdutoID: c.ID, Nome: c.Nome,
+		Categoria: c.Categoria, Estrategia: c.Estrategia, Comissao: c.Comissao, Preco: c.Preco,
+	})
+
+	writeJSON(w, http.StatusOK, res)
+}
+
+// autorizadoColeta protege o endpoint de coleta: se COLETA_TOKEN estiver
+// definido, exige o header X-Garimpo-Token igual. Sem token configurado (dev),
+// fica liberado. Evita que terceiros disparem coletas e queimem o rate limit.
+func (srv *Server) autorizadoColeta(r *http.Request) bool {
+	tok := os.Getenv("COLETA_TOKEN")
+	if tok == "" {
+		return true
+	}
+	return r.Header.Get("X-Garimpo-Token") == tok
+}
+
+// coletar roda a busca de uma categoria e grava um snapshot (top N do momento)
+// para análise posterior. Disparado pelo Cloud Scheduler em cron.
+func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeErr(w, http.StatusMethodNotAllowed, "use POST")
+		return
+	}
+	if !srv.autorizadoColeta(r) {
+		writeErr(w, http.StatusUnauthorized, "token de coleta inválido")
+		return
+	}
+
+	q := r.URL.Query()
+	estrategia := "nicho"
+	if v := q.Get("estrategia"); v != "" {
+		estrategia = v
+	}
+
+	src, chave := srv.buildSource(q)
+	produtos, err := srv.fetchCacheado(src, chave)
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	scored := engine.Rankear(produtos, strategyDe(estrategia), srv.elegibilidade(q))
+	n := topN(q)
+	if n > len(scored) {
+		n = len(scored)
+	}
+
+	categoria := q.Get("categoria")
+	if categoria == "" {
+		categoria = srv.Categoria
+	}
+	keyword := q.Get("keyword")
+	if keyword == "" {
+		keyword = srv.Keyword
+	}
+
+	snap := store.Snapshot{
+		Categoria:  categoria,
+		Keyword:    keyword,
+		Estrategia: estrategia,
+		Em:         time.Now().UTC(),
+	}
+	for i, s := range scored[:n] {
+		p := s.Product
+		snap.Itens = append(snap.Itens, store.ItemSnapshot{
+			Posicao: i + 1, ProdutoID: p.ID, Nome: p.Name,
+			Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
+			Nota: p.Rating, Score: s.Score,
+		})
+	}
+
+	if err := srv.Eventos.RegistrarSnapshot(r.Context(), snap); err != nil {
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusAccepted, map[string]any{
+		"categoria":  categoria,
+		"estrategia": estrategia,
+		"coletados":  len(snap.Itens),
+		"em":         snap.Em,
 	})
 }
 

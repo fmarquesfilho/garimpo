@@ -70,6 +70,7 @@ cmd/garimpo        CLI (composição: escolhe fonte + estratégia)
 cmd/garimpo-api    servidor HTTP que serve a curadoria em JSON
 internal/domain    núcleo: Product, Scored (sem dependências)
 internal/httpapi   handlers HTTP (CORS) sobre o engine
+internal/store     registro de eventos (NopStore; BigQueryStore com -tags gcp)
 internal/source    PORTA de entrada: ProductSource
                      - csv.go     adaptador que funciona hoje
                      - shopee.go  adaptador da API de afiliados (GraphQL, ✅ implementado)
@@ -83,6 +84,12 @@ data/              CSV de exemplo
 web/               frontend SvelteKit (Incremento 2)
 docs/MODELO.md     modelo de negócio + roadmap incremental + Kanban
 docs/APIS.md       referência das APIs Shopee (campos) e Instagram (limites)
+docs/DEPLOY.md     hospedagem em VPS (OCI/Hetzner), CI/CD por SSH
+docs/DEPLOY_GCP.md hospedagem na GCP (Cloud Run + BigQuery + Firebase) ★ atual
+deploy/            systemd/nginx (VPS), schema BigQuery, segredos, scheduler de coleta
+Dockerfile         imagem do Cloud Run (build com -tags gcp)
+firebase.json      Firebase Hosting + rewrite /api -> Cloud Run
+.github/workflows/ ci.yml (testes) e deploy-gcp.yml (Cloud Run + Hosting)
 ```
 
 O motor depende só das duas portas. Trocar CSV pela API, ou nicho por

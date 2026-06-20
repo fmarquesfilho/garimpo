@@ -1,7 +1,7 @@
 <script>
 	import ScoreMeter from './ScoreMeter.svelte';
 
-	let { candidato, posicao = null, destaque = false, onselecionar = null } = $props();
+	let { candidato, posicao = null, destaque = false, onselecionar = null, onpublicar = null } = $props();
 
 	const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 	const pct = (v) => `${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
@@ -53,6 +53,9 @@
 	<footer>
 		{#if onselecionar}
 			<button class="primario" onclick={() => onselecionar(candidato)}>Garimpar</button>
+		{/if}
+		{#if onpublicar}
+			<button class="publicar" onclick={() => onpublicar(candidato)}>Publicar</button>
 		{/if}
 		<button class="secundario" onclick={copiarLink} disabled={!candidato.link}>
 			{copiado ? 'Copiado' : 'Copiar link'}
@@ -131,6 +134,7 @@
 	}
 	footer {
 		display: flex;
+		flex-wrap: wrap;
 		gap: var(--r2);
 		margin-top: auto;
 	}
@@ -149,6 +153,13 @@
 	}
 	.primario:hover {
 		background: #a3782f;
+	}
+	.publicar {
+		background: var(--rosa);
+		color: #fff;
+	}
+	.publicar:hover {
+		background: #8f4c62;
 	}
 	.secundario {
 		background: transparent;

@@ -1,0 +1,25 @@
+# systemd unit do backend. Copie para /etc/systemd/system/garimpo-api.service
+# e ative com:  sudo systemctl enable --now garimpo-api
+[Unit]
+Description=Garimpo API (curadoria de afiliados)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=garimpo
+Group=garimpo
+# Segredos da Shopee e configs ficam aqui (NUNCA no repositório):
+EnvironmentFile=/etc/garimpo/garimpo.env
+# Escuta só no localhost; quem expõe ao mundo (com TLS) é o nginx.
+ExecStart=/opt/garimpo/garimpo-api -addr 127.0.0.1:8080 -fonte shopee
+Restart=on-failure
+RestartSec=3
+# Reforços de segurança:
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

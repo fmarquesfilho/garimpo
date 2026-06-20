@@ -15,16 +15,26 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/fmarquesfilho/garimpo/internal/httpapi"
+	"github.com/fmarquesfilho/garimpo/internal/publish"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "endereço de escuta")
+	// Cloud Run injeta PORT; honramos como padrão do -addr.
+	addrPadrao := ":8080"
+	if p := os.Getenv("PORT"); p != "" {
+		addrPadrao = ":" + p
+	}
+
+	addr := flag.String("addr", addrPadrao, "endereço de escuta")
 	csv := flag.String("csv", "data/candidatos_exemplo.csv", "CSV padrão (fonte csv)")
 	fonte := flag.String("fonte", "csv", "fonte padrão: csv | shopee")
 	cat := flag.Int("cat", 0, "productCatId da Shopee (fonte shopee)")
@@ -35,6 +45,16 @@ func main() {
 	cacheSeg := flag.Int("cache", 60, "TTL do cache de fetch, em segundos")
 	flag.Parse()
 
+	// Store de eventos: NopStore por padrão; BigQueryStore com -tags gcp + env.
+	eventos, err := store.Novo(context.Background())
+	if err != nil {
+		log.Fatalf("store: %v", err)
+	}
+
+	// Publicador: Telegram se TELEGRAM_BOT_TOKEN/CHAT_ID estiverem no ambiente;
+	// senão, Mock (não envia nada).
+	pub := publish.Novo()
+
 	srv := &httpapi.Server{
 		DefaultCSV: *csv,
 		Fonte:      *fonte,
@@ -44,9 +64,11 @@ func main() {
 		VendasMin:  *vendasMin,
 		NotaMin:    *notaMin,
 		CacheTTL:   time.Duration(*cacheSeg) * time.Second,
+		Eventos:    eventos,
+		Publicador: pub,
 	}
-	log.Printf("Garimpo API em %s | fonte=%s categoria=%q keyword=%q vendas-min=%d nota-min=%.1f cache=%ds",
-		*addr, *fonte, *categoria, *keyword, *vendasMin, *notaMin, *cacheSeg)
+	log.Printf("Garimpo API em %s | fonte=%s categoria=%q keyword=%q vendas-min=%d nota-min=%.1f cache=%ds store=%s publicador=%s",
+		*addr, *fonte, *categoria, *keyword, *vendasMin, *notaMin, *cacheSeg, eventos.Nome(), pub.Nome())
 	if err := http.ListenAndServe(*addr, srv.Handler()); err != nil {
 		log.Fatal(err)
 	}

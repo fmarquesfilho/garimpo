@@ -1,0 +1,19 @@
+{
+  "hosting": {
+    "public": "web/build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": { "serviceId": "garimpo-api", "region": "REGIAO" }
+      },
+      { "source": "**", "destination": "/200.html" }
+    ],
+    "headers": [
+      {
+        "source": "/_app/**",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 <script>
-	import { buscarCandidatos, compararEstrategias } from '$lib/api.js';
+	import { buscarCandidatos, compararEstrategias, registrarSelecao, publicar } from '$lib/api.js';
 	import { quadro } from '$lib/board.js';
 	import CandidateCard from '$lib/components/CandidateCard.svelte';
 	import StrategyToggle from '$lib/components/StrategyToggle.svelte';
@@ -65,6 +65,22 @@
 
 	function selecionar(c) {
 		quadro.selecionar(c);
+		registrarSelecao(c); // best-effort: alimenta o BigQuery para análise
+	}
+
+	let aviso = $state(null); // resultado da publicação (mock mostra a mensagem)
+	let publicando = $state(false);
+	async function publicarOferta(c) {
+		publicando = true;
+		aviso = null;
+		try {
+			const r = await publicar(c);
+			aviso = { ok: true, ...r };
+		} catch (e) {
+			aviso = { ok: false, erro: e.message };
+		} finally {
+			publicando = false;
+		}
 	}
 </script>
 
@@ -133,6 +149,18 @@
 	deixam na peneira só o que já tem tração.{#if fonteAtiva}<span class="fonte dado"> · fonte: {fonteAtiva}</span>{/if}
 </p>
 
+{#if aviso}
+	<div class="publicacao" class:falha={!aviso.ok} role="status">
+		<button class="fechar" onclick={() => (aviso = null)} aria-label="fechar">✕</button>
+		{#if aviso.ok}
+			<p class="cab">Publicado no canal <strong>{aviso.canal}</strong> · <span class="dado">{aviso.detalhe}</span></p>
+			<pre class="msg">{aviso.mensagem}</pre>
+		{:else}
+			<p class="cab">Não consegui publicar: {aviso.erro}</p>
+		{/if}
+	</div>
+{/if}
+
 {#if carregando}
 	<p class="aviso">Garimpando os melhores produtos…</p>
 {:else if erro}
@@ -147,7 +175,7 @@
 			<h2 class="tit-col rosa">Nicho</h2>
 			<div class="empilhado">
 				{#each pares.nicho as c, i (c.id)}
-					<CandidateCard candidato={{ ...c, estrategia: 'nicho' }} posicao={i + 1} onselecionar={selecionar} />
+					<CandidateCard candidato={{ ...c, estrategia: 'nicho' }} posicao={i + 1} onselecionar={selecionar} onpublicar={publicarOferta} />
 				{/each}
 			</div>
 		</div>
@@ -155,7 +183,7 @@
 			<h2 class="tit-col ardosia">Diversificada</h2>
 			<div class="empilhado">
 				{#each pares.diversificada as c, i (c.id)}
-					<CandidateCard candidato={{ ...c, estrategia: 'diversificada' }} posicao={i + 1} onselecionar={selecionar} />
+					<CandidateCard candidato={{ ...c, estrategia: 'diversificada' }} posicao={i + 1} onselecionar={selecionar} onpublicar={publicarOferta} />
 				{/each}
 			</div>
 		</div>
@@ -173,12 +201,50 @@
 {:else}
 	<div class="grade">
 		{#each lista as c, i (c.id)}
-			<CandidateCard candidato={c} posicao={i + 1} destaque={i === 0} onselecionar={selecionar} />
+			<CandidateCard candidato={c} posicao={i + 1} destaque={i === 0} onselecionar={selecionar} onpublicar={publicarOferta} />
 		{/each}
 	</div>
 {/if}
 
 <style>
+	.publicacao {
+		position: relative;
+		background: color-mix(in srgb, var(--rosa) 8%, var(--nevoa));
+		border: 1px solid color-mix(in srgb, var(--rosa) 30%, var(--linha));
+		border-left: 3px solid var(--rosa);
+		border-radius: var(--raio);
+		padding: var(--r4) var(--r6);
+		margin-bottom: var(--r6);
+	}
+	.publicacao.falha {
+		background: color-mix(in srgb, var(--alerta) 8%, var(--nevoa));
+		border-color: color-mix(in srgb, var(--alerta) 30%, var(--linha));
+		border-left-color: var(--alerta);
+	}
+	.publicacao .cab {
+		margin: 0 var(--r6) 0 0;
+		font-size: 0.92rem;
+	}
+	.publicacao .msg {
+		margin: var(--r3) 0 0;
+		padding: var(--r3);
+		background: var(--porcelana);
+		border-radius: 8px;
+		font-family: var(--ui);
+		font-size: 0.92rem;
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+	.fechar {
+		position: absolute;
+		top: var(--r3);
+		right: var(--r3);
+		border: none;
+		background: transparent;
+		font-size: 0.9rem;
+		color: var(--tinta-suave);
+		cursor: pointer;
+	}
 	.intro {
 		max-width: 40rem;
 		margin-bottom: var(--r8);

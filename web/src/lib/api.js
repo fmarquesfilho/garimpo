@@ -1,5 +1,8 @@
-// Cliente da API do Garimpo. Base configurável via VITE_API_BASE.
-const BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
+// Cliente da API do Garimpo.
+// Em produção o front é estático e o nginx faz proxy de /api -> Go (mesma origem),
+// então a base é vazia. Em dev, aponta para o Go local. Dá pra sobrescrever com
+// VITE_API_BASE se precisar (ex.: front e API em hosts diferentes).
+const BASE = import.meta.env.VITE_API_BASE ?? (import.meta.env.PROD ? '' : 'http://localhost:8080');
 
 async function pegar(caminho) {
 	const resp = await fetch(`${BASE}${caminho}`);
@@ -37,7 +40,40 @@ export function buscarCandidatos({
 	return pegar(`/api/candidatos?${p}`);
 }
 
-/** Os dois rankings lado a lado. */
+/** Registra uma decisão de curadoria (seleção) para análise. Best-effort. */
+export function registrarSelecao(candidato) {
+	return fetch(`${BASE}/api/eventos`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ tipo: 'selecao', ...candidato })
+	}).catch(() => {
+		/* telemetria não pode atrapalhar o uso */
+	});
+}
+
+async function postar(caminho, corpo) {
+	const resp = await fetch(`${BASE}${caminho}`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(corpo)
+	});
+	if (!resp.ok) {
+		let detalhe = '';
+		try {
+			detalhe = (await resp.json())?.erro ?? '';
+		} catch {
+			/* corpo não-JSON */
+		}
+		throw new Error(detalhe || `Falha ${resp.status}`);
+	}
+	return resp.json();
+}
+
+/** Publica a oferta no canal (Telegram/Mock) e devolve o Resultado. */
+export function publicar(candidato) {
+	return postar('/api/publicar', candidato);
+}
+
 export function compararEstrategias({
 	top = 8,
 	keyword,
