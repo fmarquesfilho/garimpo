@@ -17,6 +17,31 @@ Custo no seu volume: Cloud Run praticamente de graça (escala a zero), BigQuery
 dentro do free tier (10 GB de storage + 1 TB de consulta/mês), Firebase Hosting
 free tier. Deve ficar bem abaixo de R$50 — confirme no Billing.
 
+## RUNBOOK: do zero ao ar (checklist ordenado)
+
+Faça na ordem. Os detalhes de cada passo estão nas seções abaixo.
+
+- [ ] **1.** Criar projeto GCP e instalar o `gcloud` (e `bq`). `gcloud auth login`.
+- [ ] **2.** Definir `PROJECT_ID` e `REGION` e rodar o bloco de **Setup** (habilita
+      APIs, cria Artifact Registry, cria os segredos `SHOPEE_*`, cria o dataset e
+      as tabelas do BigQuery).
+- [ ] **3.** Dar à service account do Cloud Run os papéis de BigQuery + Secret
+      Manager (seção *Permissões*).
+- [ ] **4.** Editar `.firebaserc` (`SEU_PROJECT_ID`) e `firebase.json` (trocar
+      `REGIAO` pela sua `REGION`). Associar o projeto ao Firebase Hosting.
+- [ ] **5.** Criar a service account de deploy do CI e gerar `key.json`
+      (seção *Service account para o CI*).
+- [ ] **6.** No GitHub, criar os secrets `GCP_PROJECT_ID` e `GCP_SA_KEY`.
+      (Os segredos da Shopee **não** vão para o GitHub.)
+- [ ] **7.** `git push` na `main` → o workflow `deploy-gcp.yml` testa, builda a
+      imagem, sobe no Cloud Run e publica o front. Acompanhe na aba **Actions**.
+- [ ] **8.** **Testar** (seção *Primeiro deploy → verificação*): abrir a URL do
+      Hosting, conferir `/api/health`, fazer uma busca e uma publicação.
+- [ ] **9.** *(Opcional)* Ligar a coleta periódica (seção *Coleta periódica*):
+      criar `COLETA_TOKEN` e os jobs do Cloud Scheduler.
+
+Pré-requisitos locais para o passo 8 de teste manual: `curl` e o `gcloud`.
+
 ## Setup (uma vez)
 
 Defina o projeto e a região (use a mesma em tudo):
@@ -103,11 +128,37 @@ Workload Identity Federation — fica como evolução.)
 `gcp`, que inclui a gravação no BigQuery), sobe no Cloud Run e publica o front.
 Acompanhe na aba Actions. Ao fim, abra a URL do Firebase Hosting.
 
-Diagnóstico rápido:
+### Verificação (passo 8 do runbook)
+
 ```bash
-gcloud run services describe garimpo-api --region $REGION --format='value(status.url)'
+# URLs
+HOSTING="https://$PROJECT_ID.web.app"        # ou o domínio do Firebase Hosting
+RUN_URL=$(gcloud run services describe garimpo-api --region $REGION --format='value(status.url)')
+
+# 1) a API está viva?
+curl -s "$RUN_URL/api/health"                 # espera {"status":"ok"} (ou similar)
+
+# 2) a busca real funciona? (precisa dos SHOPEE_* no Secret Manager)
+curl -s "$RUN_URL/api/candidatos?fonte=shopee&keyword=perfume&top=3" | head -c 400
+
+# 3) o front carrega e fala com a API?
+echo "Abra no navegador: $HOSTING  -> busque 'perfume' -> clique Publicar"
+```
+
+Checklist do teste manual no navegador:
+- A página abre e a barra de filtros aparece (busca, comissão, vendas, nota, explorar).
+- Buscar "perfume" traz produtos com o **teor** preenchido; o botão **?** explica o teor.
+- Produtos de comissão alta sem vendas aparecem com o selo **⚠ suspeito**.
+- **Publicar** mostra a mensagem montada e o **sub_id** de atribuição.
+- A aba **Quadro** persiste os cards entre recarregamentos.
+
+Se a página subir mas a busca vier vazia/erro:
+```bash
 gcloud run services logs read garimpo-api --region $REGION --limit 50
 ```
+Causas comuns: `SHOPEE_*` não acessíveis (papel `secretmanager.secretAccessor`
+faltando na SA do Run), ou o rewrite Hosting→Run na região não suportado — nesse
+caso use o plano B do `VITE_API_BASE` (ver nota na seção Setup → Firebase).
 
 ## Coleta periódica (Cloud Scheduler)
 

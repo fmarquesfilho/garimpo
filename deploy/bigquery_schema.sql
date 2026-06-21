@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.eventos` (
   categoria   STRING,
   estrategia  STRING,      -- "nicho" | "diversificada"
   canal       STRING,      -- preenchido em publicações: "telegram", ...
+  sub_id      STRING,      -- atribuição: canal_estrategia_AAAAMMDD (conversionReport)
   comissao    FLOAT64,     -- fração (0.15 = 15%)
   preco       FLOAT64,
   vendas      INT64,

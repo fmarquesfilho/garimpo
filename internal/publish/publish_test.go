@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestMensagemComPrecoELink(t *testing.T) {
@@ -59,4 +60,23 @@ func TestMockCanalPadrao(t *testing.T) {
 	if NovoMock("").Nome() != "mock:telegram" {
 		t.Error("canal vazio deveria virar telegram")
 	}
+}
+
+func TestSubIDComposicao(t *testing.T) {
+	id := SubID("Telegram", "nicho", mustTime())
+	if id != "telegram_nicho_20260315" {
+		t.Errorf("subId inesperado: %q", id)
+	}
+}
+
+func TestSubIDSanitiza(t *testing.T) {
+	// acentos, espaços e símbolos saem; fica só [a-z0-9] em cada parte
+	id := SubID("Insta Gram!", "bem-estar", mustTime())
+	if id != "instagram_bemestar_20260315" {
+		t.Errorf("subId não sanitizado: %q", id)
+	}
+}
+
+func mustTime() time.Time {
+	return time.Date(2026, 3, 15, 10, 0, 0, 0, time.UTC)
 }

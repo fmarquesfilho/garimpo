@@ -2,6 +2,7 @@
 	// Barra de "teor" — assinatura visual. O preenchimento dourado encoda o
 	// score; abaixo, a decomposição em componentes (explicabilidade).
 	let { score = 0, componentes = {}, animar = true } = $props();
+	let mostraAjuda = $state(false);
 
 	const rotulos = {
 		comissao: 'comissão',
@@ -30,11 +31,41 @@
 <div class="teor">
 	<div class="cabeca">
 		<span class="rotulo">teor</span>
+		<button
+			class="ajuda"
+			type="button"
+			aria-label="O que é o teor?"
+			onclick={() => (mostraAjuda = !mostraAjuda)}>?</button
+		>
 		<span class="valor dado">{score.toFixed(3)}</span>
 		{#if mult && mult > 1}
 			<span class="chip" title="bônus por estar no nicho">×{mult.toLocaleString('pt-BR')} nicho</span>
 		{/if}
 	</div>
+
+	{#if mostraAjuda}
+		<div class="popover">
+			<p>
+				<strong>Teor</strong> é o "grau de ouro" da pepita — um número de 0 a 1 que mede
+				<em>o quanto o produto rende pelo esforço de divulgar</em>. Quanto maior, melhor a aposta.
+			</p>
+			<p>É a soma de três sinais, cada um comparado aos outros produtos do dia:</p>
+			<ul>
+				<li><strong>comissão</strong> — quanto da venda volta pra você;</li>
+				<li>
+					<strong>valor esperado</strong> — comissão × preço × vendas: o retorno provável, não só a
+					porcentagem;
+				</li>
+				<li><strong>avaliação</strong> — a nota, como sinal de confiança.</li>
+			</ul>
+			<p>
+				Na estratégia <strong>nicho</strong>, produtos de cosméticos/perfumaria/bem-estar ganham um
+				bônus (o <span class="dado">×nicho</span>). A barra colorida abaixo mostra o peso de cada
+				sinal nesta pepita.
+			</p>
+			<button class="fechar-pop" type="button" onclick={() => (mostraAjuda = false)}>entendi</button>
+		</div>
+	{/if}
 
 	<div class="trilho" role="meter" aria-valuemin="0" aria-valuemax="1" aria-valuenow={score} aria-label="teor">
 		<div class="ouro" class:animar style="--w: {largura}%"></div>
@@ -62,6 +93,54 @@
 		display: flex;
 		align-items: baseline;
 		gap: var(--r2);
+	}
+	.ajuda {
+		width: 16px;
+		height: 16px;
+		border-radius: 999px;
+		border: 1px solid var(--linha);
+		background: var(--nevoa);
+		color: var(--tinta-suave);
+		font-size: 0.7rem;
+		font-weight: 700;
+		line-height: 1;
+		cursor: pointer;
+		padding: 0;
+		align-self: center;
+	}
+	.ajuda:hover {
+		border-color: var(--ouro);
+		color: var(--ouro);
+	}
+	.popover {
+		font-size: 0.8rem;
+		line-height: 1.45;
+		color: var(--tinta);
+		background: var(--porcelana);
+		border: 1px solid var(--linha);
+		border-left: 3px solid var(--ouro);
+		border-radius: 10px;
+		padding: var(--r3) var(--r4);
+	}
+	.popover p {
+		margin: 0 0 var(--r2);
+	}
+	.popover ul {
+		margin: 0 0 var(--r2);
+		padding-left: 1.1rem;
+	}
+	.popover li {
+		margin-bottom: 2px;
+	}
+	.fechar-pop {
+		border: none;
+		background: var(--ouro);
+		color: #fff;
+		font-weight: 600;
+		font-size: 0.78rem;
+		padding: 5px 12px;
+		border-radius: 8px;
+		cursor: pointer;
 	}
 	.valor {
 		font-size: 1.05rem;

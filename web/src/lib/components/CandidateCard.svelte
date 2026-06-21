@@ -27,6 +27,20 @@
 	<header>
 		<span class="cat">{candidato.categoria}</span>
 		<h3>{candidato.nome}</h3>
+		{#if candidato.suspeito || candidato.exploracao}
+			<div class="selos">
+				{#if candidato.suspeito}
+					<span class="selo alerta" title="Comissão alta, mas sem vendas/nota — pode ser produto-fantasma">
+						⚠ suspeito
+					</span>
+				{/if}
+				{#if candidato.exploracao}
+					<span class="selo explor" title="Sorteado fora do topo para testar o que converte (exploração)">
+						✦ exploração
+					</span>
+				{/if}
+			</div>
+		{/if}
 	</header>
 
 	<dl class="laudo">
@@ -94,6 +108,26 @@
 		font-weight: 700;
 		color: var(--tinta-suave);
 		opacity: 0.5;
+	}
+	.selos {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin-top: 6px;
+	}
+	.selo {
+		font-size: 0.68rem;
+		font-weight: 700;
+		padding: 2px 8px;
+		border-radius: 999px;
+	}
+	.selo.alerta {
+		background: color-mix(in srgb, var(--alerta) 14%, var(--porcelana));
+		color: var(--alerta);
+	}
+	.selo.explor {
+		background: color-mix(in srgb, var(--ardosia) 14%, var(--porcelana));
+		color: var(--ardosia);
 	}
 	.cat {
 		font-size: 0.72rem;

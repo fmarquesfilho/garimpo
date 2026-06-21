@@ -21,4 +21,13 @@ type Scored struct {
 	Product Product
 	Score   float64
 	Reasons map[string]float64
+
+	// Suspeito sinaliza "produto-fantasma": comissão alta no pool mas sem
+	// tração (zero vendas) ou sem credibilidade (nota zero). Não é eliminado —
+	// é marcado, para ela decidir com a informação à vista.
+	Suspeito bool
+
+	// Exploracao marca um candidato sorteado fora do topo (hold-out de
+	// exploração), para gerar dados não-enviesados sobre o que mais converte.
+	Exploracao bool
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Oferta é o que sai para um canal: o produto curado + o link rastreável.
@@ -40,6 +41,24 @@ type Resultado struct {
 	Enviado  bool   `json:"enviado"`
 	Mensagem string `json:"mensagem"`
 	Detalhe  string `json:"detalhe"`
+	SubID    string `json:"sub_id"` // identificador de atribuição (canal_estrategia_data)
+}
+
+// SubID compõe o identificador de atribuição embutido no link (utm_content da
+// Shopee): canal_estrategia_AAAAMMDD. É a peça que, lá na frente, permite saber
+// QUAL canal converteu (Telegram vs. Instagram) no conversionReport.
+func SubID(canal, estrategia string, t time.Time) string {
+	limpa := func(s string) string {
+		s = strings.ToLower(s)
+		var b strings.Builder
+		for _, r := range s {
+			if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+				b.WriteRune(r)
+			}
+		}
+		return b.String()
+	}
+	return fmt.Sprintf("%s_%s_%s", limpa(canal), limpa(estrategia), t.Format("20060102"))
 }
 
 // Publicador é a porta: cada canal a implementa.

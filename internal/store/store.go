@@ -17,7 +17,8 @@ type Evento struct {
 	Nome       string    `json:"nome"`
 	Categoria  string    `json:"categoria"`
 	Estrategia string    `json:"estrategia"`
-	Canal      string    `json:"canal,omitempty"` // preenchido em publicações
+	Canal      string    `json:"canal,omitempty"`  // preenchido em publicações
+	SubID      string    `json:"sub_id,omitempty"` // atribuição (canal_estrategia_data)
 	Comissao   float64   `json:"comissao"`
 	Preco      float64   `json:"preco"`
 	Vendas     int       `json:"vendas"`

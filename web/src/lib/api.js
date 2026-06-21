@@ -28,7 +28,8 @@ export function buscarCandidatos({
 	cat,
 	comissaoMin,
 	vendasMin,
-	notaMin
+	notaMin,
+	exploracao
 } = {}) {
 	const p = new URLSearchParams({ estrategia, top: String(top) });
 	if (keyword) p.set('keyword', keyword);
@@ -37,6 +38,7 @@ export function buscarCandidatos({
 	if (comissaoMin != null) p.set('comissao_min', String(comissaoMin));
 	if (vendasMin != null) p.set('vendas_min', String(vendasMin));
 	if (notaMin != null) p.set('nota_min', String(notaMin));
+	if (exploracao != null) p.set('exploracao', String(exploracao));
 	return pegar(`/api/candidatos?${p}`);
 }
 

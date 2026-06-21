@@ -40,6 +40,7 @@ type linhaBQ struct {
 	Categoria  string    `bigquery:"categoria"`
 	Estrategia string    `bigquery:"estrategia"`
 	Canal      string    `bigquery:"canal"`
+	SubID      string    `bigquery:"sub_id"`
 	Comissao   float64   `bigquery:"comissao"`
 	Preco      float64   `bigquery:"preco"`
 	Vendas     int       `bigquery:"vendas"`
@@ -58,6 +59,7 @@ func (s *BigQueryStore) Registrar(ctx context.Context, e Evento) error {
 		Categoria:  e.Categoria,
 		Estrategia: e.Estrategia,
 		Canal:      e.Canal,
+		SubID:      e.SubID,
 		Comissao:   e.Comissao,
 		Preco:      e.Preco,
 		Vendas:     e.Vendas,

@@ -11,6 +11,7 @@
 	let quantos = $state(9);
 	let vendasMin = $state(5); // piso de credibilidade (filtra produto-fantasma)
 	let notaMinima = $state(0);
+	let explorar = $state(false); // hold-out de exploração (gera dados não-enviesados)
 
 	let carregando = $state(true);
 	let erro = $state(null);
@@ -27,7 +28,8 @@
 			categoria,
 			comissaoMin: pisoComissao,
 			vendasMin,
-			notaMin: notaMinima
+			notaMin: notaMinima,
+			exploracao: explorar ? 0.2 : 0
 		};
 		try {
 			if (modo === 'comparar') {
@@ -58,6 +60,7 @@
 		quantos;
 		vendasMin;
 		notaMinima;
+		explorar;
 		clearTimeout(timer);
 		timer = setTimeout(carregar, 350);
 		return () => clearTimeout(timer);
@@ -141,6 +144,10 @@
 				<option value={12}>12</option>
 			</select>
 		</label>
+		<label class="campo-check" title="Reserva ~20% das vagas para produtos fora do topo, para descobrir o que converte">
+			<input type="checkbox" bind:checked={explorar} />
+			<span class="rotulo">explorar</span>
+		</label>
 	{/if}
 </div>
 
@@ -155,6 +162,9 @@
 		{#if aviso.ok}
 			<p class="cab">Publicado no canal <strong>{aviso.canal}</strong> · <span class="dado">{aviso.detalhe}</span></p>
 			<pre class="msg">{aviso.mensagem}</pre>
+			{#if aviso.sub_id}
+				<p class="subid dado">atribuição: {aviso.sub_id}</p>
+			{/if}
 		{:else}
 			<p class="cab">Não consegui publicar: {aviso.erro}</p>
 		{/if}
@@ -280,6 +290,25 @@
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
+	}
+	.campo-check {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		align-self: flex-end;
+		padding-bottom: 9px;
+		cursor: pointer;
+	}
+	.campo-check input {
+		width: 16px;
+		height: 16px;
+		accent-color: var(--ouro);
+		cursor: pointer;
+	}
+	.subid {
+		margin: var(--r2) 0 0;
+		font-size: 0.78rem;
+		color: var(--tinta-suave);
 	}
 	.campo.busca {
 		flex: 1 1 220px;

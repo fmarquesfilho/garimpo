@@ -3,7 +3,12 @@
 // "burra" e sem opinião — a OPINIÃO (que peso dar a quê) mora em strategy.
 package scoring
 
-import "github.com/fmarquesfilho/garimpo/internal/domain"
+import (
+	"math"
+	"sort"
+
+	"github.com/fmarquesfilho/garimpo/internal/domain"
+)
 
 // EV é um proxy do valor esperado bruto de comissão de um produto:
 //
@@ -30,6 +35,10 @@ type Stats struct {
 	MinSales, MaxSales   float64
 	MinRating, MaxRating float64
 	MinEV, MaxEV         float64
+
+	// CommissionP75 é o 75º percentil de comissão do pool — referência para
+	// flagrar "produto-fantasma" (comissão alta sem tração).
+	CommissionP75 float64
 }
 
 // Compute extrai os extremos do conjunto de candidatos ELEGÍVEIS.
@@ -61,5 +70,37 @@ func Compute(products []domain.Product) Stats {
 		s.MinEV = min(s.MinEV, ev)
 		s.MaxEV = max(s.MaxEV, ev)
 	}
+	s.CommissionP75 = percentil(products, 0.75)
 	return s
+}
+
+// percentil devolve o p-ésimo percentil (0..1) da comissão do pool (nearest-rank).
+func percentil(products []domain.Product, p float64) float64 {
+	n := len(products)
+	if n == 0 {
+		return 0
+	}
+	comissoes := make([]float64, n)
+	for i, prod := range products {
+		comissoes[i] = prod.Commission
+	}
+	sort.Float64s(comissoes)
+	idx := int(math.Ceil(p*float64(n))) - 1
+	if idx < 0 {
+		idx = 0
+	}
+	if idx >= n {
+		idx = n - 1
+	}
+	return comissoes[idx]
+}
+
+// Suspeito sinaliza "produto-fantasma" (a armadilha que os dados reais revelaram):
+// comissão no topo do pool (>= P75) combinada com falta de tração (zero vendas)
+// ou de credibilidade (nota zero). Detecção descritiva, adequada ao volume atual
+// — um z-score/IQR simples embutido na curadoria, não um modelo pesado.
+func Suspeito(p domain.Product, s Stats) bool {
+	comissaoAlta := p.Commission >= s.CommissionP75 && s.CommissionP75 > 0
+	semTracao := p.Sales30d == 0 || p.Rating == 0
+	return comissaoAlta && semTracao
 }

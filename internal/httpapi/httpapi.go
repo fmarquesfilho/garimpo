@@ -4,6 +4,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -31,6 +32,8 @@ type candidatoDTO struct {
 	Link        string             `json:"link"`
 	Score       float64            `json:"score"`
 	Componentes map[string]float64 `json:"componentes"`
+	Suspeito    bool               `json:"suspeito"`
+	Exploracao  bool               `json:"exploracao"`
 }
 
 func toDTO(s domain.Scored) candidatoDTO {
@@ -40,6 +43,7 @@ func toDTO(s domain.Scored) candidatoDTO {
 		Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
 		Avaliacao: p.Rating, Link: p.Link,
 		Score: s.Score, Componentes: s.Reasons,
+		Suspeito: s.Suspeito, Exploracao: s.Exploracao,
 	}
 }
 
@@ -57,6 +61,10 @@ type Server struct {
 	// Pisos de elegibilidade padrão (a query pode sobrescrever).
 	VendasMin int
 	NotaMin   float64
+
+	// Exploracao é a fração padrão de vagas reservadas para hold-out (0..1).
+	// 0 = desligado. A query (?exploracao=) sobrescreve.
+	Exploracao float64
 
 	// CacheTTL evita refazer o fetch (lento e sujeito a rate limit) a cada
 	// ajuste de estratégia/piso no front e nas duas buscas do modo "comparar".
@@ -167,9 +175,12 @@ func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// subId de atribuição (canal_estrategia_data) — pronto para o conversionReport.
+	res.SubID = publish.SubID(res.Canal, c.Estrategia, time.Now())
+
 	// Registra a publicação (best-effort) para análise por canal no BigQuery.
 	_ = srv.Eventos.Registrar(r.Context(), store.Evento{
-		Tipo: "publicacao", Canal: res.Canal, ProdutoID: c.ID, Nome: c.Nome,
+		Tipo: "publicacao", Canal: res.Canal, SubID: res.SubID, ProdutoID: c.ID, Nome: c.Nome,
 		Categoria: c.Categoria, Estrategia: c.Estrategia, Comissao: c.Comissao, Preco: c.Preco,
 	})
 
@@ -274,6 +285,23 @@ func (srv *Server) fonteAtiva(q url.Values) string {
 	return "csv"
 }
 
+// fracaoExploracao resolve a fração de exploração (query > padrão do servidor).
+func (srv *Server) fracaoExploracao(q url.Values) float64 {
+	f := srv.Exploracao
+	if s := q.Get("exploracao"); s != "" {
+		if v, err := strconv.ParseFloat(s, 64); err == nil {
+			f = v
+		}
+	}
+	if f < 0 {
+		f = 0
+	}
+	if f > 0.9 {
+		f = 0.9
+	}
+	return f
+}
+
 // fonte resolve a fonte: usa a injetada (testes) ou a padrão (buildSource).
 func (srv *Server) fonte(q url.Values) (source.ProductSource, string) {
 	if srv.FonteFactory != nil {
@@ -369,14 +397,21 @@ func topN(q url.Values) int {
 	return 10
 }
 
-// rankear aplica elegibilidade + scoring + ordenação sobre um pool já buscado.
-func rankearDTO(produtos []domain.Product, st strategy.Strategy, elig strategy.Elegibilidade, n int) []candidatoDTO {
+// rankearDTO aplica elegibilidade + scoring + ordenação sobre um pool já buscado.
+// Se fracaoExpl > 0 e houver rng, reserva parte das vagas para exploração.
+func rankearDTO(produtos []domain.Product, st strategy.Strategy, elig strategy.Elegibilidade, n int, fracaoExpl float64, r *rand.Rand) []candidatoDTO {
 	scored := engine.Rankear(produtos, st, elig)
-	if n > len(scored) {
-		n = len(scored)
+	var escolhidos []domain.Scored
+	if fracaoExpl > 0 && r != nil {
+		escolhidos = engine.SelecionarComExploracao(scored, n, fracaoExpl, r)
+	} else {
+		if n > len(scored) {
+			n = len(scored)
+		}
+		escolhidos = scored[:n]
 	}
-	out := make([]candidatoDTO, 0, n)
-	for _, s := range scored[:n] {
+	out := make([]candidatoDTO, 0, len(escolhidos))
+	for _, s := range escolhidos {
 		out = append(out, toDTO(s))
 	}
 	return out
@@ -396,7 +431,8 @@ func (srv *Server) candidatos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := rankearDTO(produtos, strategyDe(estrategia), srv.elegibilidade(q), topN(q))
+	out := rankearDTO(produtos, strategyDe(estrategia), srv.elegibilidade(q), topN(q),
+		srv.fracaoExploracao(q), rand.New(rand.NewSource(time.Now().UnixNano())))
 	writeJSON(w, http.StatusOK, map[string]any{
 		"fonte":      src.Name(),
 		"estrategia": estrategia,
@@ -416,8 +452,8 @@ func (srv *Server) comparar(w http.ResponseWriter, r *http.Request) {
 	elig := srv.elegibilidade(q)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"fonte":         src.Name(),
-		"nicho":         rankearDTO(produtos, strategy.NewNiche(), elig, n),
-		"diversificada": rankearDTO(produtos, strategy.Diversified{}, elig, n),
+		"nicho":         rankearDTO(produtos, strategy.NewNiche(), elig, n, 0, nil),
+		"diversificada": rankearDTO(produtos, strategy.Diversified{}, elig, n, 0, nil),
 	})
 }
 

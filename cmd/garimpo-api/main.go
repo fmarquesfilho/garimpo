@@ -44,6 +44,7 @@ func main() {
 	keyword := flag.String("keyword", "", "palavra-chave de busca (fonte shopee)")
 	vendasMin := flag.Int("vendas-min", 0, "piso de vendas padrão (0 = sem filtro)")
 	notaMin := flag.Float64("nota-min", 0, "piso de avaliação padrão 0..5 (0 = sem filtro)")
+	exploracao := flag.Float64("exploracao", 0, "fração de vagas para exploração (hold-out), 0..0.9")
 	cacheSeg := flag.Int("cache", 60, "TTL do cache de fetch, em segundos")
 	flag.Parse()
 
@@ -65,6 +66,7 @@ func main() {
 		Keyword:    *keyword,
 		VendasMin:  *vendasMin,
 		NotaMin:    *notaMin,
+		Exploracao: *exploracao,
 		CacheTTL:   time.Duration(*cacheSeg) * time.Second,
 		Eventos:    eventos,
 		Publicador: pub,
