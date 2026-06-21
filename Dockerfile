@@ -6,9 +6,7 @@ RUN go mod download
 
 COPY . .
 
-# ❌ Remova "-tags gcp" para usar a implementação NopStore
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" \
-      -o /out/garimpo-api ./cmd/garimpo-api
+RUN CGO_ENABLED=0 GOOS=linux go build -tags gcp -ldflags="-s -w" -o /out/garimpo-api ./cmd/garimpo-api
 
 FROM gcr.io/distroless/static-debian12
 COPY --from=build /out/garimpo-api /garimpo-api
