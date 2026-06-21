@@ -1,47 +1,58 @@
 #!/usr/bin/env bash
-# Exemplo de coleta periódica via Cloud Scheduler -> Cloud Run.
-# Cada job chama POST /api/coletar?categoria=... no cron definido, e o backend
-# grava o snapshot (top N do momento) na tabela `snapshots` do BigQuery.
+# Coleta periódica dirigida pelas BUSCAS SALVAS.
 #
-# AJUSTE as variáveis e rode os blocos que quiser. NÃO commite o token real.
+# Lê os perfis de busca do servidor (GET /api/buscas, sincronizados no BigQuery)
+# e cria um job no Cloud Scheduler por perfil que TENHA cron, chamando
+# POST /api/coletar com os filtros do perfil. Cada coleta grava um snapshot
+# (com timestamp) na tabela `snapshots`.
+#
+# Pré-requisitos: gcloud autenticado, `jq` instalado, e o COLETA_TOKEN criado
+# (ver docs/DEPLOY_GCP.md → Coleta periódica). NÃO commite o token.
+#
+# Uso:
+#   ./deploy/scheduler-exemplo.sh                 # cria/atualiza os jobs
+#   DRY_RUN=1 ./deploy/scheduler-exemplo.sh       # só mostra o que faria
 set -euo pipefail
 
-PROJECT_ID="seu-projeto"
-REGION="southamerica-east1"
-SERVICE="garimpo-api"
+PROJECT_ID="${PROJECT_ID:-garimpo-500114}"
+REGION="${REGION:-southamerica-east1}"
+SERVICE="${SERVICE:-garimpo-api}"
+TZ_AGENDA="${TZ_AGENDA:-America/Sao_Paulo}"
 
-# URL pública do Cloud Run:
-URL="$(gcloud run services describe "$SERVICE" --region "$REGION" \
-        --format='value(status.url)')"
-
-# Token compartilhado que protege o endpoint de coleta -----------------------
-# 1) crie o segredo e ligue na revisão do Cloud Run:
-#    printf '%s' "$(openssl rand -hex 24)" | gcloud secrets create COLETA_TOKEN --data-file=-
-#    gcloud run services update "$SERVICE" --region "$REGION" \
-#      --update-secrets COLETA_TOKEN=COLETA_TOKEN:latest
-# 2) pegue o valor para os jobs do Scheduler (eles mandam no header):
+URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 TOKEN="$(gcloud secrets versions access latest --secret=COLETA_TOKEN)"
 
-# Função utilitária: cria um job de coleta para uma categoria ----------------
-criar_coleta() {
-  local nome="$1" categoria="$2" keyword="$3" cron="$4"
-  gcloud scheduler jobs create http "coleta-$nome" \
-    --location "$REGION" \
-    --schedule "$cron" \
-    --time-zone "America/Sao_Paulo" \
-    --uri "$URL/api/coletar?fonte=shopee&categoria=$categoria&keyword=$keyword&estrategia=nicho&top=20&vendas_min=5&nota_min=4" \
-    --http-method POST \
-    --headers "X-Garimpo-Token=$TOKEN" \
-    --attempt-deadline 60s
-}
+echo "Servidor: $URL"
+echo "Lendo buscas salvas de $URL/api/buscas ..."
+BUSCAS_JSON="$(curl -fsS "$URL/api/buscas")"
 
-# Categorias do nicho, com horários ESPAÇADOS para respeitar o rate limit -----
-# (não dispare tudo no mesmo minuto)
-criar_coleta "perfumaria"  "perfumaria" "perfume"  "0 8 * * *"   # 08:00 todo dia
-criar_coleta "skincare"    "cosméticos" "skincare" "10 8 * * *"  # 08:10
-criar_coleta "maquiagem"   "cosméticos" "batom"    "20 8 * * *"  # 08:20
-criar_coleta "bem-estar"   "bem-estar"  "massageador" "30 8 * * *" # 08:30
+# percorre cada busca com cron não-vazio
+echo "$BUSCAS_JSON" | jq -c '.buscas[]? | select(.cron != null and .cron != "")' | while read -r b; do
+  nome="$(echo "$b"      | jq -r '.nome')"
+  keyword="$(echo "$b"   | jq -r '.keyword // ""')"
+  categoria="$(echo "$b" | jq -r '.categoria // ""')"
+  estrategia="$(echo "$b"| jq -r '.estrategia // "nicho"')"
+  top="$(echo "$b"       | jq -r '.top // 20')"
+  vendas="$(echo "$b"    | jq -r '.vendas_min // 5')"
+  nota="$(echo "$b"      | jq -r '.nota_min // 0')"
+  cron="$(echo "$b"      | jq -r '.cron')"
 
-echo "Jobs criados. Liste com: gcloud scheduler jobs list --location $REGION"
-echo "Teste manual:"
-echo "  curl -X POST -H \"X-Garimpo-Token: \$TOKEN\" \"$URL/api/coletar?fonte=shopee&categoria=perfumaria&keyword=perfume&top=20\""
+  # nome de job sanitizado (Scheduler aceita [a-z0-9-])
+  job="coleta-$(echo "$nome" | tr '[:upper:] ' '[:lower:]-' | tr -cd 'a-z0-9-')"
+  alvo="$URL/api/coletar?fonte=shopee&keyword=$(jq -rn --arg v "$keyword" '$v|@uri')&categoria=$(jq -rn --arg v "$categoria" '$v|@uri')&estrategia=$estrategia&top=$top&vendas_min=$vendas&nota_min=$nota"
+
+  echo "→ $job  ($cron)  keyword='$keyword' categoria='$categoria'"
+  if [ "${DRY_RUN:-0}" = "1" ]; then continue; fi
+
+  # cria OU atualiza (create falha se já existe → cai no update)
+  gcloud scheduler jobs create http "$job" \
+    --location "$REGION" --schedule "$cron" --time-zone "$TZ_AGENDA" \
+    --uri "$alvo" --http-method POST \
+    --headers "X-Garimpo-Token=$TOKEN" --attempt-deadline 60s 2>/dev/null \
+  || gcloud scheduler jobs update http "$job" \
+    --location "$REGION" --schedule "$cron" --time-zone "$TZ_AGENDA" \
+    --uri "$alvo" --http-method POST \
+    --update-headers "X-Garimpo-Token=$TOKEN" --attempt-deadline 60s
+done
+
+echo "Pronto. Liste com: gcloud scheduler jobs list --location $REGION"

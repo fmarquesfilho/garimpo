@@ -76,6 +76,28 @@ export function publicar(candidato) {
 	return postar('/api/publicar', candidato);
 }
 
+/** Resumo descritivo dos snapshots coletados (por categoria), janela em dias. */
+export function buscarEstatisticas({ dias = 30 } = {}) {
+	return pegar(`/api/estatisticas?dias=${dias}`);
+}
+
+/** Lista os perfis de busca sincronizados no servidor (BigQuery). */
+export function listarBuscasServidor() {
+	return pegar('/api/buscas');
+}
+
+/** Salva (sync) um perfil de busca no servidor. Best-effort. */
+export function sincronizarBusca(busca, { remover = false } = {}) {
+	const qs = remover ? '?remover' : '';
+	return fetch(`${BASE}/api/buscas${qs}`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(busca)
+	}).catch(() => {
+		/* sync não pode travar o uso local */
+	});
+}
+
 export function compararEstrategias({
 	top = 8,
 	keyword,

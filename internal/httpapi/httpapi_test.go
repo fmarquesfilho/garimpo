@@ -31,6 +31,7 @@ func (f *fonteFake) Fetch() ([]domain.Product, error) {
 type spyStore struct {
 	eventos   []store.Evento
 	snapshots []store.Snapshot
+	buscas    []store.Busca
 }
 
 func (s *spyStore) Registrar(_ context.Context, e store.Evento) error {
@@ -41,7 +42,23 @@ func (s *spyStore) RegistrarSnapshot(_ context.Context, snap store.Snapshot) err
 	s.snapshots = append(s.snapshots, snap)
 	return nil
 }
+func (s *spyStore) Estatisticas(_ context.Context, dias int) (store.Estatisticas, error) {
+	return store.Estatisticas{
+		Fonte: "spy", DiasJanela: dias, TotalAmostras: 3,
+		PorCategoria: []store.EstatCategoria{
+			{Categoria: "cosméticos", Amostras: 3, ComissaoMedia: 0.12, TeorMedio: 0.5},
+		},
+	}, nil
+}
 func (s *spyStore) Nome() string { return "spy" }
+
+func (s *spyStore) SalvarBusca(_ context.Context, b store.Busca) error {
+	s.buscas = append(s.buscas, b)
+	return nil
+}
+func (s *spyStore) ListarBuscas(_ context.Context) ([]store.Busca, error) {
+	return s.buscas, nil
+}
 
 type spyPub struct {
 	chamadas int
@@ -201,6 +218,71 @@ func TestColetarGravaSnapshotComToken(t *testing.T) {
 	}
 	if len(sp.snapshots) != 1 || len(sp.snapshots[0].Itens) == 0 {
 		t.Errorf("snapshot não gravado: %+v", sp.snapshots)
+	}
+}
+
+func TestBuscasSalvaEListagem(t *testing.T) {
+	sp := &spyStore{}
+	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+
+	corpo := []byte(`{"nome":"perfumaria diária","keyword":"perfume","categoria":"perfumaria","cron":"0 8 * * *","top":20}`)
+	rec := req(t, h, "POST", "/api/buscas", corpo, map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 202 {
+		t.Fatalf("POST status %d", rec.Code)
+	}
+	if len(sp.buscas) != 1 || sp.buscas[0].Nome != "perfumaria diária" || !sp.buscas[0].Ativo {
+		t.Fatalf("busca não salva certo: %+v", sp.buscas)
+	}
+
+	rec = req(t, h, "GET", "/api/buscas", nil, nil)
+	var resp struct {
+		Buscas []struct {
+			Nome string `json:"nome"`
+			Cron string `json:"cron"`
+		} `json:"buscas"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if len(resp.Buscas) != 1 || resp.Buscas[0].Cron != "0 8 * * *" {
+		t.Errorf("listagem inesperada: %+v", resp.Buscas)
+	}
+}
+
+func TestBuscasExigeNome(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "POST", "/api/buscas", []byte(`{"keyword":"x"}`), map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 400 {
+		t.Errorf("busca sem nome deveria dar 400, veio %d", rec.Code)
+	}
+}
+
+func TestBuscasRemoverMarcaInativo(t *testing.T) {
+	sp := &spyStore{}
+	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	req(t, h, "POST", "/api/buscas?remover", []byte(`{"nome":"x"}`), map[string]string{"Content-Type": "application/json"})
+	if len(sp.buscas) != 1 || sp.buscas[0].Ativo {
+		t.Errorf("remover deveria gravar tombstone (ativo=false): %+v", sp.buscas)
+	}
+}
+
+func TestEstatisticasRetornaResumo(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/estatisticas?dias=15", nil, nil)
+	if rec.Code != 200 {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var resp struct {
+		Fonte        string `json:"fonte"`
+		DiasJanela   int    `json:"dias_janela"`
+		PorCategoria []struct {
+			Categoria string `json:"categoria"`
+		} `json:"por_categoria"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.DiasJanela != 15 {
+		t.Errorf("dias_janela esperado 15, veio %d", resp.DiasJanela)
+	}
+	if len(resp.PorCategoria) != 1 || resp.PorCategoria[0].Categoria != "cosméticos" {
+		t.Errorf("por_categoria inesperado: %+v", resp.PorCategoria)
 	}
 }
 

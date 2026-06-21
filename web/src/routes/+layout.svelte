@@ -18,6 +18,7 @@
 		<nav>
 			<a href="/" class:atual={$page.url.pathname === '/'}>Curadoria</a>
 			<a href="/quadro" class:atual={$page.url.pathname === '/quadro'}>Quadro</a>
+			<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'}>Estatísticas</a>
 		</nav>
 	</div>
 </header>

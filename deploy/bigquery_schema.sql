@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.snapshots` (
 )
 PARTITION BY DATE(coletado_em);
 
+-- 2c) Buscas salvas (perfis de coleta), append-only/versionadas. O estado atual
+--     é o último registro por nome (ativo = TRUE). Alimenta a coleta agendada.
+CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.buscas` (
+  nome         STRING,
+  keyword      STRING,
+  categoria    STRING,
+  estrategia   STRING,
+  comissao_min FLOAT64,
+  vendas_min   INT64,
+  nota_min     FLOAT64,
+  top          INT64,
+  cron         STRING,       -- periodicidade da coleta (ex.: "0 8 * * *")
+  ativo        BOOL,         -- FALSE = removida (tombstone)
+  salvo_em     TIMESTAMP
+)
+PARTITION BY DATE(salvo_em);
+
 -- 3) (Opcional, Incremento futuro) Conversões vindas do conversionReport da Shopee.
 CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.conversoes` (
   conversion_id   STRING,

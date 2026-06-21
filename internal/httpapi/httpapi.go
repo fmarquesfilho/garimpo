@@ -4,6 +4,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -80,6 +81,9 @@ type Server struct {
 	// FonteFactory permite injetar a fonte (testes). Se nil, usa buildSource.
 	FonteFactory func(q url.Values) (source.ProductSource, string)
 
+	// Logger estruturado por criticidade. Se nil, usa slog.Default().
+	Logger *slog.Logger
+
 	mu    sync.Mutex
 	cache map[string]*cacheEntry
 }
@@ -100,6 +104,9 @@ func (srv *Server) Handler() http.Handler {
 	if srv.Publicador == nil {
 		srv.Publicador = publish.NovoMock("telegram")
 	}
+	if srv.Logger == nil {
+		srv.Logger = slog.Default()
+	}
 	srv.cache = map[string]*cacheEntry{}
 
 	mux := http.NewServeMux()
@@ -109,7 +116,47 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/eventos", srv.eventos)
 	mux.HandleFunc("/api/publicar", srv.publicar)
 	mux.HandleFunc("/api/coletar", srv.coletar)
-	return cors(mux)
+	mux.HandleFunc("/api/estatisticas", srv.estatisticas)
+	mux.HandleFunc("/api/buscas", srv.buscas)
+	return cors(srv.logRequests(mux))
+}
+
+// respCapturado embrulha o ResponseWriter para capturar o status no log.
+type respCapturado struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *respCapturado) WriteHeader(c int) {
+	r.status = c
+	r.ResponseWriter.WriteHeader(c)
+}
+
+// logRequests registra cada requisição com método, rota, status e duração.
+// /api/health cai em DEBUG (ruidoso, health checks frequentes); o resto em INFO,
+// e respostas 5xx em ERROR.
+func (srv *Server) logRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		inicio := time.Now()
+		rc := &respCapturado{ResponseWriter: w, status: 200}
+		next.ServeHTTP(rc, r)
+
+		dur := time.Since(inicio)
+		attrs := []any{
+			slog.String("metodo", r.Method),
+			slog.String("rota", r.URL.Path),
+			slog.Int("status", rc.status),
+			slog.Duration("dur", dur),
+		}
+		switch {
+		case rc.status >= 500:
+			srv.Logger.Error("requisição", attrs...)
+		case r.URL.Path == "/api/health":
+			srv.Logger.Debug("requisição", attrs...)
+		default:
+			srv.Logger.Info("requisição", attrs...)
+		}
+	})
 }
 
 func cors(next http.Handler) http.Handler {
@@ -177,6 +224,13 @@ func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
 
 	// subId de atribuição (canal_estrategia_data) — pronto para o conversionReport.
 	res.SubID = publish.SubID(res.Canal, c.Estrategia, time.Now())
+
+	srv.Logger.Info("publicacao",
+		slog.String("canal", res.Canal),
+		slog.String("sub_id", res.SubID),
+		slog.String("produto", c.ID),
+		slog.Bool("enviado", res.Enviado),
+	)
 
 	// Registra a publicação (best-effort) para análise por canal no BigQuery.
 	_ = srv.Eventos.Registrar(r.Context(), store.Evento{
@@ -254,9 +308,19 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := srv.Eventos.RegistrarSnapshot(r.Context(), snap); err != nil {
+		srv.Logger.Error("coleta falhou ao gravar snapshot",
+			slog.String("categoria", categoria), slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
+
+	srv.Logger.Info("coleta",
+		slog.String("categoria", categoria),
+		slog.String("keyword", keyword),
+		slog.String("estrategia", estrategia),
+		slog.Int("coletados", len(snap.Itens)),
+		slog.String("store", srv.Eventos.Nome()),
+	)
 
 	writeJSON(w, http.StatusAccepted, map[string]any{
 		"categoria":  categoria,
@@ -264,6 +328,66 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 		"coletados":  len(snap.Itens),
 		"em":         snap.Em,
 	})
+}
+
+// buscas gerencia os perfis de coleta sincronizados no servidor:
+//
+//	GET  /api/buscas         -> lista os perfis ativos
+//	POST /api/buscas         -> salva/atualiza um perfil (ativo=true)
+//	POST /api/buscas?remover -> grava tombstone (ativo=false) de um perfil
+//
+// É a camada de sync (BigQuery) das buscas salvas; o front também guarda em
+// localStorage para uso manual imediato.
+func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		lista, err := srv.Eventos.ListarBuscas(r.Context())
+		if err != nil {
+			srv.Logger.Error("listar buscas falhou", slog.String("erro", err.Error()))
+			writeErr(w, http.StatusBadGateway, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"buscas": lista, "store": srv.Eventos.Nome()})
+	case http.MethodPost:
+		var b store.Busca
+		if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+			writeErr(w, http.StatusBadRequest, "json inválido")
+			return
+		}
+		if b.Nome == "" {
+			writeErr(w, http.StatusBadRequest, "busca precisa de um nome")
+			return
+		}
+		b.Ativo = !r.URL.Query().Has("remover")
+		if err := srv.Eventos.SalvarBusca(r.Context(), b); err != nil {
+			srv.Logger.Error("salvar busca falhou", slog.String("erro", err.Error()))
+			writeErr(w, http.StatusBadGateway, err.Error())
+			return
+		}
+		srv.Logger.Info("busca salva", slog.String("nome", b.Nome), slog.Bool("ativo", b.Ativo))
+		writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "nome": b.Nome, "ativo": b.Ativo})
+	default:
+		writeErr(w, http.StatusMethodNotAllowed, "use GET ou POST")
+	}
+}
+
+// estatisticas devolve o resumo descritivo dos snapshots coletados (por
+// categoria) numa janela de `dias` (padrão 30). É o primeiro passo do pipeline
+// de análise e a base para um painel no frontend.
+func (srv *Server) estatisticas(w http.ResponseWriter, r *http.Request) {
+	dias := 30
+	if s := r.URL.Query().Get("dias"); s != "" {
+		if v, err := strconv.Atoi(s); err == nil && v > 0 {
+			dias = v
+		}
+	}
+	est, err := srv.Eventos.Estatisticas(r.Context(), dias)
+	if err != nil {
+		srv.Logger.Error("estatisticas falhou", slog.String("erro", err.Error()))
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, est)
 }
 
 func (srv *Server) health(w http.ResponseWriter, r *http.Request) {

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/fmarquesfilho/garimpo/internal/httpapi"
+	"github.com/fmarquesfilho/garimpo/internal/logs"
 	"github.com/fmarquesfilho/garimpo/internal/publish"
 	"github.com/fmarquesfilho/garimpo/internal/store"
 )
@@ -48,6 +49,9 @@ func main() {
 	cacheSeg := flag.Int("cache", 60, "TTL do cache de fetch, em segundos")
 	flag.Parse()
 
+	// Logging estruturado por criticidade (LOG_LEVEL / LOG_FORMAT no ambiente).
+	logger := logs.Init()
+
 	// Store de eventos: NopStore por padrão; BigQueryStore com -tags gcp + env.
 	eventos, err := store.Novo(context.Background())
 	if err != nil {
@@ -69,10 +73,13 @@ func main() {
 		Exploracao: *exploracao,
 		CacheTTL:   time.Duration(*cacheSeg) * time.Second,
 		Eventos:    eventos,
+		Logger:     logger,
 		Publicador: pub,
 	}
-	log.Printf("Garimpo API em %s | fonte=%s categoria=%q keyword=%q vendas-min=%d nota-min=%.1f cache=%ds store=%s publicador=%s",
-		*addr, *fonte, *categoria, *keyword, *vendasMin, *notaMin, *cacheSeg, eventos.Nome(), pub.Nome())
+	logger.Info("garimpo-api iniciando",
+		"addr", *addr, "fonte", *fonte, "categoria", *categoria, "keyword", *keyword,
+		"vendas_min", *vendasMin, "nota_min", *notaMin, "exploracao", *exploracao,
+		"cache_s", *cacheSeg, "store", eventos.Nome(), "publicador", pub.Nome())
 	if err := http.ListenAndServe(*addr, srv.Handler()); err != nil {
 		log.Fatal(err)
 	}

@@ -86,6 +86,7 @@ docs/MODELO.md     modelo de negócio + roadmap incremental + Kanban
 docs/MANUAL.md     manual de uso (o "teor", selos, fluxo) — também embutido na UI
 docs/JORNADA.md    jornada do usuário: fluxo de valor e pontos de decisão
 docs/CIENCIA_DE_DADOS.md  guia estratégico de DS por objetivo e maturidade
+docs/COLETA.md     o que é coletado, onde fica, e como ligar a coleta agendada
 docs/APIS.md       referência das APIs Shopee (campos) e Instagram (limites)
 docs/DEPLOY.md     hospedagem em VPS (OCI/Hetzner), CI/CD por SSH
 docs/DEPLOY_GCP.md hospedagem na GCP (Cloud Run + BigQuery + Firebase) ★ atual

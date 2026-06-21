@@ -26,10 +26,56 @@ type Evento struct {
 	Em         time.Time `json:"-"` // carimbado no servidor
 }
 
+// EstatCategoria resume os snapshots de mercado de uma categoria na janela.
+// É a primeira camada descritiva do pipeline de análise (Fase 1 da estratégia):
+// "como está cada categoria agora", sobre o dado que já se acumula no tempo.
+type EstatCategoria struct {
+	Categoria       string  `json:"categoria"`
+	Amostras        int     `json:"amostras"`
+	ComissaoMedia   float64 `json:"comissao_media"`
+	ComissaoMediana float64 `json:"comissao_mediana"`
+	PrecoMedio      float64 `json:"preco_medio"`
+	VendasMedia     float64 `json:"vendas_media"`
+	TeorMedio       float64 `json:"teor_medio"`
+}
+
+// Estatisticas é o resumo descritivo dos snapshots coletados numa janela.
+type Estatisticas struct {
+	Fonte         string           `json:"fonte"`          // "bigquery" | "nop"
+	DiasJanela    int              `json:"dias_janela"`    // janela considerada
+	TotalAmostras int              `json:"total_amostras"` // itens de snapshot
+	PorCategoria  []EstatCategoria `json:"por_categoria"`  // agregado por categoria
+	GeradoEm      time.Time        `json:"gerado_em"`
+}
+
+// Busca é um "perfil de coleta": um conjunto nomeado de filtros que pode ser
+// reusado manualmente (no front) e rodado periodicamente (Cloud Scheduler) para
+// coletar snapshots. Cada busca carrega seu próprio `Cron` (periodicidade), o
+// que torna a coleta agendada configurável por perfil e independente do navegador.
+type Busca struct {
+	Nome        string    `json:"nome"`
+	Keyword     string    `json:"keyword"`
+	Categoria   string    `json:"categoria"`
+	Estrategia  string    `json:"estrategia"`
+	ComissaoMin float64   `json:"comissao_min"`
+	VendasMin   int       `json:"vendas_min"`
+	NotaMin     float64   `json:"nota_min"`
+	Top         int       `json:"top"`
+	Cron        string    `json:"cron"`  // ex.: "0 8 * * *" (vazio = só manual)
+	Ativo       bool      `json:"ativo"` // false = removida (tombstone)
+	SalvoEm     time.Time `json:"salvo_em"`
+}
+
 // EventoStore registra eventos. Implementações: NopStore e BigQueryStore.
 type EventoStore interface {
 	Registrar(ctx context.Context, e Evento) error
 	RegistrarSnapshot(ctx context.Context, s Snapshot) error
+	// Estatisticas devolve o resumo descritivo dos snapshots dos últimos `dias`.
+	Estatisticas(ctx context.Context, dias int) (Estatisticas, error)
+	// SalvarBusca persiste (append) um perfil de busca; ListarBuscas devolve o
+	// estado atual (último registro por nome, só os ativos).
+	SalvarBusca(ctx context.Context, b Busca) error
+	ListarBuscas(ctx context.Context) ([]Busca, error)
 	Nome() string
 }
 
@@ -61,4 +107,13 @@ type NopStore struct{}
 
 func (NopStore) Registrar(context.Context, Evento) error           { return nil }
 func (NopStore) RegistrarSnapshot(context.Context, Snapshot) error { return nil }
-func (NopStore) Nome() string                                      { return "nop" }
+func (NopStore) Estatisticas(_ context.Context, dias int) (Estatisticas, error) {
+	// Sem persistência local: devolve um resumo vazio, deixando claro a fonte.
+	return Estatisticas{Fonte: "nop", DiasJanela: dias, GeradoEm: time.Now().UTC()}, nil
+}
+
+// SalvarBusca/ListarBuscas no Nop são no-op: localmente, as buscas vivem no
+// navegador (localStorage). O sync server-side só acontece com o BigQuery ligado.
+func (NopStore) SalvarBusca(context.Context, Busca) error      { return nil }
+func (NopStore) ListarBuscas(context.Context) ([]Busca, error) { return nil, nil }
+func (NopStore) Nome() string                                  { return "nop" }
