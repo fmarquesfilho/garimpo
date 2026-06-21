@@ -1,11 +1,12 @@
 {
   "hosting": {
+    "site": "garimpo-hoje",
     "public": "web/build",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "/api/**",
-        "run": { "serviceId": "garimpo-api", "region": "southamerica-east1" }
+        "run": { "serviceId": "garimpo", "region": "southamerica-east1" }
       },
       { "source": "**", "destination": "/200.html" }
     ],
