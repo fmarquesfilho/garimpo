@@ -27,6 +27,7 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/httpapi"
 	"github.com/fmarquesfilho/garimpo/internal/logs"
 	"github.com/fmarquesfilho/garimpo/internal/publish"
+	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
@@ -70,6 +71,15 @@ func main() {
 	// senão, Mock (não envia nada).
 	pub := publish.Novo()
 
+	// Scheduler: Cloud Scheduler com -tags gcp + env; NopScheduler caso contrário.
+	sched, err := scheduler.Novo(context.Background())
+	if err != nil {
+		logger.Warn("scheduler não disponível", "erro", err)
+		sched = scheduler.NopScheduler{}
+	} else {
+		logger.Info("scheduler configurado", "tipo", sched.Nome())
+	}
+
 	srv := &httpapi.Server{
 		DefaultCSV: *csv,
 		Fonte:      *fonte,
@@ -83,6 +93,7 @@ func main() {
 		Eventos:    eventos,
 		Logger:     logger,
 		Publicador: pub,
+		Scheduler:  sched,
 	}
 	logger.Info("garimpo-api iniciando",
 		"addr", *addr, "fonte", *fonte, "categoria", *categoria, "keyword", *keyword,

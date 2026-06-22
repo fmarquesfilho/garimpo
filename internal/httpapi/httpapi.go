@@ -3,6 +3,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"math/rand"
@@ -16,6 +17,7 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/engine"
 	"github.com/fmarquesfilho/garimpo/internal/publish"
+	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/source"
 	"github.com/fmarquesfilho/garimpo/internal/store"
 	"github.com/fmarquesfilho/garimpo/internal/strategy"
@@ -78,6 +80,10 @@ type Server struct {
 	// Publicador envia a oferta para um canal (Telegram). Se nil, vira o Mock.
 	Publicador publish.Publicador
 
+	// Scheduler cria/atualiza jobs no Cloud Scheduler quando buscas são salvas.
+	// Se nil, vira NopScheduler (não cria jobs).
+	Scheduler scheduler.Scheduler
+
 	// FonteFactory permite injetar a fonte (testes). Se nil, usa buildSource.
 	FonteFactory func(q url.Values) (source.ProductSource, string)
 
@@ -103,6 +109,9 @@ func (srv *Server) Handler() http.Handler {
 	}
 	if srv.Publicador == nil {
 		srv.Publicador = publish.NovoMock("telegram")
+	}
+	if srv.Scheduler == nil {
+		srv.Scheduler = scheduler.NopScheduler{}
 	}
 	if srv.Logger == nil {
 		srv.Logger = slog.Default()
@@ -366,6 +375,29 @@ func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, http.StatusBadGateway, err.Error())
 			return
 		}
+
+		// Sincroniza com o Cloud Scheduler (best-effort, não bloqueia o usuário)
+		go func() {
+			params := scheduler.ColetaParams{
+				Categoria:  b.Categoria,
+				Estrategia: b.Estrategia,
+				Top:        b.Top,
+				VendasMin:  b.VendasMin,
+				NotaMin:    b.NotaMin,
+			}
+			var err error
+			if b.Ativo {
+				err = srv.Scheduler.SyncBusca(context.Background(), b.ID, b.Keywords, b.Cron, params)
+			} else {
+				err = srv.Scheduler.DeletarBusca(context.Background(), b.ID, b.Keywords)
+			}
+			if err != nil {
+				srv.Logger.Error("scheduler sync falhou", slog.String("busca", b.ID), slog.String("erro", err.Error()))
+			} else {
+				srv.Logger.Info("scheduler sync", slog.String("busca", b.ID), slog.Bool("ativo", b.Ativo), slog.String("cron", b.Cron))
+			}
+		}()
+
 		srv.Logger.Info("busca salva", slog.String("id", b.ID), slog.Bool("ativo", b.Ativo))
 		writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "id": b.ID, "ativo": b.Ativo})
 	default:

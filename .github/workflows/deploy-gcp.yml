@@ -101,14 +101,22 @@ jobs:
       - name: Deploy no Cloud Run
         run: |
           IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/garimpo/garimpo-api"
+          # Pegar a URL existente do serviço (ou usar a URL do deploy atual)
+          SVC_URL=$(gcloud run services describe garimpo-api --region "${{ env.GCP_REGION }}" --format='value(status.url)' 2>/dev/null || echo "")
           gcloud run deploy garimpo-api \
             --image "$IMAGE:${{ github.sha }}" \
             --region "${{ env.GCP_REGION }}" \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=garimpo,BQ_TABELA=eventos,BQ_TABELA_SNAP=snapshots" \
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=garimpo,BQ_TABELA=eventos,BQ_TABELA_SNAP=snapshots,GCP_REGION=${{ env.GCP_REGION }}" \
             --update-secrets "SHOPEE_APP_ID=SHOPEE_APP_ID:latest,SHOPEE_SECRET=SHOPEE_SECRET:latest,COLETA_TOKEN=COLETA_TOKEN:latest" \
             --args="-fonte,shopee" \
+            --quiet
+          # Atualiza a URL do scheduler (agora que o deploy existe)
+          SVC_URL=$(gcloud run services describe garimpo-api --region "${{ env.GCP_REGION }}" --format='value(status.url)')
+          gcloud run services update garimpo-api \
+            --region "${{ env.GCP_REGION }}" \
+            --update-env-vars "SCHEDULER_API_URL=$SVC_URL" \
             --quiet
 
   # ── 4. Deploy do frontend no Firebase Hosting ────────────────────────────
