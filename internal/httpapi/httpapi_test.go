@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/fmarquesfilho/garimpo/internal/auth"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/publish"
 	"github.com/fmarquesfilho/garimpo/internal/source"
@@ -73,6 +74,16 @@ func (p *spyPub) Publicar(_ context.Context, o publish.Oferta) (publish.Resultad
 	return publish.Resultado{Canal: "spy", Enviado: true, Mensagem: o.Mensagem(), Detalhe: "spy"}, nil
 }
 
+// fakeVerifier aceita qualquer token não-vazio e retorna um usuário fixo.
+type fakeVerifier struct{}
+
+func (fakeVerifier) Verify(_ context.Context, token string) *auth.User {
+	if token == "" {
+		return nil
+	}
+	return &auth.User{UID: "test-user", Email: "test@test.com"}
+}
+
 var amostra = []domain.Product{
 	{ID: "P1", Name: "Sérum", Category: "cosméticos", Price: 100, Commission: 0.15, Sales30d: 80, Rating: 4.8},
 	{ID: "P2", Name: "Fone", Category: "eletrônicos", Price: 100, Commission: 0.10, Sales30d: 900, Rating: 4.3},
@@ -83,6 +94,7 @@ func montar(fonte *fonteFake, ev store.EventoStore, pub publish.Publicador) http
 	srv := &Server{
 		Eventos:    ev,
 		Publicador: pub,
+		Auth:       fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return fonte, "fake|fixo"
 		},
@@ -226,17 +238,22 @@ func TestBuscasSalvaEListagem(t *testing.T) {
 	sp := &spyStore{}
 	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
 
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
+
 	// envia no novo formato: keywords[] + id implícito via slug
 	corpo := []byte(`{"keywords":["perfume"],"categoria":"perfumaria","estrategia":"nicho","cron":"0 8 * * *","top":20}`)
-	rec := req(t, h, "POST", "/api/buscas", corpo, map[string]string{"Content-Type": "application/json"})
+	rec := req(t, h, "POST", "/api/buscas", corpo, authH)
 	if rec.Code != 202 {
 		t.Fatalf("POST status %d — body: %s", rec.Code, rec.Body.String())
 	}
 	if len(sp.buscas) != 1 || sp.buscas[0].ID != "perfume" || !sp.buscas[0].Ativo {
 		t.Fatalf("busca não salva certo: %+v", sp.buscas)
 	}
+	if sp.buscas[0].OwnerUID != "test-user" {
+		t.Errorf("owner_uid deveria ser test-user, veio %q", sp.buscas[0].OwnerUID)
+	}
 
-	rec = req(t, h, "GET", "/api/buscas", nil, nil)
+	rec = req(t, h, "GET", "/api/buscas", nil, map[string]string{"Authorization": "Bearer fake-token"})
 	var resp struct {
 		Buscas []struct {
 			ID   string `json:"id"`
@@ -253,9 +270,11 @@ func TestBuscasSalvaCompatibilidadeLegada(t *testing.T) {
 	sp := &spyStore{}
 	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
 
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
+
 	// formato antigo: campo "nome" + "keyword" (string) — deve ser normalizado
 	corpo := []byte(`{"nome":"perfumaria diária","keyword":"perfume","categoria":"perfumaria","cron":"0 8 * * *","top":20}`)
-	rec := req(t, h, "POST", "/api/buscas", corpo, map[string]string{"Content-Type": "application/json"})
+	rec := req(t, h, "POST", "/api/buscas", corpo, authH)
 	if rec.Code != 202 {
 		t.Fatalf("POST legado status %d — body: %s", rec.Code, rec.Body.String())
 	}
@@ -267,10 +286,24 @@ func TestBuscasSalvaCompatibilidadeLegada(t *testing.T) {
 	}
 }
 
-func TestBuscasExigeNome(t *testing.T) {
+func TestBuscasExigeAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	// POST sem auth → 401
+	rec := req(t, h, "POST", "/api/buscas", []byte(`{"keywords":["x"]}`), map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 401 {
+		t.Errorf("busca sem auth deveria dar 401, veio %d", rec.Code)
+	}
+	// GET sem auth → 200 mas lista vazia
+	rec = req(t, h, "GET", "/api/buscas", nil, nil)
+	if rec.Code != 200 {
+		t.Errorf("GET sem auth deveria dar 200, veio %d", rec.Code)
+	}
+}
+
+func TestBuscasExigeKeywords(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
 	// sem keywords e sem keyword legado → 400
-	rec := req(t, h, "POST", "/api/buscas", []byte(`{}`), map[string]string{"Content-Type": "application/json"})
+	rec := req(t, h, "POST", "/api/buscas", []byte(`{}`), map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"})
 	if rec.Code != 400 {
 		t.Errorf("busca sem keywords deveria dar 400, veio %d", rec.Code)
 	}
@@ -279,7 +312,8 @@ func TestBuscasExigeNome(t *testing.T) {
 func TestBuscasRemoverMarcaInativo(t *testing.T) {
 	sp := &spyStore{}
 	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
-	req(t, h, "POST", "/api/buscas?remover", []byte(`{"id":"minha-busca","keywords":["x"]}`), map[string]string{"Content-Type": "application/json"})
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
+	req(t, h, "POST", "/api/buscas?remover", []byte(`{"id":"minha-busca","keywords":["x"]}`), authH)
 	if len(sp.buscas) != 1 || sp.buscas[0].Ativo {
 		t.Errorf("remover deveria gravar tombstone (ativo=false): %+v", sp.buscas)
 	}
@@ -322,8 +356,9 @@ func TestBuscasMultiKeyword(t *testing.T) {
 	sp := &spyStore{}
 	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
 
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
 	corpo := []byte(`{"keywords":["kenzo","shiseido","issey miyake"],"categoria":"perfumaria","estrategia":"ambas","cron":"0 8,18 * * *","top":12}`)
-	rec := req(t, h, "POST", "/api/buscas", corpo, map[string]string{"Content-Type": "application/json"})
+	rec := req(t, h, "POST", "/api/buscas", corpo, authH)
 	if rec.Code != 202 {
 		t.Fatalf("POST status %d — body: %s", rec.Code, rec.Body.String())
 	}

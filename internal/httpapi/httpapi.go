@@ -370,24 +370,30 @@ func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
+		// Sem auth → lista vazia (buscas são privadas)
+		if user == nil {
+			writeJSON(w, http.StatusOK, map[string]any{"buscas": []store.Busca{}, "store": srv.Eventos.Nome()})
+			return
+		}
 		lista, err := srv.Eventos.ListarBuscas(r.Context())
 		if err != nil {
 			srv.Logger.Error("listar buscas falhou", slog.String("erro", err.Error()))
 			writeErr(w, http.StatusBadGateway, err.Error())
 			return
 		}
-		// Filtra por owner se o usuário está autenticado
-		if user != nil {
-			var filtrada []store.Busca
-			for _, b := range lista {
-				if b.OwnerUID == "" || b.OwnerUID == user.UID {
-					filtrada = append(filtrada, b)
-				}
+		// Filtra por owner
+		var filtrada []store.Busca
+		for _, b := range lista {
+			if b.OwnerUID == "" || b.OwnerUID == user.UID {
+				filtrada = append(filtrada, b)
 			}
-			lista = filtrada
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"buscas": lista, "store": srv.Eventos.Nome()})
+		writeJSON(w, http.StatusOK, map[string]any{"buscas": filtrada, "store": srv.Eventos.Nome()})
 	case http.MethodPost:
+		if user == nil {
+			writeErr(w, http.StatusUnauthorized, "faça login para salvar buscas")
+			return
+		}
 		var b store.Busca
 		if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
 			writeErr(w, http.StatusBadRequest, "json inválido")
