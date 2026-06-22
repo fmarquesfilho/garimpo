@@ -5,10 +5,12 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/bigquery"
+	"github.com/fmarquesfilho/garimpo/internal/publish"
 	"google.golang.org/api/iterator"
 )
 
@@ -32,6 +34,13 @@ func NovoBigQueryStore(ctx context.Context, projeto, dataset, tabela, tabelaSnap
 	}
 	return &BigQueryStore{client: c, dataset: dataset, tabela: tabela, tabelaSnap: tabelaSnap}, nil
 }
+
+// Client expõe o client BigQuery para ser reutilizado pelos stores auxiliares
+// (BQDestinoStore, BQTemplateStore) sem criar conexões adicionais.
+func (s *BigQueryStore) Client() *bigquery.Client { return s.client }
+
+// Dataset retorna o nome do dataset.
+func (s *BigQueryStore) Dataset() string { return s.dataset }
 
 func (s *BigQueryStore) Nome() string { return "bigquery" }
 
@@ -94,7 +103,57 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "owner_uid", Type: bigquery.StringFieldType},
 		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
 	}
-	return criarSeNaoExistir(ctx, ds, "buscas", bSchema, "salvo_em")
+	if err := criarSeNaoExistir(ctx, ds, "buscas", bSchema, "salvo_em"); err != nil {
+		return err
+	}
+
+	// --- tabela destinos (append-only, como buscas) ---
+	dSchema := bigquery.Schema{
+		{Name: "id", Type: bigquery.StringFieldType},
+		{Name: "nome", Type: bigquery.StringFieldType},
+		{Name: "tipo", Type: bigquery.StringFieldType},
+		{Name: "config", Type: bigquery.StringFieldType},
+		{Name: "ativo", Type: bigquery.BooleanFieldType},
+		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
+	}
+	if err := criarSeNaoExistir(ctx, ds, "destinos", dSchema, "salvo_em"); err != nil {
+		return err
+	}
+
+	// --- tabela templates (append-only) ---
+	tSchema := bigquery.Schema{
+		{Name: "id", Type: bigquery.StringFieldType},
+		{Name: "nome", Type: bigquery.StringFieldType},
+		{Name: "corpo", Type: bigquery.StringFieldType},
+		{Name: "com_foto", Type: bigquery.BooleanFieldType},
+		{Name: "ativo", Type: bigquery.BooleanFieldType},
+		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
+	}
+	if err := criarSeNaoExistir(ctx, ds, "templates", tSchema, "salvo_em"); err != nil {
+		return err
+	}
+
+	// --- tabela publicacoes ---
+	pSchema := bigquery.Schema{
+		{Name: "id", Type: bigquery.StringFieldType},
+		{Name: "produto_id", Type: bigquery.StringFieldType},
+		{Name: "nome", Type: bigquery.StringFieldType},
+		{Name: "categoria", Type: bigquery.StringFieldType},
+		{Name: "preco", Type: bigquery.FloatFieldType},
+		{Name: "comissao", Type: bigquery.FloatFieldType},
+		{Name: "link", Type: bigquery.StringFieldType},
+		{Name: "imagem", Type: bigquery.StringFieldType},
+		{Name: "estrategia", Type: bigquery.StringFieldType},
+		{Name: "destino_id", Type: bigquery.StringFieldType},
+		{Name: "template_id", Type: bigquery.StringFieldType},
+		{Name: "agendada_em", Type: bigquery.StringFieldType},
+		{Name: "status", Type: bigquery.StringFieldType},
+		{Name: "detalhe", Type: bigquery.StringFieldType},
+		{Name: "criada_em", Type: bigquery.TimestampFieldType},
+		{Name: "enviada_em", Type: bigquery.StringFieldType},
+		{Name: "owner_uid", Type: bigquery.StringFieldType},
+	}
+	return criarSeNaoExistir(ctx, ds, "publicacoes", pSchema, "criada_em")
 }
 
 // criarSeNaoExistir cria a tabela particionada por dia se ainda não existir.
@@ -448,31 +507,259 @@ func (s *BigQueryStore) Conversoes(ctx context.Context, dias int) ([]ConversaoRe
 	return out, nil
 }
 
-// SalvarPublicacao persiste uma publicação agendada/executada.
-// TODO: criar tabela `publicacoes` no EnsureSchema quando estiver pronto.
+// ─── Publicações ──────────────────────────────────────────────────────────
+
+type linhaPublicacaoBQ struct {
+	ID         string    `bigquery:"id"`
+	ProdutoID  string    `bigquery:"produto_id"`
+	Nome       string    `bigquery:"nome"`
+	Categoria  string    `bigquery:"categoria"`
+	Preco      float64   `bigquery:"preco"`
+	Comissao   float64   `bigquery:"comissao"`
+	Link       string    `bigquery:"link"`
+	Imagem     string    `bigquery:"imagem"`
+	Estrategia string    `bigquery:"estrategia"`
+	DestinoID  string    `bigquery:"destino_id"`
+	TemplateID string    `bigquery:"template_id"`
+	AgendadaEm string    `bigquery:"agendada_em"`
+	Status     string    `bigquery:"status"`
+	Detalhe    string    `bigquery:"detalhe"`
+	CriadaEm   time.Time `bigquery:"criada_em"`
+	EnviadaEm  string    `bigquery:"enviada_em"`
+	OwnerUID   string    `bigquery:"owner_uid"`
+}
+
 func (s *BigQueryStore) SalvarPublicacao(ctx context.Context, p Publicacao) error {
-	// Por enquanto, registra como evento tipo=publicacao_agendada
-	return s.Registrar(ctx, Evento{
-		Tipo:       "publicacao_" + p.Status,
-		ProdutoID:  p.ProdutoID,
-		Nome:       p.Nome,
-		Categoria:  p.Categoria,
-		Estrategia: p.Estrategia,
-		Canal:      p.DestinoID,
-		SubID:      p.Detalhe,
-		Comissao:   p.Comissao,
-		Preco:      p.Preco,
-	})
+	criadaEm, _ := time.Parse(time.RFC3339, p.CriadaEm)
+	if criadaEm.IsZero() {
+		criadaEm = time.Now().UTC()
+	}
+	row := linhaPublicacaoBQ{
+		ID: p.ID, ProdutoID: p.ProdutoID, Nome: p.Nome, Categoria: p.Categoria,
+		Preco: p.Preco, Comissao: p.Comissao, Link: p.Link, Imagem: p.Imagem,
+		Estrategia: p.Estrategia, DestinoID: p.DestinoID, TemplateID: p.TemplateID,
+		AgendadaEm: p.AgendadaEm, Status: p.Status, Detalhe: p.Detalhe,
+		CriadaEm: criadaEm, EnviadaEm: p.EnviadaEm, OwnerUID: p.OwnerUID,
+	}
+	return s.client.Dataset(s.dataset).Table("publicacoes").Inserter().Put(ctx, row)
 }
 
-// ListarPublicacoes retorna publicações por status. Placeholder até tabela dedicada.
 func (s *BigQueryStore) ListarPublicacoes(ctx context.Context, status string) ([]Publicacao, error) {
-	// TODO: implementar com tabela dedicada
-	return nil, nil
+	filtro := ""
+	if status != "" {
+		filtro = " AND status = @status"
+	}
+	q := s.client.Query(`
+		WITH ranked AS (
+		  SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY criada_em DESC) AS rn
+		  FROM ` + "`" + s.dataset + ".publicacoes`" + `
+		  WHERE criada_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+		)
+		SELECT id, produto_id, nome, categoria, preco, comissao, link, imagem,
+		       estrategia, destino_id, template_id, agendada_em, status, detalhe,
+		       criada_em, enviada_em, owner_uid
+		FROM ranked WHERE rn = 1` + filtro + `
+		ORDER BY criada_em DESC
+		LIMIT 200
+	`)
+	if status != "" {
+		q.Parameters = []bigquery.QueryParameter{{Name: "status", Value: status}}
+	}
+	it, err := q.Read(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []Publicacao
+	for {
+		var r linhaPublicacaoBQ
+		err := it.Next(&r)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, Publicacao{
+			ID: r.ID, ProdutoID: r.ProdutoID, Nome: r.Nome, Categoria: r.Categoria,
+			Preco: r.Preco, Comissao: r.Comissao, Link: r.Link, Imagem: r.Imagem,
+			Estrategia: r.Estrategia, DestinoID: r.DestinoID, TemplateID: r.TemplateID,
+			AgendadaEm: r.AgendadaEm, Status: r.Status, Detalhe: r.Detalhe,
+			CriadaEm: r.CriadaEm.Format(time.RFC3339), EnviadaEm: r.EnviadaEm, OwnerUID: r.OwnerUID,
+		})
+	}
+	return out, nil
 }
 
-// AtualizarPublicacao atualiza status de uma publicação. Placeholder.
 func (s *BigQueryStore) AtualizarPublicacao(ctx context.Context, id, status, detalhe string) error {
-	// TODO: implementar com tabela dedicada
-	return nil
+	// Append-only: grava novo registro com o status atualizado.
+	// O ROW_NUMBER em ListarPublicacoes garante que o mais recente prevalece.
+	row := linhaPublicacaoBQ{
+		ID: id, Status: status, Detalhe: detalhe, CriadaEm: time.Now().UTC(),
+	}
+	return s.client.Dataset(s.dataset).Table("publicacoes").Inserter().Put(ctx, row)
+}
+
+// ─── Destinos (BigQuery) ──────────────────────────────────────────────────
+
+type linhaDestinoBQ struct {
+	ID      string    `bigquery:"id"`
+	Nome    string    `bigquery:"nome"`
+	Tipo    string    `bigquery:"tipo"`
+	Config  string    `bigquery:"config"`
+	Ativo   bool      `bigquery:"ativo"`
+	SalvoEm time.Time `bigquery:"salvo_em"`
+}
+
+// BQDestinoStore implementa publish.DestinoStore com BigQuery.
+type BQDestinoStore struct {
+	client  *bigquery.Client
+	dataset string
+}
+
+func NovoBQDestinoStore(client *bigquery.Client, dataset string) *BQDestinoStore {
+	return &BQDestinoStore{client: client, dataset: dataset}
+}
+
+func (s *BQDestinoStore) Listar(ctx context.Context) ([]publish.Destino, error) {
+	q := s.client.Query(`
+		WITH ranked AS (
+		  SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
+		  FROM ` + "`" + s.dataset + ".destinos`" + `
+		)
+		SELECT id, nome, tipo, config, ativo
+		FROM ranked WHERE rn = 1 AND ativo = TRUE
+		ORDER BY nome
+	`)
+	it, err := q.Read(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []publish.Destino
+	for {
+		var r struct {
+			ID     string `bigquery:"id"`
+			Nome   string `bigquery:"nome"`
+			Tipo   string `bigquery:"tipo"`
+			Config string `bigquery:"config"`
+			Ativo  bool   `bigquery:"ativo"`
+		}
+		err := it.Next(&r)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, publish.Destino{ID: r.ID, Nome: r.Nome, Tipo: r.Tipo, Config: r.Config, Ativo: r.Ativo})
+	}
+	return out, nil
+}
+
+func (s *BQDestinoStore) Buscar(ctx context.Context, id string) (publish.Destino, error) {
+	lista, err := s.Listar(ctx)
+	if err != nil {
+		return publish.Destino{}, err
+	}
+	for _, d := range lista {
+		if d.ID == id {
+			return d, nil
+		}
+	}
+	return publish.Destino{}, fmt.Errorf("destino %q não encontrado", id)
+}
+
+func (s *BQDestinoStore) Salvar(ctx context.Context, d publish.Destino) error {
+	row := linhaDestinoBQ{
+		ID: d.ID, Nome: d.Nome, Tipo: d.Tipo, Config: d.Config,
+		Ativo: d.Ativo, SalvoEm: time.Now().UTC(),
+	}
+	return s.client.Dataset(s.dataset).Table("destinos").Inserter().Put(ctx, row)
+}
+
+func (s *BQDestinoStore) Deletar(ctx context.Context, id string) error {
+	// Append-only tombstone
+	row := linhaDestinoBQ{ID: id, Ativo: false, SalvoEm: time.Now().UTC()}
+	return s.client.Dataset(s.dataset).Table("destinos").Inserter().Put(ctx, row)
+}
+
+// ─── Templates (BigQuery) ─────────────────────────────────────────────────
+
+type linhaTemplateBQ struct {
+	ID      string    `bigquery:"id"`
+	Nome    string    `bigquery:"nome"`
+	Corpo   string    `bigquery:"corpo"`
+	ComFoto bool      `bigquery:"com_foto"`
+	Ativo   bool      `bigquery:"ativo"`
+	SalvoEm time.Time `bigquery:"salvo_em"`
+}
+
+// BQTemplateStore implementa publish.TemplateStore com BigQuery.
+type BQTemplateStore struct {
+	client  *bigquery.Client
+	dataset string
+}
+
+func NovoBQTemplateStore(client *bigquery.Client, dataset string) *BQTemplateStore {
+	return &BQTemplateStore{client: client, dataset: dataset}
+}
+
+func (s *BQTemplateStore) Listar(ctx context.Context) ([]publish.Template, error) {
+	q := s.client.Query(`
+		WITH ranked AS (
+		  SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
+		  FROM ` + "`" + s.dataset + ".templates`" + `
+		)
+		SELECT id, nome, corpo, com_foto, ativo
+		FROM ranked WHERE rn = 1 AND ativo = TRUE
+		ORDER BY nome
+	`)
+	it, err := q.Read(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []publish.Template
+	for {
+		var r struct {
+			ID      string `bigquery:"id"`
+			Nome    string `bigquery:"nome"`
+			Corpo   string `bigquery:"corpo"`
+			ComFoto bool   `bigquery:"com_foto"`
+			Ativo   bool   `bigquery:"ativo"`
+		}
+		err := it.Next(&r)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, publish.Template{ID: r.ID, Nome: r.Nome, Corpo: r.Corpo, ComFoto: r.ComFoto, Ativo: r.Ativo})
+	}
+	return out, nil
+}
+
+func (s *BQTemplateStore) Buscar(ctx context.Context, id string) (publish.Template, error) {
+	lista, err := s.Listar(ctx)
+	if err != nil {
+		return publish.Template{}, err
+	}
+	for _, t := range lista {
+		if t.ID == id {
+			return t, nil
+		}
+	}
+	return publish.Template{}, fmt.Errorf("template %q não encontrado", id)
+}
+
+func (s *BQTemplateStore) Salvar(ctx context.Context, t publish.Template) error {
+	row := linhaTemplateBQ{
+		ID: t.ID, Nome: t.Nome, Corpo: t.Corpo, ComFoto: t.ComFoto,
+		Ativo: t.Ativo, SalvoEm: time.Now().UTC(),
+	}
+	return s.client.Dataset(s.dataset).Table("templates").Inserter().Put(ctx, row)
+}
+
+func (s *BQTemplateStore) Deletar(ctx context.Context, id string) error {
+	row := linhaTemplateBQ{ID: id, Ativo: false, SalvoEm: time.Now().UTC()}
+	return s.client.Dataset(s.dataset).Table("templates").Inserter().Put(ctx, row)
 }

@@ -167,9 +167,10 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("DELETE /api/templates", srv.deletarTemplate)
 	mux.HandleFunc("POST /api/templates/preview", srv.templatePreview)
 
-	// Publicações: GET lista, POST agenda/envia
+	// Publicações: GET lista, POST agenda/envia, POST pendentes (scheduler)
 	mux.HandleFunc("GET /api/publicacoes", srv.listarPublicacoes)
 	mux.HandleFunc("POST /api/publicacoes", srv.agendarPublicacao)
+	mux.HandleFunc("POST /api/publicar-pendentes", srv.publicarPendentes)
 
 	return cors(srv.logRequests(mux))
 }

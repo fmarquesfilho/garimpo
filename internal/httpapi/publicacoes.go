@@ -125,3 +125,75 @@ func (srv *Server) agendarPublicacao(w http.ResponseWriter, r *http.Request) {
 func generateID(produtoID string, t time.Time) string {
 	return produtoID + "-" + t.Format("20060102150405")
 }
+
+// publicarPendentes executa publicações com status=agendada cujo agendada_em já passou.
+// Disparado periodicamente pelo Cloud Scheduler (ex.: a cada 5 min).
+func (srv *Server) publicarPendentes(w http.ResponseWriter, r *http.Request) {
+	if !srv.autorizadoColeta(r) {
+		writeErr(w, http.StatusUnauthorized, "token inválido")
+		return
+	}
+
+	lista, err := srv.Eventos.ListarPublicacoes(r.Context(), "agendada")
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	agora := time.Now().UTC()
+	enviadas := 0
+	erros := 0
+
+	for _, p := range lista {
+		if p.AgendadaEm == "" {
+			continue
+		}
+		agendada, err := time.Parse(time.RFC3339, p.AgendadaEm)
+		if err != nil {
+			continue // formato inválido, ignora
+		}
+		if agendada.After(agora) {
+			continue // ainda não chegou a hora
+		}
+
+		// Hora de publicar
+		oferta := publish.Oferta{
+			ProdutoID: p.ProdutoID, Nome: p.Nome, Categoria: p.Categoria,
+			Preco: p.Preco, Comissao: p.Comissao, Link: p.Link, Imagem: p.Imagem,
+			Estrategia: p.Estrategia, DestinoID: p.DestinoID, TemplateID: p.TemplateID,
+		}
+
+		// Aplica template
+		if p.TemplateID != "" && srv.Templates != nil {
+			tmpl, err := srv.Templates.Buscar(r.Context(), p.TemplateID)
+			if err == nil && !tmpl.ComFoto {
+				oferta.Imagem = ""
+			}
+		}
+
+		res, err := srv.Publicador.Publicar(r.Context(), oferta)
+		if err != nil {
+			_ = srv.Eventos.AtualizarPublicacao(r.Context(), p.ID, "erro", err.Error())
+			erros++
+			srv.Logger.Error("publicar-pendentes falhou",
+				slog.String("id", p.ID), slog.String("erro", err.Error()))
+		} else {
+			subID := publish.SubID(res.Canal, p.Estrategia, agora)
+			_ = srv.Eventos.AtualizarPublicacao(r.Context(), p.ID, "enviada", subID)
+			enviadas++
+
+			// Registra evento de publicação
+			_ = srv.Eventos.Registrar(r.Context(), store.Evento{
+				Tipo: "publicacao", Canal: res.Canal, SubID: subID,
+				ProdutoID: p.ProdutoID, Nome: p.Nome, Categoria: p.Categoria,
+				Estrategia: p.Estrategia, Comissao: p.Comissao, Preco: p.Preco,
+			})
+		}
+	}
+
+	srv.Logger.Info("publicar-pendentes",
+		slog.Int("enviadas", enviadas), slog.Int("erros", erros))
+	writeJSON(w, http.StatusOK, map[string]any{
+		"enviadas": enviadas, "erros": erros,
+	})
+}

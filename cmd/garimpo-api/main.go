@@ -70,8 +70,7 @@ func main() {
 
 	// Publicador: Dispatcher com TelegramSender se TELEGRAM_BOT_TOKEN/CHAT_ID
 	// estiverem no ambiente (com suporte a múltiplos destinos); senão, Mock.
-	destinos := publish.NovoMemDestinoStore()
-	templates := publish.NovoMemTemplateStore()
+	destinos, templates := criarStoresAuxiliares(eventos)
 	pub := publish.NovoComDestinos(destinos)
 
 	// Scheduler: Cloud Scheduler com -tags gcp + env; NopScheduler caso contrário.

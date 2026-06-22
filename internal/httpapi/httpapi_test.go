@@ -30,9 +30,10 @@ func (f *fonteFake) Fetch() ([]domain.Product, error) {
 }
 
 type spyStore struct {
-	eventos   []store.Evento
-	snapshots []store.Snapshot
-	buscas    []store.Busca
+	eventos     []store.Evento
+	snapshots   []store.Snapshot
+	buscas      []store.Busca
+	publicacoes []store.Publicacao
 }
 
 func (s *spyStore) Registrar(_ context.Context, e store.Evento) error {
@@ -66,11 +67,32 @@ func (s *spyStore) HistoricoColetas(_ context.Context, _ int) ([]store.ColetaRes
 func (s *spyStore) Conversoes(_ context.Context, _ int) ([]store.ConversaoResumo, error) {
 	return nil, nil
 }
-func (s *spyStore) SalvarPublicacao(_ context.Context, p store.Publicacao) error { return nil }
-func (s *spyStore) ListarPublicacoes(_ context.Context, _ string) ([]store.Publicacao, error) {
-	return nil, nil
+func (s *spyStore) SalvarPublicacao(_ context.Context, p store.Publicacao) error {
+	s.publicacoes = append(s.publicacoes, p)
+	return nil
 }
-func (s *spyStore) AtualizarPublicacao(_ context.Context, _, _, _ string) error { return nil }
+func (s *spyStore) ListarPublicacoes(_ context.Context, status string) ([]store.Publicacao, error) {
+	if status == "" {
+		return s.publicacoes, nil
+	}
+	var filtrada []store.Publicacao
+	for _, p := range s.publicacoes {
+		if p.Status == status {
+			filtrada = append(filtrada, p)
+		}
+	}
+	return filtrada, nil
+}
+func (s *spyStore) AtualizarPublicacao(_ context.Context, id, status, detalhe string) error {
+	for i, p := range s.publicacoes {
+		if p.ID == id {
+			s.publicacoes[i].Status = status
+			s.publicacoes[i].Detalhe = detalhe
+			break
+		}
+	}
+	return nil
+}
 func (s *spyStore) EnsureSchema(_ context.Context) error { return nil }
 
 type spyPub struct {
@@ -700,5 +722,68 @@ func TestPublicarComTemplateFotoMantemImagem(t *testing.T) {
 	// Template "foto" tem com_foto=true → imagem deve ser mantida
 	if pub.ultima.Imagem != "http://img.jpg" {
 		t.Errorf("template com foto deveria manter imagem, mas ficou: %q", pub.ultima.Imagem)
+	}
+}
+
+func TestPublicarPendentesExecutaAgendadasVencidas(t *testing.T) {
+	t.Setenv("COLETA_TOKEN", "segredo")
+
+	sp := &spyStore{
+		publicacoes: []store.Publicacao{
+			{ID: "pub-1", Nome: "Produto A", Status: "agendada", AgendadaEm: "2020-01-01T10:00:00Z", Estrategia: "nicho"},
+			{ID: "pub-2", Nome: "Produto B", Status: "agendada", AgendadaEm: "2099-12-31T23:59:59Z", Estrategia: "nicho"},
+			{ID: "pub-3", Nome: "Produto C", Status: "enviada", AgendadaEm: "2020-01-01T10:00:00Z", Estrategia: "nicho"},
+		},
+	}
+	pub := &spyPub{}
+	srv := &Server{
+		Eventos:    sp,
+		Publicador: pub,
+		Auth:       fakeVerifier{},
+		Templates:  publish.NovoMemTemplateStore(),
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+
+	rec := req(t, h, "POST", "/api/publicar-pendentes", nil, map[string]string{"X-Garimpo-Token": "segredo"})
+	if rec.Code != 200 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp struct {
+		Enviadas int `json:"enviadas"`
+		Erros    int `json:"erros"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+
+	// pub-1: agendada no passado → deve ser publicada
+	// pub-2: agendada no futuro → NÃO deve ser publicada
+	// pub-3: já enviada → não aparece no filtro "agendada"
+	if resp.Enviadas != 1 {
+		t.Errorf("esperava 1 enviada, veio %d", resp.Enviadas)
+	}
+	if pub.chamadas != 1 {
+		t.Errorf("publicador deveria ser chamado 1 vez, veio %d", pub.chamadas)
+	}
+
+	// Verifica que o status foi atualizado
+	for _, p := range sp.publicacoes {
+		if p.ID == "pub-1" && p.Status != "enviada" {
+			t.Errorf("pub-1 deveria ter status=enviada, veio %q", p.Status)
+		}
+		if p.ID == "pub-2" && p.Status != "agendada" {
+			t.Errorf("pub-2 deveria continuar agendada, veio %q", p.Status)
+		}
+	}
+}
+
+func TestPublicarPendentesExigeToken(t *testing.T) {
+	t.Setenv("COLETA_TOKEN", "segredo")
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "POST", "/api/publicar-pendentes", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("sem token deveria dar 401, veio %d", rec.Code)
 	}
 }
