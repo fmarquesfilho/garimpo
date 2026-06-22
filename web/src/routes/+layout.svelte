@@ -171,7 +171,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-		padding: var(--r4) var(--r6) var(--r6);
+		padding: var(--r5) var(--r6) var(--r6);
 		border-top: 1px solid var(--linha);
 		background: color-mix(in srgb, var(--porcelana) 95%, white);
 		max-width: 320px;
@@ -180,8 +180,8 @@
 	.menu-secao {
 		display: flex;
 		flex-direction: column;
-		gap: var(--r2);
-		padding: var(--r3) 0;
+		gap: var(--r1);
+		padding: var(--r4) 0;
 		border-bottom: 1px solid var(--linha);
 	}
 	.menu-secao:last-child { border-bottom: none; }
@@ -192,17 +192,19 @@
 		letter-spacing: 0.06em;
 		color: var(--tinta-suave);
 		opacity: 0.7;
-		padding-bottom: 2px;
+		margin-bottom: var(--r2);
 	}
 	.nav-menu a {
 		text-decoration: none;
 		font-weight: 600;
 		font-size: 0.95rem;
 		color: var(--tinta-suave);
-		padding: 6px 0;
+		padding: 8px 12px;
+		border-radius: 8px;
+		display: block;
 	}
-	.nav-menu a:hover { color: var(--tinta); }
-	.nav-menu a.atual { color: var(--tinta); }
+	.nav-menu a:hover { color: var(--tinta); background: var(--porcelana); }
+	.nav-menu a.atual { color: var(--tinta); background: var(--ouro-fundo); }
 	.menu-auth {
 		display: flex;
 		flex-direction: column;
