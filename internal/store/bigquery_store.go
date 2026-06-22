@@ -382,3 +382,68 @@ func (s *BigQueryStore) Estatisticas(ctx context.Context, dias int) (Estatistica
 	}
 	return est, nil
 }
+
+// Conversoes retorna o relatório de publicações agrupado por canal e sub_id,
+// permitindo à usuária ver quais destinos geraram mais volume de publicação
+// (e potencial de conversão).
+func (s *BigQueryStore) Conversoes(ctx context.Context, dias int) ([]ConversaoResumo, error) {
+	if dias <= 0 {
+		dias = 30
+	}
+	q := s.client.Query(`
+		SELECT
+		  canal,
+		  sub_id,
+		  COUNT(*) AS publicacoes,
+		  ANY_VALUE(produto_id) AS produto_id,
+		  ANY_VALUE(nome) AS nome,
+		  ANY_VALUE(estrategia) AS estrategia,
+		  AVG(preco) AS preco,
+		  SUM(comissao * preco) AS comissao_estimada,
+		  FORMAT_TIMESTAMP('%Y-%m-%d', MAX(em)) AS publicado_em
+		FROM ` + "`" + s.dataset + "." + s.tabela + "`" + `
+		WHERE tipo = 'publicacao'
+		  AND em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+		GROUP BY canal, sub_id
+		ORDER BY publicacoes DESC
+		LIMIT 100
+	`)
+	q.Parameters = []bigquery.QueryParameter{{Name: "dias", Value: dias}}
+	it, err := q.Read(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []ConversaoResumo
+	for {
+		var row struct {
+			Canal       string  `bigquery:"canal"`
+			SubID       string  `bigquery:"sub_id"`
+			Publicacoes int     `bigquery:"publicacoes"`
+			ProdutoID   string  `bigquery:"produto_id"`
+			Nome        string  `bigquery:"nome"`
+			Estrategia  string  `bigquery:"estrategia"`
+			Preco       float64 `bigquery:"preco"`
+			ComissaoEst float64 `bigquery:"comissao_estimada"`
+			PublicadoEm string  `bigquery:"publicado_em"`
+		}
+		err := it.Next(&row)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ConversaoResumo{
+			Canal:       row.Canal,
+			SubID:       row.SubID,
+			Publicacoes: row.Publicacoes,
+			ProdutoID:   row.ProdutoID,
+			Nome:        row.Nome,
+			Estrategia:  row.Estrategia,
+			Preco:       row.Preco,
+			ComissaoEst: row.ComissaoEst,
+			PublicadoEm: row.PublicadoEm,
+		})
+	}
+	return out, nil
+}

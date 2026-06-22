@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { buscarCandidatos, compararEstrategias, registrarSelecao, publicar } from '$lib/api.js';
+	import { buscarCandidatos, compararEstrategias, registrarSelecao, publicar, listarDestinos } from '$lib/api.js';
 	import { quadro } from '$lib/board.js';
 	import { filtros as filtrosStore } from '$lib/filtros.js';
 	import { buscasSalvas, slugificar } from '$lib/buscas.js';
@@ -136,13 +136,26 @@
 		registrarSelecao(c);
 	}
 
+	// ── destinos de publicação ────────────────────────────────────────────────
+	let destinosDisponiveis = $state([]);
+	let destinoSelecionado = $state(''); // '' = padrão (env)
+
+	onMount(async () => {
+		try {
+			const r = await listarDestinos();
+			destinosDisponiveis = r?.destinos ?? [];
+		} catch {
+			// sem destinos — usa o padrão
+		}
+	});
+
 	let aviso = $state(null);
 	let publicando = $state(false);
 	async function publicarOferta(c) {
 		publicando = true;
 		aviso = null;
 		try {
-			const r = await publicar(c);
+			const r = await publicar(c, { destinoId: destinoSelecionado || undefined });
 			aviso = { ok: true, ...r };
 		} catch (e) {
 			aviso = { ok: false, erro: e.message };
@@ -322,6 +335,18 @@
 	deixam na peneira só o que já tem tração.{#if fonteAtiva}<span class="fonte dado"> · fonte: {fonteAtiva}</span>{/if}
 </p>
 
+{#if destinosDisponiveis.length > 0}
+	<div class="seletor-canal">
+		<label class="rotulo">📡 Publicar em:</label>
+		<select bind:value={destinoSelecionado} class="dado">
+			<option value="">Canal padrão (env)</option>
+			{#each destinosDisponiveis as d (d.id)}
+				<option value={d.id}>{d.nome} ({d.tipo})</option>
+			{/each}
+		</select>
+	</div>
+{/if}
+
 {#if aviso}
 	<div class="publicacao" class:falha={!aviso.ok} role="status">
 		<button class="fechar" onclick={() => (aviso = null)} aria-label="fechar">✕</button>
@@ -383,6 +408,24 @@
 {/if}
 
 <style>
+	.seletor-canal {
+		display: flex;
+		align-items: center;
+		gap: var(--r3);
+		margin-bottom: var(--r4);
+		padding: var(--r3) var(--r4);
+		background: var(--porcelana);
+		border: 1px solid var(--linha);
+		border-radius: 10px;
+		font-size: 0.88rem;
+	}
+	.seletor-canal select {
+		padding: 6px 12px;
+		border: 1px solid var(--linha);
+		border-radius: 8px;
+		font-size: 0.88rem;
+		background: white;
+	}
 	.publicacao {
 		position: relative;
 		background: color-mix(in srgb, var(--rosa) 8%, var(--nevoa));

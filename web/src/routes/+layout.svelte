@@ -26,6 +26,7 @@
 			<a href="/" class:atual={$page.url.pathname === '/'}>Curadoria</a>
 			<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>Coletas</a>
 			<a href="/quadro" class:atual={$page.url.pathname === '/quadro'}>Quadro</a>
+			<a href="/canais" class:atual={$page.url.pathname === '/canais'}>Destinos</a>
 			<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'}>Estatísticas</a>
 		</nav>
 		<div class="auth-desktop">
@@ -50,6 +51,7 @@
 			<a href="/" class:atual={$page.url.pathname === '/'} onclick={fecharMenu}>Curadoria</a>
 			<a href="/coletas" class:atual={$page.url.pathname === '/coletas'} onclick={fecharMenu}>Coletas</a>
 			<a href="/quadro" class:atual={$page.url.pathname === '/quadro'} onclick={fecharMenu}>Quadro</a>
+			<a href="/canais" class:atual={$page.url.pathname === '/canais'} onclick={fecharMenu}>Destinos</a>
 			<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'} onclick={fecharMenu}>Estatísticas</a>
 			{#if $usuario}
 				<span class="usuario-mobile">{$usuario.nome ?? $usuario.email}</span>

@@ -31,3 +31,21 @@ func (m *MockPublicador) Publicar(ctx context.Context, o Oferta) (Resultado, err
 		Detalhe:  "mock — nada foi enviado de verdade",
 	}, nil
 }
+
+// MockSender implementa Sender para testes unitários.
+type MockSender struct {
+	TipoNome string
+}
+
+func (m *MockSender) Tipo() string { return m.TipoNome }
+
+func (m *MockSender) Enviar(_ context.Context, o Oferta, config string) (Resultado, error) {
+	msg := o.Mensagem()
+	log.Printf("[sender mock/%s] config=%s:\n%s", m.TipoNome, config, msg)
+	return Resultado{
+		Canal:    m.TipoNome,
+		Enviado:  true,
+		Mensagem: msg,
+		Detalhe:  "mock — nada foi enviado de verdade",
+	}, nil
+}

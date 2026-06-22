@@ -152,10 +152,27 @@ type EventoStore interface {
 	ListarBuscas(ctx context.Context) ([]Busca, error)
 	// HistoricoColetas retorna os snapshots agrupados por keyword/data nos últimos `dias`.
 	HistoricoColetas(ctx context.Context, dias int) ([]ColetaResumo, error)
+	// Conversoes retorna o relatório de publicações agrupado por canal/destino nos últimos `dias`.
+	Conversoes(ctx context.Context, dias int) ([]ConversaoResumo, error)
 	// EnsureSchema cria as tabelas do BigQuery se ainda não existirem.
 	// Idempotente — seguro chamar no startup toda vez.
 	EnsureSchema(ctx context.Context) error
 	Nome() string
+}
+
+// ConversaoResumo agrupa publicações por canal+sub_id, mostrando volume e
+// potencial de conversão. Quando o webhook de conversão estiver ativo,
+// o campo Conversoes será preenchido com dados reais.
+type ConversaoResumo struct {
+	Canal        string  `json:"canal"`
+	SubID        string  `json:"sub_id"`
+	Publicacoes  int     `json:"publicacoes"`
+	ProdutoID    string  `json:"produto_id"`
+	Nome         string  `json:"nome"`
+	Estrategia   string  `json:"estrategia"`
+	Preco        float64 `json:"preco"`
+	ComissaoEst  float64 `json:"comissao_estimada"` // comissao * preco * publicacoes
+	PublicadoEm  string  `json:"publicado_em"`      // data mais recente
 }
 
 // ColetaResumo é um registro resumido de uma coleta executada.
@@ -205,6 +222,9 @@ func (NopStore) Estatisticas(_ context.Context, dias int) (Estatisticas, error) 
 func (NopStore) SalvarBusca(context.Context, Busca) error            { return nil }
 func (NopStore) ListarBuscas(context.Context) ([]Busca, error)       { return nil, nil }
 func (NopStore) HistoricoColetas(context.Context, int) ([]ColetaResumo, error) {
+	return nil, nil
+}
+func (NopStore) Conversoes(context.Context, int) ([]ConversaoResumo, error) {
 	return nil, nil
 }
 func (NopStore) EnsureSchema(context.Context) error { return nil }

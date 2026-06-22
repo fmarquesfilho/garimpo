@@ -68,9 +68,10 @@ func main() {
 		logger.Info("schema do banco verificado", "store", eventos.Nome())
 	}
 
-	// Publicador: Telegram se TELEGRAM_BOT_TOKEN/CHAT_ID estiverem no ambiente;
-	// senão, Mock (não envia nada).
-	pub := publish.Novo()
+	// Publicador: Dispatcher com TelegramSender se TELEGRAM_BOT_TOKEN/CHAT_ID
+	// estiverem no ambiente (com suporte a múltiplos destinos); senão, Mock.
+	destinos := publish.NovoMemDestinoStore()
+	pub := publish.NovoComDestinos(destinos)
 
 	// Scheduler: Cloud Scheduler com -tags gcp + env; NopScheduler caso contrário.
 	sched, err := scheduler.Novo(context.Background())
@@ -103,6 +104,7 @@ func main() {
 		Publicador: pub,
 		Scheduler:  sched,
 		Auth:       verifier,
+		Destinos:   destinos,
 	}
 	logger.Info("garimpo-api iniciando",
 		"addr", *addr, "fonte", *fonte, "categoria", *categoria, "keyword", *keyword,

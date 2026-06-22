@@ -88,6 +88,10 @@ type Server struct {
 	// Auth valida tokens Firebase. Se nil, vira NopVerifier (aceita tudo).
 	Auth auth.Verifier
 
+	// Destinos gerencia os canais de publicação cadastrados pela usuária.
+	// Se nil, o endpoint /api/destinos retorna erro (não configurado).
+	Destinos publish.DestinoStore
+
 	// FonteFactory permite injetar a fonte (testes). Se nil, usa buildSource.
 	FonteFactory func(q url.Values) (source.ProductSource, string)
 
@@ -135,6 +139,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/estatisticas", srv.estatisticas)
 	mux.HandleFunc("/api/coletas", srv.coletas)
 	mux.HandleFunc("/api/buscas", srv.buscas)
+	mux.HandleFunc("/api/destinos", srv.destinos)
+	mux.HandleFunc("/api/conversoes", srv.conversoes)
 	return cors(srv.logRequests(mux))
 }
 
@@ -190,8 +196,8 @@ func (srv *Server) usuarioDoRequest(r *http.Request) *auth.User {
 func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -235,6 +241,7 @@ func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
 		Comissao   float64 `json:"comissao"`
 		Link       string  `json:"link"`
 		Estrategia string  `json:"estrategia"`
+		DestinoID  string  `json:"destino_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")
@@ -244,6 +251,7 @@ func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
 	res, err := srv.Publicador.Publicar(r.Context(), publish.Oferta{
 		ProdutoID: c.ID, Nome: c.Nome, Categoria: c.Categoria,
 		Preco: c.Preco, Comissao: c.Comissao, Link: c.Link, Estrategia: c.Estrategia,
+		DestinoID: c.DestinoID,
 	})
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())

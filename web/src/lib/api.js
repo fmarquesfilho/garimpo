@@ -83,9 +83,43 @@ async function postar(caminho, corpo) {
 	return resp.json();
 }
 
-/** Publica a oferta no canal (Telegram/Mock) e devolve o Resultado. */
-export function publicar(candidato) {
-	return postar('/api/publicar', candidato);
+/** Publica a oferta no canal (Telegram/WhatsApp/Mock) e devolve o Resultado. */
+export function publicar(candidato, { destinoId } = {}) {
+	const corpo = { ...candidato };
+	if (destinoId) corpo.destino_id = destinoId;
+	return postar('/api/publicar', corpo);
+}
+
+/** Lista os destinos de publicação cadastrados (Telegram, WhatsApp, etc.). */
+export function listarDestinos() {
+	return pegar('/api/destinos');
+}
+
+/** Salva (cria/atualiza) um destino de publicação. */
+export function salvarDestino(destino) {
+	return postar('/api/destinos', destino);
+}
+
+/** Remove um destino por ID. */
+export async function deletarDestino(id) {
+	const headers = { ...(await authHeaders()) };
+	const resp = await fetch(`${BASE}/api/destinos?id=${encodeURIComponent(id)}`, {
+		method: 'DELETE',
+		headers
+	});
+	if (!resp.ok) {
+		let detalhe = '';
+		try {
+			detalhe = (await resp.json())?.erro ?? '';
+		} catch { /* */ }
+		throw new Error(detalhe || `Falha ${resp.status}`);
+	}
+	return resp.json();
+}
+
+/** Relatório de conversões (publicações por canal/destino). */
+export function buscarConversoes({ dias = 30 } = {}) {
+	return pegar(`/api/conversoes?dias=${dias}`);
 }
 
 /** Resumo descritivo dos snapshots coletados (por categoria), janela em dias. */
