@@ -150,8 +150,40 @@ type EventoStore interface {
 	SalvarPublicacao(ctx context.Context, p Publicacao) error
 	ListarPublicacoes(ctx context.Context, status string) ([]Publicacao, error)
 	AtualizarPublicacao(ctx context.Context, id, status, detalhe string) error
+	// Novidades de lojas monitoradas (diff de snapshots)
+	Novidades(ctx context.Context, buscaID string, dias int) (NovidadesLojas, error)
 	EnsureSchema(ctx context.Context) error
 	Nome() string
+}
+
+// NovidadesLojas é o resultado da comparação de snapshots para lojas monitoradas.
+type NovidadesLojas struct {
+	BuscaID       string           `json:"busca_id"`
+	DiasJanela    int              `json:"dias_janela"`
+	ProdutosNovos []ProdutoNovo    `json:"produtos_novos"`
+	Variacoes     []VariacaoPreco  `json:"variacoes"`
+	TotalAtual    int              `json:"total_atual"`
+}
+
+// ProdutoNovo é um produto que apareceu pela primeira vez no último snapshot.
+type ProdutoNovo struct {
+	ProdutoID string  `json:"produto_id"`
+	Nome      string  `json:"nome"`
+	Preco     float64 `json:"preco"`
+	Comissao  float64 `json:"comissao"`
+	Vendas    int     `json:"vendas"`
+	Nota      float64 `json:"nota"`
+	DetectadoEm string `json:"detectado_em"`
+}
+
+// VariacaoPreco sinaliza um produto cujo preço mudou entre snapshots.
+type VariacaoPreco struct {
+	ProdutoID    string  `json:"produto_id"`
+	Nome         string  `json:"nome"`
+	PrecoAnterior float64 `json:"preco_anterior"`
+	PrecoAtual   float64 `json:"preco_atual"`
+	Variacao     float64 `json:"variacao_pct"` // ex.: -0.20 = baixou 20%
+	DetectadoEm  string  `json:"detectado_em"`
 }
 
 // Publicacao representa uma publicação agendada ou executada (espelhado do publish).
@@ -245,5 +277,8 @@ func (NopStore) Conversoes(context.Context, int) ([]ConversaoResumo, error) {
 func (NopStore) SalvarPublicacao(context.Context, Publicacao) error              { return nil }
 func (NopStore) ListarPublicacoes(context.Context, string) ([]Publicacao, error) { return nil, nil }
 func (NopStore) AtualizarPublicacao(context.Context, string, string, string) error { return nil }
+func (NopStore) Novidades(_ context.Context, buscaID string, dias int) (NovidadesLojas, error) {
+	return NovidadesLojas{BuscaID: buscaID, DiasJanela: dias}, nil
+}
 func (NopStore) EnsureSchema(context.Context) error { return nil }
 func (NopStore) Nome() string                       { return "nop" }

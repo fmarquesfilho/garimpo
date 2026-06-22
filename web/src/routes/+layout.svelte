@@ -24,6 +24,7 @@
 		</a>
 		<nav class="nav-desktop">
 			<a href="/" class:atual={$page.url.pathname === '/'}>Curadoria</a>
+			<a href="/lojas" class:atual={$page.url.pathname === '/lojas'}>Lojas</a>
 			<a href="/publicacoes" class:atual={$page.url.pathname === '/publicacoes'}>Publicações</a>
 			<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>Coletas</a>
 			<a href="/quadro" class:atual={$page.url.pathname === '/quadro'}>Quadro</a>
@@ -50,6 +51,7 @@
 	{#if menuAberto}
 		<nav class="nav-mobile">
 			<a href="/" class:atual={$page.url.pathname === '/'} onclick={fecharMenu}>Curadoria</a>
+			<a href="/lojas" class:atual={$page.url.pathname === '/lojas'} onclick={fecharMenu}>Lojas</a>
 			<a href="/publicacoes" class:atual={$page.url.pathname === '/publicacoes'} onclick={fecharMenu}>Publicações</a>
 			<a href="/coletas" class:atual={$page.url.pathname === '/coletas'} onclick={fecharMenu}>Coletas</a>
 			<a href="/quadro" class:atual={$page.url.pathname === '/quadro'} onclick={fecharMenu}>Quadro</a>

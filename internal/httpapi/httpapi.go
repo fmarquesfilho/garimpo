@@ -172,6 +172,9 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/publicacoes", srv.agendarPublicacao)
 	mux.HandleFunc("POST /api/publicar-pendentes", srv.publicarPendentes)
 
+	// Lojas monitoradas: novidades (produtos novos + variações de preço)
+	mux.HandleFunc("GET /api/lojas/novidades", srv.novidades)
+
 	return cors(srv.logRequests(mux))
 }
 

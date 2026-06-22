@@ -39,7 +39,9 @@ export function buscarCandidatos({
 	comissaoMin,
 	vendasMin,
 	notaMin,
-	exploracao
+	exploracao,
+	fonte,
+	shopIds
 } = {}) {
 	const p = new URLSearchParams({ estrategia, top: String(top) });
 	if (keyword) p.set('keyword', keyword);
@@ -49,6 +51,8 @@ export function buscarCandidatos({
 	if (vendasMin != null) p.set('vendas_min', String(vendasMin));
 	if (notaMin != null) p.set('nota_min', String(notaMin));
 	if (exploracao != null) p.set('exploracao', String(exploracao));
+	if (fonte) p.set('fonte', fonte);
+	if (shopIds) p.set('shop_ids', Array.isArray(shopIds) ? shopIds.join(',') : String(shopIds));
 	return pegar(`/api/candidatos?${p}`);
 }
 
@@ -169,6 +173,13 @@ export function agendarPublicacao(pub) {
 /** Resumo descritivo dos snapshots coletados (por categoria), janela em dias. */
 export function buscarEstatisticas({ dias = 30 } = {}) {
 	return pegar(`/api/estatisticas?dias=${dias}`);
+}
+
+/** Novidades de lojas monitoradas (produtos novos + variações de preço). */
+export function buscarNovidades({ buscaId = '', dias = 7 } = {}) {
+	const p = new URLSearchParams({ dias: String(dias) });
+	if (buscaId) p.set('busca_id', buscaId);
+	return pegar(`/api/lojas/novidades?${p}`);
 }
 
 /** Histórico de coletas executadas (snapshots por execução), janela em dias. */
