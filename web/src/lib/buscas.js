@@ -149,17 +149,14 @@ function criar() {
 			sincronizarBusca({ id }, { remover: true });
 		},
 
-		/** Puxa do servidor (BigQuery) e funde com o local — servidor vence por ID. */
+		/** Puxa do servidor (BigQuery) e substitui o local — servidor é a verdade.
+		 *  Se o servidor retorna lista vazia, o local fica vazio. */
 		async sincronizarDoServidor() {
 			try {
 				const r = await listarBuscasServidor();
 				const doServidor = (r?.buscas ?? []).map(migrarBuscaLegada);
-				if (doServidor.length === 0) return;
-				update((local) => {
-					const porId = new Map(local.map((b) => [b.id, b]));
-					for (const b of doServidor) porId.set(b.id, b);
-					return [...porId.values()];
-				});
+				// Servidor é a fonte de verdade: substitui o local inteiro.
+				set(doServidor);
 			} catch {
 				/* offline ou sem servidor: fica só com o local */
 			}
