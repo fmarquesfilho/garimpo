@@ -133,6 +133,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/publicar", srv.publicar)
 	mux.HandleFunc("/api/coletar", srv.coletar)
 	mux.HandleFunc("/api/estatisticas", srv.estatisticas)
+	mux.HandleFunc("/api/coletas", srv.coletas)
 	mux.HandleFunc("/api/buscas", srv.buscas)
 	return cors(srv.logRequests(mux))
 }
@@ -462,6 +463,24 @@ func (srv *Server) estatisticas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, est)
+}
+
+// coletas retorna o histórico de coletas executadas (snapshots agrupados por
+// execução). Útil para validar que os jobs do scheduler estão funcionando.
+func (srv *Server) coletas(w http.ResponseWriter, r *http.Request) {
+	dias := 30
+	if s := r.URL.Query().Get("dias"); s != "" {
+		if v, err := strconv.Atoi(s); err == nil && v > 0 {
+			dias = v
+		}
+	}
+	historico, err := srv.Eventos.HistoricoColetas(r.Context(), dias)
+	if err != nil {
+		srv.Logger.Error("historico coletas falhou", slog.String("erro", err.Error()))
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"coletas": historico, "dias": dias})
 }
 
 func (srv *Server) health(w http.ResponseWriter, r *http.Request) {

@@ -93,6 +93,11 @@ export function buscarEstatisticas({ dias = 30 } = {}) {
 	return pegar(`/api/estatisticas?dias=${dias}`);
 }
 
+/** Histórico de coletas executadas (snapshots por execução), janela em dias. */
+export function buscarColetas({ dias = 30 } = {}) {
+	return pegar(`/api/coletas?dias=${dias}`);
+}
+
 /** Lista os perfis de busca sincronizados no servidor (BigQuery). */
 export function listarBuscasServidor() {
 	return pegar('/api/buscas');

@@ -274,6 +274,57 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 	return out, nil
 }
 
+// HistoricoColetas retorna os snapshots agrupados por execução (keyword + timestamp)
+// nos últimos `dias`, ordenados do mais recente ao mais antigo.
+func (s *BigQueryStore) HistoricoColetas(ctx context.Context, dias int) ([]ColetaResumo, error) {
+	if dias <= 0 {
+		dias = 30
+	}
+	q := s.client.Query(`
+		SELECT
+		  coletado_em,
+		  keyword,
+		  categoria,
+		  estrategia,
+		  COUNT(*) AS produtos
+		FROM ` + "`" + s.dataset + ".snapshots`" + `
+		WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+		GROUP BY coletado_em, keyword, categoria, estrategia
+		ORDER BY coletado_em DESC
+		LIMIT 200
+	`)
+	q.Parameters = []bigquery.QueryParameter{{Name: "dias", Value: dias}}
+	it, err := q.Read(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []ColetaResumo
+	for {
+		var row struct {
+			ColetadoEm time.Time `bigquery:"coletado_em"`
+			Keyword    string    `bigquery:"keyword"`
+			Categoria  string    `bigquery:"categoria"`
+			Estrategia string    `bigquery:"estrategia"`
+			Produtos   int       `bigquery:"produtos"`
+		}
+		err := it.Next(&row)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ColetaResumo{
+			ColetadoEm: row.ColetadoEm,
+			Keyword:    row.Keyword,
+			Categoria:  row.Categoria,
+			Estrategia: row.Estrategia,
+			Produtos:   row.Produtos,
+		})
+	}
+	return out, nil
+}
+
 // Estatisticas agrega os snapshots dos últimos `dias` por categoria.
 func (s *BigQueryStore) Estatisticas(ctx context.Context, dias int) (Estatisticas, error) {
 	if dias <= 0 {

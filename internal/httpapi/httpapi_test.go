@@ -60,6 +60,9 @@ func (s *spyStore) SalvarBusca(_ context.Context, b store.Busca) error {
 func (s *spyStore) ListarBuscas(_ context.Context) ([]store.Busca, error) {
 	return s.buscas, nil
 }
+func (s *spyStore) HistoricoColetas(_ context.Context, _ int) ([]store.ColetaResumo, error) {
+	return nil, nil
+}
 func (s *spyStore) EnsureSchema(_ context.Context) error { return nil }
 
 type spyPub struct {

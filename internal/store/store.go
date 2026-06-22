@@ -150,10 +150,21 @@ type EventoStore interface {
 	// estado atual (último registro por ID, só os ativos).
 	SalvarBusca(ctx context.Context, b Busca) error
 	ListarBuscas(ctx context.Context) ([]Busca, error)
+	// HistoricoColetas retorna os snapshots agrupados por keyword/data nos últimos `dias`.
+	HistoricoColetas(ctx context.Context, dias int) ([]ColetaResumo, error)
 	// EnsureSchema cria as tabelas do BigQuery se ainda não existirem.
 	// Idempotente — seguro chamar no startup toda vez.
 	EnsureSchema(ctx context.Context) error
 	Nome() string
+}
+
+// ColetaResumo é um registro resumido de uma coleta executada.
+type ColetaResumo struct {
+	ColetadoEm time.Time `json:"coletado_em"`
+	Keyword    string    `json:"keyword"`
+	Categoria  string    `json:"categoria"`
+	Estrategia string    `json:"estrategia"`
+	Produtos   int       `json:"produtos"`
 }
 
 // ItemSnapshot é um produto na foto de mercado de uma categoria, num instante.
@@ -191,7 +202,10 @@ func (NopStore) Estatisticas(_ context.Context, dias int) (Estatisticas, error) 
 
 // SalvarBusca/ListarBuscas no Nop são no-op: localmente, as buscas vivem no
 // navegador (localStorage). O sync server-side só acontece com o BigQuery ligado.
-func (NopStore) SalvarBusca(context.Context, Busca) error      { return nil }
-func (NopStore) ListarBuscas(context.Context) ([]Busca, error) { return nil, nil }
-func (NopStore) EnsureSchema(context.Context) error            { return nil }
-func (NopStore) Nome() string                                  { return "nop" }
+func (NopStore) SalvarBusca(context.Context, Busca) error            { return nil }
+func (NopStore) ListarBuscas(context.Context) ([]Busca, error)       { return nil, nil }
+func (NopStore) HistoricoColetas(context.Context, int) ([]ColetaResumo, error) {
+	return nil, nil
+}
+func (NopStore) EnsureSchema(context.Context) error { return nil }
+func (NopStore) Nome() string                       { return "nop" }
