@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { listarDestinos, listarTemplates, publicar, previewTemplate } from '$lib/api.js';
+	import { listarDestinos, listarTemplates, previewTemplate, agendarPublicacao } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 
 	// Produto vem via query params (serializado pelo card)
@@ -21,6 +21,7 @@
 	let publicando = $state(false);
 	let resultado = $state(null);
 	let erro = $state(null);
+	let agendamento = $state(''); // ISO datetime-local para agendar
 
 	onMount(async () => {
 		// Desserializa produto da URL
@@ -87,8 +88,14 @@
 		resultado = null;
 		erro = null;
 		try {
-			const r = await publicar(produto, { destinoId: destinoId || undefined, templateId: templateId || undefined });
-			resultado = r;
+			const r = await agendarPublicacao({
+				...produto,
+				produto_id: produto.id,
+				destino_id: destinoId || undefined,
+				template_id: templateId || undefined,
+				agendada_em: agendamento ? new Date(agendamento).toISOString() : ''
+			});
+			resultado = r.publicacao;
 		} catch (e) {
 			erro = e.message;
 		} finally {
@@ -160,17 +167,28 @@
 				</div>
 
 				<!-- Ações -->
+				<div class="campo-pub">
+					<label>⏱ Agendar para (opcional)</label>
+					<input type="datetime-local" bind:value={agendamento} />
+				</div>
+
 				<div class="acoes">
 					<button class="btn-enviar" onclick={enviarAgora} disabled={publicando}>
-						{publicando ? 'Enviando…' : '🚀 Enviar agora'}
+						{#if publicando}
+							Enviando…
+						{:else if agendamento}
+							⏱ Agendar
+						{:else}
+							🚀 Enviar agora
+						{/if}
 					</button>
 				</div>
 
 				{#if resultado}
 					<div class="resultado ok">
-						<p>✓ Publicado em <strong>{resultado.canal}</strong></p>
-						{#if resultado.sub_id}
-							<p class="subid">Atribuição: <code>{resultado.sub_id}</code></p>
+						<p>✓ {resultado.status === 'enviada' ? 'Publicado' : 'Agendado'} com sucesso</p>
+						{#if resultado.detalhe}
+							<p class="subid">Atribuição: <code>{resultado.detalhe}</code></p>
 						{/if}
 					</div>
 				{/if}

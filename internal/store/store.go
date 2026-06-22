@@ -6,6 +6,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -55,10 +56,9 @@ type Estatisticas struct {
 // Compatibilidade: se o cliente enviar apenas `keyword` (string), o servidor
 // normaliza para `Keywords` com um único elemento.
 type Busca struct {
-	// ID é a chave primária da busca (ex.: "perfumaria-japonesa"). Gerado
-	// automaticamente como slug da primeira keyword se não fornecido.
 	ID          string    `json:"id"`
 	Keywords    []string  `json:"keywords"`             // um ou mais termos de busca
+	ShopIDs     []int64   `json:"shop_ids,omitempty"`   // IDs de lojas a monitorar (shopOfferV2)
 	Categoria   string    `json:"categoria"`
 	Estrategia  string    `json:"estrategia"`           // "nicho" | "diversificada" | "ambas"
 	ComissaoMin float64   `json:"comissao_min"`
@@ -70,33 +70,30 @@ type Busca struct {
 	OwnerUID    string    `json:"owner_uid,omitempty"` // uid do Firebase Auth
 	SalvoEm     time.Time `json:"salvo_em"`
 
-	// Legado: campo keyword como string única. Lido na deserialização mas
-	// convertido para Keywords imediatamente pelo normalizador.
+	// Legado
 	KeywordLegado string `json:"keyword,omitempty"`
-	// NomeLegado preserva compatibilidade com perfis antigos que usavam nome livre.
-	NomeLegado string `json:"nome,omitempty"`
+	NomeLegado    string `json:"nome,omitempty"`
 }
 
 // NormalizarBusca garante que a busca tenha um ID e que Keywords esteja
 // preenchida. Converte campos legados (nome/keyword como string).
 func NormalizarBusca(b Busca) Busca {
-	// compatibilidade com o modelo antigo que usava keyword (string única)
 	if len(b.Keywords) == 0 && b.KeywordLegado != "" {
 		b.Keywords = []string{b.KeywordLegado}
 	}
-	// compatibilidade: nome livre vira ID se ainda não tiver
 	if b.ID == "" && b.NomeLegado != "" {
 		b.ID = slugificar(b.NomeLegado)
 	}
-	// se ainda não tem ID, usa o slug da primeira keyword
 	if b.ID == "" && len(b.Keywords) > 0 {
 		b.ID = slugificar(b.Keywords[0])
 	}
-	// estratégia padrão
+	// Se só tem shop_ids sem keywords, gera ID a partir do primeiro shopId
+	if b.ID == "" && len(b.ShopIDs) > 0 {
+		b.ID = fmt.Sprintf("loja-%d", b.ShopIDs[0])
+	}
 	if b.Estrategia == "" {
 		b.Estrategia = "nicho"
 	}
-	// limpa legados para não gerar ruído no JSON de resposta
 	b.KeywordLegado = ""
 	b.NomeLegado = ""
 	return b
@@ -144,20 +141,38 @@ func slugificar(s string) string {
 type EventoStore interface {
 	Registrar(ctx context.Context, e Evento) error
 	RegistrarSnapshot(ctx context.Context, s Snapshot) error
-	// Estatisticas devolve o resumo descritivo dos snapshots dos últimos `dias`.
 	Estatisticas(ctx context.Context, dias int) (Estatisticas, error)
-	// SalvarBusca persiste (append) um perfil de busca; ListarBuscas devolve o
-	// estado atual (último registro por ID, só os ativos).
 	SalvarBusca(ctx context.Context, b Busca) error
 	ListarBuscas(ctx context.Context) ([]Busca, error)
-	// HistoricoColetas retorna os snapshots agrupados por keyword/data nos últimos `dias`.
 	HistoricoColetas(ctx context.Context, dias int) ([]ColetaResumo, error)
-	// Conversoes retorna o relatório de publicações agrupado por canal/destino nos últimos `dias`.
 	Conversoes(ctx context.Context, dias int) ([]ConversaoResumo, error)
-	// EnsureSchema cria as tabelas do BigQuery se ainda não existirem.
-	// Idempotente — seguro chamar no startup toda vez.
+	// Publicações agendadas
+	SalvarPublicacao(ctx context.Context, p Publicacao) error
+	ListarPublicacoes(ctx context.Context, status string) ([]Publicacao, error)
+	AtualizarPublicacao(ctx context.Context, id, status, detalhe string) error
 	EnsureSchema(ctx context.Context) error
 	Nome() string
+}
+
+// Publicacao representa uma publicação agendada ou executada (espelhado do publish).
+type Publicacao struct {
+	ID         string  `json:"id"`
+	ProdutoID  string  `json:"produto_id"`
+	Nome       string  `json:"nome"`
+	Categoria  string  `json:"categoria"`
+	Preco      float64 `json:"preco"`
+	Comissao   float64 `json:"comissao"`
+	Link       string  `json:"link"`
+	Imagem     string  `json:"imagem"`
+	Estrategia string  `json:"estrategia"`
+	DestinoID  string  `json:"destino_id"`
+	TemplateID string  `json:"template_id"`
+	AgendadaEm string  `json:"agendada_em"`
+	Status     string  `json:"status"`
+	Detalhe    string  `json:"detalhe"`
+	CriadaEm   string  `json:"criada_em"`
+	EnviadaEm  string  `json:"enviada_em,omitempty"`
+	OwnerUID   string  `json:"owner_uid,omitempty"`
 }
 
 // ConversaoResumo agrupa publicações por canal+sub_id, mostrando volume e
@@ -227,5 +242,8 @@ func (NopStore) HistoricoColetas(context.Context, int) ([]ColetaResumo, error) {
 func (NopStore) Conversoes(context.Context, int) ([]ConversaoResumo, error) {
 	return nil, nil
 }
+func (NopStore) SalvarPublicacao(context.Context, Publicacao) error              { return nil }
+func (NopStore) ListarPublicacoes(context.Context, string) ([]Publicacao, error) { return nil, nil }
+func (NopStore) AtualizarPublicacao(context.Context, string, string, string) error { return nil }
 func (NopStore) EnsureSchema(context.Context) error { return nil }
 func (NopStore) Nome() string                       { return "nop" }

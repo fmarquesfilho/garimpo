@@ -447,3 +447,32 @@ func (s *BigQueryStore) Conversoes(ctx context.Context, dias int) ([]ConversaoRe
 	}
 	return out, nil
 }
+
+// SalvarPublicacao persiste uma publicação agendada/executada.
+// TODO: criar tabela `publicacoes` no EnsureSchema quando estiver pronto.
+func (s *BigQueryStore) SalvarPublicacao(ctx context.Context, p Publicacao) error {
+	// Por enquanto, registra como evento tipo=publicacao_agendada
+	return s.Registrar(ctx, Evento{
+		Tipo:       "publicacao_" + p.Status,
+		ProdutoID:  p.ProdutoID,
+		Nome:       p.Nome,
+		Categoria:  p.Categoria,
+		Estrategia: p.Estrategia,
+		Canal:      p.DestinoID,
+		SubID:      p.Detalhe,
+		Comissao:   p.Comissao,
+		Preco:      p.Preco,
+	})
+}
+
+// ListarPublicacoes retorna publicações por status. Placeholder até tabela dedicada.
+func (s *BigQueryStore) ListarPublicacoes(ctx context.Context, status string) ([]Publicacao, error) {
+	// TODO: implementar com tabela dedicada
+	return nil, nil
+}
+
+// AtualizarPublicacao atualiza status de uma publicação. Placeholder.
+func (s *BigQueryStore) AtualizarPublicacao(ctx context.Context, id, status, detalhe string) error {
+	// TODO: implementar com tabela dedicada
+	return nil
+}

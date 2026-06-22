@@ -155,6 +155,17 @@ export function buscarConversoes({ dias = 30 } = {}) {
 	return pegar(`/api/conversoes?dias=${dias}`);
 }
 
+/** Lista publicações por status (agendada|enviada|erro; vazio = todas). */
+export function listarPublicacoes({ status = '' } = {}) {
+	const qs = status ? `?status=${status}` : '';
+	return pegar(`/api/publicacoes${qs}`);
+}
+
+/** Agenda ou envia imediatamente uma publicação. */
+export function agendarPublicacao(pub) {
+	return postar('/api/publicacoes', pub);
+}
+
 /** Resumo descritivo dos snapshots coletados (por categoria), janela em dias. */
 export function buscarEstatisticas({ dias = 30 } = {}) {
 	return pegar(`/api/estatisticas?dias=${dias}`);

@@ -66,6 +66,11 @@ func (s *spyStore) HistoricoColetas(_ context.Context, _ int) ([]store.ColetaRes
 func (s *spyStore) Conversoes(_ context.Context, _ int) ([]store.ConversaoResumo, error) {
 	return nil, nil
 }
+func (s *spyStore) SalvarPublicacao(_ context.Context, p store.Publicacao) error { return nil }
+func (s *spyStore) ListarPublicacoes(_ context.Context, _ string) ([]store.Publicacao, error) {
+	return nil, nil
+}
+func (s *spyStore) AtualizarPublicacao(_ context.Context, _, _, _ string) error { return nil }
 func (s *spyStore) EnsureSchema(_ context.Context) error { return nil }
 
 type spyPub struct {

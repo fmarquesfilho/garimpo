@@ -5,12 +5,14 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -164,6 +166,10 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/templates", srv.salvarTemplate)
 	mux.HandleFunc("DELETE /api/templates", srv.deletarTemplate)
 	mux.HandleFunc("POST /api/templates/preview", srv.templatePreview)
+
+	// Publicações: GET lista, POST agenda/envia
+	mux.HandleFunc("GET /api/publicacoes", srv.listarPublicacoes)
+	mux.HandleFunc("POST /api/publicacoes", srv.agendarPublicacao)
 
 	return cors(srv.logRequests(mux))
 }
@@ -580,6 +586,27 @@ func (srv *Server) buildSource(q url.Values) (source.ProductSource, string) {
 		sh.Keyword = keyword
 		chave := "shopee|" + strconv.Itoa(cat) + "|" + categoria + "|" + keyword
 		return sh, chave
+
+	case "shopee-shop":
+		// Monitoramento de loja: busca por shopId(s)
+		var shopIDs []int64
+		for _, s := range strings.Split(q.Get("shop_ids"), ",") {
+			s = strings.TrimSpace(s)
+			if v, err := strconv.ParseInt(s, 10, 64); err == nil {
+				shopIDs = append(shopIDs, v)
+			}
+		}
+		keyword := q.Get("keyword")
+		categoria := q.Get("categoria")
+		if categoria == "" {
+			categoria = srv.Categoria
+		}
+		sh := source.NewShopeeShopSource(os.Getenv("SHOPEE_APP_ID"), os.Getenv("SHOPEE_SECRET"), shopIDs)
+		sh.Keyword = keyword
+		sh.CategoryLabel = categoria
+		chave := fmt.Sprintf("shop|%v|%s", shopIDs, keyword)
+		return sh, chave
+
 	default:
 		csv := q.Get("csv")
 		if csv == "" {
