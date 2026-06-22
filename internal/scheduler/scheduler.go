@@ -24,6 +24,7 @@ type ColetaParams struct {
 	Top         int
 	VendasMin   int
 	NotaMin     float64
+	ShopIDs     []int64 // IDs de lojas (usa shopee-shop quando preenchido)
 }
 
 // Scheduler cria/atualiza/deleta jobs de coleta periódica.

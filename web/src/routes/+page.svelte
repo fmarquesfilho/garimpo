@@ -32,6 +32,8 @@
 
 	// keywords que estão sendo montadas antes de salvar
 	let keywordsNovas = $state([]);
+	let shopIdsNovas = $state([]);
+	let novaShopId = $state('');
 
 	function adicionarKeywordNova() {
 		const kw = novaKeyword.trim();
@@ -44,13 +46,36 @@
 		keywordsNovas = keywordsNovas.filter((k) => k !== kw);
 	}
 
+	function adicionarShopId() {
+		// Aceita ID numérico ou URL da Shopee (extrai o ID)
+		let raw = novaShopId.trim();
+		if (!raw) return;
+		// Se colou uma URL tipo shopee.com.br/shop/12345 ou shopee.com.br/loja.12345
+		const match = raw.match(/(\d{5,})/);
+		const id = match ? match[1] : raw;
+		if (!/^\d+$/.test(id) || shopIdsNovas.includes(id)) {
+			novaShopId = '';
+			return;
+		}
+		shopIdsNovas = [...shopIdsNovas, id];
+		novaShopId = '';
+	}
+
+	function removerShopId(id) {
+		shopIdsNovas = shopIdsNovas.filter((s) => s !== id);
+	}
+
 	function salvarBuscaNova() {
-		// se não adicionou explicitamente, usa o termo atual da busca
 		const kws = keywordsNovas.length > 0 ? keywordsNovas : (f.busca.trim() ? [f.busca.trim()] : []);
-		if (kws.length === 0) return;
+		const shops = shopIdsNovas.map(Number).filter(Boolean);
+
+		// Precisa de ao menos keywords OU shop_ids
+		if (kws.length === 0 && shops.length === 0) return;
+
 		buscasSalvas.salvar({
-			id: slugificar(kws[0]),
+			id: slugificar(kws[0] ?? `loja-${shops[0]}`),
 			keywords: kws,
+			shop_ids: shops.length > 0 ? shops : undefined,
 			categoria: f.categoria,
 			estrategia: estrategiaNova === 'comparar' ? 'ambas' : estrategiaNova,
 			comissao_min: f.comissaoMin,
@@ -60,7 +85,9 @@
 			cron: cronNova
 		});
 		keywordsNovas = [];
+		shopIdsNovas = [];
 		novaKeyword = '';
+		novaShopId = '';
 		cronNova = '';
 		mostrarFormBusca = false;
 	}
@@ -260,15 +287,42 @@
 						</span>
 					{/each}
 				</div>
-			{:else if f.busca.trim()}
+			{:else if f.busca.trim() && shopIdsNovas.length === 0}
 				<p class="dica-kw">A busca atual "<strong>{f.busca.trim()}</strong>" será usada se não adicionar keywords.</p>
 			{/if}
+
+			<!-- Lojas Shopee -->
+			<div class="form-linha">
+				<label class="campo flex1">
+					<span class="rotulo">🏪 lojas shopee (ID ou URL)</span>
+					<div class="entrada-kw">
+						<input
+							class="entrada"
+							bind:value={novaShopId}
+							placeholder="ex.: 12345678 ou shopee.com.br/shop/12345678"
+							onkeydown={(e) => e.key === 'Enter' && adicionarShopId()}
+						/>
+						<button type="button" class="btn-add-kw" onclick={adicionarShopId}>+</button>
+					</div>
+				</label>
+			</div>
+			{#if shopIdsNovas.length > 0}
+				<div class="kws-montadas">
+					{#each shopIdsNovas as sid}
+						<span class="pilula-kw pilula-shop">
+							🏪 {sid}
+							<button type="button" class="x" onclick={() => removerShopId(sid)}>✕</button>
+						</span>
+					{/each}
+				</div>
+			{/if}
+
 			<AgendadorBusca bind:value={cronNova} />
 			<div class="form-acoes">
 				<button
 					class="salvar"
 					onclick={salvarBuscaNova}
-					disabled={keywordsNovas.length === 0 && !f.busca.trim()}
+					disabled={keywordsNovas.length === 0 && !f.busca.trim() && shopIdsNovas.length === 0}
 					type="button"
 				>Salvar busca</button>
 			</div>
@@ -304,6 +358,9 @@
 							<span class="badge cron dado" title="coleta periódica">⏱ {b.cron}</span>
 						{/if}
 						<span class="badge dado">{b.categoria}</span>
+						{#if b.shop_ids?.length}
+							<span class="badge shop dado" title="monitorando lojas">🏪 {b.shop_ids.length} {b.shop_ids.length === 1 ? 'loja' : 'lojas'}</span>
+						{/if}
 					</div>
 				</div>
 			{/each}
@@ -515,6 +572,16 @@
 		background: var(--ouro-fundo); border: 1px solid color-mix(in srgb, var(--ouro) 40%, var(--linha));
 		border-radius: 999px; padding: 3px 6px 3px 10px;
 		font-size: 0.85rem; font-weight: 600; color: #7a5a1e;
+	}
+	.pilula-shop {
+		background: color-mix(in srgb, var(--rosa) 10%, var(--porcelana));
+		border-color: color-mix(in srgb, var(--rosa) 30%, var(--linha));
+		color: var(--rosa);
+	}
+	.badge.shop {
+		color: var(--rosa);
+		border-color: color-mix(in srgb, var(--rosa) 30%, var(--linha));
+		background: color-mix(in srgb, var(--rosa) 8%, var(--porcelana));
 	}
 	.dica-kw { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
 	.form-acoes { display: flex; justify-content: flex-end; }

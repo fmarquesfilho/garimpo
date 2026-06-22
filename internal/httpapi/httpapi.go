@@ -458,6 +458,7 @@ func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
 			Top:        b.Top,
 			VendasMin:  b.VendasMin,
 			NotaMin:    b.NotaMin,
+			ShopIDs:    b.ShopIDs,
 		}
 		var err error
 		if b.Ativo {

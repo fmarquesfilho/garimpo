@@ -44,9 +44,14 @@ func (s *GCPScheduler) Nome() string { return "gcp-scheduler" }
 
 func (s *GCPScheduler) SyncBusca(ctx context.Context, buscaID string, keywords []string, cron string, params ColetaParams) error {
 	if cron == "" {
-		// sem cron = deleta os jobs existentes
 		return s.DeletarBusca(ctx, buscaID, keywords)
 	}
+
+	// Se tem shop_ids, cria um único job para a busca inteira (não por keyword)
+	if len(params.ShopIDs) > 0 && len(keywords) == 0 {
+		keywords = []string{"all"} // placeholder — buildURI ignora keyword quando tem shop_ids
+	}
+
 	for _, kw := range keywords {
 		jobID := jobName(buscaID, kw)
 		uri := s.buildURI(kw, params)
@@ -105,8 +110,20 @@ func (s *GCPScheduler) criarOuAtualizar(ctx context.Context, jobID, cron, uri st
 
 func (s *GCPScheduler) buildURI(keyword string, p ColetaParams) string {
 	q := url.Values{}
-	q.Set("fonte", "shopee")
-	q.Set("keyword", keyword)
+	if len(p.ShopIDs) > 0 {
+		q.Set("fonte", "shopee-shop")
+		ids := make([]string, 0, len(p.ShopIDs))
+		for _, id := range p.ShopIDs {
+			ids = append(ids, fmt.Sprintf("%d", id))
+		}
+		q.Set("shop_ids", strings.Join(ids, ","))
+		if keyword != "" {
+			q.Set("keyword", keyword) // filtra dentro das lojas
+		}
+	} else {
+		q.Set("fonte", "shopee")
+		q.Set("keyword", keyword)
+	}
 	if p.Categoria != "" {
 		q.Set("categoria", p.Categoria)
 	}
