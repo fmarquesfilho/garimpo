@@ -89,10 +89,14 @@ export function listarBuscasServidor() {
 /** Salva (sync) um perfil de busca no servidor. Best-effort. */
 export function sincronizarBusca(busca, { remover = false } = {}) {
 	const qs = remover ? '?remover' : '';
+	// garante que o campo keywords está presente mesmo ao remover (para o servidor identificar)
+	const corpo = remover
+		? { id: busca.id, keywords: busca.keywords ?? [] }
+		: busca;
 	return fetch(`${BASE}/api/buscas${qs}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(busca)
+		body: JSON.stringify(corpo)
 	}).catch(() => {
 		/* sync não pode travar o uso local */
 	});

@@ -44,12 +44,13 @@ CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.snapshots` (
 PARTITION BY DATE(coletado_em);
 
 -- 2c) Buscas salvas (perfis de coleta), append-only/versionadas. O estado atual
---     é o último registro por nome (ativo = TRUE). Alimenta a coleta agendada.
+--     é o último registro por id (ativo = TRUE). Alimenta a coleta agendada.
+--     Uma busca pode ter várias keywords (armazenadas como JSON array em `keywords`).
 CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.buscas` (
-  nome         STRING,
-  keyword      STRING,
+  id           STRING,       -- slug da keyword principal (ex.: "perfumaria-japonesa")
+  keywords     STRING,       -- JSON array de termos (ex.: '["kenzo","shiseido"]')
   categoria    STRING,
-  estrategia   STRING,
+  estrategia   STRING,       -- "nicho" | "diversificada" | "ambas"
   comissao_min FLOAT64,
   vendas_min   INT64,
   nota_min     FLOAT64,

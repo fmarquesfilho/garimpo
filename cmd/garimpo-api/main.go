@@ -58,6 +58,14 @@ func main() {
 		log.Fatalf("store: %v", err)
 	}
 
+	// Migration automática: garante que as tabelas existam no BigQuery. Idempotente.
+	if err := eventos.EnsureSchema(context.Background()); err != nil {
+		logger.Warn("EnsureSchema falhou (talvez tabelas já existam ou permissão insuficiente)",
+			"erro", err)
+	} else {
+		logger.Info("schema do banco verificado", "store", eventos.Nome())
+	}
+
 	// Publicador: Telegram se TELEGRAM_BOT_TOKEN/CHAT_ID estiverem no ambiente;
 	// senão, Mock (não envia nada).
 	pub := publish.Novo()

@@ -6,6 +6,7 @@ package store
 
 import (
 	"context"
+	"strings"
 	"time"
 )
 
@@ -48,15 +49,18 @@ type Estatisticas struct {
 	GeradoEm      time.Time        `json:"gerado_em"`
 }
 
-// Busca é um "perfil de coleta": um conjunto nomeado de filtros que pode ser
-// reusado manualmente (no front) e rodado periodicamente (Cloud Scheduler) para
-// coletar snapshots. Cada busca carrega seu próprio `Cron` (periodicidade), o
-// que torna a coleta agendada configurável por perfil e independente do navegador.
+// Busca é um "perfil de coleta": um agrupamento de keywords com filtros comuns,
+// reusável manualmente e candidato à coleta periódica. O campo `Keywords` é a
+// lista de termos que serão buscados na Shopee (ex.: ["kenzo", "shiseido"]).
+// Compatibilidade: se o cliente enviar apenas `keyword` (string), o servidor
+// normaliza para `Keywords` com um único elemento.
 type Busca struct {
-	Nome        string    `json:"nome"`
-	Keyword     string    `json:"keyword"`
+	// ID é a chave primária da busca (ex.: "perfumaria-japonesa"). Gerado
+	// automaticamente como slug da primeira keyword se não fornecido.
+	ID          string    `json:"id"`
+	Keywords    []string  `json:"keywords"`             // um ou mais termos de busca
 	Categoria   string    `json:"categoria"`
-	Estrategia  string    `json:"estrategia"`
+	Estrategia  string    `json:"estrategia"`           // "nicho" | "diversificada" | "ambas"
 	ComissaoMin float64   `json:"comissao_min"`
 	VendasMin   int       `json:"vendas_min"`
 	NotaMin     float64   `json:"nota_min"`
@@ -64,6 +68,75 @@ type Busca struct {
 	Cron        string    `json:"cron"`  // ex.: "0 8 * * *" (vazio = só manual)
 	Ativo       bool      `json:"ativo"` // false = removida (tombstone)
 	SalvoEm     time.Time `json:"salvo_em"`
+
+	// Legado: campo keyword como string única. Lido na deserialização mas
+	// convertido para Keywords imediatamente pelo normalizador.
+	KeywordLegado string `json:"keyword,omitempty"`
+	// NomeLegado preserva compatibilidade com perfis antigos que usavam nome livre.
+	NomeLegado string `json:"nome,omitempty"`
+}
+
+// NormalizarBusca garante que a busca tenha um ID e que Keywords esteja
+// preenchida. Converte campos legados (nome/keyword como string).
+func NormalizarBusca(b Busca) Busca {
+	// compatibilidade com o modelo antigo que usava keyword (string única)
+	if len(b.Keywords) == 0 && b.KeywordLegado != "" {
+		b.Keywords = []string{b.KeywordLegado}
+	}
+	// compatibilidade: nome livre vira ID se ainda não tiver
+	if b.ID == "" && b.NomeLegado != "" {
+		b.ID = slugificar(b.NomeLegado)
+	}
+	// se ainda não tem ID, usa o slug da primeira keyword
+	if b.ID == "" && len(b.Keywords) > 0 {
+		b.ID = slugificar(b.Keywords[0])
+	}
+	// estratégia padrão
+	if b.Estrategia == "" {
+		b.Estrategia = "nicho"
+	}
+	// limpa legados para não gerar ruído no JSON de resposta
+	b.KeywordLegado = ""
+	b.NomeLegado = ""
+	return b
+}
+
+// slugificar transforma uma string em identificador sem espaços/acentos.
+func slugificar(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	var out []rune
+	for _, r := range s {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			out = append(out, r)
+		case r == ' ' || r == '_':
+			out = append(out, '-')
+		default:
+			// mapeia acentos comuns do português
+			switch r {
+			case 'á', 'à', 'ã', 'â', 'ä':
+				out = append(out, 'a')
+			case 'é', 'è', 'ê', 'ë':
+				out = append(out, 'e')
+			case 'í', 'ì', 'î', 'ï':
+				out = append(out, 'i')
+			case 'ó', 'ò', 'õ', 'ô', 'ö':
+				out = append(out, 'o')
+			case 'ú', 'ù', 'û', 'ü':
+				out = append(out, 'u')
+			case 'ç':
+				out = append(out, 'c')
+			case 'ñ':
+				out = append(out, 'n')
+			}
+		}
+	}
+	// remove hífens duplicados/no início/fim
+	result := strings.Trim(strings.ReplaceAll(string(out), "--", "-"), "-")
+	if result == "" {
+		return "busca"
+	}
+	return result
 }
 
 // EventoStore registra eventos. Implementações: NopStore e BigQueryStore.
@@ -73,9 +146,12 @@ type EventoStore interface {
 	// Estatisticas devolve o resumo descritivo dos snapshots dos últimos `dias`.
 	Estatisticas(ctx context.Context, dias int) (Estatisticas, error)
 	// SalvarBusca persiste (append) um perfil de busca; ListarBuscas devolve o
-	// estado atual (último registro por nome, só os ativos).
+	// estado atual (último registro por ID, só os ativos).
 	SalvarBusca(ctx context.Context, b Busca) error
 	ListarBuscas(ctx context.Context) ([]Busca, error)
+	// EnsureSchema cria as tabelas do BigQuery se ainda não existirem.
+	// Idempotente — seguro chamar no startup toda vez.
+	EnsureSchema(ctx context.Context) error
 	Nome() string
 }
 
@@ -116,4 +192,5 @@ func (NopStore) Estatisticas(_ context.Context, dias int) (Estatisticas, error) 
 // navegador (localStorage). O sync server-side só acontece com o BigQuery ligado.
 func (NopStore) SalvarBusca(context.Context, Busca) error      { return nil }
 func (NopStore) ListarBuscas(context.Context) ([]Busca, error) { return nil, nil }
+func (NopStore) EnsureSchema(context.Context) error            { return nil }
 func (NopStore) Nome() string                                  { return "nop" }

@@ -1,0 +1,161 @@
+name: Deploy → GCP
+
+on:
+  push:
+    branches: [main]
+
+# Variáveis de repositório (Settings → Secrets and variables → Variables):
+#   GCP_REGION  = southamerica-east1   (ou a região do seu projeto)
+# Secrets de repositório (Settings → Secrets and variables → Secrets):
+#   GCP_PROJECT_ID = id-do-projeto-gcp
+#   GCP_SA_KEY     = conteúdo do key.json da service account de deploy
+# (ver docs/DEPLOY_GCP.md para criar a service account e os papéis necessários)
+
+env:
+  GCP_REGION: ${{ vars.GCP_REGION || 'southamerica-east1' }}
+
+jobs:
+  # ── 1. Testes Go ─────────────────────────────────────────────────────────
+  test-go:
+    name: Testes Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: go mod tidy (garante go.sum atualizado)
+        run: go mod tidy
+
+      - name: Verificar diff após go mod tidy
+        run: |
+          if ! git diff --quiet go.sum; then
+            echo "go.sum desatualizado — rode 'go mod tidy' localmente e commite o resultado."
+            git diff go.sum
+            exit 1
+          fi
+
+      - name: Testes (build tag padrão, sem BigQuery)
+        run: go test ./...
+
+  # ── 2. Build do frontend ─────────────────────────────────────────────────
+  test-web:
+    name: Build do frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      - name: npm run build
+        run: npm run build
+
+      - name: Salvar artefato do build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: web/build
+          retention-days: 1
+
+  # ── 3. Build e deploy da API no Cloud Run ────────────────────────────────
+  deploy-api:
+    name: Deploy API → Cloud Run
+    needs: test-go
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configurar Docker para o Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build e push da imagem
+        run: |
+          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/garimpo/garimpo-api"
+          docker build --tag "$IMAGE:${{ github.sha }}" --tag "$IMAGE:latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+      - name: Deploy no Cloud Run
+        run: |
+          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/garimpo/garimpo-api"
+          gcloud run deploy garimpo-api \
+            --image "$IMAGE:${{ github.sha }}" \
+            --region "${{ env.GCP_REGION }}" \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=garimpo,BQ_TABELA=eventos,BQ_TABELA_SNAP=snapshots" \
+            --update-secrets "SHOPEE_APP_ID=SHOPEE_APP_ID:latest,SHOPEE_SECRET=SHOPEE_SECRET:latest,COLETA_TOKEN=COLETA_TOKEN:latest" \
+            --args="-fonte,shopee" \
+            --quiet
+
+  # ── 4. Deploy do frontend no Firebase Hosting ────────────────────────────
+  deploy-web:
+    name: Deploy frontend → Firebase Hosting
+    needs: [test-web, deploy-api]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Baixar artefato do build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web/build
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Instalar Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy no Firebase Hosting
+        run: firebase deploy --only hosting --project ${{ secrets.GCP_PROJECT_ID }} --non-interactive
+
+  # ── 5. Atualizar jobs do Cloud Scheduler ─────────────────────────────────
+  update-scheduler:
+    name: Atualizar Cloud Scheduler
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Instalar jq
+        run: sudo apt-get install -y jq
+
+      - name: Recriar jobs do scheduler a partir das buscas salvas
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          REGION: ${{ env.GCP_REGION }}
+        run: |
+          chmod +x deploy/scheduler-exemplo.sh
+          deploy/scheduler-exemplo.sh

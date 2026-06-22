@@ -59,6 +59,7 @@ func (s *spyStore) SalvarBusca(_ context.Context, b store.Busca) error {
 func (s *spyStore) ListarBuscas(_ context.Context) ([]store.Busca, error) {
 	return s.buscas, nil
 }
+func (s *spyStore) EnsureSchema(_ context.Context) error { return nil }
 
 type spyPub struct {
 	chamadas int
@@ -225,19 +226,20 @@ func TestBuscasSalvaEListagem(t *testing.T) {
 	sp := &spyStore{}
 	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
 
-	corpo := []byte(`{"nome":"perfumaria diária","keyword":"perfume","categoria":"perfumaria","cron":"0 8 * * *","top":20}`)
+	// envia no novo formato: keywords[] + id implícito via slug
+	corpo := []byte(`{"keywords":["perfume"],"categoria":"perfumaria","estrategia":"nicho","cron":"0 8 * * *","top":20}`)
 	rec := req(t, h, "POST", "/api/buscas", corpo, map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 202 {
-		t.Fatalf("POST status %d", rec.Code)
+		t.Fatalf("POST status %d — body: %s", rec.Code, rec.Body.String())
 	}
-	if len(sp.buscas) != 1 || sp.buscas[0].Nome != "perfumaria diária" || !sp.buscas[0].Ativo {
+	if len(sp.buscas) != 1 || sp.buscas[0].ID != "perfume" || !sp.buscas[0].Ativo {
 		t.Fatalf("busca não salva certo: %+v", sp.buscas)
 	}
 
 	rec = req(t, h, "GET", "/api/buscas", nil, nil)
 	var resp struct {
 		Buscas []struct {
-			Nome string `json:"nome"`
+			ID   string `json:"id"`
 			Cron string `json:"cron"`
 		} `json:"buscas"`
 	}
@@ -247,18 +249,37 @@ func TestBuscasSalvaEListagem(t *testing.T) {
 	}
 }
 
+func TestBuscasSalvaCompatibilidadeLegada(t *testing.T) {
+	sp := &spyStore{}
+	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+
+	// formato antigo: campo "nome" + "keyword" (string) — deve ser normalizado
+	corpo := []byte(`{"nome":"perfumaria diária","keyword":"perfume","categoria":"perfumaria","cron":"0 8 * * *","top":20}`)
+	rec := req(t, h, "POST", "/api/buscas", corpo, map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 202 {
+		t.Fatalf("POST legado status %d — body: %s", rec.Code, rec.Body.String())
+	}
+	if len(sp.buscas) != 1 || sp.buscas[0].ID == "" {
+		t.Fatalf("busca legada não normalizada: %+v", sp.buscas)
+	}
+	if len(sp.buscas[0].Keywords) == 0 || sp.buscas[0].Keywords[0] != "perfume" {
+		t.Errorf("keyword legada não migrada para Keywords[]: %+v", sp.buscas[0])
+	}
+}
+
 func TestBuscasExigeNome(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "POST", "/api/buscas", []byte(`{"keyword":"x"}`), map[string]string{"Content-Type": "application/json"})
+	// sem keywords e sem keyword legado → 400
+	rec := req(t, h, "POST", "/api/buscas", []byte(`{}`), map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 400 {
-		t.Errorf("busca sem nome deveria dar 400, veio %d", rec.Code)
+		t.Errorf("busca sem keywords deveria dar 400, veio %d", rec.Code)
 	}
 }
 
 func TestBuscasRemoverMarcaInativo(t *testing.T) {
 	sp := &spyStore{}
 	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
-	req(t, h, "POST", "/api/buscas?remover", []byte(`{"nome":"x"}`), map[string]string{"Content-Type": "application/json"})
+	req(t, h, "POST", "/api/buscas?remover", []byte(`{"id":"minha-busca","keywords":["x"]}`), map[string]string{"Content-Type": "application/json"})
 	if len(sp.buscas) != 1 || sp.buscas[0].Ativo {
 		t.Errorf("remover deveria gravar tombstone (ativo=false): %+v", sp.buscas)
 	}

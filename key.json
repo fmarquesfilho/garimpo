@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "garimpo-500114",
+  "private_key_id": "265a65f5a3352b548d2e245191336354c3bd64e8",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCpN1etmTVEx/zE\ntElEslLJUrWsp3JWZj4fe9uVjhB9l8ZeVVyAEMJL76rT2FDfMmpiEwWEA5z/tUQw\nng1gzDumv8+lA2CV3KPI6aXs6Qu648tluPKdi432hWp/UuaJT+3a8yKCcy99Ials\n/KhqHEKoLfYahPEpuewYO7bUJvzY0uW8z14Y0AzdFc798Qh6OrUBSogbZ3iCAjoM\nZJshxxF/kR3MVXUyjjPH0C3mEbUb284fiduWXKBMo1fH3u3XLNb88DZROWMLzmc6\ntMvknCx9XvoUOR+WYWVj/FLw8lCy1Eiwb1SI1lROfny+h4B/W3DpZXnlwjSIeR+N\n0gjA7PbdAgMBAAECggEAE8/yQNXfnghBUOGf835igYZg1ZB8a1/ItcR5cwMBbMcM\nt4ZMkIUFzsDGskuROnTLbmS2QFzw8KKPU5bpz5PSByXNoM8qq5k8Bv3OStUFZdIe\ngjA7ndUVX9ACplo1Ok4Eth5CA96LKJ48mVFiwZvB9TF+b1/x4ZYObc7uCtxuvc8Q\nzrGoh90kA1VrD4Jq3sEMiVV4lOa6cXp/O2RUVx3yVkgJqvYEkwNliTi9wX6RQI4X\nwO+RHcAUOuHzddnzSMj5JxV4Q+spxlCgQh0LzZShljxH6rCupqwBteCZAZTeY270\nRMSFuTkFox523QsFQ67Ma70eK0reTqzX4zJ22BtTIQKBgQDTtCmIzgVG8Qqx+Qu9\nphn48CVbD2sEXBBJLPEqnO1nJqNMKZjxI9wFjRvkrNCdrsXLOoacGVyOU73SRvOh\nL2BlfRKydGRwtC2tbAN7iEVr29OwxjZ81J32qWEHERJRcHeKw1rcbKdk0PqaiMXx\nSzMsLTn/X4cCbzw9uUJvPoRDYQKBgQDMn1kZk5EmztyZ2zOQquk3w09VHqAi1ibl\nqIrTzLZRuGAYlNfOKcVSHYCu3y5VXj6paBm9tI8r8CIBQJUNbOWGm5gK2gX93Iol\nKzSZR2XNQUFqlb67O7cgKetP8FOzJiBD7ZqjLFB4OxQRvB6lyrRFfAU/gkBhWNSS\nW+9S9jJg/QKBgQCZuswmYaSHXWXs0vJppwJZONmHhGyr38abvJzr2sSyEOan2dUL\n1oRhK5TDu5JJzq4m47r4A5qoZ7sBxTAJLgQL7oTzPX3qMYyx0Cu/OrdemWThiy3p\n++MxSNICda0dolPMWgvS4Lu1g+NW8Fb83ySrwbPJ865wYCIYmDzb10PoQQKBgEZ1\nrHGxLa9GVhIot/Xd1FbeSygNVqkIQvab9cn+2N0E9xofzrvwCEFBZXlR4puEy2D8\nNrjrPs2rb5osyeaIk/SpCU7bSmrjETLBUOhi/HwUN1ljXP0OD/3kUWICaF/tBfk+\nDRyY+tCbz0pYE9mVFkRC82+uA0tCElifjaZsnmZlAoGBALtSOE+4D1wFpjJchagn\nnEfgA8rgEdi/WFF6zE2dCX47xX8xB3HNCtIDN3tmobATeKkONiw97uus0HlfMbiY\ndi+6G4IRzMJQKg6iq0993JysyiR1f+FQ0JGn70qEyzAKLdqiTMk/3GNOdQNcP9XY\ne2U2Sufjfn9YYrZvZN9arjug\n-----END PRIVATE KEY-----\n",
+  "client_email": "gh-deploy@garimpo-500114.iam.gserviceaccount.com",
+  "client_id": "106060415559952592164",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/gh-deploy%40garimpo-500114.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

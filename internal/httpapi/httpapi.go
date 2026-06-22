@@ -354,8 +354,10 @@ func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, http.StatusBadRequest, "json inválido")
 			return
 		}
-		if b.Nome == "" {
-			writeErr(w, http.StatusBadRequest, "busca precisa de um nome")
+		// normaliza: preenche ID, converte legados (nome/keyword string), garante estratégia
+		b = store.NormalizarBusca(b)
+		if b.ID == "" {
+			writeErr(w, http.StatusBadRequest, "busca precisa de ao menos uma keyword")
 			return
 		}
 		b.Ativo = !r.URL.Query().Has("remover")
@@ -364,8 +366,8 @@ func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, http.StatusBadGateway, err.Error())
 			return
 		}
-		srv.Logger.Info("busca salva", slog.String("nome", b.Nome), slog.Bool("ativo", b.Ativo))
-		writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "nome": b.Nome, "ativo": b.Ativo})
+		srv.Logger.Info("busca salva", slog.String("id", b.ID), slog.Bool("ativo", b.Ativo))
+		writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "id": b.ID, "ativo": b.Ativo})
 	default:
 		writeErr(w, http.StatusMethodNotAllowed, "use GET ou POST")
 	}
@@ -396,6 +398,11 @@ func (srv *Server) health(w http.ResponseWriter, r *http.Request) {
 		"fonte":     srv.fonteAtiva(url.Values{}),
 		"categoria": srv.Categoria,
 		"keyword":   srv.Keyword,
+		"store":     srv.Eventos.Nome(),
+		// Logs vão para stdout — no Cloud Run são capturados pelo Cloud Logging.
+		// Filtre por severity, rota ou categoria em:
+		// https://console.cloud.google.com/logs → recurso "Cloud Run Revision"
+		"logs": "stdout → Cloud Logging (Cloud Run) / terminal (local)",
 	})
 }
 

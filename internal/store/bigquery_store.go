@@ -4,6 +4,8 @@ package store
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/bigquery"
@@ -32,6 +34,85 @@ func NovoBigQueryStore(ctx context.Context, projeto, dataset, tabela, tabelaSnap
 }
 
 func (s *BigQueryStore) Nome() string { return "bigquery" }
+
+// EnsureSchema cria as tabelas do dataset se ainda não existirem. Idempotente —
+// chamado no startup toda vez, de modo que o banco evolui automaticamente ao
+// deploy sem passo manual de "criar tabelas".
+func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
+	ds := s.client.Dataset(s.dataset)
+
+	// --- tabela eventos ---
+	eSchema := bigquery.Schema{
+		{Name: "tipo", Type: bigquery.StringFieldType},
+		{Name: "produto_id", Type: bigquery.StringFieldType},
+		{Name: "nome", Type: bigquery.StringFieldType},
+		{Name: "categoria", Type: bigquery.StringFieldType},
+		{Name: "estrategia", Type: bigquery.StringFieldType},
+		{Name: "canal", Type: bigquery.StringFieldType},
+		{Name: "sub_id", Type: bigquery.StringFieldType},
+		{Name: "comissao", Type: bigquery.FloatFieldType},
+		{Name: "preco", Type: bigquery.FloatFieldType},
+		{Name: "vendas", Type: bigquery.IntegerFieldType},
+		{Name: "score", Type: bigquery.FloatFieldType},
+		{Name: "em", Type: bigquery.TimestampFieldType},
+	}
+	if err := criarSeNaoExistir(ctx, ds, s.tabela, eSchema, "em"); err != nil {
+		return err
+	}
+
+	// --- tabela snapshots ---
+	sSchema := bigquery.Schema{
+		{Name: "coletado_em", Type: bigquery.TimestampFieldType},
+		{Name: "categoria", Type: bigquery.StringFieldType},
+		{Name: "keyword", Type: bigquery.StringFieldType},
+		{Name: "estrategia", Type: bigquery.StringFieldType},
+		{Name: "posicao", Type: bigquery.IntegerFieldType},
+		{Name: "produto_id", Type: bigquery.StringFieldType},
+		{Name: "nome", Type: bigquery.StringFieldType},
+		{Name: "preco", Type: bigquery.FloatFieldType},
+		{Name: "comissao", Type: bigquery.FloatFieldType},
+		{Name: "vendas", Type: bigquery.IntegerFieldType},
+		{Name: "nota", Type: bigquery.FloatFieldType},
+		{Name: "score", Type: bigquery.FloatFieldType},
+	}
+	if err := criarSeNaoExistir(ctx, ds, s.tabelaSnap, sSchema, "coletado_em"); err != nil {
+		return err
+	}
+
+	// --- tabela buscas ---
+	bSchema := bigquery.Schema{
+		{Name: "id", Type: bigquery.StringFieldType},
+		{Name: "keywords", Type: bigquery.StringFieldType}, // JSON array
+		{Name: "categoria", Type: bigquery.StringFieldType},
+		{Name: "estrategia", Type: bigquery.StringFieldType},
+		{Name: "comissao_min", Type: bigquery.FloatFieldType},
+		{Name: "vendas_min", Type: bigquery.IntegerFieldType},
+		{Name: "nota_min", Type: bigquery.FloatFieldType},
+		{Name: "top", Type: bigquery.IntegerFieldType},
+		{Name: "cron", Type: bigquery.StringFieldType},
+		{Name: "ativo", Type: bigquery.BooleanFieldType},
+		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
+	}
+	return criarSeNaoExistir(ctx, ds, "buscas", bSchema, "salvo_em")
+}
+
+// criarSeNaoExistir cria a tabela particionada por dia se ainda não existir.
+func criarSeNaoExistir(ctx context.Context, ds *bigquery.Dataset, nome string, schema bigquery.Schema, campoPartition string) error {
+	t := ds.Table(nome)
+	_, err := t.Metadata(ctx)
+	if err == nil {
+		return nil // já existe
+	}
+	// se o erro não for "não encontrado", propaga
+	meta := &bigquery.TableMetadata{
+		Schema: schema,
+		TimePartitioning: &bigquery.TimePartitioning{
+			Type:  bigquery.DayPartitioningType,
+			Field: campoPartition,
+		},
+	}
+	return t.Create(ctx, meta)
+}
 
 // linhaBQ mapeia o Evento para as colunas da tabela (ver deploy/bigquery_schema.sql).
 type linhaBQ struct {
@@ -114,10 +195,11 @@ func (s *BigQueryStore) RegistrarSnapshot(ctx context.Context, snap Snapshot) er
 	return s.client.Dataset(s.dataset).Table(s.tabelaSnap).Inserter().Put(ctx, linhas)
 }
 
-// linhaBuscaBQ mapeia a Busca para a tabela `buscas` (append-only/versionada).
+// linhaBuscaBQ mapeia a Busca para a tabela `buscas`.
+// Keywords é serializado como JSON array para caber em uma coluna STRING.
 type linhaBuscaBQ struct {
-	Nome        string    `bigquery:"nome"`
-	Keyword     string    `bigquery:"keyword"`
+	ID          string    `bigquery:"id"`
+	Keywords    string    `bigquery:"keywords"` // JSON array
 	Categoria   string    `bigquery:"categoria"`
 	Estrategia  string    `bigquery:"estrategia"`
 	ComissaoMin float64   `bigquery:"comissao_min"`
@@ -130,29 +212,31 @@ type linhaBuscaBQ struct {
 }
 
 func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
+	b = NormalizarBusca(b)
 	if b.SalvoEm.IsZero() {
 		b.SalvoEm = time.Now().UTC()
 	}
+	kw, _ := json.Marshal(b.Keywords)
 	row := linhaBuscaBQ{
-		Nome: b.Nome, Keyword: b.Keyword, Categoria: b.Categoria, Estrategia: b.Estrategia,
+		ID: b.ID, Keywords: string(kw), Categoria: b.Categoria, Estrategia: b.Estrategia,
 		ComissaoMin: b.ComissaoMin, VendasMin: b.VendasMin, NotaMin: b.NotaMin, Top: b.Top,
 		Cron: b.Cron, Ativo: b.Ativo, SalvoEm: b.SalvoEm,
 	}
 	return s.client.Dataset(s.dataset).Table("buscas").Inserter().Put(ctx, row)
 }
 
-// ListarBuscas devolve o estado atual: o último registro por nome (append-only),
+// ListarBuscas devolve o estado atual: o último registro por ID (append-only),
 // filtrando os removidos (ativo = false).
 func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 	q := s.client.Query(`
 		WITH ranked AS (
-		  SELECT *, ROW_NUMBER() OVER (PARTITION BY nome ORDER BY salvo_em DESC) AS rn
+		  SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
 		  FROM ` + "`" + s.dataset + ".buscas`" + `
 		)
-		SELECT nome, keyword, categoria, estrategia, comissao_min, vendas_min,
+		SELECT id, keywords, categoria, estrategia, comissao_min, vendas_min,
 		       nota_min, top, cron, ativo, salvo_em
 		FROM ranked WHERE rn = 1 AND ativo = TRUE
-		ORDER BY nome
+		ORDER BY id
 	`)
 	it, err := q.Read(ctx)
 	if err != nil {
@@ -168,8 +252,19 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 		if err != nil {
 			return nil, err
 		}
+		var kws []string
+		// tenta deserializar o JSON array; cai num slice com o valor bruto se falhar
+		if e2 := json.Unmarshal([]byte(r.Keywords), &kws); e2 != nil {
+			// compatibilidade: campo keywords pode ser string simples em dados antigos
+			if r.Keywords != "" {
+				kws = strings.Split(r.Keywords, ",")
+				for i := range kws {
+					kws[i] = strings.TrimSpace(kws[i])
+				}
+			}
+		}
 		out = append(out, Busca{
-			Nome: r.Nome, Keyword: r.Keyword, Categoria: r.Categoria, Estrategia: r.Estrategia,
+			ID: r.ID, Keywords: kws, Categoria: r.Categoria, Estrategia: r.Estrategia,
 			ComissaoMin: r.ComissaoMin, VendasMin: r.VendasMin, NotaMin: r.NotaMin, Top: r.Top,
 			Cron: r.Cron, Ativo: r.Ativo, SalvoEm: r.SalvoEm,
 		})
@@ -177,10 +272,7 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 	return out, nil
 }
 
-// Estatisticas agrega os snapshots dos últimos `dias` por categoria: média de
-// comissão/preço/vendas/teor e mediana de comissão (APPROX_QUANTILES). É a
-// primeira consulta do pipeline de análise — descritiva, barata, e base para o
-// painel no frontend.
+// Estatisticas agrega os snapshots dos últimos `dias` por categoria.
 func (s *BigQueryStore) Estatisticas(ctx context.Context, dias int) (Estatisticas, error) {
 	if dias <= 0 {
 		dias = 30
