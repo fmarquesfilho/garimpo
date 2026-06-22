@@ -67,6 +67,7 @@ type Busca struct {
 	Top         int       `json:"top"`
 	Cron        string    `json:"cron"`  // ex.: "0 8 * * *" (vazio = só manual)
 	Ativo       bool      `json:"ativo"` // false = removida (tombstone)
+	OwnerUID    string    `json:"owner_uid,omitempty"` // uid do Firebase Auth
 	SalvoEm     time.Time `json:"salvo_em"`
 
 	// Legado: campo keyword como string única. Lido na deserialização mas
@@ -107,7 +108,7 @@ func slugificar(s string) string {
 	var out []rune
 	for _, r := range s {
 		switch {
-		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9', r == '-':
 			out = append(out, r)
 		case r == ' ' || r == '_':
 			out = append(out, '-')

@@ -27,6 +27,7 @@
 	let cronNova = $state('');        // agendamento da nova busca
 	let estrategiaNova = $state('nicho'); // estratégia da nova busca
 	let mostrarFormBusca = $state(false);
+	let buscasColapsadas = $state(false);
 
 	// keywords que estão sendo montadas antes de salvar
 	let keywordsNovas = $state([]);
@@ -218,13 +219,19 @@
 <!-- ── Buscas Salvas ─────────────────────────────────────────────────────── -->
 <div class="buscas">
 	<div class="buscas-cabecalho">
-		<span class="buscas-titulo">Buscas salvas</span>
-		<button class="btn-nova" onclick={() => (mostrarFormBusca = !mostrarFormBusca)} type="button">
-			{mostrarFormBusca ? '✕ cancelar' : '+ nova busca'}
+		<button class="buscas-titulo-btn" onclick={() => (buscasColapsadas = !buscasColapsadas)} type="button">
+			<span class="seta" class:girada={!buscasColapsadas}>▸</span>
+			Buscas salvas
+			{#if $buscasSalvas.length > 0}<span class="badge-contagem">{$buscasSalvas.length}</span>{/if}
 		</button>
+		{#if !buscasColapsadas}
+			<button class="btn-nova" onclick={() => (mostrarFormBusca = !mostrarFormBusca)} type="button">
+				{mostrarFormBusca ? '✕ cancelar' : '+ nova busca'}
+			</button>
+		{/if}
 	</div>
 
-	{#if mostrarFormBusca}
+	{#if mostrarFormBusca && !buscasColapsadas}
 		<div class="form-nova-busca">
 			<div class="form-linha">
 				<label class="campo flex1">
@@ -272,7 +279,7 @@
 		</div>
 	{/if}
 
-	{#if $buscasSalvas.length > 0}
+	{#if $buscasSalvas.length > 0 && !buscasColapsadas}
 		<div class="buscas-lista">
 			{#each $buscasSalvas as b (b.id)}
 				<div class="cartao-busca">
@@ -305,7 +312,7 @@
 				</div>
 			{/each}
 		</div>
-	{:else if !mostrarFormBusca}
+	{:else if !mostrarFormBusca && !buscasColapsadas}
 		<p class="buscas-vazia">Nenhuma busca salva ainda. Clique em "+ nova busca" para criar.</p>
 	{/if}
 </div>
@@ -469,7 +476,18 @@
 		display: flex; align-items: center; justify-content: space-between;
 		margin-bottom: var(--r3);
 	}
-	.buscas-titulo { font-weight: 700; font-size: 0.9rem; color: var(--tinta-suave); }
+	.buscas-titulo-btn {
+		border: none; background: transparent; cursor: pointer;
+		font-weight: 700; font-size: 0.9rem; color: var(--tinta-suave);
+		display: flex; align-items: center; gap: 6px; padding: 0;
+	}
+	.buscas-titulo-btn:hover { color: var(--tinta); }
+	.seta { display: inline-block; transition: transform 0.15s ease; font-size: 0.8rem; }
+	.seta.girada { transform: rotate(90deg); }
+	.badge-contagem {
+		font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e;
+		padding: 1px 6px; border-radius: 999px; font-weight: 700;
+	}
 	.btn-nova {
 		border: 1px solid var(--linha); background: var(--porcelana);
 		color: var(--tinta); font-size: 0.82rem; font-weight: 600;

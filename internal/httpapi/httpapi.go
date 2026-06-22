@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/auth"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/engine"
 	"github.com/fmarquesfilho/garimpo/internal/publish"
@@ -84,6 +85,9 @@ type Server struct {
 	// Se nil, vira NopScheduler (não cria jobs).
 	Scheduler scheduler.Scheduler
 
+	// Auth valida tokens Firebase. Se nil, vira NopVerifier (aceita tudo).
+	Auth auth.Verifier
+
 	// FonteFactory permite injetar a fonte (testes). Se nil, usa buildSource.
 	FonteFactory func(q url.Values) (source.ProductSource, string)
 
@@ -112,6 +116,9 @@ func (srv *Server) Handler() http.Handler {
 	}
 	if srv.Scheduler == nil {
 		srv.Scheduler = scheduler.NopScheduler{}
+	}
+	if srv.Auth == nil {
+		srv.Auth = auth.NopVerifier{}
 	}
 	if srv.Logger == nil {
 		srv.Logger = slog.Default()
@@ -166,6 +173,17 @@ func (srv *Server) logRequests(next http.Handler) http.Handler {
 			srv.Logger.Info("requisição", attrs...)
 		}
 	})
+}
+
+// usuarioDoRequest extrai o usuário autenticado do header Authorization.
+// Retorna nil se não autenticado (anônimo). Não bloqueia — os endpoints
+// decidem individualmente se exigem auth.
+func (srv *Server) usuarioDoRequest(r *http.Request) *auth.User {
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return nil
+	}
+	return srv.Auth.Verify(r.Context(), token)
 }
 
 func cors(next http.Handler) http.Handler {
@@ -348,6 +366,8 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 // É a camada de sync (BigQuery) das buscas salvas; o front também guarda em
 // localStorage para uso manual imediato.
 func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
+	user := srv.usuarioDoRequest(r)
+
 	switch r.Method {
 	case http.MethodGet:
 		lista, err := srv.Eventos.ListarBuscas(r.Context())
@@ -355,6 +375,16 @@ func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
 			srv.Logger.Error("listar buscas falhou", slog.String("erro", err.Error()))
 			writeErr(w, http.StatusBadGateway, err.Error())
 			return
+		}
+		// Filtra por owner se o usuário está autenticado
+		if user != nil {
+			var filtrada []store.Busca
+			for _, b := range lista {
+				if b.OwnerUID == "" || b.OwnerUID == user.UID {
+					filtrada = append(filtrada, b)
+				}
+			}
+			lista = filtrada
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"buscas": lista, "store": srv.Eventos.Nome()})
 	case http.MethodPost:
@@ -370,6 +400,10 @@ func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		b.Ativo = !r.URL.Query().Has("remover")
+		// Associa o owner se autenticado
+		if user != nil {
+			b.OwnerUID = user.UID
+		}
 		if err := srv.Eventos.SalvarBusca(r.Context(), b); err != nil {
 			srv.Logger.Error("salvar busca falhou", slog.String("erro", err.Error()))
 			writeErr(w, http.StatusBadGateway, err.Error())

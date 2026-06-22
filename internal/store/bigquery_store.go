@@ -91,6 +91,7 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "top", Type: bigquery.IntegerFieldType},
 		{Name: "cron", Type: bigquery.StringFieldType},
 		{Name: "ativo", Type: bigquery.BooleanFieldType},
+		{Name: "owner_uid", Type: bigquery.StringFieldType},
 		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
 	}
 	return criarSeNaoExistir(ctx, ds, "buscas", bSchema, "salvo_em")
@@ -208,6 +209,7 @@ type linhaBuscaBQ struct {
 	Top         int       `bigquery:"top"`
 	Cron        string    `bigquery:"cron"`
 	Ativo       bool      `bigquery:"ativo"`
+	OwnerUID    string    `bigquery:"owner_uid"`
 	SalvoEm     time.Time `bigquery:"salvo_em"`
 }
 
@@ -220,7 +222,7 @@ func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
 	row := linhaBuscaBQ{
 		ID: b.ID, Keywords: string(kw), Categoria: b.Categoria, Estrategia: b.Estrategia,
 		ComissaoMin: b.ComissaoMin, VendasMin: b.VendasMin, NotaMin: b.NotaMin, Top: b.Top,
-		Cron: b.Cron, Ativo: b.Ativo, SalvoEm: b.SalvoEm,
+		Cron: b.Cron, Ativo: b.Ativo, OwnerUID: b.OwnerUID, SalvoEm: b.SalvoEm,
 	}
 	return s.client.Dataset(s.dataset).Table("buscas").Inserter().Put(ctx, row)
 }
@@ -234,7 +236,7 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 		  FROM ` + "`" + s.dataset + ".buscas`" + `
 		)
 		SELECT id, keywords, categoria, estrategia, comissao_min, vendas_min,
-		       nota_min, top, cron, ativo, salvo_em
+		       nota_min, top, cron, ativo, owner_uid, salvo_em
 		FROM ranked WHERE rn = 1 AND ativo = TRUE
 		ORDER BY id
 	`)
@@ -266,7 +268,7 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 		out = append(out, Busca{
 			ID: r.ID, Keywords: kws, Categoria: r.Categoria, Estrategia: r.Estrategia,
 			ComissaoMin: r.ComissaoMin, VendasMin: r.VendasMin, NotaMin: r.NotaMin, Top: r.Top,
-			Cron: r.Cron, Ativo: r.Ativo, SalvoEm: r.SalvoEm,
+			Cron: r.Cron, Ativo: r.Ativo, OwnerUID: r.OwnerUID, SalvoEm: r.SalvoEm,
 		})
 	}
 	return out, nil

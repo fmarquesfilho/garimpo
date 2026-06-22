@@ -2,10 +2,20 @@
 // Em produção o front é estático e o nginx faz proxy de /api -> Go (mesma origem),
 // então a base é vazia. Em dev, aponta para o Go local. Dá pra sobrescrever com
 // VITE_API_BASE se precisar (ex.: front e API em hosts diferentes).
+import { getIdToken } from './firebase.js';
+
 const BASE = import.meta.env.VITE_API_BASE ?? (import.meta.env.PROD ? '' : 'http://localhost:8080');
 
+/** Headers com token de auth (se logado). */
+async function authHeaders() {
+	const token = await getIdToken();
+	if (token) return { Authorization: `Bearer ${token}` };
+	return {};
+}
+
 async function pegar(caminho) {
-	const resp = await fetch(`${BASE}${caminho}`);
+	const headers = await authHeaders();
+	const resp = await fetch(`${BASE}${caminho}`, { headers });
 	if (!resp.ok) {
 		let detalhe = '';
 		try {
@@ -43,10 +53,11 @@ export function buscarCandidatos({
 }
 
 /** Registra uma decisão de curadoria (seleção) para análise. Best-effort. */
-export function registrarSelecao(candidato) {
+export async function registrarSelecao(candidato) {
+	const headers = { 'Content-Type': 'application/json', ...(await authHeaders()) };
 	return fetch(`${BASE}/api/eventos`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers,
 		body: JSON.stringify({ tipo: 'selecao', ...candidato })
 	}).catch(() => {
 		/* telemetria não pode atrapalhar o uso */
@@ -54,9 +65,10 @@ export function registrarSelecao(candidato) {
 }
 
 async function postar(caminho, corpo) {
+	const headers = { 'Content-Type': 'application/json', ...(await authHeaders()) };
 	const resp = await fetch(`${BASE}${caminho}`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers,
 		body: JSON.stringify(corpo)
 	});
 	if (!resp.ok) {
@@ -87,15 +99,15 @@ export function listarBuscasServidor() {
 }
 
 /** Salva (sync) um perfil de busca no servidor. Best-effort. */
-export function sincronizarBusca(busca, { remover = false } = {}) {
+export async function sincronizarBusca(busca, { remover = false } = {}) {
 	const qs = remover ? '?remover' : '';
-	// garante que o campo keywords está presente mesmo ao remover (para o servidor identificar)
 	const corpo = remover
 		? { id: busca.id, keywords: busca.keywords ?? [] }
 		: busca;
+	const headers = { 'Content-Type': 'application/json', ...(await authHeaders()) };
 	return fetch(`${BASE}/api/buscas${qs}`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers,
 		body: JSON.stringify(corpo)
 	}).catch(() => {
 		/* sync não pode travar o uso local */

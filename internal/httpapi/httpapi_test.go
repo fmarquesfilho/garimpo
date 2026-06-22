@@ -317,3 +317,46 @@ func TestCacheBuscaUmaVez(t *testing.T) {
 		t.Errorf("a fonte deveria ser buscada 1 vez (cache), veio %d", f.chamadas)
 	}
 }
+
+func TestBuscasMultiKeyword(t *testing.T) {
+	sp := &spyStore{}
+	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+
+	corpo := []byte(`{"keywords":["kenzo","shiseido","issey miyake"],"categoria":"perfumaria","estrategia":"ambas","cron":"0 8,18 * * *","top":12}`)
+	rec := req(t, h, "POST", "/api/buscas", corpo, map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 202 {
+		t.Fatalf("POST status %d — body: %s", rec.Code, rec.Body.String())
+	}
+	if len(sp.buscas) != 1 {
+		t.Fatalf("esperava 1 busca, veio %d", len(sp.buscas))
+	}
+	b := sp.buscas[0]
+	if b.ID != "kenzo" {
+		t.Errorf("ID deveria ser slug da primeira keyword (kenzo), veio %q", b.ID)
+	}
+	if len(b.Keywords) != 3 {
+		t.Errorf("esperava 3 keywords, veio %d", len(b.Keywords))
+	}
+	if b.Estrategia != "ambas" {
+		t.Errorf("estrategia deveria ser 'ambas', veio %q", b.Estrategia)
+	}
+	if b.Cron != "0 8,18 * * *" {
+		t.Errorf("cron deveria ser '0 8,18 * * *', veio %q", b.Cron)
+	}
+}
+
+func TestHealthRetornaStoreELogs(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/health", nil, nil)
+	if rec.Code != 200 {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var resp map[string]any
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp["store"] != "spy" {
+		t.Errorf("health deveria expor store, veio %v", resp["store"])
+	}
+	if resp["logs"] == nil || resp["logs"] == "" {
+		t.Errorf("health deveria expor info de logs")
+	}
+}
