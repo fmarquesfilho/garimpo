@@ -25,7 +25,19 @@ TOKEN="$(gcloud secrets versions access latest --secret=COLETA_TOKEN)"
 
 echo "Servidor: $URL"
 echo "Lendo buscas salvas de $URL/api/buscas ..."
-BUSCAS_JSON="$(curl -fsS "$URL/api/buscas")"
+
+# Retry com backoff — Cloud Run pode estar em cold start
+BUSCAS_JSON=""
+for i in 1 2 3 4 5; do
+  BUSCAS_JSON="$(curl -fsS "$URL/api/buscas" 2>/dev/null)" && break
+  echo "  tentativa $i falhou, aguardando ${i}0s..."
+  sleep "${i}0"
+done
+
+if [ -z "$BUSCAS_JSON" ]; then
+  echo "Não consegui ler as buscas do servidor após 5 tentativas. Pulando."
+  exit 0
+fi
 
 # percorre cada busca com cron não-vazio
 echo "$BUSCAS_JSON" | jq -c '.buscas[]? | select(.cron != null and .cron != "")' | while read -r b; do

@@ -157,5 +157,10 @@ jobs:
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           REGION: ${{ env.GCP_REGION }}
         run: |
+          # Acorda o Cloud Run (cold start) antes de rodar o script
+          URL=$(gcloud run services describe garimpo-api --region "$REGION" --format='value(status.url)')
+          echo "Acordando $URL..."
+          curl -sS --retry 5 --retry-delay 10 --retry-all-errors "$URL/api/health" || true
+          sleep 5
           chmod +x deploy/scheduler-exemplo.sh
           deploy/scheduler-exemplo.sh
