@@ -84,9 +84,10 @@ async function postar(caminho, corpo) {
 }
 
 /** Publica a oferta no canal (Telegram/WhatsApp/Mock) e devolve o Resultado. */
-export function publicar(candidato, { destinoId } = {}) {
+export function publicar(candidato, { destinoId, templateId } = {}) {
 	const corpo = { ...candidato };
 	if (destinoId) corpo.destino_id = destinoId;
+	if (templateId) corpo.template_id = templateId;
 	return postar('/api/publicar', corpo);
 }
 
@@ -115,6 +116,38 @@ export async function deletarDestino(id) {
 		throw new Error(detalhe || `Falha ${resp.status}`);
 	}
 	return resp.json();
+}
+
+/** Lista os templates de mensagem disponíveis. */
+export function listarTemplates() {
+	return pegar('/api/templates');
+}
+
+/** Salva (cria/atualiza) um template de mensagem. */
+export function salvarTemplate(template) {
+	return postar('/api/templates', template);
+}
+
+/** Remove um template por ID. */
+export async function deletarTemplate(id) {
+	const headers = { ...(await authHeaders()) };
+	const resp = await fetch(`${BASE}/api/templates?id=${encodeURIComponent(id)}`, {
+		method: 'DELETE',
+		headers
+	});
+	if (!resp.ok) {
+		let detalhe = '';
+		try {
+			detalhe = (await resp.json())?.erro ?? '';
+		} catch { /* */ }
+		throw new Error(detalhe || `Falha ${resp.status}`);
+	}
+	return resp.json();
+}
+
+/** Renderiza um preview de template com dados do produto. */
+export function previewTemplate(dados) {
+	return postar('/api/templates/preview', dados);
 }
 
 /** Relatório de conversões (publicações por canal/destino). */

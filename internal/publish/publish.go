@@ -45,8 +45,10 @@ type Oferta struct {
 	Preco      float64
 	Comissao   float64
 	Link       string
+	Imagem     string // URL da foto do produto
 	Estrategia string
 	DestinoID  string // qual destino usar (vazio = padrão do provedor)
+	TemplateID string // qual template usar (vazio = MensagemHTML padrão)
 }
 
 // Resultado descreve o que aconteceu (para o front mostrar o que "saiu").

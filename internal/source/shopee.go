@@ -98,7 +98,7 @@ func (s *ShopeeAPISource) buildQuery(page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName } pageInfo { page hasNextPage } } }`,
+		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }
@@ -113,6 +113,7 @@ type productNode struct {
 	RatingStar     flexFloat  `json:"ratingStar"`
 	CommissionRate flexFloat  `json:"commissionRate"`
 	ShopName       string     `json:"shopName"`
+	ImageURL       string     `json:"imageUrl"`
 }
 
 type gqlResponse struct {
@@ -198,6 +199,7 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 				Sales30d:   int(n.Sales),
 				Rating:     float64(n.RatingStar),
 				Link:       n.OfferLink,
+				Image:      n.ImageURL,
 			})
 		}
 

@@ -34,6 +34,7 @@ type candidatoDTO struct {
 	Vendas      int                `json:"vendas"`
 	Avaliacao   float64            `json:"avaliacao"`
 	Link        string             `json:"link"`
+	Imagem      string             `json:"imagem,omitempty"`
 	Score       float64            `json:"score"`
 	Componentes map[string]float64 `json:"componentes"`
 	Suspeito    bool               `json:"suspeito"`
@@ -45,7 +46,7 @@ func toDTO(s domain.Scored) candidatoDTO {
 	return candidatoDTO{
 		ID: p.ID, Nome: p.Name, Categoria: p.Category,
 		Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
-		Avaliacao: p.Rating, Link: p.Link,
+		Avaliacao: p.Rating, Link: p.Link, Imagem: p.Image,
 		Score: s.Score, Componentes: s.Reasons,
 		Suspeito: s.Suspeito, Exploracao: s.Exploracao,
 	}
@@ -92,6 +93,10 @@ type Server struct {
 	// Se nil, o endpoint /api/destinos retorna erro (não configurado).
 	Destinos publish.DestinoStore
 
+	// Templates gerencia os modelos de mensagem cadastrados pela usuária.
+	// Se nil, usa MemTemplateStore (com templates padrão embutidos).
+	Templates publish.TemplateStore
+
 	// FonteFactory permite injetar a fonte (testes). Se nil, usa buildSource.
 	FonteFactory func(q url.Values) (source.ProductSource, string)
 
@@ -124,6 +129,9 @@ func (srv *Server) Handler() http.Handler {
 	if srv.Auth == nil {
 		srv.Auth = auth.NopVerifier{}
 	}
+	if srv.Templates == nil {
+		srv.Templates = publish.NovoMemTemplateStore()
+	}
 	if srv.Logger == nil {
 		srv.Logger = slog.Default()
 	}
@@ -141,6 +149,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/buscas", srv.buscas)
 	mux.HandleFunc("/api/destinos", srv.destinos)
 	mux.HandleFunc("/api/conversoes", srv.conversoes)
+	mux.HandleFunc("/api/templates", srv.templates)
+	mux.HandleFunc("/api/templates/preview", srv.templates)
 	return cors(srv.logRequests(mux))
 }
 
@@ -240,19 +250,34 @@ func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
 		Preco      float64 `json:"preco"`
 		Comissao   float64 `json:"comissao"`
 		Link       string  `json:"link"`
+		Imagem     string  `json:"imagem"`
 		Estrategia string  `json:"estrategia"`
 		DestinoID  string  `json:"destino_id"`
+		TemplateID string  `json:"template_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")
 		return
 	}
 
-	res, err := srv.Publicador.Publicar(r.Context(), publish.Oferta{
+	oferta := publish.Oferta{
 		ProdutoID: c.ID, Nome: c.Nome, Categoria: c.Categoria,
-		Preco: c.Preco, Comissao: c.Comissao, Link: c.Link, Estrategia: c.Estrategia,
-		DestinoID: c.DestinoID,
-	})
+		Preco: c.Preco, Comissao: c.Comissao, Link: c.Link, Imagem: c.Imagem,
+		Estrategia: c.Estrategia, DestinoID: c.DestinoID, TemplateID: c.TemplateID,
+	}
+
+	// Se um template foi escolhido, aplica na oferta (renderiza corpo + decide se envia foto)
+	if c.TemplateID != "" && srv.Templates != nil {
+		tmpl, err := srv.Templates.Buscar(r.Context(), c.TemplateID)
+		if err == nil {
+			// Template com foto: mantém imagem; sem foto: remove imagem para forçar sendMessage
+			if !tmpl.ComFoto {
+				oferta.Imagem = ""
+			}
+		}
+	}
+
+	res, err := srv.Publicador.Publicar(r.Context(), oferta)
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return

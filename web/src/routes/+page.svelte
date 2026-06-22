@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
-	import { buscarCandidatos, compararEstrategias, registrarSelecao, publicar, listarDestinos } from '$lib/api.js';
+	import { buscarCandidatos, compararEstrategias, registrarSelecao, publicar } from '$lib/api.js';
+	import { goto } from '$app/navigation';
 	import { quadro } from '$lib/board.js';
 	import { filtros as filtrosStore } from '$lib/filtros.js';
 	import { buscasSalvas, slugificar } from '$lib/buscas.js';
@@ -136,32 +137,14 @@
 		registrarSelecao(c);
 	}
 
-	// ── destinos de publicação ────────────────────────────────────────────────
-	let destinosDisponiveis = $state([]);
-	let destinoSelecionado = $state(''); // '' = padrão (env)
-
-	onMount(async () => {
-		try {
-			const r = await listarDestinos();
-			destinosDisponiveis = r?.destinos ?? [];
-		} catch {
-			// sem destinos — usa o padrão
-		}
-	});
+	// ── destinos de publicação (removido — agora fica na página /publicar) ────
 
 	let aviso = $state(null);
 	let publicando = $state(false);
 	async function publicarOferta(c) {
-		publicando = true;
-		aviso = null;
-		try {
-			const r = await publicar(c, { destinoId: destinoSelecionado || undefined });
-			aviso = { ok: true, ...r };
-		} catch (e) {
-			aviso = { ok: false, erro: e.message };
-		} finally {
-			publicando = false;
-		}
+		// Navega para a página de publicação com os dados do produto
+		const dados = encodeURIComponent(JSON.stringify(c));
+		goto(`/publicar?dados=${dados}`);
 	}
 </script>
 
@@ -334,33 +317,6 @@
 	Comissão alta com zero venda costuma ser produto-fantasma. O piso de vendas e a nota mínima
 	deixam na peneira só o que já tem tração.{#if fonteAtiva}<span class="fonte dado"> · fonte: {fonteAtiva}</span>{/if}
 </p>
-
-{#if destinosDisponiveis.length > 0}
-	<div class="seletor-canal">
-		<label class="rotulo">📡 Publicar em:</label>
-		<select bind:value={destinoSelecionado} class="dado">
-			<option value="">Canal padrão (env)</option>
-			{#each destinosDisponiveis as d (d.id)}
-				<option value={d.id}>{d.nome} ({d.tipo})</option>
-			{/each}
-		</select>
-	</div>
-{/if}
-
-{#if aviso}
-	<div class="publicacao" class:falha={!aviso.ok} role="status">
-		<button class="fechar" onclick={() => (aviso = null)} aria-label="fechar">✕</button>
-		{#if aviso.ok}
-			<p class="cab">Publicado no canal <strong>{aviso.canal}</strong> · <span class="dado">{aviso.detalhe}</span></p>
-			<pre class="msg">{aviso.mensagem}</pre>
-			{#if aviso.sub_id}
-				<p class="subid dado">atribuição: {aviso.sub_id}</p>
-			{/if}
-		{:else}
-			<p class="cab">Não consegui publicar: {aviso.erro}</p>
-		{/if}
-	</div>
-{/if}
 
 {#if carregando}
 	<p class="aviso">Garimpando os melhores produtos…</p>

@@ -71,6 +71,7 @@ func main() {
 	// Publicador: Dispatcher com TelegramSender se TELEGRAM_BOT_TOKEN/CHAT_ID
 	// estiverem no ambiente (com suporte a múltiplos destinos); senão, Mock.
 	destinos := publish.NovoMemDestinoStore()
+	templates := publish.NovoMemTemplateStore()
 	pub := publish.NovoComDestinos(destinos)
 
 	// Scheduler: Cloud Scheduler com -tags gcp + env; NopScheduler caso contrário.
@@ -105,6 +106,7 @@ func main() {
 		Scheduler:  sched,
 		Auth:       verifier,
 		Destinos:   destinos,
+		Templates:  templates,
 	}
 	logger.Info("garimpo-api iniciando",
 		"addr", *addr, "fonte", *fonte, "categoria", *categoria, "keyword", *keyword,

@@ -53,6 +53,11 @@ func inlineKeyboard(link string) map[string]any {
 func (t *TelegramSender) Enviar(ctx context.Context, o Oferta, chatID string) (Resultado, error) {
 	msg := o.MensagemHTML()
 
+	// Se tem imagem, usa sendPhoto com caption
+	if o.Imagem != "" {
+		return t.enviarFoto(ctx, o, chatID, msg)
+	}
+
 	payload := map[string]any{
 		"chat_id":                  chatID,
 		"text":                     msg,
@@ -88,6 +93,45 @@ func (t *TelegramSender) Enviar(ctx context.Context, o Oferta, chatID string) (R
 			fmt.Errorf("telegram: %s", r.Description)
 	}
 	return Resultado{Canal: "telegram", Enviado: true, Mensagem: msg, Detalhe: "enviado"}, nil
+}
+
+// enviarFoto usa sendPhoto do Telegram (foto + caption + botão inline).
+func (t *TelegramSender) enviarFoto(ctx context.Context, o Oferta, chatID, caption string) (Resultado, error) {
+	payload := map[string]any{
+		"chat_id":    chatID,
+		"photo":      o.Imagem,
+		"caption":    caption,
+		"parse_mode": "HTML",
+	}
+	if kb := inlineKeyboard(o.Link); kb != nil {
+		payload["reply_markup"] = kb
+	}
+
+	corpo, _ := json.Marshal(payload)
+	url := fmt.Sprintf("%s/bot%s/sendPhoto", t.base(), t.token)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
+	if err != nil {
+		return Resultado{}, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := t.http.Do(req)
+	if err != nil {
+		return Resultado{Canal: "telegram", Enviado: false, Mensagem: caption, Detalhe: err.Error()}, err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Ok          bool   `json:"ok"`
+		Description string `json:"description"`
+	}
+	_ = json.NewDecoder(resp.Body).Decode(&r)
+	if !r.Ok {
+		return Resultado{Canal: "telegram", Enviado: false, Mensagem: caption, Detalhe: r.Description},
+			fmt.Errorf("telegram: %s", r.Description)
+	}
+	return Resultado{Canal: "telegram", Enviado: true, Mensagem: caption, Detalhe: "enviado com foto"}, nil
 }
 
 // ─── Compat: TelegramPublicador (wrapper legado para testes que usam Publicador) ─
