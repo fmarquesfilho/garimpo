@@ -6,7 +6,7 @@
     "rewrites": [
       {
         "source": "/api/**",
-        "run": { "serviceId": "garimpo", "region": "southamerica-east1" }
+        "run": { "serviceId": "garimpo-api", "region": "southamerica-east1" }
       },
       { "source": "**", "destination": "/200.html" }
     ],
