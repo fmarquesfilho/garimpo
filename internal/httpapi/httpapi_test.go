@@ -406,3 +406,299 @@ func TestHealthRetornaStoreELogs(t *testing.T) {
 		t.Errorf("health deveria expor info de logs")
 	}
 }
+
+// --- Testes de destinos ---------------------------------------------------
+
+func TestDestinosCRUD(t *testing.T) {
+	destinos := publish.NovoMemDestinoStore()
+	srv := &Server{
+		Eventos:    &spyStore{},
+		Publicador: &spyPub{},
+		Auth:       fakeVerifier{},
+		Destinos:   destinos,
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
+
+	// POST cria destino
+	corpo := []byte(`{"nome":"Ofertas Beleza","tipo":"telegram","config":"@beleza"}`)
+	rec := req(t, h, "POST", "/api/destinos", corpo, authH)
+	if rec.Code != 201 {
+		t.Fatalf("POST /api/destinos esperava 201, veio %d: %s", rec.Code, rec.Body.String())
+	}
+
+	// GET lista destinos
+	rec = req(t, h, "GET", "/api/destinos", nil, map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("GET /api/destinos esperava 200, veio %d", rec.Code)
+	}
+	var resp struct {
+		Destinos []publish.Destino `json:"destinos"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if len(resp.Destinos) != 1 || resp.Destinos[0].Config != "@beleza" {
+		t.Errorf("listagem inesperada: %+v", resp.Destinos)
+	}
+
+	// DELETE remove destino
+	rec = req(t, h, "DELETE", "/api/destinos?id=ofertas-beleza", nil, map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("DELETE esperava 200, veio %d: %s", rec.Code, rec.Body.String())
+	}
+
+	// GET após delete → vazio
+	rec = req(t, h, "GET", "/api/destinos", nil, map[string]string{"Authorization": "Bearer tok"})
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if len(resp.Destinos) != 0 {
+		t.Errorf("após delete deveria estar vazio: %+v", resp.Destinos)
+	}
+}
+
+func TestDestinosExigeAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/destinos", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
+	}
+}
+
+// --- Testes de templates ---------------------------------------------------
+
+func TestTemplatesCRUD(t *testing.T) {
+	srv := &Server{
+		Eventos:    &spyStore{},
+		Publicador: &spyPub{},
+		Auth:       fakeVerifier{},
+		Templates:  publish.NovoMemTemplateStore(),
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
+
+	// GET lista templates (padrão embutidos)
+	rec := req(t, h, "GET", "/api/templates", nil, map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("GET esperava 200, veio %d", rec.Code)
+	}
+	var resp struct {
+		Templates []publish.Template `json:"templates"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if len(resp.Templates) < 2 {
+		t.Errorf("deveria ter ao menos 2 templates padrão: %d", len(resp.Templates))
+	}
+
+	// POST cria template
+	corpo := []byte(`{"nome":"Promoção Flash","corpo":"🔥 <b>{{nome}}</b> por {{preco}}!","com_foto":true}`)
+	rec = req(t, h, "POST", "/api/templates", corpo, authH)
+	if rec.Code != 201 {
+		t.Fatalf("POST esperava 201, veio %d: %s", rec.Code, rec.Body.String())
+	}
+
+	// DELETE remove
+	rec = req(t, h, "DELETE", "/api/templates?id=promocao-flash", nil, map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("DELETE esperava 200, veio %d", rec.Code)
+	}
+}
+
+func TestTemplatePreview(t *testing.T) {
+	srv := &Server{
+		Eventos:    &spyStore{},
+		Publicador: &spyPub{},
+		Auth:       fakeVerifier{},
+		Templates:  publish.NovoMemTemplateStore(),
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+
+	corpo := []byte(`{"template_id":"padrao","nome":"Sérum Vitamina C","preco":89.90,"categoria":"Beleza"}`)
+	rec := req(t, h, "POST", "/api/templates/preview", corpo, map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 200 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		Preview string `json:"preview"`
+		ComFoto bool   `json:"com_foto"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.Preview == "" {
+		t.Error("preview não deveria ser vazio")
+	}
+	if resp.ComFoto {
+		t.Error("template 'padrao' não deveria ter com_foto=true")
+	}
+}
+
+// --- Testes de publicações -------------------------------------------------
+
+func TestPublicacoesAgendarImediato(t *testing.T) {
+	sp := &spyStore{}
+	pub := &spyPub{}
+	srv := &Server{
+		Eventos:    sp,
+		Publicador: pub,
+		Auth:       fakeVerifier{},
+		Templates:  publish.NovoMemTemplateStore(),
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
+
+	corpo := []byte(`{"nome":"Sérum","preco":100,"comissao":0.15,"link":"http://l","estrategia":"nicho"}`)
+	rec := req(t, h, "POST", "/api/publicacoes", corpo, authH)
+	if rec.Code != 201 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp struct {
+		Publicacao struct {
+			Status  string `json:"status"`
+			Detalhe string `json:"detalhe"`
+		} `json:"publicacao"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.Publicacao.Status != "enviada" {
+		t.Errorf("sem agendada_em deveria enviar imediatamente, status=%q", resp.Publicacao.Status)
+	}
+	if pub.chamadas != 1 {
+		t.Errorf("publicador deveria ter sido chamado 1 vez, veio %d", pub.chamadas)
+	}
+}
+
+func TestPublicacoesAgendar(t *testing.T) {
+	sp := &spyStore{}
+	pub := &spyPub{}
+	srv := &Server{
+		Eventos:    sp,
+		Publicador: pub,
+		Auth:       fakeVerifier{},
+		Templates:  publish.NovoMemTemplateStore(),
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
+
+	corpo := []byte(`{"nome":"Sérum","preco":100,"estrategia":"nicho","agendada_em":"2026-12-25T10:00:00Z"}`)
+	rec := req(t, h, "POST", "/api/publicacoes", corpo, authH)
+	if rec.Code != 201 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp struct {
+		Publicacao struct {
+			Status     string `json:"status"`
+			AgendadaEm string `json:"agendada_em"`
+		} `json:"publicacao"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.Publicacao.Status != "agendada" {
+		t.Errorf("com agendada_em deveria ficar agendada, status=%q", resp.Publicacao.Status)
+	}
+	if pub.chamadas != 0 {
+		t.Errorf("agendada NÃO deveria chamar o publicador, chamadas=%d", pub.chamadas)
+	}
+}
+
+func TestPublicacoesExigeAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/publicacoes", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
+	}
+	rec = req(t, h, "POST", "/api/publicacoes", []byte(`{"nome":"x"}`),
+		map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 401 {
+		t.Errorf("POST sem auth deveria dar 401, veio %d", rec.Code)
+	}
+}
+
+// --- Testes de conversões --------------------------------------------------
+
+func TestConversoesExigeAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/conversoes", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
+	}
+}
+
+func TestConversoesComAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/conversoes", nil, map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+// --- Testes de publicar com template e imagem ------------------------------
+
+func TestPublicarComDestinoIDETemplateID(t *testing.T) {
+	pub := &spyPub{}
+	destinos := publish.NovoMemDestinoStore()
+	_ = destinos.Salvar(context.Background(), publish.Destino{
+		ID: "beleza", Nome: "Beleza", Tipo: "telegram", Config: "@beleza", Ativo: true,
+	})
+
+	srv := &Server{
+		Eventos:    &spyStore{},
+		Publicador: pub,
+		Auth:       fakeVerifier{},
+		Destinos:   destinos,
+		Templates:  publish.NovoMemTemplateStore(),
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+
+	corpo := []byte(`{"id":"P1","nome":"Sérum","preco":100,"link":"http://l","estrategia":"nicho","destino_id":"beleza","template_id":"padrao","imagem":"http://img.jpg"}`)
+	rec := req(t, h, "POST", "/api/publicar", corpo,
+		map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 200 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	// Template "padrao" tem com_foto=false → imagem deve ser removida
+	if pub.ultima.Imagem != "" {
+		t.Errorf("template sem foto deveria remover imagem, mas ficou: %q", pub.ultima.Imagem)
+	}
+	if pub.ultima.DestinoID != "beleza" {
+		t.Errorf("destino_id deveria ser 'beleza', veio %q", pub.ultima.DestinoID)
+	}
+}
+
+func TestPublicarComTemplateFotoMantemImagem(t *testing.T) {
+	pub := &spyPub{}
+	srv := &Server{
+		Eventos:    &spyStore{},
+		Publicador: pub,
+		Auth:       fakeVerifier{},
+		Templates:  publish.NovoMemTemplateStore(),
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return &fonteFake{produtos: amostra}, "fake"
+		},
+	}
+	h := srv.Handler()
+
+	corpo := []byte(`{"id":"P1","nome":"Sérum","preco":100,"link":"http://l","estrategia":"nicho","template_id":"foto","imagem":"http://img.jpg"}`)
+	rec := req(t, h, "POST", "/api/publicar", corpo,
+		map[string]string{"Content-Type": "application/json"})
+	if rec.Code != 200 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	// Template "foto" tem com_foto=true → imagem deve ser mantida
+	if pub.ultima.Imagem != "http://img.jpg" {
+		t.Errorf("template com foto deveria manter imagem, mas ficou: %q", pub.ultima.Imagem)
+	}
+}

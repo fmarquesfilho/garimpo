@@ -72,3 +72,33 @@ func TestSlugificar(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalizarBusca_ShopIDsSemKeywords(t *testing.T) {
+	b := NormalizarBusca(Busca{ShopIDs: []int64{12345}})
+	if b.ID != "loja-12345" {
+		t.Errorf("esperava ID=loja-12345, veio %q", b.ID)
+	}
+	if b.Estrategia != "nicho" {
+		t.Errorf("estrategia padrão deveria ser nicho, veio %q", b.Estrategia)
+	}
+}
+
+func TestNormalizarBusca_ShopIDsComKeywords(t *testing.T) {
+	b := NormalizarBusca(Busca{Keywords: []string{"sérum"}, ShopIDs: []int64{99}})
+	if b.ID != "serum" { // slug da keyword tem prioridade
+		t.Errorf("esperava ID=serum (slug da keyword), veio %q", b.ID)
+	}
+	if len(b.ShopIDs) != 1 || b.ShopIDs[0] != 99 {
+		t.Errorf("shop_ids deveria ser preservado: %v", b.ShopIDs)
+	}
+}
+
+func TestNormalizarBusca_IDExplicitoPreservaShopIDs(t *testing.T) {
+	b := NormalizarBusca(Busca{ID: "minha-loja", ShopIDs: []int64{1, 2, 3}})
+	if b.ID != "minha-loja" {
+		t.Errorf("ID explícito deveria ser preservado, veio %q", b.ID)
+	}
+	if len(b.ShopIDs) != 3 {
+		t.Errorf("shop_ids deveria ter 3 elementos: %v", b.ShopIDs)
+	}
+}
