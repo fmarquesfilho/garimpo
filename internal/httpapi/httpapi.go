@@ -138,19 +138,33 @@ func (srv *Server) Handler() http.Handler {
 	srv.cache = map[string]*cacheEntry{}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/health", srv.health)
-	mux.HandleFunc("/api/candidatos", srv.candidatos)
-	mux.HandleFunc("/api/comparar", srv.comparar)
-	mux.HandleFunc("/api/eventos", srv.eventos)
-	mux.HandleFunc("/api/publicar", srv.publicar)
-	mux.HandleFunc("/api/coletar", srv.coletar)
-	mux.HandleFunc("/api/estatisticas", srv.estatisticas)
-	mux.HandleFunc("/api/coletas", srv.coletas)
-	mux.HandleFunc("/api/buscas", srv.buscas)
-	mux.HandleFunc("/api/destinos", srv.destinos)
-	mux.HandleFunc("/api/conversoes", srv.conversoes)
-	mux.HandleFunc("/api/templates", srv.templates)
-	mux.HandleFunc("/api/templates/preview", srv.templates)
+
+	// ── Rotas com método explícito (Go 1.22+ mux patterns) ────────────────
+	mux.HandleFunc("GET /api/health", srv.health)
+	mux.HandleFunc("GET /api/candidatos", srv.candidatos)
+	mux.HandleFunc("GET /api/comparar", srv.comparar)
+	mux.HandleFunc("POST /api/eventos", srv.eventos)
+	mux.HandleFunc("POST /api/publicar", srv.publicar)
+	mux.HandleFunc("POST /api/coletar", srv.coletar)
+	mux.HandleFunc("GET /api/estatisticas", srv.estatisticas)
+	mux.HandleFunc("GET /api/coletas", srv.coletas)
+	mux.HandleFunc("GET /api/conversoes", srv.conversoes)
+
+	// Buscas: GET lista, POST salva/remove
+	mux.HandleFunc("GET /api/buscas", srv.listarBuscas)
+	mux.HandleFunc("POST /api/buscas", srv.salvarBusca)
+
+	// Destinos: GET lista, POST salva, DELETE remove
+	mux.HandleFunc("GET /api/destinos", srv.listarDestinos)
+	mux.HandleFunc("POST /api/destinos", srv.salvarDestino)
+	mux.HandleFunc("DELETE /api/destinos", srv.deletarDestino)
+
+	// Templates: GET lista, POST salva, DELETE remove, POST preview
+	mux.HandleFunc("GET /api/templates", srv.listarTemplates)
+	mux.HandleFunc("POST /api/templates", srv.salvarTemplate)
+	mux.HandleFunc("DELETE /api/templates", srv.deletarTemplate)
+	mux.HandleFunc("POST /api/templates/preview", srv.templatePreview)
+
 	return cors(srv.logRequests(mux))
 }
 
@@ -218,10 +232,6 @@ func cors(next http.Handler) http.Handler {
 
 // eventos registra uma decisão de curadoria (ex.: produto selecionado) no store.
 func (srv *Server) eventos(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeErr(w, http.StatusMethodNotAllowed, "use POST")
-		return
-	}
 	var e store.Evento
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")
@@ -239,10 +249,6 @@ func (srv *Server) eventos(w http.ResponseWriter, r *http.Request) {
 
 // publicar envia a oferta para o canal (Telegram/Mock) e registra a publicação.
 func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeErr(w, http.StatusMethodNotAllowed, "use POST")
-		return
-	}
 	var c struct {
 		ID         string  `json:"id"`
 		Nome       string  `json:"nome"`
@@ -316,10 +322,6 @@ func (srv *Server) autorizadoColeta(r *http.Request) bool {
 // coletar roda a busca de uma categoria e grava um snapshot (top N do momento)
 // para análise posterior. Disparado pelo Cloud Scheduler em cron.
 func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeErr(w, http.StatusMethodNotAllowed, "use POST")
-		return
-	}
 	if !srv.autorizadoColeta(r) {
 		writeErr(w, http.StatusUnauthorized, "token de coleta inválido")
 		return
@@ -391,92 +393,80 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// buscas gerencia os perfis de coleta sincronizados no servidor:
-//
-//	GET  /api/buscas         -> lista os perfis ativos
-//	POST /api/buscas         -> salva/atualiza um perfil (ativo=true)
-//	POST /api/buscas?remover -> grava tombstone (ativo=false) de um perfil
-//
-// É a camada de sync (BigQuery) das buscas salvas; o front também guarda em
-// localStorage para uso manual imediato.
-func (srv *Server) buscas(w http.ResponseWriter, r *http.Request) {
+// listarBuscas devolve os perfis de coleta ativos do usuário.
+func (srv *Server) listarBuscas(w http.ResponseWriter, r *http.Request) {
 	user := srv.usuarioDoRequest(r)
-
-	switch r.Method {
-	case http.MethodGet:
-		// Sem auth → lista vazia (buscas são privadas)
-		if user == nil {
-			writeJSON(w, http.StatusOK, map[string]any{"buscas": []store.Busca{}, "store": srv.Eventos.Nome()})
-			return
-		}
-		lista, err := srv.Eventos.ListarBuscas(r.Context())
-		if err != nil {
-			srv.Logger.Error("listar buscas falhou", slog.String("erro", err.Error()))
-			writeErr(w, http.StatusBadGateway, err.Error())
-			return
-		}
-		// Filtra por owner
-		var filtrada []store.Busca
-		for _, b := range lista {
-			if b.OwnerUID == "" || b.OwnerUID == user.UID {
-				filtrada = append(filtrada, b)
-			}
-		}
-		writeJSON(w, http.StatusOK, map[string]any{"buscas": filtrada, "store": srv.Eventos.Nome()})
-	case http.MethodPost:
-		if user == nil {
-			writeErr(w, http.StatusUnauthorized, "faça login para salvar buscas")
-			return
-		}
-		var b store.Busca
-		if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
-			writeErr(w, http.StatusBadRequest, "json inválido")
-			return
-		}
-		// normaliza: preenche ID, converte legados (nome/keyword string), garante estratégia
-		b = store.NormalizarBusca(b)
-		if b.ID == "" {
-			writeErr(w, http.StatusBadRequest, "busca precisa de ao menos uma keyword")
-			return
-		}
-		b.Ativo = !r.URL.Query().Has("remover")
-		// Associa o owner se autenticado
-		if user != nil {
-			b.OwnerUID = user.UID
-		}
-		if err := srv.Eventos.SalvarBusca(r.Context(), b); err != nil {
-			srv.Logger.Error("salvar busca falhou", slog.String("erro", err.Error()))
-			writeErr(w, http.StatusBadGateway, err.Error())
-			return
-		}
-
-		// Sincroniza com o Cloud Scheduler (best-effort, não bloqueia o usuário)
-		go func() {
-			params := scheduler.ColetaParams{
-				Categoria:  b.Categoria,
-				Estrategia: b.Estrategia,
-				Top:        b.Top,
-				VendasMin:  b.VendasMin,
-				NotaMin:    b.NotaMin,
-			}
-			var err error
-			if b.Ativo {
-				err = srv.Scheduler.SyncBusca(context.Background(), b.ID, b.Keywords, b.Cron, params)
-			} else {
-				err = srv.Scheduler.DeletarBusca(context.Background(), b.ID, b.Keywords)
-			}
-			if err != nil {
-				srv.Logger.Error("scheduler sync falhou", slog.String("busca", b.ID), slog.String("erro", err.Error()))
-			} else {
-				srv.Logger.Info("scheduler sync", slog.String("busca", b.ID), slog.Bool("ativo", b.Ativo), slog.String("cron", b.Cron))
-			}
-		}()
-
-		srv.Logger.Info("busca salva", slog.String("id", b.ID), slog.Bool("ativo", b.Ativo))
-		writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "id": b.ID, "ativo": b.Ativo})
-	default:
-		writeErr(w, http.StatusMethodNotAllowed, "use GET ou POST")
+	// Sem auth → lista vazia (buscas são privadas)
+	if user == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"buscas": []store.Busca{}, "store": srv.Eventos.Nome()})
+		return
 	}
+	lista, err := srv.Eventos.ListarBuscas(r.Context())
+	if err != nil {
+		srv.Logger.Error("listar buscas falhou", slog.String("erro", err.Error()))
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	// Filtra por owner
+	var filtrada []store.Busca
+	for _, b := range lista {
+		if b.OwnerUID == "" || b.OwnerUID == user.UID {
+			filtrada = append(filtrada, b)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"buscas": filtrada, "store": srv.Eventos.Nome()})
+}
+
+// salvarBusca salva/atualiza um perfil de coleta. Com ?remover, grava tombstone.
+func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
+	user := srv.usuarioDoRequest(r)
+	if user == nil {
+		writeErr(w, http.StatusUnauthorized, "faça login para salvar buscas")
+		return
+	}
+	var b store.Busca
+	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+		writeErr(w, http.StatusBadRequest, "json inválido")
+		return
+	}
+	b = store.NormalizarBusca(b)
+	if b.ID == "" {
+		writeErr(w, http.StatusBadRequest, "busca precisa de ao menos uma keyword")
+		return
+	}
+	b.Ativo = !r.URL.Query().Has("remover")
+	b.OwnerUID = user.UID
+
+	if err := srv.Eventos.SalvarBusca(r.Context(), b); err != nil {
+		srv.Logger.Error("salvar busca falhou", slog.String("erro", err.Error()))
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	// Sincroniza com o Cloud Scheduler (best-effort, não bloqueia o usuário)
+	go func() {
+		params := scheduler.ColetaParams{
+			Categoria:  b.Categoria,
+			Estrategia: b.Estrategia,
+			Top:        b.Top,
+			VendasMin:  b.VendasMin,
+			NotaMin:    b.NotaMin,
+		}
+		var err error
+		if b.Ativo {
+			err = srv.Scheduler.SyncBusca(context.Background(), b.ID, b.Keywords, b.Cron, params)
+		} else {
+			err = srv.Scheduler.DeletarBusca(context.Background(), b.ID, b.Keywords)
+		}
+		if err != nil {
+			srv.Logger.Error("scheduler sync falhou", slog.String("busca", b.ID), slog.String("erro", err.Error()))
+		} else {
+			srv.Logger.Info("scheduler sync", slog.String("busca", b.ID), slog.Bool("ativo", b.Ativo), slog.String("cron", b.Cron))
+		}
+	}()
+
+	srv.Logger.Info("busca salva", slog.String("id", b.ID), slog.Bool("ativo", b.Ativo))
+	writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "id": b.ID, "ativo": b.Ativo})
 }
 
 // estatisticas devolve o resumo descritivo dos snapshots coletados (por
