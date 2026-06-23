@@ -143,7 +143,7 @@
 				const r = await resolverLinkShopee(url);
 				produto = {
 					...produto,
-					link: r.url_final || url,
+					link: url, // mantém o link curto original (mais limpo no Telegram)
 					nome: r.nome || produto.nome || '',
 					id: r.item_id || ''
 				};
@@ -194,8 +194,7 @@
 				destino_id: destinoId || undefined,
 				template_id: templateId || undefined,
 				agendada_em: agendamento ? new Date(agendamento).toISOString() : '',
-				// A legenda editada vai como campo extra — o backend pode usá-la
-				legenda_custom: legendaEditada ? legenda : undefined
+				legenda_custom: legenda || undefined
 			});
 			resultado = r.publicacao;
 		} catch (e) {

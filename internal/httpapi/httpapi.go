@@ -291,16 +291,17 @@ func (srv *Server) eventos(w http.ResponseWriter, r *http.Request) {
 // publicar envia a oferta para o canal (Telegram/Mock) e registra a publicação.
 func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
 	var c struct {
-		ID         string  `json:"id"`
-		Nome       string  `json:"nome"`
-		Categoria  string  `json:"categoria"`
-		Preco      float64 `json:"preco"`
-		Comissao   float64 `json:"comissao"`
-		Link       string  `json:"link"`
-		Imagem     string  `json:"imagem"`
-		Estrategia string  `json:"estrategia"`
-		DestinoID  string  `json:"destino_id"`
-		TemplateID string  `json:"template_id"`
+		ID            string  `json:"id"`
+		Nome          string  `json:"nome"`
+		Categoria     string  `json:"categoria"`
+		Preco         float64 `json:"preco"`
+		Comissao      float64 `json:"comissao"`
+		Link          string  `json:"link"`
+		Imagem        string  `json:"imagem"`
+		Estrategia    string  `json:"estrategia"`
+		DestinoID     string  `json:"destino_id"`
+		TemplateID    string  `json:"template_id"`
+		LegendaCustom string  `json:"legenda_custom"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")
@@ -311,17 +312,7 @@ func (srv *Server) publicar(w http.ResponseWriter, r *http.Request) {
 		ProdutoID: c.ID, Nome: c.Nome, Categoria: c.Categoria,
 		Preco: c.Preco, Comissao: c.Comissao, Link: c.Link, Imagem: c.Imagem,
 		Estrategia: c.Estrategia, DestinoID: c.DestinoID, TemplateID: c.TemplateID,
-	}
-
-	// Se um template foi escolhido, aplica na oferta (renderiza corpo + decide se envia foto)
-	if c.TemplateID != "" && srv.Templates != nil {
-		tmpl, err := srv.Templates.Buscar(r.Context(), c.TemplateID)
-		if err == nil {
-			// Template com foto: mantém imagem; sem foto: remove imagem para forçar sendMessage
-			if !tmpl.ComFoto {
-				oferta.Imagem = ""
-			}
-		}
+		LegendaHTML: c.LegendaCustom,
 	}
 
 	res, err := srv.Publicador.Publicar(r.Context(), oferta)

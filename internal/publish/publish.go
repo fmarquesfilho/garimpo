@@ -39,16 +39,17 @@ type DestinoStore interface {
 // Oferta é o que sai para um canal: o produto curado + o link rastreável.
 // Comissão entra aqui só para registro interno — NUNCA aparece na mensagem ao público.
 type Oferta struct {
-	ProdutoID  string
-	Nome       string
-	Categoria  string
-	Preco      float64
-	Comissao   float64
-	Link       string
-	Imagem     string // URL da foto do produto
-	Estrategia string
-	DestinoID  string // qual destino usar (vazio = padrão do provedor)
-	TemplateID string // qual template usar (vazio = MensagemHTML padrão)
+	ProdutoID    string
+	Nome         string
+	Categoria    string
+	Preco        float64
+	Comissao     float64
+	Link         string
+	Imagem       string // URL da foto do produto
+	Estrategia   string
+	DestinoID    string // qual destino usar (vazio = padrão do provedor)
+	TemplateID   string // qual template usar (vazio = MensagemHTML padrão)
+	LegendaHTML  string // legenda editada pelo user (se vazio, usa MensagemHTML)
 }
 
 // Resultado descreve o que aconteceu (para o front mostrar o que "saiu").

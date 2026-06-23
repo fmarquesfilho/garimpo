@@ -36,17 +36,18 @@ func (srv *Server) agendarPublicacao(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		ProdutoID  string  `json:"produto_id"`
-		Nome       string  `json:"nome"`
-		Categoria  string  `json:"categoria"`
-		Preco      float64 `json:"preco"`
-		Comissao   float64 `json:"comissao"`
-		Link       string  `json:"link"`
-		Imagem     string  `json:"imagem"`
-		Estrategia string  `json:"estrategia"`
-		DestinoID  string  `json:"destino_id"`
-		TemplateID string  `json:"template_id"`
-		AgendadaEm string  `json:"agendada_em"` // ISO 8601; vazio = enviar agora
+		ProdutoID    string  `json:"produto_id"`
+		Nome         string  `json:"nome"`
+		Categoria    string  `json:"categoria"`
+		Preco        float64 `json:"preco"`
+		Comissao     float64 `json:"comissao"`
+		Link         string  `json:"link"`
+		Imagem       string  `json:"imagem"`
+		Estrategia   string  `json:"estrategia"`
+		DestinoID    string  `json:"destino_id"`
+		TemplateID   string  `json:"template_id"`
+		AgendadaEm   string  `json:"agendada_em"`
+		LegendaCustom string `json:"legenda_custom"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")
@@ -83,14 +84,7 @@ func (srv *Server) agendarPublicacao(w http.ResponseWriter, r *http.Request) {
 			ProdutoID: req.ProdutoID, Nome: req.Nome, Categoria: req.Categoria,
 			Preco: req.Preco, Comissao: req.Comissao, Link: req.Link, Imagem: req.Imagem,
 			Estrategia: req.Estrategia, DestinoID: req.DestinoID, TemplateID: req.TemplateID,
-		}
-
-		// Aplica template (se com_foto=false, remove imagem)
-		if req.TemplateID != "" && srv.Templates != nil {
-			tmpl, err := srv.Templates.Buscar(r.Context(), req.TemplateID)
-			if err == nil && !tmpl.ComFoto {
-				oferta.Imagem = ""
-			}
+			LegendaHTML: req.LegendaCustom,
 		}
 
 		res, err := srv.Publicador.Publicar(r.Context(), oferta)

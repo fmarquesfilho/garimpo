@@ -51,7 +51,11 @@ func inlineKeyboard(link string) map[string]any {
 }
 
 func (t *TelegramSender) Enviar(ctx context.Context, o Oferta, chatID string) (Resultado, error) {
-	msg := o.MensagemHTML()
+	// Usa legenda customizada se fornecida, senão gera do template padrão
+	msg := o.LegendaHTML
+	if msg == "" {
+		msg = o.MensagemHTML()
+	}
 
 	// Se tem imagem, usa sendPhoto com caption
 	if o.Imagem != "" {

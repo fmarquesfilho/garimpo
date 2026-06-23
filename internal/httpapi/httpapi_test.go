@@ -688,18 +688,22 @@ func TestPublicarComDestinoIDETemplateID(t *testing.T) {
 	}
 	h := srv.Handler()
 
-	corpo := []byte(`{"id":"P1","nome":"Sérum","preco":100,"link":"http://l","estrategia":"nicho","destino_id":"beleza","template_id":"padrao","imagem":"http://img.jpg"}`)
+	corpo := []byte(`{"id":"P1","nome":"Sérum","preco":100,"link":"http://l","estrategia":"nicho","destino_id":"beleza","template_id":"padrao","imagem":"http://img.jpg","legenda_custom":"<b>Oferta!</b>"}`)
 	rec := req(t, h, "POST", "/api/publicar", corpo,
 		map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 200 {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
 	}
-	// Template "padrao" tem com_foto=false → imagem deve ser removida
-	if pub.ultima.Imagem != "" {
-		t.Errorf("template sem foto deveria remover imagem, mas ficou: %q", pub.ultima.Imagem)
+	// Imagem é sempre mantida (user decide no frontend)
+	if pub.ultima.Imagem != "http://img.jpg" {
+		t.Errorf("imagem deveria ser mantida, veio: %q", pub.ultima.Imagem)
 	}
 	if pub.ultima.DestinoID != "beleza" {
 		t.Errorf("destino_id deveria ser 'beleza', veio %q", pub.ultima.DestinoID)
+	}
+	// Legenda custom é enviada
+	if pub.ultima.LegendaHTML != "<b>Oferta!</b>" {
+		t.Errorf("legenda_custom deveria ser '<b>Oferta!</b>', veio %q", pub.ultima.LegendaHTML)
 	}
 }
 
