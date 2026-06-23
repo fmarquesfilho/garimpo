@@ -47,26 +47,17 @@ type ShopeeAPISource struct {
 	AppID  string
 	Secret string
 
-	// Filtros/ordenação do productOfferV2 (ver doc oficial; semântica de
-	// listType varia entre versões — confirme no seu painel):
-	//   listType: 0=Recomendados, 1=Maior comissão, 2=Top performance
-	//   sortType: 1=Relevância, 2=Vendidos, 3=Maior preço, 4=Menor preço, 5=Comissão
 	ListType     int
 	SortType     int
-	ProductCatID int    // categoria (nível 1/2/3) — use para puxar o nicho
-	Keyword      string // busca por nome
-	Limit        int    // itens por página (1-500)
-	MaxPages     int    // quantas páginas paginar
+	ProductCatID int
+	Keyword      string
+	ItemID       string // busca por itemId específico (resolver-link)
+	Limit        int
+	MaxPages     int
 
-	// CategoryLabel é carimbado em todos os produtos retornados. Como você
-	// consulta uma categoria por vez (ProductCatID), isto preenche Product.Category
-	// para a estratégia de nicho funcionar (ex.: "cosméticos").
 	CategoryLabel string
-
-	// Endpoint permite apontar para outro host (testes). Vazio = endpoint oficial.
-	Endpoint string
-
-	HTTPClient *http.Client
+	Endpoint      string
+	HTTPClient    *http.Client
 }
 
 // NewShopeeAPISource traz padrões alinhados à regra dela (priorizar comissão).
@@ -92,6 +83,9 @@ func (s *ShopeeAPISource) buildQuery(page int) string {
 	}
 	if s.ProductCatID != 0 {
 		args = append(args, fmt.Sprintf("productCatId: %d", s.ProductCatID))
+	}
+	if s.ItemID != "" {
+		args = append(args, fmt.Sprintf("itemId: %s", s.ItemID))
 	}
 	if s.Keyword != "" {
 		args = append(args, fmt.Sprintf("keyword: %q", s.Keyword))

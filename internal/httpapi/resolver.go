@@ -114,7 +114,7 @@ func extrairDadosURL(url string) (nome, shopID, itemID string) {
 // buscarProdutoPorID consulta productOfferV2 com itemId para obter dados completos.
 func buscarProdutoPorID(appID, secret, itemID string) *domain.Product {
 	src := source.NewShopeeAPISource(appID, secret)
-	src.Keyword = itemID // a API aceita itemId como keyword para busca exata
+	src.ItemID = itemID
 	src.Limit = 1
 	src.MaxPages = 1
 
