@@ -278,7 +278,7 @@
 						<p class="dica">Nenhum destino cadastrado. <a href="/canais">Adicione um destino</a> primeiro.</p>
 					{:else}
 						<select bind:value={destinoId}>
-							<option value="">Canal padrão</option>
+							<option value="" disabled>Selecione um destino…</option>
 							{#each destinos as d (d.id)}
 								<option value={d.id}>{d.nome} ({d.tipo})</option>
 							{/each}
@@ -322,7 +322,7 @@
 
 				<!-- Ações -->
 				<div class="acoes">
-					<button class="btn-enviar" onclick={enviarAgora} disabled={publicando}>
+					<button class="btn-enviar" onclick={enviarAgora} disabled={publicando || !destinoId}>
 						{#if publicando}
 							Enviando…
 						{:else if agendamento}
@@ -331,6 +331,9 @@
 							🚀 Enviar agora
 						{/if}
 					</button>
+					{#if !destinoId && destinos.length > 0}
+						<p class="dica">Selecione um destino acima para enviar.</p>
+					{/if}
 				</div>
 
 				{#if resultado}
