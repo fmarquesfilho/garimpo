@@ -25,6 +25,7 @@
 	// Colar link do produto
 	let linkColado = $state('');
 	let resolvendoLink = $state(false);
+	let linkAplicado = $state(false); // feedback visual
 
 	// Status
 	let publicando = $state(false);
@@ -63,6 +64,17 @@
 
 	async function gerarLegenda() {
 		if (!produto || legendaEditada) return;
+
+		// Fallback client-side caso a API falhe ou o template não exista
+		function legendaLocal() {
+			let txt = '';
+			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
+			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
+			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			return txt.trimEnd();
+		}
+
 		try {
 			const r = await previewTemplate({
 				template_id: templateId || undefined,
@@ -73,10 +85,11 @@
 				link: produto.link,
 				imagem: produto.imagem
 			});
-			legenda = r.preview ?? '';
+			legenda = r.preview || legendaLocal();
 			previewFoto = r.com_foto && !!produto.imagem;
 		} catch {
-			legenda = `✨ ${produto.nome}\n💸 R$ ${produto.preco?.toFixed(2)}`;
+			legenda = legendaLocal();
+			previewFoto = false;
 		}
 	}
 
@@ -108,11 +121,12 @@
 		const url = linkColado.trim();
 		if (!url) return;
 
+		linkAplicado = false;
+
 		// Detecta link curto
 		const isShortLink = /s\.shopee|shope\.ee/i.test(url) && !url.includes('-i.');
 
 		if (isShortLink) {
-			// Resolve o link curto no backend (segue redirects)
 			resolvendoLink = true;
 			try {
 				const r = await resolverLinkShopee(url);
@@ -123,13 +137,11 @@
 					id: r.item_id || ''
 				};
 			} catch {
-				// Fallback: usa o link como está
 				produto = { ...produto, link: url };
 			} finally {
 				resolvendoLink = false;
 			}
 		} else {
-			// URL longa: extrai nome direto do path
 			produto = { ...produto, link: url };
 			if (!produto.nome) {
 				const match = url.match(/\/([^\/\?]+?)(?:-i\.\d+\.\d+)?(?:\?|$)/);
@@ -140,6 +152,8 @@
 		}
 
 		linkColado = '';
+		linkAplicado = true;
+		setTimeout(() => { linkAplicado = false; }, 4000);
 		gerarLegenda();
 	}
 
@@ -217,7 +231,9 @@
 						</button>
 					</div>
 					{#if resolvendoLink}
-						<p class="dica">Resolvendo link curto…</p>
+						<p class="dica loading-msg">⏳ Resolvendo link curto…</p>
+					{:else if linkAplicado}
+						<p class="dica sucesso-msg">✓ Link aplicado — edite os campos abaixo se necessário.</p>
 					{/if}
 				</div>
 
@@ -364,6 +380,8 @@
 	}
 	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
 	.dica a { color: var(--ouro); text-decoration: underline; }
+	.sucesso-msg { color: #166534; }
+	.loading-msg { color: var(--ouro); }
 
 	/* Link input */
 	.link-input { display: flex; gap: var(--r2); flex-wrap: wrap; }
