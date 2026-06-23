@@ -8,6 +8,7 @@ import "context"
 type User struct {
 	UID   string
 	Email string
+	Admin bool // true se o email está na lista ADMIN_EMAILS
 }
 
 // Verifier valida tokens e extrai o usuário.

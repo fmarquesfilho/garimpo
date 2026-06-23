@@ -50,5 +50,6 @@ func (v *FirebaseVerifier) Verify(ctx context.Context, idToken string) *User {
 	return &User{
 		UID:   token.UID,
 		Email: email,
+		Admin: IsAdmin(email),
 	}
 }

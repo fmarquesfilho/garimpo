@@ -2,9 +2,12 @@
 	import '../app.css';
 	import { page } from '$app/stores';
 	import { usuario, login, logout } from '$lib/firebase.js';
+	import { verificarAdmin } from '$lib/api.js';
+	import { onMount } from 'svelte';
 	let { children } = $props();
 
 	let menuAberto = $state(false);
+	let isAdmin = $state(false);
 
 	const hoje = new Date().toLocaleDateString('pt-BR', {
 		weekday: 'long',
@@ -15,6 +18,15 @@
 	function fecharMenu() {
 		menuAberto = false;
 	}
+
+	// Verifica role quando o usuário loga
+	$effect(() => {
+		if ($usuario) {
+			verificarAdmin().then(r => { isAdmin = r?.admin ?? false; }).catch(() => { isAdmin = false; });
+		} else {
+			isAdmin = false;
+		}
+	});
 </script>
 
 <header class="topo">
@@ -53,7 +65,9 @@
 				<span class="menu-titulo">Monitoramento</span>
 				<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>⏱ Coletas</a>
 				<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'}>📊 Estatísticas</a>
-				<a href="/admin" class:atual={$page.url.pathname === '/admin'}>🛠 Admin</a>
+				{#if isAdmin}
+					<a href="/admin" class:atual={$page.url.pathname === '/admin'}>🛠 Admin</a>
+				{/if}
 			</div>
 		</nav>
 	{/if}

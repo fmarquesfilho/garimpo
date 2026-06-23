@@ -180,8 +180,10 @@ func (srv *Server) Handler() http.Handler {
 	// Lojas monitoradas: novidades (produtos novos + variações de preço)
 	mux.HandleFunc("GET /api/lojas/novidades", srv.novidades)
 
-	// Admin: logs em tempo real
+	// Admin: logs em tempo real, configuração
 	mux.HandleFunc("GET /api/admin/logs", srv.adminLogs)
+	mux.HandleFunc("POST /api/admin/log-level", srv.adminLogLevel)
+	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
 
 	return cors(srv.logRequests(mux))
 }

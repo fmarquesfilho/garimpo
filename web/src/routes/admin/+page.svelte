@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { buscarLogs } from '$lib/api.js';
+	import { buscarLogs, alterarNivelLog } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 
 	let logs = $state([]);
@@ -10,6 +10,7 @@
 	let erro = $state(null);
 	let filtroNivel = $state('');
 	let autoRefresh = $state(true);
+	let logLevel = $state('info');
 	let intervalo;
 
 	onMount(() => {
@@ -37,6 +38,14 @@
 		carregar();
 	});
 
+	async function mudarNivel() {
+		try {
+			await alterarNivelLog(logLevel);
+		} catch (e) {
+			erro = e.message;
+		}
+	}
+
 	const nivelCor = { error: '#b91c1c', warn: '#ca8a04', info: '#166534', debug: '#6b7280' };
 	const nivelBg = { error: '#fef2f2', warn: '#fefce8', info: '#f0fdf4', debug: '#f9fafb' };
 </script>
@@ -48,10 +57,21 @@
 <section class="admin-page">
 	<div class="admin-header">
 		<h1>🛠 Admin — Logs</h1>
-		<label class="auto-refresh">
-			<input type="checkbox" bind:checked={autoRefresh} />
-			Auto-refresh (5s)
-		</label>
+		<div class="admin-controls">
+			<div class="log-level-control">
+				<label>Granularidade:</label>
+				<select bind:value={logLevel} onchange={mudarNivel}>
+					<option value="debug">Debug (tudo)</option>
+					<option value="info">Info</option>
+					<option value="warn">Warn</option>
+					<option value="error">Só erros</option>
+				</select>
+			</div>
+			<label class="auto-refresh">
+				<input type="checkbox" bind:checked={autoRefresh} />
+				Auto-refresh (5s)
+			</label>
+		</div>
 	</div>
 
 	{#if !$usuario}
@@ -115,8 +135,11 @@
 
 <style>
 	.admin-page { max-width: 900px; }
-	.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r6); }
+	.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r6); flex-wrap: wrap; gap: var(--r3); }
 	.admin-header h1 { font-size: 1.4rem; margin: 0; }
+	.admin-controls { display: flex; align-items: center; gap: var(--r4); flex-wrap: wrap; }
+	.log-level-control { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; }
+	.log-level-control select { padding: 4px 10px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.82rem; background: var(--porcelana); }
 	.auto-refresh { font-size: 0.82rem; color: var(--tinta-suave); display: flex; align-items: center; gap: 6px; cursor: pointer; }
 	.auto-refresh input { accent-color: var(--ouro); }
 

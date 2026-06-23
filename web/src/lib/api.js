@@ -168,6 +168,16 @@ export function buscarLogs({ n = 100, nivel = '' } = {}) {
 	return pegar(`/api/admin/logs?${p}`);
 }
 
+/** Verifica se o usuário logado é admin. */
+export function verificarAdmin() {
+	return pegar('/api/admin/me');
+}
+
+/** Altera o nível de log em runtime (admin). */
+export function alterarNivelLog(nivel) {
+	return postar('/api/admin/log-level', { nivel });
+}
+
 /** Lista publicações por status (agendada|enviada|erro; vazio = todas). */
 export function listarPublicacoes({ status = '' } = {}) {
 	const qs = status ? `?status=${status}` : '';
