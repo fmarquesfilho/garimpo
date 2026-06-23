@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { listarDestinos, listarTemplates, previewTemplate, agendarPublicacao } from '$lib/api.js';
+	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 
-	// Produto vem via query params (serializado pelo card)
+	// Produto vem via query params
 	let produto = $state(null);
 	let destinos = $state([]);
 	let templates = $state([]);
@@ -14,23 +14,23 @@
 	// Seleções
 	let destinoId = $state('');
 	let templateId = $state('padrao');
-	let preview = $state('');
+	let agendamento = $state('');
+
+	// Legenda editável
+	let legenda = $state('');
+	let legendaEditada = $state(false); // se o user editou manualmente
 	let previewFoto = $state(false);
 
 	// Status
 	let publicando = $state(false);
 	let resultado = $state(null);
 	let erro = $state(null);
-	let agendamento = $state(''); // ISO datetime-local para agendar
 
 	onMount(async () => {
-		// Desserializa produto da URL
 		const params = $page.url.searchParams;
 		const dados = params.get('dados');
 		if (dados) {
-			try {
-				produto = JSON.parse(decodeURIComponent(dados));
-			} catch { /* */ }
+			try { produto = JSON.parse(decodeURIComponent(dados)); } catch { /* */ }
 		}
 		if (!produto) {
 			erro = 'Nenhum produto selecionado. Volte à curadoria e clique em Publicar.';
@@ -38,7 +38,6 @@
 			return;
 		}
 
-		// Carrega destinos e templates
 		try {
 			const [rd, rt] = await Promise.all([
 				listarDestinos().catch(() => ({ destinos: [] })),
@@ -55,11 +54,11 @@
 			carregando = false;
 		}
 
-		atualizarPreview();
+		gerarLegenda();
 	});
 
-	async function atualizarPreview() {
-		if (!produto) return;
+	async function gerarLegenda() {
+		if (!produto || legendaEditada) return;
 		try {
 			const r = await previewTemplate({
 				template_id: templateId || undefined,
@@ -70,18 +69,28 @@
 				link: produto.link,
 				imagem: produto.imagem
 			});
-			preview = r.preview ?? '';
-			previewFoto = r.com_foto && produto.imagem;
+			legenda = r.preview ?? '';
+			previewFoto = r.com_foto && !!produto.imagem;
 		} catch {
-			preview = `✨ ${produto.nome}\n💸 R$ ${produto.preco?.toFixed(2)}`;
+			legenda = `✨ ${produto.nome}\n💸 R$ ${produto.preco?.toFixed(2)}`;
 		}
 	}
 
-	// Recarrega preview quando template muda
+	// Regenera legenda quando template muda (se user não editou)
 	$effect(() => {
 		templateId;
-		atualizarPreview();
+		legendaEditada = false;
+		gerarLegenda();
 	});
+
+	function onLegendaInput() {
+		legendaEditada = true;
+	}
+
+	function resetarLegenda() {
+		legendaEditada = false;
+		gerarLegenda();
+	}
 
 	async function enviarAgora() {
 		publicando = true;
@@ -93,7 +102,9 @@
 				produto_id: produto.id,
 				destino_id: destinoId || undefined,
 				template_id: templateId || undefined,
-				agendada_em: agendamento ? new Date(agendamento).toISOString() : ''
+				agendada_em: agendamento ? new Date(agendamento).toISOString() : '',
+				// A legenda editada vai como campo extra — o backend pode usá-la
+				legenda_custom: legendaEditada ? legenda : undefined
 			});
 			resultado = r.publicacao;
 		} catch (e) {
@@ -122,7 +133,7 @@
 		<div class="aviso">{erro ?? 'Nenhum produto selecionado.'}</div>
 	{:else}
 		<div class="layout">
-			<!-- Coluna esquerda: Produto + Configuração -->
+			<!-- Coluna esquerda: Configuração -->
 			<div class="config">
 				<!-- Resumo do produto -->
 				<div class="card-produto">
@@ -166,12 +177,33 @@
 					{/if}
 				</div>
 
-				<!-- Ações -->
+				<!-- Legenda editável -->
+				<div class="campo-pub">
+					<div class="legenda-header">
+						<label>✏️ Legenda</label>
+						{#if legendaEditada}
+							<button class="btn-reset" onclick={resetarLegenda} type="button">↺ Resetar</button>
+						{/if}
+					</div>
+					<textarea
+						class="legenda-editor"
+						bind:value={legenda}
+						oninput={onLegendaInput}
+						rows="5"
+						placeholder="Edite a legenda antes de publicar…"
+					></textarea>
+					{#if legendaEditada}
+						<p class="dica-editada">Legenda editada manualmente. Clique ↺ para voltar ao template.</p>
+					{/if}
+				</div>
+
+				<!-- Agendamento -->
 				<div class="campo-pub">
 					<label>⏱ Agendar para (opcional)</label>
 					<input type="datetime-local" bind:value={agendamento} />
 				</div>
 
+				<!-- Ações -->
 				<div class="acoes">
 					<button class="btn-enviar" onclick={enviarAgora} disabled={publicando}>
 						{#if publicando}
@@ -192,11 +224,8 @@
 						{/if}
 					</div>
 				{/if}
-
 				{#if erro && produto}
-					<div class="resultado falha">
-						<p>✕ {erro}</p>
-					</div>
+					<div class="resultado falha"><p>✕ {erro}</p></div>
 				{/if}
 			</div>
 
@@ -207,7 +236,7 @@
 					{#if previewFoto && produto.imagem}
 						<img src={produto.imagem} alt="preview" class="preview-img" />
 					{/if}
-					<div class="preview-corpo">{@html preview.replace(/\n/g, '<br>')}</div>
+					<div class="preview-corpo">{@html legenda.replace(/\n/g, '<br>')}</div>
 					{#if produto.link}
 						<div class="preview-botao">
 							<span class="btn-fake">🛒 Comprar</span>
@@ -247,12 +276,27 @@
 
 	.campo-pub { display: flex; flex-direction: column; gap: 6px; }
 	.campo-pub label { font-weight: 600; font-size: 0.88rem; }
-	.campo-pub select {
+	.campo-pub select, .campo-pub input {
 		padding: 10px 14px; border: 1px solid var(--linha); border-radius: 10px;
 		font-size: 0.9rem; background: var(--porcelana);
 	}
 	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
 	.dica a { color: var(--ouro); text-decoration: underline; }
+
+	/* Legenda editável */
+	.legenda-header { display: flex; align-items: center; justify-content: space-between; }
+	.btn-reset {
+		border: none; background: transparent; color: var(--tinta-suave);
+		font-size: 0.78rem; font-weight: 600; cursor: pointer;
+	}
+	.btn-reset:hover { color: var(--ouro); }
+	.legenda-editor {
+		padding: 12px; border: 1px solid var(--linha); border-radius: 10px;
+		font-family: var(--ui); font-size: 0.9rem; line-height: 1.5;
+		background: white; resize: vertical; min-height: 100px;
+	}
+	.legenda-editor:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
+	.dica-editada { font-size: 0.75rem; color: var(--ouro); margin: 0; font-style: italic; }
 
 	.acoes { display: flex; gap: var(--r3); flex-wrap: wrap; }
 	.btn-enviar {
@@ -263,9 +307,7 @@
 	.btn-enviar:hover { background: #8f4c62; }
 	.btn-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
 
-	.resultado {
-		padding: var(--r3) var(--r4); border-radius: 10px; font-size: 0.88rem;
-	}
+	.resultado { padding: var(--r3) var(--r4); border-radius: 10px; font-size: 0.88rem; }
 	.resultado.ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
 	.resultado.falha { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
 	.resultado p { margin: 0; }
@@ -279,21 +321,13 @@
 		background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 	}
 	.preview-img { width: 100%; max-height: 240px; object-fit: cover; }
-	.preview-corpo {
-		padding: var(--r4); font-size: 0.92rem; line-height: 1.5;
-	}
-	.preview-botao {
-		padding: 0 var(--r4) var(--r4);
-	}
+	.preview-corpo { padding: var(--r4); font-size: 0.92rem; line-height: 1.5; }
+	.preview-botao { padding: 0 var(--r4) var(--r4); }
 	.btn-fake {
 		display: inline-block; padding: 8px 18px; background: #0088cc;
 		color: white; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
 	}
-	.preview-nota {
-		font-size: 0.75rem; color: var(--tinta-suave); margin-top: var(--r2);
-		font-style: italic;
-	}
-
+	.preview-nota { font-size: 0.75rem; color: var(--tinta-suave); margin-top: var(--r2); font-style: italic; }
 	.loading { color: var(--tinta-suave); }
 	.aviso { background: var(--porcelana); padding: var(--r4); border-radius: 10px; color: var(--tinta-suave); }
 </style>
