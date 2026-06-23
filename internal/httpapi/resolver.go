@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/domain"
+	"github.com/fmarquesfilho/garimpo/internal/source"
 )
 
 // resolverLink segue redirects de um link curto da Shopee e extrai dados do produto.
+// Se possível, busca dados completos (preço, comissão, imagem) via productOfferV2.
 // POST /api/resolver-link  body: {"url": "https://s.shopee.com.br/HASH"}
-// Retorna: {url_final, nome, shop_id, item_id}
 func (srv *Server) resolverLink(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		URL string `json:"url"`
@@ -22,7 +26,7 @@ func (srv *Server) resolverLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Segue redirects para obter a URL final (sem baixar o corpo)
+	// Segue redirects para obter a URL final
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -35,7 +39,6 @@ func (srv *Server) resolverLink(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := client.Head(req.URL)
 	if err != nil {
-		// Alguns links curtos não respondem a HEAD, tenta GET
 		resp, err = client.Get(req.URL)
 		if err != nil {
 			srv.Logger.Error("resolver-link falhou", slog.String("url", req.URL), slog.String("erro", err.Error()))
@@ -48,9 +51,6 @@ func (srv *Server) resolverLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	urlFinal := resp.Request.URL.String()
-
-	// Extrai dados da URL final da Shopee
-	// Formato: shopee.com.br/Nome-do-Produto-i.SHOP_ID.ITEM_ID
 	nome, shopID, itemID := extrairDadosURL(urlFinal)
 
 	result := map[string]any{
@@ -58,6 +58,23 @@ func (srv *Server) resolverLink(w http.ResponseWriter, r *http.Request) {
 		"nome":      nome,
 		"shop_id":   shopID,
 		"item_id":   itemID,
+	}
+
+	// Se temos itemId, busca dados completos na API de afiliados (preço, imagem, etc.)
+	if itemID != "" {
+		appID := os.Getenv("SHOPEE_APP_ID")
+		secret := os.Getenv("SHOPEE_SECRET")
+		if appID != "" && secret != "" {
+			if produto := buscarProdutoPorID(appID, secret, itemID); produto != nil {
+				result["nome"] = produto.Name
+				result["preco"] = produto.Price
+				result["comissao"] = produto.Commission
+				result["vendas"] = produto.Sales30d
+				result["nota"] = produto.Rating
+				result["imagem"] = produto.Image
+				result["link_afiliado"] = produto.Link
+			}
+		}
 	}
 
 	srv.Logger.Info("resolver-link",
@@ -92,4 +109,18 @@ func extrairDadosURL(url string) (nome, shopID, itemID string) {
 		nome = nome[:idx]
 	}
 	return nome, match[2], match[3]
+}
+
+// buscarProdutoPorID consulta productOfferV2 com itemId para obter dados completos.
+func buscarProdutoPorID(appID, secret, itemID string) *domain.Product {
+	src := source.NewShopeeAPISource(appID, secret)
+	src.Keyword = itemID // a API aceita itemId como keyword para busca exata
+	src.Limit = 1
+	src.MaxPages = 1
+
+	produtos, err := src.Fetch()
+	if err != nil || len(produtos) == 0 {
+		return nil
+	}
+	return &produtos[0]
 }

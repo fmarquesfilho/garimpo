@@ -145,8 +145,16 @@
 					...produto,
 					link: url, // mantém o link curto original (mais limpo no Telegram)
 					nome: r.nome || produto.nome || '',
-					id: r.item_id || ''
+					id: r.item_id || '',
+					preco: r.preco ?? produto.preco ?? 0,
+					comissao: r.comissao ?? produto.comissao ?? 0,
+					imagem: r.imagem || produto.imagem || '',
+					categoria: produto.categoria || ''
 				};
+				// Se a API retornou link de afiliado, usa esse (tem tracking)
+				if (r.link_afiliado) {
+					produto = { ...produto, link: r.link_afiliado };
+				}
 			} catch {
 				produto = { ...produto, link: url };
 			} finally {
