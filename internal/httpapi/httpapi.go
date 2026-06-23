@@ -107,7 +107,60 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
 	mux.HandleFunc("GET /api/whatsapp/grupos", srv.whatsappGrupos)
 
+	// Serve o frontend estático (SPA). Qualquer rota que não seja /api/*
+	// devolve o arquivo correspondente ou o fallback (200.html) para o
+	// SvelteKit resolver no client-side.
+	mux.Handle("/", srv.spaHandler())
+
 	return cors(srv.logRequests(mux))
+}
+
+// spaHandler serve os arquivos estáticos do frontend (web/build) com fallback
+// para 200.html (SPA). Em produção, os arquivos são embeddados ou montados em
+// /web. Em dev, usa o diretório local web/build.
+func (srv *Server) spaHandler() http.Handler {
+	// Determina o diretório do frontend
+	dir := os.Getenv("WEB_DIR")
+	if dir == "" {
+		dir = "web/build"
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Rotas /api/* que chegaram aqui não correspondem a nenhum handler
+		// registrado — devolve 404 JSON (não o SPA).
+		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
+			writeErr(w, http.StatusNotFound, "rota não encontrada")
+			return
+		}
+
+		// Tenta servir o arquivo pedido
+		path := r.URL.Path
+		if path == "/" {
+			path = "/200.html"
+		}
+
+		// Verifica se o arquivo existe
+		fullPath := dir + path
+		if _, err := os.Stat(fullPath); err == nil {
+			// Cache headers para assets imutáveis (SvelteKit _app/immutable/)
+			if len(path) > 17 && path[:17] == "/_app/immutable/" {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			} else if len(path) > 5 && path[:5] == "/_app" {
+				w.Header().Set("Cache-Control", "no-cache")
+			}
+			http.ServeFile(w, r, fullPath)
+			return
+		}
+
+		// Fallback: SPA (200.html)
+		fallback := dir + "/200.html"
+		if _, err := os.Stat(fallback); err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		http.ServeFile(w, r, fallback)
+	})
 }
 
 // ── Middleware ─────────────────────────────────────────────────────────────
