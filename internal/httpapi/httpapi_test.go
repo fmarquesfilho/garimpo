@@ -790,3 +790,90 @@ func TestPublicarPendentesExigeToken(t *testing.T) {
 		t.Errorf("sem token deveria dar 401, veio %d", rec.Code)
 	}
 }
+
+// --- Testes de lojas/novidades e sem_filtro --------------------------------
+
+func TestCandidatosComSemFiltro(t *testing.T) {
+	// Sem sem_filtro: aplica piso de comissão 7% (P3 com 5% cai fora)
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/candidatos?estrategia=nicho", nil, nil)
+	var resp struct {
+		Candidatos []struct{ ID string } `json:"candidatos"`
+		TotalBruto int                    `json:"total_bruto"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	semFiltroCount := len(resp.Candidatos)
+
+	// Com sem_filtro=true: todos passam
+	rec = req(t, h, "GET", "/api/candidatos?estrategia=nicho&sem_filtro=true", nil, nil)
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if len(resp.Candidatos) <= semFiltroCount {
+		t.Errorf("sem_filtro=true deveria retornar mais candidatos: sem=%d com=%d", semFiltroCount, len(resp.Candidatos))
+	}
+	if resp.TotalBruto != 3 {
+		t.Errorf("total_bruto deveria ser 3 (todos da amostra), veio %d", resp.TotalBruto)
+	}
+}
+
+func TestCandidatosTotalBruto(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/candidatos?estrategia=nicho", nil, nil)
+	var resp struct {
+		TotalBruto int `json:"total_bruto"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.TotalBruto != 3 {
+		t.Errorf("total_bruto deveria ser 3, veio %d", resp.TotalBruto)
+	}
+}
+
+func TestNovidadesExigeAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/lojas/novidades", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
+	}
+}
+
+func TestNovidadesComAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/lojas/novidades?busca_id=teste&dias=7", nil,
+		map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("com auth deveria dar 200, veio %d: %s", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		BuscaID    string `json:"busca_id"`
+		DiasJanela int    `json:"dias_janela"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.BuscaID != "teste" {
+		t.Errorf("busca_id deveria ser 'teste', veio %q", resp.BuscaID)
+	}
+	if resp.DiasJanela != 7 {
+		t.Errorf("dias_janela deveria ser 7, veio %d", resp.DiasJanela)
+	}
+}
+
+func TestCompararRetornaDuasListas(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/comparar?top=5", nil, nil)
+	if rec.Code != 200 {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var resp struct {
+		Nicho         []map[string]any `json:"nicho"`
+		Diversificada []map[string]any `json:"diversificada"`
+		Fonte         string           `json:"fonte"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.Fonte != "fake" {
+		t.Errorf("fonte deveria ser 'fake', veio %q", resp.Fonte)
+	}
+	if len(resp.Nicho) == 0 {
+		t.Error("nicho não deveria estar vazio")
+	}
+	if len(resp.Diversificada) == 0 {
+		t.Error("diversificada não deveria estar vazio")
+	}
+}

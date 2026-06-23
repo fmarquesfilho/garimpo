@@ -87,3 +87,49 @@ func TestRankearUmProdutoNaoQuebra(t *testing.T) {
 		t.Fatalf("esperava o único produto, veio %+v", got)
 	}
 }
+
+func TestRankearComPipelineVazio(t *testing.T) {
+	// Pipeline vazio = sem filtro, todos passam
+	produtos := []domain.Product{
+		{ID: "a", Commission: 0.02, Sales30d: 0, Rating: 0, Price: 10},
+		{ID: "b", Commission: 0.15, Sales30d: 100, Rating: 4.8, Price: 200},
+	}
+	got := RankearComPipeline(produtos, strategy.NewNiche(), strategy.PipelineMonitoramento())
+	if len(got) != 2 {
+		t.Fatalf("pipeline vazio deveria passar tudo, veio %d", len(got))
+	}
+}
+
+func TestRankearComPipelineCuradoria(t *testing.T) {
+	produtos := []domain.Product{
+		{ID: "baixa", Commission: 0.03, Sales30d: 100, Rating: 4.5, Price: 50},
+		{ID: "alta", Commission: 0.15, Sales30d: 80, Rating: 4.8, Price: 120},
+	}
+	elig := strategy.Elegibilidade{ComissaoMin: 0.07}
+	got := RankearComPipeline(produtos, strategy.NewNiche(), strategy.PipelineCuradoria(elig))
+	if len(got) != 1 || got[0].Product.ID != "alta" {
+		t.Fatalf("deveria filtrar 'baixa' e manter 'alta', veio %+v", got)
+	}
+}
+
+func TestRankearRetrocompativel(t *testing.T) {
+	// Rankear (legacy) deve produzir o mesmo resultado que RankearComPipeline
+	produtos := []domain.Product{
+		{ID: "a", Commission: 0.10, Sales30d: 50, Rating: 4.5, Price: 80, Category: "cosméticos"},
+		{ID: "b", Commission: 0.05, Sales30d: 200, Rating: 4.9, Price: 30, Category: "cosméticos"},
+	}
+	elig := strategy.Elegibilidade{ComissaoMin: 0.07}
+	st := strategy.NewNiche()
+
+	legacy := Rankear(produtos, st, elig)
+	novo := RankearComPipeline(produtos, st, strategy.PipelineCuradoria(elig))
+
+	if len(legacy) != len(novo) {
+		t.Fatalf("legacy=%d novo=%d", len(legacy), len(novo))
+	}
+	for i := range legacy {
+		if legacy[i].Product.ID != novo[i].Product.ID {
+			t.Errorf("posicao %d: legacy=%s novo=%s", i, legacy[i].Product.ID, novo[i].Product.ID)
+		}
+	}
+}
