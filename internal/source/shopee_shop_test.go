@@ -158,3 +158,58 @@ func TestShopeeShopSourceMultiplasLojas(t *testing.T) {
 		t.Errorf("deveria retornar 3 produtos, veio %d", len(produtos))
 	}
 }
+
+func TestShopeeAPISourceBuildQueryComItemID(t *testing.T) {
+	var queryRecebida string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+		var req map[string]string
+		json.Unmarshal(body, &req)
+		queryRecebida = req["query"]
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[],"pageInfo":{"page":1,"hasNextPage":false}}}}`))
+	}))
+	defer srv.Close()
+
+	src := NewShopeeAPISource("app", "secret")
+	src.ItemID = "10301156503"
+	src.Limit = 1
+	src.MaxPages = 1
+	src.Endpoint = srv.URL
+
+	src.Fetch()
+
+	// A query deve conter itemId como parâmetro nomeado, NÃO como keyword
+	if !strings.Contains(queryRecebida, "itemId: 10301156503") {
+		t.Errorf("query deveria conter 'itemId: 10301156503', veio:\n%s", queryRecebida)
+	}
+	if strings.Contains(queryRecebida, `keyword: "10301156503"`) {
+		t.Errorf("query NÃO deveria usar itemId como keyword, veio:\n%s", queryRecebida)
+	}
+}
+
+func TestShopeeAPISourceBuildQueryComKeyword(t *testing.T) {
+	var queryRecebida string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+		var req map[string]string
+		json.Unmarshal(body, &req)
+		queryRecebida = req["query"]
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[],"pageInfo":{"page":1,"hasNextPage":false}}}}`))
+	}))
+	defer srv.Close()
+
+	src := NewShopeeAPISource("app", "secret")
+	src.Keyword = "sérum vitamina c"
+	src.Endpoint = srv.URL
+
+	src.Fetch()
+
+	if !strings.Contains(queryRecebida, `keyword: "sérum vitamina c"`) {
+		t.Errorf("query deveria conter keyword entre aspas, veio:\n%s", queryRecebida)
+	}
+	if strings.Contains(queryRecebida, "itemId:") {
+		t.Errorf("query não deveria ter itemId quando só keyword é usado:\n%s", queryRecebida)
+	}
+}
