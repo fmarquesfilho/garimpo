@@ -41,7 +41,8 @@ export function buscarCandidatos({
 	notaMin,
 	exploracao,
 	fonte,
-	shopIds
+	shopIds,
+	semFiltro
 } = {}) {
 	const p = new URLSearchParams({ estrategia, top: String(top) });
 	if (keyword) p.set('keyword', keyword);
@@ -53,6 +54,7 @@ export function buscarCandidatos({
 	if (exploracao != null) p.set('exploracao', String(exploracao));
 	if (fonte) p.set('fonte', fonte);
 	if (shopIds) p.set('shop_ids', Array.isArray(shopIds) ? shopIds.join(',') : String(shopIds));
+	if (semFiltro) p.set('sem_filtro', 'true');
 	return pegar(`/api/candidatos?${p}`);
 }
 

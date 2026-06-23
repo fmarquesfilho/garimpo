@@ -28,13 +28,14 @@ func New(src source.ProductSource, st strategy.Strategy, elig strategy.Elegibili
 // JÁ buscado. Separar isto do fetch permite buscar a fonte uma vez (cache) e
 // ranquear de várias formas (estratégias diferentes, comparação).
 func Rankear(produtos []domain.Product, st strategy.Strategy, elig strategy.Elegibilidade) []domain.Scored {
-	// 1. Elegibilidade: comissão (+ vendas/nota, se configurados).
-	elegiveis := make([]domain.Product, 0, len(produtos))
-	for _, p := range produtos {
-		if elig.Atende(p) {
-			elegiveis = append(elegiveis, p)
-		}
-	}
+	return RankearComPipeline(produtos, st, strategy.PipelineCuradoria(elig))
+}
+
+// RankearComPipeline aplica um pipeline de filtros + scoring + ordenação.
+// Com pipeline vazio, rankeia todos os produtos sem filtrar (modo exploração/monitoramento).
+func RankearComPipeline(produtos []domain.Product, st strategy.Strategy, pipeline strategy.Pipeline) []domain.Scored {
+	// 1. Filtros do pipeline
+	elegiveis := pipeline.Aplicar(produtos)
 
 	// 2. Estatísticas do pool (normalização relativa aos candidatos do dia).
 	stats := scoring.Compute(elegiveis)

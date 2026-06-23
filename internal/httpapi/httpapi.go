@@ -674,10 +674,10 @@ func topN(q url.Values) int {
 	return 10
 }
 
-// rankearDTO aplica elegibilidade + scoring + ordenação sobre um pool já buscado.
+// rankearDTO aplica filtro + scoring + ordenação sobre um pool já buscado.
 // Se fracaoExpl > 0 e houver rng, reserva parte das vagas para exploração.
-func rankearDTO(produtos []domain.Product, st strategy.Strategy, elig strategy.Elegibilidade, n int, fracaoExpl float64, r *rand.Rand) []candidatoDTO {
-	scored := engine.Rankear(produtos, st, elig)
+func rankearDTO(produtos []domain.Product, st strategy.Strategy, pipeline strategy.Pipeline, n int, fracaoExpl float64, r *rand.Rand) []candidatoDTO {
+	scored := engine.RankearComPipeline(produtos, st, pipeline)
 	var escolhidos []domain.Scored
 	if fracaoExpl > 0 && r != nil {
 		escolhidos = engine.SelecionarComExploracao(scored, n, fracaoExpl, r)
@@ -708,12 +708,21 @@ func (srv *Server) candidatos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := rankearDTO(produtos, strategyDe(estrategia), srv.elegibilidade(q), topN(q),
+	// sem_filtro=true desliga elegibilidade (monitoramento de lojas)
+	var pipeline strategy.Pipeline
+	if q.Get("sem_filtro") == "true" {
+		pipeline = strategy.PipelineMonitoramento()
+	} else {
+		pipeline = strategy.PipelineCuradoria(srv.elegibilidade(q))
+	}
+
+	out := rankearDTO(produtos, strategyDe(estrategia), pipeline, topN(q),
 		srv.fracaoExploracao(q), rand.New(rand.NewSource(time.Now().UnixNano())))
 	writeJSON(w, http.StatusOK, map[string]any{
-		"fonte":      src.Name(),
-		"estrategia": estrategia,
-		"candidatos": out,
+		"fonte":       src.Name(),
+		"estrategia":  estrategia,
+		"candidatos":  out,
+		"total_bruto": len(produtos),
 	})
 }
 
@@ -726,11 +735,11 @@ func (srv *Server) comparar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	n := topN(q)
-	elig := srv.elegibilidade(q)
+	pipeline := strategy.PipelineCuradoria(srv.elegibilidade(q))
 	writeJSON(w, http.StatusOK, map[string]any{
 		"fonte":         src.Name(),
-		"nicho":         rankearDTO(produtos, strategy.NewNiche(), elig, n, 0, nil),
-		"diversificada": rankearDTO(produtos, strategy.Diversified{}, elig, n, 0, nil),
+		"nicho":         rankearDTO(produtos, strategy.NewNiche(), pipeline, n, 0, nil),
+		"diversificada": rankearDTO(produtos, strategy.Diversified{}, pipeline, n, 0, nil),
 	})
 }
 

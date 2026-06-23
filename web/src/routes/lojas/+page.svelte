@@ -40,9 +40,7 @@
 				categoria: buscaSelecionada.categoria,
 				estrategia: buscaSelecionada.estrategia ?? 'nicho',
 				top: 50,
-				comissaoMin: buscaSelecionada.comissao_min,
-				vendasMin: buscaSelecionada.vendas_min,
-				notaMin: buscaSelecionada.nota_min
+				semFiltro: true // monitoramento: mostra tudo, sem elegibilidade
 			});
 			produtos = r?.candidatos ?? [];
 		} catch (e) {
