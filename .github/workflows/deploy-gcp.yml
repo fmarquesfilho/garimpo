@@ -63,6 +63,12 @@ jobs:
       - name: npm run build
         run: npm run build
 
+      - name: Instalar Playwright
+        run: npx playwright install chromium --with-deps
+
+      - name: Testes E2E (Playwright)
+        run: npm test
+
       - name: Salvar artefato do build
         uses: actions/upload-artifact@v4
         with:
