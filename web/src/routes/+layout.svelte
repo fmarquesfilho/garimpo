@@ -22,14 +22,7 @@
 		<a class="marca" href="/" onclick={fecharMenu}>
 			Garimpo<span class="pingo">.</span>
 		</a>
-		<!-- Desktop: links principais condensados -->
-		<nav class="nav-desktop">
-			<a href="/" class:atual={$page.url.pathname === '/'}>Curadoria</a>
-			<a href="/lojas" class:atual={$page.url.pathname === '/lojas'}>Lojas</a>
-			<a href="/publicacoes" class:atual={$page.url.pathname === '/publicacoes'}>Publicações</a>
-			<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'}>Dados</a>
-		</nav>
-		<div class="acoes-desktop">
+		<div class="acoes-barra">
 			{#if $usuario}
 				<span class="usuario-nome">{$usuario.nome ?? $usuario.email}</span>
 				<button class="btn-auth" onclick={logout}>Sair</button>
@@ -37,21 +30,12 @@
 				<button class="btn-auth" onclick={login}>Entrar</button>
 			{/if}
 			<button
-				class="hamburguer-desktop"
+				class="hamburguer"
 				onclick={() => (menuAberto = !menuAberto)}
 				aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
 				aria-expanded={menuAberto}
-			>☰</button>
+			>{#if menuAberto}✕{:else}☰{/if}</button>
 		</div>
-		<!-- Mobile: só hamburger -->
-		<button
-			class="hamburguer-mobile"
-			onclick={() => (menuAberto = !menuAberto)}
-			aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
-			aria-expanded={menuAberto}
-		>
-			{#if menuAberto}✕{:else}☰{/if}
-		</button>
 	</div>
 	{#if menuAberto}
 		<nav class="nav-menu" onclick={fecharMenu}>
@@ -71,16 +55,6 @@
 				<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>⏱ Coletas</a>
 				<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'}>📊 Estatísticas</a>
 			</div>
-			{#if $usuario}
-				<div class="menu-secao menu-auth">
-					<span class="usuario-menu">{$usuario.nome ?? $usuario.email}</span>
-					<button class="btn-auth" onclick={logout}>Sair</button>
-				</div>
-			{:else}
-				<div class="menu-secao menu-auth">
-					<button class="btn-auth" onclick={login}>Entrar com Google</button>
-				</div>
-			{/if}
 		</nav>
 	{/if}
 </header>
@@ -107,7 +81,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		height: 64px;
+		height: 56px;
 	}
 	.marca {
 		font-family: var(--display);
@@ -118,23 +92,7 @@
 	}
 	.pingo { color: var(--ouro); }
 
-	/* ── Desktop nav (links condensados) ─────────────────────────────── */
-	.nav-desktop {
-		display: flex;
-		gap: var(--r5);
-	}
-	.nav-desktop a {
-		text-decoration: none;
-		font-weight: 600;
-		font-size: 0.88rem;
-		color: var(--tinta-suave);
-		padding-bottom: 2px;
-		border-bottom: 2px solid transparent;
-	}
-	.nav-desktop a:hover { color: var(--tinta); }
-	.nav-desktop a.atual { color: var(--tinta); border-color: var(--ouro); }
-
-	.acoes-desktop {
+	.acoes-barra {
 		display: flex;
 		align-items: center;
 		gap: var(--r3);
@@ -142,45 +100,36 @@
 	.usuario-nome {
 		font-size: 0.82rem; color: var(--tinta-suave); font-weight: 500;
 	}
-	.hamburguer-desktop {
+	.hamburguer {
 		border: 1px solid var(--linha);
 		background: var(--porcelana);
 		font-size: 1.1rem;
 		color: var(--tinta-suave);
 		cursor: pointer;
-		padding: 4px 10px;
+		padding: 6px 12px;
 		border-radius: 8px;
 		line-height: 1;
 	}
-	.hamburguer-desktop:hover { border-color: var(--ouro); color: var(--ouro); }
+	.hamburguer:hover { border-color: var(--ouro); color: var(--ouro); }
 
-	/* ── Mobile hamburger ─────────────────────────────────────────────── */
-	.hamburguer-mobile {
-		display: none;
-		border: none;
-		background: transparent;
-		font-size: 1.5rem;
-		color: var(--tinta);
-		cursor: pointer;
-		padding: 4px 8px;
-		line-height: 1;
-	}
-
-	/* ── Menu expansível (compartilhado desktop + mobile) ─────────────── */
+	/* ── Menu expandido ───────────────────────────────────────────────── */
 	.nav-menu {
 		display: flex;
 		flex-direction: column;
-		gap: 0;
 		padding: var(--r5) var(--r6) var(--r6);
 		border-top: 1px solid var(--linha);
 		background: color-mix(in srgb, var(--porcelana) 95%, white);
-		max-width: 320px;
-		margin-left: auto;
+	}
+	@media (min-width: 600px) {
+		.nav-menu {
+			max-width: 300px;
+			margin-left: auto;
+		}
 	}
 	.menu-secao {
 		display: flex;
 		flex-direction: column;
-		gap: var(--r1);
+		gap: 2px;
 		padding: var(--r4) 0;
 		border-bottom: 1px solid var(--linha);
 	}
@@ -199,21 +148,12 @@
 		font-weight: 600;
 		font-size: 0.95rem;
 		color: var(--tinta-suave);
-		padding: 8px 12px;
+		padding: 10px 12px;
 		border-radius: 8px;
 		display: block;
 	}
 	.nav-menu a:hover { color: var(--tinta); background: var(--porcelana); }
 	.nav-menu a.atual { color: var(--tinta); background: var(--ouro-fundo); }
-	.menu-auth {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r2);
-		padding-top: var(--r3);
-	}
-	.usuario-menu {
-		font-size: 0.85rem; color: var(--tinta-suave); font-weight: 500;
-	}
 
 	/* ── Auth button ──────────────────────────────────────────────────── */
 	.btn-auth {
@@ -224,21 +164,9 @@
 	}
 	.btn-auth:hover { border-color: var(--ouro); color: var(--ouro); }
 
-	/* ── Breakpoints ──────────────────────────────────────────────────── */
-	@media (max-width: 680px) {
-		.nav-desktop, .acoes-desktop {
-			display: none;
-		}
-		.hamburguer-mobile {
-			display: block;
-		}
-		.nav-menu {
-			max-width: none;
-		}
-	}
-
-	@media (min-width: 681px) {
-		.hamburguer-mobile { display: none; }
+	/* ── Mobile: esconde nome do usuário ──────────────────────────────── */
+	@media (max-width: 480px) {
+		.usuario-nome { display: none; }
 	}
 
 	/* ── Main & footer ────────────────────────────────────────────────── */
