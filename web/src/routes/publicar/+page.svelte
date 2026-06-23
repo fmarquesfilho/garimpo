@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
+	import RichEditor from '$lib/components/RichEditor.svelte';
 
 	// Produto vem via query params
 	let produto = $state(null);
@@ -18,8 +19,12 @@
 
 	// Legenda editável
 	let legenda = $state('');
-	let legendaEditada = $state(false); // se o user editou manualmente
+	let legendaEditada = $state(false);
 	let previewFoto = $state(false);
+
+	// Colar link do produto
+	let linkColado = $state('');
+	let carregandoLink = $state(false);
 
 	// Status
 	let publicando = $state(false);
@@ -32,10 +37,9 @@
 		if (dados) {
 			try { produto = JSON.parse(decodeURIComponent(dados)); } catch { /* */ }
 		}
+		// Se não veio produto via query, permite preencher manualmente
 		if (!produto) {
-			erro = 'Nenhum produto selecionado. Volte à curadoria e clique em Publicar.';
-			carregando = false;
-			return;
+			produto = { id: '', nome: '', preco: 0, categoria: '', estrategia: 'nicho', link: '', imagem: '' };
 		}
 
 		try {
@@ -92,6 +96,25 @@
 		gerarLegenda();
 	}
 
+	function onEditorChange(html) {
+		legendaEditada = true;
+		legenda = html;
+	}
+
+	function aplicarLink() {
+		const url = linkColado.trim();
+		if (!url) return;
+		// Preenche o link no produto
+		produto = { ...produto, link: url };
+		// Se não tem nome, extrai do URL como placeholder
+		if (!produto.nome) {
+			const match = url.match(/\/([^\/\?]+)(?:\?|$)/);
+			produto = { ...produto, nome: match ? match[1].replace(/-/g, ' ').replace(/\.i\.\d+\.\d+/, '') : 'Produto' };
+		}
+		linkColado = '';
+		gerarLegenda();
+	}
+
 	async function enviarAgora() {
 		publicando = true;
 		resultado = null;
@@ -130,21 +153,39 @@
 	{#if carregando}
 		<p class="loading">Carregando…</p>
 	{:else if !produto}
-		<div class="aviso">{erro ?? 'Nenhum produto selecionado.'}</div>
+		<div class="aviso">{erro ?? 'Cole um link ou volte à curadoria para selecionar um produto.'}</div>
 	{:else}
 		<div class="layout">
 			<!-- Coluna esquerda: Configuração -->
 			<div class="config">
+				<!-- Colar link do produto -->
+				<div class="campo-pub">
+					<label>🔗 Link do produto (opcional)</label>
+					<div class="link-input">
+						<input
+							type="url"
+							bind:value={linkColado}
+							placeholder="Cole o link da Shopee aqui…"
+							onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
+						/>
+						<button type="button" class="btn-link" onclick={aplicarLink} disabled={!linkColado.trim()}>Aplicar</button>
+					</div>
+				</div>
+
 				<!-- Resumo do produto -->
 				<div class="card-produto">
 					{#if produto.imagem}
 						<img src={produto.imagem} alt={produto.nome} class="thumb" />
 					{/if}
 					<div class="produto-info">
-						<h3>{produto.nome}</h3>
-						<p class="meta">
-							<span>{produto.categoria}</span> · <span class="preco">{brl(produto.preco)}</span>
-						</p>
+						<input class="nome-edit" bind:value={produto.nome} placeholder="Nome do produto" />
+						<div class="meta-edit">
+							<input class="campo-mini" bind:value={produto.categoria} placeholder="Categoria" />
+							<input class="campo-mini preco-edit" type="number" step="0.01" bind:value={produto.preco} placeholder="Preço" />
+						</div>
+						{#if produto.link}
+							<a class="link-preview" href={produto.link} target="_blank" rel="noopener">{produto.link.substring(0, 50)}…</a>
+						{/if}
 					</div>
 				</div>
 
@@ -177,23 +218,17 @@
 					{/if}
 				</div>
 
-				<!-- Legenda editável -->
+				<!-- Legenda — editor WYSIWYG -->
 				<div class="campo-pub">
 					<div class="legenda-header">
 						<label>✏️ Legenda</label>
 						{#if legendaEditada}
-							<button class="btn-reset" onclick={resetarLegenda} type="button">↺ Resetar</button>
+							<button class="btn-reset" onclick={resetarLegenda} type="button">↺ Resetar do template</button>
 						{/if}
 					</div>
-					<textarea
-						class="legenda-editor"
-						bind:value={legenda}
-						oninput={onLegendaInput}
-						rows="5"
-						placeholder="Edite a legenda antes de publicar…"
-					></textarea>
+					<RichEditor bind:content={legenda} placeholder="Escreva a legenda da publicação…" onchange={onEditorChange} />
 					{#if legendaEditada}
-						<p class="dica-editada">Legenda editada manualmente. Clique ↺ para voltar ao template.</p>
+						<p class="dica-editada">Legenda editada. O preview à direita reflete o que será enviado.</p>
 					{/if}
 				</div>
 
@@ -276,26 +311,52 @@
 
 	.campo-pub { display: flex; flex-direction: column; gap: 6px; }
 	.campo-pub label { font-weight: 600; font-size: 0.88rem; }
-	.campo-pub select, .campo-pub input {
+	.campo-pub select, .campo-pub input[type="datetime-local"] {
 		padding: 10px 14px; border: 1px solid var(--linha); border-radius: 10px;
 		font-size: 0.9rem; background: var(--porcelana);
 	}
 	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
 	.dica a { color: var(--ouro); text-decoration: underline; }
 
-	/* Legenda editável */
+	/* Link input */
+	.link-input { display: flex; gap: var(--r2); }
+	.link-input input {
+		flex: 1; padding: 10px 14px; border: 1px solid var(--linha);
+		border-radius: 10px; font-size: 0.9rem; background: var(--porcelana);
+	}
+	.btn-link {
+		padding: 10px 16px; background: var(--ouro-fundo); border: 1px solid var(--ouro);
+		color: #7a5a1e; font-weight: 600; font-size: 0.85rem;
+		border-radius: 10px; cursor: pointer; white-space: nowrap;
+	}
+	.btn-link:disabled { opacity: 0.4; cursor: not-allowed; }
+
+	/* Produto editável */
+	.nome-edit {
+		font-size: 1rem; font-weight: 700; border: none; background: transparent;
+		width: 100%; padding: 0; margin: 0 0 4px;
+		border-bottom: 1px dashed var(--linha);
+	}
+	.nome-edit:focus { outline: none; border-bottom-color: var(--ouro); }
+	.meta-edit { display: flex; gap: var(--r2); }
+	.campo-mini {
+		font-size: 0.82rem; padding: 4px 8px; border: 1px solid var(--linha);
+		border-radius: 6px; background: var(--porcelana); width: 100px;
+	}
+	.preco-edit { width: 80px; font-weight: 600; }
+	.link-preview {
+		font-size: 0.72rem; color: var(--tinta-suave); display: block;
+		margin-top: 4px; text-decoration: none; overflow: hidden; text-overflow: ellipsis;
+	}
+	.link-preview:hover { color: var(--ouro); }
+
+	/* Legenda */
 	.legenda-header { display: flex; align-items: center; justify-content: space-between; }
 	.btn-reset {
 		border: none; background: transparent; color: var(--tinta-suave);
 		font-size: 0.78rem; font-weight: 600; cursor: pointer;
 	}
 	.btn-reset:hover { color: var(--ouro); }
-	.legenda-editor {
-		padding: 12px; border: 1px solid var(--linha); border-radius: 10px;
-		font-family: var(--ui); font-size: 0.9rem; line-height: 1.5;
-		background: white; resize: vertical; min-height: 100px;
-	}
-	.legenda-editor:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
 	.dica-editada { font-size: 0.75rem; color: var(--ouro); margin: 0; font-style: italic; }
 
 	.acoes { display: flex; gap: var(--r3); flex-wrap: wrap; }
