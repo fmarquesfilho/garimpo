@@ -180,13 +180,13 @@
 			const texto = await navigator.clipboard.readText();
 			if (texto?.trim()) {
 				linkColado = texto.trim();
-				// Se parece ser link da Shopee, aplica automaticamente
-				if (/shopee|shope\.ee/i.test(linkColado)) {
-					aplicarLink();
-				}
 			}
 		} catch {
-			// Permissão negada — o user cola manualmente no campo
+			// Permissão negada — usa o que já está no campo
+		}
+		// Aplica o que estiver no campo (colado do clipboard ou digitado)
+		if (linkColado.trim()) {
+			aplicarLink();
 		}
 	}
 
@@ -242,13 +242,12 @@
 							placeholder="Cole o link da Shopee aqui…"
 							onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
 						/>
-						<button type="button" class="btn-colar" onclick={colarDoClipboard}>📋 Colar</button>
-						<button type="button" class="btn-link" onclick={aplicarLink} disabled={!linkColado.trim() || resolvendoLink}>
-							{resolvendoLink ? '⏳' : 'Aplicar'}
+						<button type="button" class="btn-colar" onclick={colarDoClipboard} disabled={resolvendoLink}>
+							{resolvendoLink ? '⏳ Resolvendo…' : '📋 Colar e aplicar'}
 						</button>
 					</div>
 					{#if resolvendoLink}
-						<p class="dica loading-msg">⏳ Resolvendo link curto…</p>
+						<p class="dica loading-msg">Buscando dados do produto…</p>
 					{:else if linkAplicado}
 						<p class="dica sucesso-msg">✓ Link aplicado — edite os campos abaixo se necessário.</p>
 					{/if}
@@ -415,18 +414,13 @@
 		flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid var(--linha);
 		border-radius: 10px; font-size: 0.9rem; background: var(--porcelana);
 	}
-	.btn-link {
-		padding: 10px 16px; background: var(--ouro-fundo); border: 1px solid var(--ouro);
-		color: #7a5a1e; font-weight: 600; font-size: 0.85rem;
-		border-radius: 10px; cursor: pointer; white-space: nowrap;
-	}
-	.btn-link:disabled { opacity: 0.4; cursor: not-allowed; }
 	.btn-colar {
-		padding: 10px 14px; background: var(--porcelana); border: 1px solid var(--linha);
-		color: var(--tinta-suave); font-weight: 600; font-size: 0.85rem;
+		padding: 10px 18px; background: var(--ouro); border: 1px solid var(--ouro);
+		color: white; font-weight: 600; font-size: 0.85rem;
 		border-radius: 10px; cursor: pointer; white-space: nowrap;
 	}
-	.btn-colar:hover { border-color: var(--ouro); color: var(--ouro); }
+	.btn-colar:hover:not(:disabled) { background: #a3782f; }
+	.btn-colar:disabled { opacity: 0.5; cursor: not-allowed; }
 
 	/* Produto editável */
 	.nome-edit {
