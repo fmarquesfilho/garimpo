@@ -185,6 +185,9 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/admin/log-level", srv.adminLogLevel)
 	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
 
+	// Utilitário: resolver link curto da Shopee
+	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
+
 	return cors(srv.logRequests(mux))
 }
 

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate } from '$lib/api.js';
+	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate, resolverLinkShopee } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 	import RichEditor from '$lib/components/RichEditor.svelte';
 
@@ -24,7 +24,7 @@
 
 	// Colar link do produto
 	let linkColado = $state('');
-	let carregandoLink = $state(false);
+	let resolvendoLink = $state(false);
 
 	// Status
 	let publicando = $state(false);
@@ -101,24 +101,41 @@
 		legenda = html;
 	}
 
-	function aplicarLink() {
+	async function aplicarLink() {
 		const url = linkColado.trim();
 		if (!url) return;
-		produto = { ...produto, link: url };
 
-		// Tenta extrair nome da URL (só funciona para URLs longas da Shopee)
-		// Links curtos (s.shopee.com.br/HASH) não têm dados — deixa vazio para edição
-		if (!produto.nome || produto.nome === '') {
-			const isShortLink = /s\.shopee|shope\.ee/i.test(url) && url.split('/').pop().length < 20;
-			if (!isShortLink) {
-				// URL longa: extrai nome do path (ex.: /Sérum-Vitamina-C-i.123.456)
+		// Detecta link curto
+		const isShortLink = /s\.shopee|shope\.ee/i.test(url) && !url.includes('-i.');
+
+		if (isShortLink) {
+			// Resolve o link curto no backend (segue redirects)
+			resolvendoLink = true;
+			try {
+				const r = await resolverLinkShopee(url);
+				produto = {
+					...produto,
+					link: r.url_final || url,
+					nome: r.nome || produto.nome || '',
+					id: r.item_id || ''
+				};
+			} catch {
+				// Fallback: usa o link como está
+				produto = { ...produto, link: url };
+			} finally {
+				resolvendoLink = false;
+			}
+		} else {
+			// URL longa: extrai nome direto do path
+			produto = { ...produto, link: url };
+			if (!produto.nome) {
 				const match = url.match(/\/([^\/\?]+?)(?:-i\.\d+\.\d+)?(?:\?|$)/);
 				if (match && match[1].length > 3) {
 					produto = { ...produto, nome: decodeURIComponent(match[1]).replace(/-/g, ' ') };
 				}
 			}
-			// Se é link curto, não preenche nome — o user edita manualmente
 		}
+
 		linkColado = '';
 		gerarLegenda();
 	}
@@ -192,8 +209,13 @@
 							onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
 						/>
 						<button type="button" class="btn-colar" onclick={colarDoClipboard}>📋 Colar</button>
-						<button type="button" class="btn-link" onclick={aplicarLink} disabled={!linkColado.trim()}>Aplicar</button>
+						<button type="button" class="btn-link" onclick={aplicarLink} disabled={!linkColado.trim() || resolvendoLink}>
+							{resolvendoLink ? '⏳' : 'Aplicar'}
+						</button>
 					</div>
+					{#if resolvendoLink}
+						<p class="dica">Resolvendo link curto…</p>
+					{/if}
 				</div>
 
 				<!-- Resumo do produto -->

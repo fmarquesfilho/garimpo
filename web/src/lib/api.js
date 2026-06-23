@@ -201,6 +201,11 @@ export function buscarNovidades({ buscaId = '', dias = 7 } = {}) {
 	return pegar(`/api/lojas/novidades?${p}`);
 }
 
+/** Resolve um link curto da Shopee para obter URL final + dados do produto. */
+export function resolverLinkShopee(url) {
+	return postar('/api/resolver-link', { url });
+}
+
 /** Histórico de coletas executadas (snapshots por execução), janela em dias. */
 export function buscarColetas({ dias = 30 } = {}) {
 	return pegar(`/api/coletas?dias=${dias}`);
