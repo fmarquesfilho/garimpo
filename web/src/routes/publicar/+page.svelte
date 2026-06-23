@@ -81,10 +81,13 @@
 	}
 
 	// Regenera legenda quando template muda (se user não editou)
+	let lastTemplateId = $state(templateId);
 	$effect(() => {
-		templateId;
-		legendaEditada = false;
-		gerarLegenda();
+		if (templateId !== lastTemplateId) {
+			lastTemplateId = templateId;
+			legendaEditada = false;
+			gerarLegenda();
+		}
 	});
 
 	function onLegendaInput() {
@@ -383,17 +386,19 @@
 
 	/* Produto editável */
 	.nome-edit {
-		font-size: 1rem; font-weight: 700; border: none; background: transparent;
-		width: 100%; padding: 4px 0;
-		border-bottom: 1px dashed var(--linha);
+		font-size: 1rem; font-weight: 700;
+		border: 1px solid var(--linha); background: white;
+		border-radius: 8px;
+		width: 100%; padding: 8px 12px;
 	}
 	.nome-edit::placeholder { color: var(--tinta-suave); opacity: 0.6; font-weight: 400; }
-	.nome-edit:focus { outline: none; border-bottom-color: var(--ouro); }
+	.nome-edit:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
 	.meta-edit { display: flex; gap: var(--r3); flex-wrap: wrap; }
 	.campo-mini {
 		font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--linha);
 		border-radius: 8px; background: var(--porcelana); width: 120px;
 	}
+	.campo-mini:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
 	.preco-edit { width: 90px; font-weight: 600; }
 	.link-preview {
 		font-size: 0.75rem; color: var(--tinta-suave); display: block;
