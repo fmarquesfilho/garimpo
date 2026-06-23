@@ -21,6 +21,7 @@
 	let legenda = $state('');
 	let legendaEditada = $state(false);
 	let previewFoto = $state(false);
+	let atualizandoLegenda = $state(false); // flag para ignorar onEditorChange programático
 
 	// Colar link do produto
 	let linkColado = $state('');
@@ -63,9 +64,10 @@
 	});
 
 	async function gerarLegenda() {
-		if (!produto || legendaEditada) return;
+		if (!produto) return;
+		// Não sobrescreve se o user editou manualmente
+		if (legendaEditada) return;
 
-		// Fallback client-side caso a API falhe ou o template não exista
 		function legendaLocal() {
 			let txt = '';
 			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
@@ -75,6 +77,7 @@
 			return txt.trimEnd();
 		}
 
+		let novaLegenda = '';
 		try {
 			const r = await previewTemplate({
 				template_id: templateId || undefined,
@@ -85,12 +88,18 @@
 				link: produto.link,
 				imagem: produto.imagem
 			});
-			legenda = r.preview || legendaLocal();
+			novaLegenda = r.preview || legendaLocal();
 			previewFoto = r.com_foto && !!produto.imagem;
 		} catch {
-			legenda = legendaLocal();
+			novaLegenda = legendaLocal();
 			previewFoto = false;
 		}
+
+		// Atualiza a legenda marcando que é programático (não do user)
+		atualizandoLegenda = true;
+		legenda = novaLegenda;
+		// O $effect do RichEditor vai sincronizar, resetamos o flag após um tick
+		setTimeout(() => { atualizandoLegenda = false; }, 100);
 	}
 
 	// Regenera legenda quando template muda (se user não editou)
@@ -113,6 +122,8 @@
 	}
 
 	function onEditorChange(html) {
+		// Ignora se a mudança veio de gerarLegenda (programática)
+		if (atualizandoLegenda) return;
 		legendaEditada = true;
 		legenda = html;
 	}

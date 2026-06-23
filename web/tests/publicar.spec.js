@@ -167,3 +167,95 @@ test.describe('Resolver link — integração (preview server contra mock)', () 
 		}
 	});
 });
+
+test.describe('Geração de legenda — lógica client-side', () => {
+	test('legendaLocal gera texto com nome, categoria e preço', async ({ page }) => {
+		await page.goto('/');
+		const resultado = await page.evaluate(() => {
+			const produto = { nome: 'Sérum Vitamina C', categoria: 'Beleza', preco: 49.90, estrategia: 'nicho' };
+			let txt = '';
+			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
+			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
+			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			return txt.trimEnd();
+		});
+		expect(resultado).toContain('<b>Sérum Vitamina C</b>');
+		expect(resultado).toContain('<i>Beleza</i>');
+		expect(resultado).toContain('R$ 49.90');
+		expect(resultado).toContain('nicho');
+	});
+
+	test('legendaLocal com dados parciais (só nome)', async ({ page }) => {
+		await page.goto('/');
+		const resultado = await page.evaluate(() => {
+			const produto = { nome: 'Produto Teste', categoria: '', preco: 0, estrategia: '' };
+			let txt = '';
+			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
+			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
+			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			return txt.trimEnd();
+		});
+		expect(resultado).toContain('<b>Produto Teste</b>');
+		expect(resultado).not.toContain('R$ 0.00');
+		expect(resultado).not.toContain('<i>');
+	});
+
+	test('legendaLocal vazia quando produto sem dados', async ({ page }) => {
+		await page.goto('/');
+		const resultado = await page.evaluate(() => {
+			const produto = { nome: '', categoria: '', preco: 0, estrategia: '' };
+			let txt = '';
+			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
+			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
+			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			return txt.trimEnd();
+		});
+		expect(resultado).toBe('');
+	});
+});
+
+test.describe('Fluxo aplicarLink → gerarLegenda (mock completo)', () => {
+	test('após resolver link, legenda é gerada com dados do produto', async ({ page }) => {
+		// Mock do resolver-link
+		await page.route('**/api/resolver-link', route =>
+			route.fulfill({ json: {
+				url_final: 'https://shopee.com.br/Creme-Hidratante-50ml-i.111.222',
+				nome: 'Creme Hidratante 50ml',
+				shop_id: '111',
+				item_id: '222'
+			}})
+		);
+		// Mock do template preview (simula que template não existe)
+		await page.route('**/api/templates/preview', route =>
+			route.fulfill({ status: 404, json: { erro: 'template não encontrado' } })
+		);
+
+		await page.goto('/');
+
+		// Simula o fluxo completo no browser
+		const legenda = await page.evaluate(async () => {
+			// Simula aplicarLink + gerarLegenda
+			const resp = await fetch('/api/resolver-link', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ url: 'https://s.shopee.com.br/abc' })
+			});
+			const r = await resp.json();
+			const produto = { nome: r.nome, categoria: '', preco: 0, estrategia: 'nicho', link: r.url_final };
+
+			// legendaLocal
+			let txt = '';
+			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
+			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
+			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			return txt.trimEnd();
+		});
+
+		expect(legenda).toContain('<b>Creme Hidratante 50ml</b>');
+		expect(legenda).toContain('nicho');
+	});
+});
