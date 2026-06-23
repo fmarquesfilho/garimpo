@@ -105,6 +105,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/admin/log-level", srv.adminLogLevel)
 	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
 	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
+	mux.HandleFunc("GET /api/whatsapp/grupos", srv.whatsappGrupos)
 
 	return cors(srv.logRequests(mux))
 }

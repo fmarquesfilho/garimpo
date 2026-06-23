@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { listarDestinos, salvarDestino, deletarDestino } from '$lib/api.js';
+	import { listarDestinos, salvarDestino, deletarDestino, listarGruposWhatsApp } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 
 	let destinos = $state([]);
@@ -14,6 +14,11 @@
 	let tipo = $state('telegram');
 	let salvando = $state(false);
 
+	// Grupos WhatsApp (carregados sob demanda)
+	let gruposWA = $state([]);
+	let carregandoGrupos = $state(false);
+	let erroGrupos = $state(null);
+
 	onMount(carregar);
 
 	async function carregar() {
@@ -26,6 +31,27 @@
 			erro = e.message;
 		} finally {
 			carregando = false;
+		}
+	}
+
+	async function carregarGruposWA() {
+		if (gruposWA.length > 0) return; // já carregado
+		carregandoGrupos = true;
+		erroGrupos = null;
+		try {
+			const r = await listarGruposWhatsApp();
+			gruposWA = r?.grupos ?? [];
+		} catch (e) {
+			erroGrupos = e.message;
+		} finally {
+			carregandoGrupos = false;
+		}
+	}
+
+	function aoMudarTipo() {
+		config = '';
+		if (tipo === 'whatsapp') {
+			carregarGruposWA();
 		}
 	}
 
@@ -63,7 +89,7 @@
 	const tipoLabel = { telegram: 'Telegram', whatsapp: 'WhatsApp' };
 	const configPlaceholder = {
 		telegram: '@meucanal ou -1001234567890',
-		whatsapp: '+5511999999999'
+		whatsapp: 'Selecione um grupo'
 	};
 </script>
 
@@ -94,7 +120,7 @@
 		<form class="form-destino" onsubmit={(e) => { e.preventDefault(); adicionar(); }}>
 			<div class="campo">
 				<label for="tipo">Tipo</label>
-				<select id="tipo" bind:value={tipo}>
+				<select id="tipo" bind:value={tipo} onchange={aoMudarTipo}>
 					<option value="telegram">✈️ Telegram</option>
 					<option value="whatsapp">💬 WhatsApp</option>
 				</select>
@@ -105,7 +131,29 @@
 			</div>
 			<div class="campo">
 				<label for="config">Destino ({tipoLabel[tipo]})</label>
-				<input id="config" bind:value={config} placeholder={configPlaceholder[tipo]} required />
+				{#if tipo === 'whatsapp'}
+					{#if carregandoGrupos}
+						<select id="config" disabled>
+							<option>Carregando grupos…</option>
+						</select>
+					{:else if erroGrupos}
+						<div class="erro-inline">{erroGrupos}</div>
+						<input id="config" bind:value={config} placeholder="ID do grupo (ex.: 123-456@g.us)" required />
+					{:else if gruposWA.length === 0}
+						<select id="config" disabled>
+							<option>Nenhum grupo encontrado</option>
+						</select>
+					{:else}
+						<select id="config" bind:value={config} required>
+							<option value="">Selecione um grupo…</option>
+							{#each gruposWA as g (g.id)}
+								<option value={g.id}>{g.nome}</option>
+							{/each}
+						</select>
+					{/if}
+				{:else}
+					<input id="config" bind:value={config} placeholder={configPlaceholder[tipo]} required />
+				{/if}
 			</div>
 			<button type="submit" disabled={salvando || !nome.trim() || !config.trim()}>
 				{salvando ? 'Salvando…' : '+ Adicionar'}
@@ -176,4 +224,5 @@
 		cursor: pointer; color: var(--tinta-suave); font-size: 1rem;
 	}
 	.btn-remover:hover { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+	.erro-inline { font-size: 0.8rem; color: #b91c1c; margin-bottom: 4px; }
 </style>

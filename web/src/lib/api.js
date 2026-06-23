@@ -124,6 +124,11 @@ export async function deletarDestino(id) {
 	return resp.json();
 }
 
+/** Lista os grupos de WhatsApp disponíveis na sessão da WaSenderAPI. */
+export function listarGruposWhatsApp() {
+	return pegar('/api/whatsapp/grupos');
+}
+
 /** Lista os templates de mensagem disponíveis. */
 export function listarTemplates() {
 	return pegar('/api/templates');
