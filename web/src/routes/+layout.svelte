@@ -45,6 +45,7 @@
 			</div>
 			<div class="menu-secao">
 				<span class="menu-titulo">Publicar</span>
+				<a href="/publicar" class:atual={$page.url.pathname === '/publicar'}>🔗 Link</a>
 				<a href="/publicacoes" class:atual={$page.url.pathname === '/publicacoes'}>📤 Publicações</a>
 				<a href="/canais" class:atual={$page.url.pathname === '/canais'}>📡 Destinos & Conversões</a>
 			</div>
