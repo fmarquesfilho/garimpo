@@ -40,6 +40,17 @@
 		// Se não veio produto via query, permite preencher manualmente
 		if (!produto) {
 			produto = { id: '', nome: '', preco: 0, categoria: '', estrategia: 'nicho', link: '', imagem: '' };
+
+			// Tenta ler da área de transferência automaticamente
+			try {
+				const texto = await navigator.clipboard.readText();
+				if (texto && /shopee|shope\.ee/i.test(texto)) {
+					linkColado = texto.trim();
+					aplicarLink();
+				}
+			} catch {
+				// Permissão negada ou clipboard vazio — ignora silenciosamente
+			}
 		}
 
 		try {
