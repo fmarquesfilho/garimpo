@@ -105,9 +105,19 @@
 		const url = linkColado.trim();
 		if (!url) return;
 		produto = { ...produto, link: url };
-		if (!produto.nome) {
-			const match = url.match(/\/([^\/\?]+)(?:\?|$)/);
-			produto = { ...produto, nome: match ? match[1].replace(/-/g, ' ').replace(/\.i\.\d+\.\d+/, '') : 'Produto' };
+
+		// Tenta extrair nome da URL (só funciona para URLs longas da Shopee)
+		// Links curtos (s.shopee.com.br/HASH) não têm dados — deixa vazio para edição
+		if (!produto.nome || produto.nome === '') {
+			const isShortLink = /s\.shopee|shope\.ee/i.test(url) && url.split('/').pop().length < 20;
+			if (!isShortLink) {
+				// URL longa: extrai nome do path (ex.: /Sérum-Vitamina-C-i.123.456)
+				const match = url.match(/\/([^\/\?]+?)(?:-i\.\d+\.\d+)?(?:\?|$)/);
+				if (match && match[1].length > 3) {
+					produto = { ...produto, nome: decodeURIComponent(match[1]).replace(/-/g, ' ') };
+				}
+			}
+			// Se é link curto, não preenche nome — o user edita manualmente
 		}
 		linkColado = '';
 		gerarLegenda();
@@ -116,14 +126,15 @@
 	async function colarDoClipboard() {
 		try {
 			const texto = await navigator.clipboard.readText();
-			if (texto) {
+			if (texto?.trim()) {
 				linkColado = texto.trim();
+				// Se parece ser link da Shopee, aplica automaticamente
 				if (/shopee|shope\.ee/i.test(linkColado)) {
 					aplicarLink();
 				}
 			}
 		} catch {
-			// Permissão negada — o user pode colar manualmente
+			// Permissão negada — o user cola manualmente no campo
 		}
 	}
 
@@ -318,11 +329,9 @@
 		border: 1px solid var(--linha); border-radius: 12px; background: var(--nevoa);
 	}
 	.thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
-	.produto-info h3 { font-size: 1rem; margin: 0 0 4px; }
-	.produto-info .meta { font-size: 0.85rem; color: var(--tinta-suave); margin: 0; }
-	.preco { font-weight: 700; color: var(--ouro); }
+	.produto-info { flex: 1; display: flex; flex-direction: column; gap: var(--r2); }
 
-	.campo-pub { display: flex; flex-direction: column; gap: 6px; }
+	.campo-pub { display: flex; flex-direction: column; gap: 8px; }
 	.campo-pub label { font-weight: 600; font-size: 0.88rem; }
 	.campo-pub select, .campo-pub input[type="datetime-local"] {
 		padding: 10px 14px; border: 1px solid var(--linha); border-radius: 10px;
@@ -332,9 +341,9 @@
 	.dica a { color: var(--ouro); text-decoration: underline; }
 
 	/* Link input */
-	.link-input { display: flex; gap: var(--r2); }
+	.link-input { display: flex; gap: var(--r2); flex-wrap: wrap; }
 	.link-input input {
-		flex: 1; padding: 10px 14px; border: 1px solid var(--linha);
+		flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid var(--linha);
 		border-radius: 10px; font-size: 0.9rem; background: var(--porcelana);
 	}
 	.btn-link {
@@ -353,19 +362,21 @@
 	/* Produto editável */
 	.nome-edit {
 		font-size: 1rem; font-weight: 700; border: none; background: transparent;
-		width: 100%; padding: 0; margin: 0 0 4px;
+		width: 100%; padding: 4px 0;
 		border-bottom: 1px dashed var(--linha);
 	}
+	.nome-edit::placeholder { color: var(--tinta-suave); opacity: 0.6; font-weight: 400; }
 	.nome-edit:focus { outline: none; border-bottom-color: var(--ouro); }
-	.meta-edit { display: flex; gap: var(--r2); }
+	.meta-edit { display: flex; gap: var(--r3); flex-wrap: wrap; }
 	.campo-mini {
-		font-size: 0.82rem; padding: 4px 8px; border: 1px solid var(--linha);
-		border-radius: 6px; background: var(--porcelana); width: 100px;
+		font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--linha);
+		border-radius: 8px; background: var(--porcelana); width: 120px;
 	}
-	.preco-edit { width: 80px; font-weight: 600; }
+	.preco-edit { width: 90px; font-weight: 600; }
 	.link-preview {
-		font-size: 0.72rem; color: var(--tinta-suave); display: block;
-		margin-top: 4px; text-decoration: none; overflow: hidden; text-overflow: ellipsis;
+		font-size: 0.75rem; color: var(--tinta-suave); display: block;
+		margin-top: var(--r2); text-decoration: none; overflow: hidden;
+		text-overflow: ellipsis; white-space: nowrap;
 	}
 	.link-preview:hover { color: var(--ouro); }
 
