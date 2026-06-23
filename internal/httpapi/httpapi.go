@@ -19,6 +19,7 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/auth"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/engine"
+	"github.com/fmarquesfilho/garimpo/internal/logs"
 	"github.com/fmarquesfilho/garimpo/internal/publish"
 	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/source"
@@ -105,6 +106,10 @@ type Server struct {
 	// Logger estruturado por criticidade. Se nil, usa slog.Default().
 	Logger *slog.Logger
 
+	// LogBuffer guarda os últimos logs em memória para o dashboard de admin.
+	// Se nil, não captura (logs só vão para stdout).
+	LogBuffer *logs.Buffer
+
 	mu    sync.Mutex
 	cache map[string]*cacheEntry
 }
@@ -175,6 +180,9 @@ func (srv *Server) Handler() http.Handler {
 	// Lojas monitoradas: novidades (produtos novos + variações de preço)
 	mux.HandleFunc("GET /api/lojas/novidades", srv.novidades)
 
+	// Admin: logs em tempo real
+	mux.HandleFunc("GET /api/admin/logs", srv.adminLogs)
+
 	return cors(srv.logRequests(mux))
 }
 
@@ -192,6 +200,7 @@ func (r *respCapturado) WriteHeader(c int) {
 // logRequests registra cada requisição com método, rota, status e duração.
 // /api/health cai em DEBUG (ruidoso, health checks frequentes); o resto em INFO,
 // e respostas 5xx em ERROR.
+// Também grava no LogBuffer (se configurado) para o dashboard de admin.
 func (srv *Server) logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		inicio := time.Now()
@@ -205,13 +214,30 @@ func (srv *Server) logRequests(next http.Handler) http.Handler {
 			slog.Int("status", rc.status),
 			slog.Duration("dur", dur),
 		}
+
+		nivel := "info"
 		switch {
 		case rc.status >= 500:
 			srv.Logger.Error("requisição", attrs...)
+			nivel = "error"
 		case r.URL.Path == "/api/health":
 			srv.Logger.Debug("requisição", attrs...)
+			nivel = "debug"
 		default:
 			srv.Logger.Info("requisição", attrs...)
+		}
+
+		// Grava no buffer para o dashboard
+		if srv.LogBuffer != nil {
+			srv.LogBuffer.Push(logs.Entry{
+				Nivel:  nivel,
+				Msg:    "requisição",
+				Metodo: r.Method,
+				Rota:   r.URL.Path,
+				Status: rc.status,
+				DurMs:  float64(dur.Microseconds()) / 1000.0,
+				Em:     inicio,
+			})
 		}
 	})
 }

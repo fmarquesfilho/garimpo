@@ -106,6 +106,7 @@ func main() {
 		Auth:       verifier,
 		Destinos:   destinos,
 		Templates:  templates,
+		LogBuffer:  logs.NovoBuffer(500),
 	}
 	logger.Info("garimpo-api iniciando",
 		"addr", *addr, "fonte", *fonte, "categoria", *categoria, "keyword", *keyword,

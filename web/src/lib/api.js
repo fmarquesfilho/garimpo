@@ -161,6 +161,13 @@ export function buscarConversoes({ dias = 30 } = {}) {
 	return pegar(`/api/conversoes?dias=${dias}`);
 }
 
+/** Logs recentes para o dashboard de admin. */
+export function buscarLogs({ n = 100, nivel = '' } = {}) {
+	const p = new URLSearchParams({ n: String(n) });
+	if (nivel) p.set('nivel', nivel);
+	return pegar(`/api/admin/logs?${p}`);
+}
+
 /** Lista publicações por status (agendada|enviada|erro; vazio = todas). */
 export function listarPublicacoes({ status = '' } = {}) {
 	const qs = status ? `?status=${status}` : '';
