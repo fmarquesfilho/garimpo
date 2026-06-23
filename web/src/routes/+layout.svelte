@@ -22,22 +22,20 @@
 		<a class="marca" href="/" onclick={fecharMenu}>
 			Garimpo<span class="pingo">.</span>
 		</a>
-		<div class="acoes-barra">
-			{#if $usuario}
+		{#if $usuario}
+			<div class="acoes-barra">
 				<span class="usuario-nome">{$usuario.nome ?? $usuario.email}</span>
 				<button class="btn-auth" onclick={logout}>Sair</button>
-			{:else}
-				<button class="btn-auth" onclick={login}>Entrar</button>
-			{/if}
-			<button
-				class="hamburguer"
-				onclick={() => (menuAberto = !menuAberto)}
-				aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
-				aria-expanded={menuAberto}
-			>{#if menuAberto}✕{:else}☰{/if}</button>
-		</div>
+				<button
+					class="hamburguer"
+					onclick={() => (menuAberto = !menuAberto)}
+					aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
+					aria-expanded={menuAberto}
+				>{#if menuAberto}✕{:else}☰{/if}</button>
+			</div>
+		{/if}
 	</div>
-	{#if menuAberto}
+	{#if menuAberto && $usuario}
 		<nav class="nav-menu" onclick={fecharMenu}>
 			<div class="menu-secao">
 				<span class="menu-titulo">Principal</span>
@@ -59,9 +57,41 @@
 	{/if}
 </header>
 
-<main class="casca">
-	{@render children()}
-</main>
+{#if $usuario}
+	<main class="casca">
+		{@render children()}
+	</main>
+{:else}
+	<!-- Landing page para usuários não logados -->
+	<main class="casca landing">
+		<section class="hero">
+			<h1>Garimpo<span class="pingo">.</span></h1>
+			<p class="hero-sub">
+				Curadoria inteligente de afiliados Shopee.<br>
+				Encontre os melhores produtos, monitore lojas e publique com um clique.
+			</p>
+			<div class="hero-features">
+				<div class="feature">
+					<span class="feat-icon">🔍</span>
+					<span>Busca e ranking por comissão, vendas e nota</span>
+				</div>
+				<div class="feature">
+					<span class="feat-icon">🏪</span>
+					<span>Monitoramento de lojas com alertas de novidades</span>
+				</div>
+				<div class="feature">
+					<span class="feat-icon">📤</span>
+					<span>Publicação com templates, fotos e agendamento</span>
+				</div>
+				<div class="feature">
+					<span class="feat-icon">📊</span>
+					<span>Rastreamento de conversões por destino</span>
+				</div>
+			</div>
+			<button class="btn-entrar" onclick={login}>Entrar com Google</button>
+		</section>
+	</main>
+{/if}
 
 <footer class="rodape casca">
 	<span>{hoje}</span>
@@ -175,6 +205,64 @@
 		padding-top: var(--r8);
 		padding-bottom: var(--r12);
 	}
+
+	/* ── Landing page ─────────────────────────────────────────────────── */
+	.landing {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 75vh;
+		padding-top: 0;
+	}
+	.hero {
+		text-align: center;
+		max-width: 520px;
+	}
+	.hero h1 {
+		font-family: var(--display);
+		font-size: clamp(2.5rem, 8vw, 4rem);
+		font-weight: 700;
+		letter-spacing: -0.03em;
+		margin: 0 0 var(--r4);
+	}
+	.hero-sub {
+		font-size: 1.1rem;
+		color: var(--tinta-suave);
+		line-height: 1.6;
+		margin: 0 0 var(--r8);
+	}
+	.hero-features {
+		display: flex;
+		flex-direction: column;
+		gap: var(--r3);
+		text-align: left;
+		margin: 0 auto var(--r8);
+		max-width: 380px;
+	}
+	.feature {
+		display: flex;
+		align-items: center;
+		gap: var(--r3);
+		font-size: 0.92rem;
+		color: var(--tinta-suave);
+	}
+	.feat-icon { font-size: 1.3rem; flex-shrink: 0; }
+	.btn-entrar {
+		padding: 14px 36px;
+		background: var(--ouro);
+		color: white;
+		font-weight: 700;
+		font-size: 1rem;
+		border: none;
+		border-radius: 12px;
+		cursor: pointer;
+		box-shadow: 0 4px 12px rgba(184, 142, 58, 0.3);
+	}
+	.btn-entrar:hover {
+		background: #a3782f;
+		box-shadow: 0 6px 20px rgba(184, 142, 58, 0.4);
+	}
+
 	.rodape {
 		display: flex;
 		justify-content: space-between;
