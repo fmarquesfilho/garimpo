@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,8 @@ func (t *TelegramSender) Enviar(ctx context.Context, o Oferta, chatID string) (R
 	if msg == "" {
 		msg = o.MensagemHTML()
 	}
+	// Sanitiza HTML: Telegram só aceita b, i, u, s, a, code, pre
+	msg = sanitizarHTMLTelegram(msg)
 
 	// Se tem imagem, usa sendPhoto com caption
 	if o.Imagem != "" {
@@ -158,4 +161,29 @@ func (t *TelegramPublicador) Nome() string { return "telegram" }
 
 func (t *TelegramPublicador) Publicar(ctx context.Context, o Oferta) (Resultado, error) {
 	return t.sender.Enviar(ctx, o, t.chatID)
+}
+
+// sanitizarHTMLTelegram converte/remove tags não suportadas pelo Telegram.
+// Telegram aceita apenas: b, i, u, s, a, code, pre, tg-spoiler.
+// Tiptap gera <p>, <br>, <em>, <strong> — precisam ser convertidos.
+func sanitizarHTMLTelegram(html string) string {
+	r := strings.NewReplacer(
+		"<p>", "",
+		"</p>", "\n",
+		"<br>", "\n",
+		"<br/>", "\n",
+		"<br />", "\n",
+		"<strong>", "<b>",
+		"</strong>", "</b>",
+		"<em>", "<i>",
+		"</em>", "</i>",
+		"<del>", "<s>",
+		"</del>", "</s>",
+	)
+	result := r.Replace(html)
+	// Remove linhas vazias duplicadas
+	for strings.Contains(result, "\n\n\n") {
+		result = strings.ReplaceAll(result, "\n\n\n", "\n\n")
+	}
+	return strings.TrimSpace(result)
 }

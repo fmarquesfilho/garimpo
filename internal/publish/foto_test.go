@@ -195,3 +195,33 @@ func TestTelegramEnviaFotoComLegendaCustom(t *testing.T) {
 		t.Errorf("caption deveria ser a legenda_custom: %q", caption)
 	}
 }
+
+func TestSanitizarHTMLTelegram(t *testing.T) {
+	casos := []struct {
+		input  string
+		expect string
+	}{
+		{
+			input:  "<p>✨ <strong>Sérum</strong></p><p>💸 <em>R$ 49.90</em></p>",
+			expect: "✨ <b>Sérum</b>\n💸 <i>R$ 49.90</i>",
+		},
+		{
+			input:  "<p><b>Negrito</b> e <i>itálico</i></p>",
+			expect: "<b>Negrito</b> e <i>itálico</i>",
+		},
+		{
+			input:  "texto simples sem tags",
+			expect: "texto simples sem tags",
+		},
+		{
+			input:  "<p></p><p>texto</p><p></p>",
+			expect: "texto",
+		},
+	}
+	for _, c := range casos {
+		got := sanitizarHTMLTelegram(c.input)
+		if got != c.expect {
+			t.Errorf("sanitizar(%q)\n  veio:    %q\n  esperava: %q", c.input, got, c.expect)
+		}
+	}
+}
