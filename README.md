@@ -1,106 +1,124 @@
 # Garimpo
 
-Curadoria automática de produtos de afiliado: pega candidatos (CSV hoje, API da
-Shopee amanhã), aplica o piso de comissão, pontua por estratégia e devolve a
-lista priorizada do dia. Ataca o gargalo da operação — a escolha manual e diária
-do produto a anunciar.
+Plataforma de curadoria e publicação automatizada para afiliados Shopee.
+Busca produtos, monitora lojas, rankeia por estratégia, e publica em canais
+(Telegram, WhatsApp) com templates, fotos e agendamento — tudo com rastreamento
+de conversão.
 
-## Rodar
+## Funcionalidades
 
-```bash
-# lista do dia pela estratégia de nicho (padrão)
-go run ./cmd/garimpo
+- **Curadoria inteligente** — busca na Shopee por keyword ou categoria, rankeia
+  por "teor" (comissão × demanda × avaliação), filtra produto-fantasma.
+- **Monitoramento de lojas** — acompanha lojas específicas via `shopOfferV2`,
+  detecta novos produtos e variações de preço.
+- **Publicação rica** — templates customizáveis, editor WYSIWYG, foto do produto,
+  botão inline "Comprar", envio para múltiplos destinos (Telegram, WhatsApp futuro).
+- **Agendamento** — publica no horário configurado via Cloud Scheduler.
+- **Rastreamento** — cada publicação gera um `sub_id` que identifica canal +
+  estratégia + data, cruzável com o `validatedReport` da Shopee.
+- **Pipeline de filtros modular** — Chain of Responsibility extensível; modo
+  "sem filtro" para exploração de lojas, modo curadoria com pisos configuráveis.
+- **Landing page** — protege a aplicação; exige login Google para acessar.
 
-# estratégia diversificada, top 8
-go run ./cmd/garimpo -estrategia diversificada -top 8
-
-# subir o piso de comissão para 10%
-go run ./cmd/garimpo -comissao-min 0.10
-
-# usar outro CSV
-go run ./cmd/garimpo -csv data/candidatos_exemplo.csv
-
-# fonte ao vivo: API de afiliados da Shopee (precisa de credenciais)
-export SHOPEE_APP_ID=...
-export SHOPEE_SECRET=...
-go run ./cmd/garimpo -fonte shopee -cat 100017 -categoria "cosméticos"
-```
-
-Veja `docs/APIS.md` para o mapeamento dos campos da Shopee e os limites do
-Instagram, e `docs/MODELO.md` para o modelo de negócio e o roadmap incremental.
-
-## Frontend (SvelteKit) — Incremento 2
-
-A interface que ela usa fica em `web/`. Consome a API HTTP do Garimpo.
+## Rodar localmente
 
 ```bash
-# 1. suba a API (a fonte é definida aqui; os filtros vêm do front)
-go run ./cmd/garimpo-api -fonte shopee      # ou sem flag, para o CSV de exemplo
+# API (fonte CSV para teste rápido)
+go run ./cmd/garimpo-api
 
-# 2. em outro terminal, rode o frontend
-cd web
-npm install          # OBRIGATÓRIO na primeira vez (baixa as dependências)
-npm run dev          # abre em http://localhost:5173
+# API com Shopee ao vivo
+export SHOPEE_APP_ID=... SHOPEE_SECRET=...
+go run ./cmd/garimpo-api -fonte shopee -keyword "skincare"
+
+# Frontend (em outro terminal)
+cd web && npm install && npm run dev
 ```
 
-A API base do frontend é configurável: `VITE_API_BASE=http://localhost:8080`.
-
-Os controles de **busca (keyword), categoria, comissão, vendas mínimas e nota
-mínima** ficam na própria interface — não precisam de flags. As flags do
-`garimpo-api` (`-keyword`, `-categoria`, `-vendas-min`, `-nota-min`) servem só
-como padrões iniciais; o front sobrescreve a cada requisição.
-
-Telas:
-- **Curadoria** — a peneira do dia: busca na Shopee + filtros, short-list
-  ranqueada por "teor", alternador de estratégia (nicho / diversificada /
-  comparar), e o botão **Garimpar** que manda o produto pro quadro.
-- **Quadro** — Kanban da operação (Selecionados → Em produção → Publicado →
-  Em análise) com limites de WIP, persistido no navegador.
+A API escuta na porta 8080; o front aponta para ela automaticamente em dev.
 
 ## Testes
 
 ```bash
-go test ./...
+go test ./...                    # todos os pacotes
+go test ./... -cover             # com cobertura
+cd web && npm run build          # verifica o frontend
 ```
 
-## Estrutura (ports & adapters)
+Cobertura atual: publish 91%, scoring 90%, source 87%, strategy 86%, engine 85%.
+
+## Deploy (GCP)
+
+Push para `main` dispara o workflow `deploy-gcp.yml`:
+1. Testes Go + build do frontend
+2. Build da imagem Docker (com `-tags gcp` para BigQuery)
+3. Deploy no Cloud Run + Firebase Hosting
+
+Detalhes em `docs/DEPLOY_GCP.md`.
+
+## Estrutura
 
 ```
-cmd/garimpo        CLI (composição: escolhe fonte + estratégia)
-cmd/garimpo-api    servidor HTTP que serve a curadoria em JSON
-internal/domain    núcleo: Product, Scored (sem dependências)
-internal/httpapi   handlers HTTP (CORS) sobre o engine
-internal/store     registro de eventos (NopStore; BigQueryStore com -tags gcp)
-internal/source    PORTA de entrada: ProductSource
-                     - csv.go     adaptador que funciona hoje
-                     - shopee.go  adaptador da API de afiliados (GraphQL, ✅ implementado)
-                     - flex.go    tipos que aceitam número OU string no JSON da Shopee
-internal/scoring   matemática neutra: valor esperado + normalização
-internal/strategy  PORTA de decisão: Strategy
-                     - niche.go        prioriza nicho + comissão + avaliação
-                     - diversified.go  persegue valor esperado/volume
-internal/engine    orquestra: fonte -> elegibilidade -> scoring -> ranking
-data/              CSV de exemplo
-web/               frontend SvelteKit (Incremento 2)
-docs/MODELO.md     modelo de negócio + roadmap incremental + Kanban
-docs/MANUAL.md     manual de uso (o "teor", selos, fluxo) — também embutido na UI
-docs/JORNADA.md    jornada do usuário: fluxo de valor e pontos de decisão
-docs/CIENCIA_DE_DADOS.md  guia estratégico de DS por objetivo e maturidade
-docs/COLETA.md     o que é coletado, onde fica, e como ligar a coleta agendada
-docs/APIS.md       referência das APIs Shopee (campos) e Instagram (limites)
-docs/DEPLOY.md     hospedagem em VPS (OCI/Hetzner), CI/CD por SSH
-docs/DEPLOY_GCP.md hospedagem na GCP (Cloud Run + BigQuery + Firebase) ★ atual
-deploy/            systemd/nginx (VPS), schema BigQuery, segredos, scheduler de coleta
-Dockerfile         imagem do Cloud Run (build com -tags gcp)
-firebase.json      Firebase Hosting + rewrite /api -> Cloud Run
-.github/workflows/ ci.yml (testes) e deploy-gcp.yml (Cloud Run + Hosting)
+cmd/garimpo          CLI (composição: fonte + estratégia)
+cmd/garimpo-api      servidor HTTP (API JSON para o frontend)
+internal/
+  domain/            núcleo: Product, Scored
+  engine/            orquestra: fonte → filtros → scoring → ranking
+  strategy/          estratégias (Niche, Diversified) + Pipeline de filtros
+  scoring/           matemática: valor esperado, normalização, suspeito
+  source/            adaptadores de entrada (CSV, Shopee keyword, Shopee shop)
+  publish/           saída: Dispatcher, Sender (Telegram), Templates, Destinos
+  httpapi/           handlers HTTP (rotas com método explícito, Go 1.22+)
+  store/             persistência (NopStore / BigQueryStore com -tags gcp)
+  scheduler/         Cloud Scheduler (cria jobs de coleta e publicação)
+  auth/              Firebase Auth (verifica tokens)
+  logs/              logging estruturado (slog)
+web/                 frontend SvelteKit 5 + Vite 6
+  src/lib/components/  componentes reutilizáveis (TagInput, FilterBar, BuscaCard,
+                       CandidateCard, RichEditor, ScoreMeter, StrategyToggle)
+  src/routes/          páginas: /, /lojas, /publicar, /publicacoes,
+                       /coletas, /canais, /quadro, /estatisticas
+deploy/              systemd/nginx (VPS), schema BigQuery, scheduler
+docs/                documentação detalhada
 ```
 
-O motor depende só das duas portas. Trocar CSV pela API, ou nicho por
-diversificada, não toca em mais nada — é onde a prova de conceito vira produto.
+## API — endpoints
 
-## CSV de entrada
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/health` | Status da API |
+| GET | `/api/candidatos` | Busca + ranking (aceita `fonte`, `sem_filtro`, `shop_ids`) |
+| GET | `/api/comparar` | Nicho vs. diversificada lado a lado |
+| POST | `/api/eventos` | Registra decisão de curadoria |
+| POST | `/api/publicar` | Publica oferta (destino + template + imagem) |
+| POST | `/api/coletar` | Coleta agendada (Cloud Scheduler) |
+| GET | `/api/estatisticas` | Resumo descritivo dos snapshots |
+| GET | `/api/coletas` | Histórico de coletas executadas |
+| GET | `/api/conversoes` | Relatório de publicações por canal |
+| GET | `/api/lojas/novidades` | Novos produtos + variações de preço |
+| GET/POST/DELETE | `/api/buscas` | Perfis de busca (keywords + shop_ids + cron) |
+| GET/POST/DELETE | `/api/destinos` | Canais de publicação (Telegram, WhatsApp) |
+| GET/POST/DELETE | `/api/templates` | Modelos de mensagem |
+| POST | `/api/templates/preview` | Renderiza preview de template |
+| GET/POST | `/api/publicacoes` | Publicações agendadas/enviadas/erros |
+| POST | `/api/publicar-pendentes` | Executa publicações agendadas vencidas |
 
-Cabeçalho: `id,name,category,price,commission,sales_30d,rating`
-`commission` em fração (0.12 = 12%). `sales_30d` é proxy de demanda — se a API
-não expuser vendas, use a posição no ranking de best-sellers como proxy.
+## Variáveis de ambiente
+
+| Variável | Onde | Para quê |
+|----------|------|----------|
+| `SHOPEE_APP_ID` | Secret Manager | Credencial da API de afiliados |
+| `SHOPEE_SECRET` | Secret Manager | Assinatura HMAC-SHA256 |
+| `TELEGRAM_BOT_TOKEN` | Secret Manager | Bot do Telegram (@BotFather) |
+| `COLETA_TOKEN` | Secret Manager | Protege endpoints de coleta/scheduler |
+| `GOOGLE_CLOUD_PROJECT` | Cloud Run env | Projeto GCP |
+| `BQ_DATASET` | Cloud Run env | Dataset BigQuery (default: `garimpo`) |
+
+## Documentação
+
+- `docs/DEPLOY_GCP.md` — runbook completo de deploy na GCP
+- `docs/COLETA.md` — o que é coletado, onde fica, como ligar
+- `docs/APIS.md` — referência das APIs Shopee e Instagram
+- `docs/MODELO.md` — modelo de negócio e roadmap
+- `docs/MANUAL.md` — manual de uso (teor, selos, fluxo)
+- `docs/JORNADA.md` — jornada do usuário e pontos de decisão
+- `docs/CIENCIA_DE_DADOS.md` — guia de análise por maturidade

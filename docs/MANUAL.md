@@ -1,61 +1,100 @@
 # Manual do Garimpo (para quem usa no dia a dia)
 
-O Garimpo é uma peneira: de centenas de produtos da Shopee, ele separa os que
-**valem o esforço de divulgar** e te ajuda a publicá-los. Boa parte deste manual
-também está **dentro da tela** — no card de cada produto há um botão **?** ao lado
-de "teor" que abre essa explicação.
+O Garimpo é uma peneira inteligente: de centenas de produtos da Shopee, ele
+separa os que **valem o esforço de divulgar** e te ajuda a publicá-los nos seus
+canais (Telegram, WhatsApp) com formatação rica, foto e agendamento.
+
+## Primeiro acesso
+
+Ao abrir o app, você vê a **landing page**. Clique em **Entrar com Google** para
+acessar. Sem login, nenhuma funcionalidade fica disponível.
+
+## As telas
+
+### 🔍 Curadoria (página principal)
+
+A peneira do dia. Busque por produto (perfume, sérum, batom), ajuste os filtros
+e veja os melhores candidatos ordenados pelo **teor**.
+
+**Filtros:** comissão mínima, vendas mínimas, nota mínima, quantidade de resultados,
+modo explorar (testa produtos fora do topo).
+
+**Buscas salvas:** salve combinações de filtros + keywords + lojas para reusar.
+Configure um **cron** (ex.: todo dia 8h) para coleta automática.
+
+### 🏪 Lojas
+
+Monitore lojas específicas da Shopee. Selecione uma busca com shop_ids e veja:
+
+- **Produtos** — lista completa da loja (sem filtro de elegibilidade), com botão
+  de publicar direto.
+- **🆕 Novidades** — produtos que apareceram pela primeira vez nos últimos 7 dias.
+- **📉 Preços** — variações de preço detectadas (verde = baixou, vermelho = subiu).
+
+### 📤 Publicar (página de publicação)
+
+Ao clicar "Publicar" em qualquer produto, ou ao acessar direto:
+
+1. **Cole um link** da Shopee (opcional) — preenche os dados automaticamente.
+2. **Edite o produto** — nome, categoria, preço são editáveis inline.
+3. **Escolha o destino** — qual grupo Telegram (ou WhatsApp futuro) vai receber.
+4. **Escolha o template** — modelo de mensagem (com ou sem foto 📷).
+5. **Edite a legenda** — editor rico (negrito, itálico, links) com preview WYSIWYG.
+6. **Envie ou agende** — imediato ou para um horário futuro.
+
+### 📋 Publicações
+
+Histórico de tudo que foi publicado:
+- **Agendadas** — esperando o horário (⏱)
+- **Enviadas** — publicadas com sucesso (✓)
+- **Erros** — falhas de envio (✕)
+
+### 📡 Destinos & Conversões
+
+- **Destinos** — gerencie onde o Garimpo publica (grupos Telegram, WhatsApp).
+  Cada destino tem tipo + config (chat_id ou telefone).
+- **Conversões** — relatório de publicações por canal/sub_id, mostrando volume
+  e comissão estimada.
+
+### ⏱ Coletas
+
+Histórico das coletas periódicas (snapshots gravados pelo scheduler).
+
+### 📊 Estatísticas
+
+Resumo descritivo dos dados coletados por categoria: comissão média/mediana,
+preço médio, vendas média, teor médio.
 
 ## Os termos
 
-**Teor** — o "grau de ouro" da pepita. Um número de 0 a 1 que mede o quanto o
-produto tende a render *pelo esforço de divulgar*. Quanto maior, melhor a aposta.
-Não é a comissão sozinha — é a combinação de três sinais, cada um comparado aos
-outros produtos daquele momento:
+**Teor** — o "grau de ouro" da pepita. Número de 0 a 1 que mede o quanto o
+produto rende pelo esforço. Combina:
+- **comissão** — quanto da venda volta pra você
+- **valor esperado** — comissão × preço × vendas (retorno provável)
+- **avaliação** — nota como sinal de confiança
 
-- **comissão** — quanto da venda volta pra você;
-- **valor esperado** — comissão × preço × vendas: o retorno *provável*, não só a
-  porcentagem (uma comissão de 80% num produto que ninguém compra vale pouco);
-- **avaliação** — a nota, como sinal de confiança de quem comprou.
+**Nicho vs. Diversificada** — duas estratégias de ranking:
+- *Nicho* bonifica cosméticos/perfumaria/bem-estar (foco editorial)
+- *Diversificada* ignora categoria, olha só retorno × demanda
+- *Comparar* mostra ambas lado a lado
 
-A barrinha colorida embaixo do teor mostra o peso de cada sinal naquele produto.
+**⚠ Suspeito** — comissão alta sem vendas/nota. Produto-fantasma. Marcado, não
+escondido — você decide.
 
-**Nicho vs. Diversificada** — duas formas de ranquear:
-- *Nicho* dá um bônus para cosméticos, perfumaria e bem-estar (o seu foco). Esses
-  produtos aparecem com a marca `×nicho`.
-- *Diversificada* ignora categoria e olha só retorno × demanda.
-- *Comparar* mostra as duas listas lado a lado, para você ver onde elas discordam.
+**✦ Exploração** — ~20% das vagas para testar o que converte fora do topo.
 
-**⚠ suspeito** — o produto-fantasma: comissão alta, mas sem vendas ou sem nota.
-É o padrão de item de baixa qualidade que ninguém compra. O Garimpo **não esconde**
-— ele marca, para você decidir com a informação à vista. Os filtros de *vendas
-mínimas* e *nota mínima* tiram esses da peneira quando você quer.
+**sub_id** — código de atribuição (ex.: `telegram_nicho_20260622`) que identifica
+qual canal/estratégia/data gerou cada venda.
 
-**✦ exploração** — quando você liga o "explorar", o Garimpo reserva ~20% das vagas
-para produtos **fora do topo**, sorteados. Parece contraintuitivo, mas é o que
-permite descobrir o que converte de verdade — sem isso, você só publica o que o
-sistema já recomenda e nunca testa o resto. Esses dados valem ouro mais pra frente.
-
-**atribuição (sub_id)** — quando você publica, aparece um código como
-`telegram_nicho_20260321`. É a etiqueta que, lá na frente, vai dizer **qual canal**
-trouxe a venda (Telegram vs. Instagram). Por enquanto fica registrado; quando as
-conversões da Shopee estiverem ligadas, ele fecha o ciclo.
-
-## O fluxo
-
-1. **Buscar** — digite o que quer divulgar (perfume, sérum, batom). Ajuste os
-   filtros (comissão, vendas e nota mínimas) até a peneira ficar limpa.
-2. **Ler o teor** — o topo da lista é a melhor aposta do momento. Olhe os selos.
-3. **Garimpar** — manda o produto para o **Quadro** (seu Kanban de produção).
-4. **Publicar** — dispara a oferta no canal. A mensagem é montada sem mostrar a
-   comissão (que é sua margem). Por ora o envio é simulado (mock).
-5. **Quadro** — acompanhe cada produto de "Selecionados" até "Publicado".
+**Pipeline de filtros** — o sistema filtra em cadeia (comissão → vendas → nota).
+Na página de Lojas, os filtros são desligados para mostrar tudo.
 
 ## Dúvidas frequentes
 
-- *Por que esse produto de 80% de comissão está lá embaixo?* Porque tem zero
-  vendas — o teor pesa demanda, não só comissão. Provavelmente está com ⚠ suspeito.
-- *Por que a lista veio vazia?* Com a fonte Shopee, busca vazia volta vazia —
-  comece sempre por um termo.
-- *Devo ligar o "explorar" sempre?* Não precisa. Ligue de vez em quando: é um
-  investimento em aprender o que funciona, ao custo de algumas publicações menos
-  "certeiras".
+- *Produto de 80% lá embaixo?* Sem vendas → teor baixo. Marcado ⚠ suspeito.
+- *Lista vazia?* Busca vazia = sem resultados. Digite um termo.
+- *Não encontro uma loja?* Use o modo "sem filtro" na página Lojas, que mostra
+  todos os produtos independente de comissão/vendas.
+- *Como agendar?* Na página Publicar, preencha o campo de data/hora antes de enviar.
+- *Como editar a mensagem?* Use o editor rico na página Publicar — negrito, itálico,
+  links, tudo visual.

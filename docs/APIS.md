@@ -71,7 +71,11 @@ UNPAID → PENDING → COMPLETED → CANCELLED. Paginação por `scrollId` (vale
 **`validatedReport`** — conversões já validadas, com valor **final** de comissão
 (inclui `refundAmount`). É o que conferir antes do pagamento.
 
-**`shopOfferV2`** — lojas com comissão diferenciada (Key Sellers, Mall/Star/Star+).
+**`shopOfferV2`** — busca produtos de uma loja específica pelo `shopId`.
+Mesmos campos de retorno que `productOfferV2` (comissão, preço, vendas, nota,
+offerLink, imageUrl). Aceita `keyword` para filtrar dentro da loja. Implementado
+no Garimpo como `ShopeeShopSource` — usado para monitoramento de lojas (detecta
+novos produtos e variações de preço via diff de snapshots).
 
 ### 1.3 O que isso destrava
 

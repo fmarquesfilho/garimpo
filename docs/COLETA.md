@@ -13,8 +13,11 @@ o uso é o mesmo, só não grava.
 |---|---|---|---|
 | `snapshots` | `POST /api/coletar` | coleta agendada (Cloud Scheduler) | série temporal do mercado por categoria (preço, comissão, vendas, nota, teor, posição) com `coletado_em` |
 | `eventos` | `POST /api/eventos` (seleção) e `POST /api/publicar` | quando ela garimpa/publica | comportamento de curadoria + atribuição (`sub_id`, canal) |
-| `buscas` | `POST /api/buscas` | ao salvar um perfil de busca | perfis de coleta (filtros + cron), append-only/versionado |
-| `conversoes` | (futuro) `conversionReport` da Shopee | quando ligado | fecha o laço receita ↔ curadoria |
+| `buscas` | `POST /api/buscas` | ao salvar um perfil de busca | perfis de coleta (filtros + cron + shop_ids), append-only/versionado |
+| `destinos` | `POST /api/destinos` | ao cadastrar canal Telegram/WhatsApp | canais de publicação (tipo + config), append-only |
+| `templates` | `POST /api/templates` | ao criar modelo de mensagem | modelos de legenda (corpo + com_foto), append-only |
+| `publicacoes` | `POST /api/publicacoes` | ao publicar/agendar | histórico completo (status, destino, template, sub_id) |
+| `conversoes` | (futuro) `validatedReport` da Shopee | quando ligado | fecha o laço receita ↔ curadoria |
 
 O schema está em `deploy/bigquery_schema.sql` (rode-o uma vez; ver
 `docs/DEPLOY_GCP.md`). Cada tabela é particionada por data para consulta barata.

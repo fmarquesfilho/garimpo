@@ -11,9 +11,13 @@ mercado Shopee ─► COLETA ─► CURADORIA ─► DECISÃO ─► PUBLICAÇÃ
    (oferta)      (snapshot)   (teor)     (escolha)   (canal)      (sub_id)      (análise)
                      │            │           │           │            │             │
                   BigQuery     filtros     Garimpar    Telegram    conversion-    Looker/
-                  snapshots   + selos     /Publicar    (mock)       Report*        Python
+                  snapshots   + selos     /Publicar    WhatsApp     Report        Python
+                     │                                    │
+                     └── LOJAS ──► novidades             editor
+                        (shopOfferV2)  variações preço   WYSIWYG
+                                                         templates
+                                                         agendamento
 ```
-`*` = destrava quando as conversões da Shopee forem ligadas.
 
 ## Etapas, valor e decisão
 
@@ -35,9 +39,11 @@ diversificada? *Ponto-chave de rentabilidade:* é aqui que a estratégia vira a�
 discordam. *Decisão:* quando fugir do nicho compensa? *Maturidade:* hoje é
 julgamento; no futuro, um bandit recomenda a fração ideal.
 
-**5. Publicação (Publicar)** — *Valor:* a oferta chega à audiência; gera o
-**evento de publicação** com o `sub_id`. *Decisão:* qual canal? *Atrito a evitar:*
-vazar comissão na mensagem (o sistema impede).
+**5. Publicação (Publicar)** — *Valor:* a oferta chega à audiência com
+formatação rica (foto, negrito, botão inline). *Decisão:* qual destino? qual
+template? editar a legenda? agendar ou enviar agora? *Apoio:* editor WYSIWYG
+com preview, templates com placeholders, múltiplos destinos, agendamento.
+Gera o **evento de publicação** com o `sub_id`.
 
 **6. Produção (Quadro)** — *Valor:* visibilidade do trabalho em andamento, sem
 gargalo. *Decisão:* o que priorizar? *Apoio:* limites de WIP no Kanban.
