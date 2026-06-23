@@ -252,8 +252,8 @@
 {:else if lista.length === 0}
 	<div class="vazio">
 		{#if f.busca.trim() === ''}
-			<p>Comece por uma busca.</p>
-			<p class="dica">Digite o que quer divulgar — perfume, sérum, batom.</p>
+			<p>Nenhum produto recomendado no momento.</p>
+			<p class="dica">Tente digitar um termo de busca ou ajuste os filtros.</p>
 		{:else}
 			<p>Nada na peneira para "{f.busca}".</p>
 			<p class="dica">Tente outro termo, ou afrouxe os pisos de comissão, vendas e nota.</p>

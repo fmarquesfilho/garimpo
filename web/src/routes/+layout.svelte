@@ -59,7 +59,6 @@
 				<span class="menu-titulo">Publicar</span>
 				<a href="/publicar" class:atual={$page.url.pathname === '/publicar'}>🔗 Link</a>
 				<a href="/publicacoes" class:atual={$page.url.pathname === '/publicacoes'}>📤 Publicações</a>
-				<a href="/canais" class:atual={$page.url.pathname === '/canais'}>📡 Destinos & Conversões</a>
 			</div>
 			<div class="menu-secao">
 				<span class="menu-titulo">Monitoramento</span>
@@ -68,6 +67,10 @@
 				{#if isAdmin}
 					<a href="/admin" class:atual={$page.url.pathname === '/admin'}>🛠 Admin</a>
 				{/if}
+			</div>
+			<div class="menu-secao">
+				<span class="menu-titulo">Configurações</span>
+				<a href="/canais" class:atual={$page.url.pathname === '/canais'}>📡 Destinos</a>
 			</div>
 		</nav>
 	{/if}

@@ -1,12 +1,14 @@
 <script>
 	import { onMount } from 'svelte';
-	import { listarPublicacoes } from '$lib/api.js';
+	import { listarPublicacoes, buscarConversoes } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 
 	let publicacoes = $state([]);
+	let conversoes = $state([]);
 	let carregando = $state(true);
 	let erro = $state(null);
 	let filtro = $state(''); // '' | 'agendada' | 'enviada' | 'erro'
+	let aba = $state('historico'); // 'historico' | 'desempenho'
 
 	onMount(carregar);
 
@@ -14,8 +16,12 @@
 		carregando = true;
 		erro = null;
 		try {
-			const r = await listarPublicacoes({ status: filtro });
-			publicacoes = r?.publicacoes ?? [];
+			const [rp, rc] = await Promise.all([
+				listarPublicacoes({ status: filtro }),
+				buscarConversoes({ dias: 30 }).catch(() => ({ conversoes: [] }))
+			]);
+			publicacoes = rp?.publicacoes ?? [];
+			conversoes = rc?.conversoes ?? [];
 		} catch (e) {
 			erro = e.message;
 		} finally {
@@ -23,7 +29,6 @@
 		}
 	}
 
-	// Recarrega quando o filtro muda
 	$effect(() => {
 		filtro;
 		carregar();
@@ -38,16 +43,25 @@
 </svelte:head>
 
 <section class="publicacoes-page">
-	<h1>📋 Publicações</h1>
+	<h1>📤 Publicações</h1>
 	<p class="subtitulo">
-		Histórico de publicações: agendadas, enviadas e erros.
+		Histórico e desempenho das publicações.
 	</p>
 
 	{#if !$usuario}
 		<div class="aviso">Faça login para ver publicações.</div>
 	{:else}
-		<!-- Filtros -->
-		<nav class="filtros-pub">
+		<!-- Abas principais -->
+		<nav class="abas-pub">
+			<button class:ativa={aba === 'historico'} onclick={() => (aba = 'historico')}>Histórico</button>
+			<button class:ativa={aba === 'desempenho'} onclick={() => (aba = 'desempenho')}>
+				Desempenho {#if conversoes.length > 0}<span class="badge-n">{conversoes.length}</span>{/if}
+			</button>
+		</nav>
+
+		{#if aba === 'historico'}
+			<!-- Filtros de status -->
+			<nav class="filtros-pub">
 			<button class:ativa={filtro === ''} onclick={() => (filtro = '')}>Todas</button>
 			<button class:ativa={filtro === 'agendada'} onclick={() => (filtro = 'agendada')}>⏱ Agendadas</button>
 			<button class:ativa={filtro === 'enviada'} onclick={() => (filtro = 'enviada')}>✓ Enviadas</button>
@@ -94,13 +108,59 @@
 				{/each}
 			</div>
 		{/if}
+
+		{:else if aba === 'desempenho'}
+			<!-- Relatório de desempenho das publicações por canal -->
+			{#if conversoes.length === 0}
+				<p class="vazio">Nenhuma publicação rastreada nos últimos 30 dias.</p>
+				<p class="dica">O desempenho aparece aqui quando publicações são enviadas com sub_id de rastreamento.</p>
+			{:else}
+				<div class="tabela-desemp">
+					<table>
+						<thead>
+							<tr>
+								<th>Canal</th>
+								<th>Produto</th>
+								<th>Publicações</th>
+								<th>Comissão est.</th>
+								<th>Último envio</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each conversoes as c (c.sub_id)}
+								<tr>
+									<td><span class="canal-badge">{c.canal}</span></td>
+									<td class="nome-col">{c.nome}</td>
+									<td class="num">{c.publicacoes}</td>
+									<td class="num">R$ {c.comissao_estimada?.toFixed(2) ?? '—'}</td>
+									<td class="data">{c.publicado_em}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
+		{/if}
 	{/if}
 </section>
 
 <style>
 	.publicacoes-page { max-width: 780px; }
 	h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
-	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r6); }
+	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r5); }
+
+	.abas-pub {
+		display: flex; gap: 2px; margin-bottom: var(--r4);
+		border-bottom: 2px solid var(--linha);
+	}
+	.abas-pub button {
+		padding: 8px 16px; border: none; background: transparent;
+		font-weight: 600; font-size: 0.88rem; color: var(--tinta-suave);
+		cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+		display: flex; align-items: center; gap: 6px;
+	}
+	.abas-pub button.ativa { color: var(--tinta); border-bottom-color: var(--ouro); }
+	.badge-n { font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e; padding: 1px 6px; border-radius: 999px; font-weight: 700; }
 
 	.filtros-pub {
 		display: flex; gap: 2px; margin-bottom: var(--r5);
@@ -143,4 +203,15 @@
 	.pub-detalhe { font-size: 0.78rem; margin: 4px 0 0; color: var(--tinta-suave); }
 	.pub-detalhe code { font-size: 0.72rem; background: var(--porcelana); padding: 2px 6px; border-radius: 4px; }
 	.erro-txt { color: #b91c1c; }
+	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin-top: var(--r2); }
+
+	/* Desempenho */
+	.tabela-desemp { overflow-x: auto; }
+	.tabela-desemp table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+	.tabela-desemp th { text-align: left; font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--linha); font-size: 0.78rem; text-transform: uppercase; color: var(--tinta-suave); }
+	.tabela-desemp td { padding: 8px 10px; border-bottom: 1px solid var(--linha); }
+	.canal-badge { font-size: 0.78rem; font-weight: 600; }
+	.nome-col { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.num { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+	.data { font-size: 0.78rem; color: var(--tinta-suave); }
 </style>

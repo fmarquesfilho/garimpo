@@ -40,17 +40,6 @@
 		// Se não veio produto via query, permite preencher manualmente
 		if (!produto) {
 			produto = { id: '', nome: '', preco: 0, categoria: '', estrategia: 'nicho', link: '', imagem: '' };
-
-			// Tenta ler da área de transferência automaticamente
-			try {
-				const texto = await navigator.clipboard.readText();
-				if (texto && /shopee|shope\.ee/i.test(texto)) {
-					linkColado = texto.trim();
-					aplicarLink();
-				}
-			} catch {
-				// Permissão negada ou clipboard vazio — ignora silenciosamente
-			}
 		}
 
 		try {
@@ -115,15 +104,27 @@
 	function aplicarLink() {
 		const url = linkColado.trim();
 		if (!url) return;
-		// Preenche o link no produto
 		produto = { ...produto, link: url };
-		// Se não tem nome, extrai do URL como placeholder
 		if (!produto.nome) {
 			const match = url.match(/\/([^\/\?]+)(?:\?|$)/);
 			produto = { ...produto, nome: match ? match[1].replace(/-/g, ' ').replace(/\.i\.\d+\.\d+/, '') : 'Produto' };
 		}
 		linkColado = '';
 		gerarLegenda();
+	}
+
+	async function colarDoClipboard() {
+		try {
+			const texto = await navigator.clipboard.readText();
+			if (texto) {
+				linkColado = texto.trim();
+				if (/shopee|shope\.ee/i.test(linkColado)) {
+					aplicarLink();
+				}
+			}
+		} catch {
+			// Permissão negada — o user pode colar manualmente
+		}
 	}
 
 	async function enviarAgora() {
@@ -171,7 +172,7 @@
 			<div class="config">
 				<!-- Colar link do produto -->
 				<div class="campo-pub">
-					<label>🔗 Link do produto (opcional)</label>
+					<label>🔗 Link do produto</label>
 					<div class="link-input">
 						<input
 							type="url"
@@ -179,6 +180,7 @@
 							placeholder="Cole o link da Shopee aqui…"
 							onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
 						/>
+						<button type="button" class="btn-colar" onclick={colarDoClipboard}>📋 Colar</button>
 						<button type="button" class="btn-link" onclick={aplicarLink} disabled={!linkColado.trim()}>Aplicar</button>
 					</div>
 				</div>
@@ -341,6 +343,12 @@
 		border-radius: 10px; cursor: pointer; white-space: nowrap;
 	}
 	.btn-link:disabled { opacity: 0.4; cursor: not-allowed; }
+	.btn-colar {
+		padding: 10px 14px; background: var(--porcelana); border: 1px solid var(--linha);
+		color: var(--tinta-suave); font-weight: 600; font-size: 0.85rem;
+		border-radius: 10px; cursor: pointer; white-space: nowrap;
+	}
+	.btn-colar:hover { border-color: var(--ouro); color: var(--ouro); }
 
 	/* Produto editável */
 	.nome-edit {
