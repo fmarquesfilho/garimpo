@@ -72,8 +72,7 @@
 			let txt = '';
 			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
 			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
-			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
-			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>`;
 			return txt.trimEnd();
 		}
 
@@ -335,12 +334,18 @@
 				</div>
 
 				{#if resultado}
-					<div class="resultado ok">
-						<p>✓ {resultado.status === 'enviada' ? 'Publicado' : 'Agendado'} com sucesso</p>
-						{#if resultado.detalhe}
-							<p class="subid">Atribuição: <code>{resultado.detalhe}</code></p>
-						{/if}
-					</div>
+					{#if resultado.status === 'erro'}
+						<div class="resultado falha">
+							<p>✕ Erro ao publicar: {resultado.detalhe}</p>
+						</div>
+					{:else}
+						<div class="resultado ok">
+							<p>✓ {resultado.status === 'enviada' ? 'Publicado' : 'Agendado'} com sucesso</p>
+							{#if resultado.detalhe}
+								<p class="subid">Atribuição: <code>{resultado.detalhe}</code></p>
+							{/if}
+						</div>
+					{/if}
 				{/if}
 				{#if erro && produto}
 					<div class="resultado falha"><p>✕ {erro}</p></div>

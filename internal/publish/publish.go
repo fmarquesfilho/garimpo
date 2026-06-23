@@ -85,10 +85,7 @@ func (o Oferta) MensagemHTML() string {
 		fmt.Fprintf(&b, "📂 <i>%s</i>\n", o.Categoria)
 	}
 	if o.Preco > 0 {
-		fmt.Fprintf(&b, "💸 <b>R$ %.2f</b>\n", o.Preco)
-	}
-	if o.Estrategia != "" {
-		fmt.Fprintf(&b, "🎯 %s", o.Estrategia)
+		fmt.Fprintf(&b, "💸 <b>R$ %.2f</b>", o.Preco)
 	}
 	return strings.TrimRight(b.String(), "\n")
 }

@@ -176,14 +176,13 @@ test.describe('Geração de legenda — lógica client-side', () => {
 			let txt = '';
 			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
 			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
-			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
-			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>`;
 			return txt.trimEnd();
 		});
 		expect(resultado).toContain('<b>Sérum Vitamina C</b>');
 		expect(resultado).toContain('<i>Beleza</i>');
 		expect(resultado).toContain('R$ 49.90');
-		expect(resultado).toContain('nicho');
+		expect(resultado).not.toContain('nicho');
 	});
 
 	test('legendaLocal com dados parciais (só nome)', async ({ page }) => {
@@ -193,8 +192,7 @@ test.describe('Geração de legenda — lógica client-side', () => {
 			let txt = '';
 			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
 			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
-			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
-			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>`;
 			return txt.trimEnd();
 		});
 		expect(resultado).toContain('<b>Produto Teste</b>');
@@ -209,8 +207,7 @@ test.describe('Geração de legenda — lógica client-side', () => {
 			let txt = '';
 			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
 			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
-			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
-			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>`;
 			return txt.trimEnd();
 		});
 		expect(resultado).toBe('');
@@ -244,18 +241,17 @@ test.describe('Fluxo aplicarLink → gerarLegenda (mock completo)', () => {
 				body: JSON.stringify({ url: 'https://s.shopee.com.br/abc' })
 			});
 			const r = await resp.json();
-			const produto = { nome: r.nome, categoria: '', preco: 0, estrategia: 'nicho', link: r.url_final };
+			const produto = { nome: r.nome, categoria: '', preco: 0, link: r.url_final };
 
-			// legendaLocal
+			// legendaLocal (sem estratégia)
 			let txt = '';
 			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
 			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
-			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>\n`;
-			if (produto.estrategia) txt += `🎯 ${produto.estrategia}`;
+			if (produto.preco > 0) txt += `💸 <b>R$ ${produto.preco.toFixed(2)}</b>`;
 			return txt.trimEnd();
 		});
 
 		expect(legenda).toContain('<b>Creme Hidratante 50ml</b>');
-		expect(legenda).toContain('nicho');
+		expect(legenda).not.toContain('nicho');
 	});
 });
