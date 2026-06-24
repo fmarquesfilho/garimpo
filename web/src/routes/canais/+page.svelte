@@ -20,7 +20,11 @@
 	let carregandoGrupos = $state(false);
 	let erroGrupos = $state(null);
 
-	onMount(carregar);
+	onMount(async () => {
+		await carregar();
+		// Carrega nomes dos grupos WA para exibição na lista de destinos
+		carregarGruposWA();
+	});
 
 	async function carregar() {
 		carregando = true;
@@ -36,7 +40,7 @@
 	}
 
 	async function carregarGruposWA() {
-		if (gruposWA.length > 0) return;
+		if (gruposWA.length > 0 || carregandoGrupos) return;
 		carregandoGrupos = true;
 		erroGrupos = null;
 		try {
@@ -156,7 +160,16 @@
 						<div class="info">
 							<span class="tipo-badge">{tipoIcone[d.tipo] ?? '📤'} {tipoLabel[d.tipo] ?? d.tipo}</span>
 							<strong>{d.nome}</strong>
-							<code>{d.config}</code>
+							{#if d.tipo === 'whatsapp' && gruposWA.length > 0}
+								<div class="grupos-lista">
+									{#each d.config.split(',') as gid (gid)}
+										{@const grupo = gruposWA.find(g => g.id === gid.trim())}
+										<span class="grupo-nome">{grupo?.nome ?? gid.trim()}</span>
+									{/each}
+								</div>
+							{:else}
+								<code>{d.config}</code>
+							{/if}
 						</div>
 						<button class="btn-remover" onclick={() => remover(d.id)} title="Remover">✕</button>
 					</div>
@@ -208,4 +221,6 @@
 		cursor: pointer; color: var(--tinta-suave); font-size: 1rem;
 	}
 	.btn-remover:hover { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+	.grupos-lista { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+	.grupo-nome { font-size: 0.78rem; color: var(--tinta-suave); padding: 1px 6px; background: #f0fdf4; border-radius: 4px; border: 1px solid #bbf7d0; }
 </style>
