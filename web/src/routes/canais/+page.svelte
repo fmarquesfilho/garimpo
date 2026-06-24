@@ -131,7 +131,6 @@
 				{#if tipo === 'whatsapp'}
 					<SeletorGrupo
 						grupos={gruposWA}
-						value={config}
 						carregando={carregandoGrupos}
 						erro={erroGrupos}
 						onselect={(id) => { config = id; }}

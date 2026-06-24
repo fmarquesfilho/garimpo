@@ -2,23 +2,24 @@
 	/**
 	 * SeletorGrupo — select com filtro para grupos de WhatsApp.
 	 *
-	 * Em vez de usar bind:value no <select> (que tem bugs com opções dinâmicas
-	 * no Svelte 5), usa um callback onselect para notificar o parent.
+	 * Usa callback onselect para notificar o parent. Mantém o valor selecionado
+	 * internamente para controlar o atributo selected das options.
+	 * Não depende de props reativas para o valor — isso evita re-renders que
+	 * resetam o select.
 	 */
-
-	/** @type {{grupos: Array<{id: string, nome: string}>, value: string, carregando: boolean, erro: string|null, onselect: (id: string) => void}} */
-	let { grupos = [], value = '', carregando = false, erro = null, onselect = () => {} } = $props();
+	let { grupos = [], carregando = false, erro = null, onselect = () => {} } = $props();
 
 	let filtro = $state('');
-
-	let visiveis = $derived(
-		filtro
-			? grupos.filter((g) => g.nome.toLowerCase().includes(filtro.toLowerCase()))
-			: grupos
-	);
+	let selecionado = $state('');
 
 	function handleChange(e) {
-		onselect(e.target.value);
+		selecionado = e.target.value;
+		onselect(selecionado);
+	}
+
+	function handleInput(e) {
+		selecionado = e.target.value;
+		onselect(selecionado);
 	}
 </script>
 
@@ -28,12 +29,13 @@
 	</select>
 {:else if erro}
 	<div class="erro-inline">{erro}</div>
-	<input value={value} oninput={(e) => onselect(e.target.value)} placeholder="ID do grupo (ex.: 123-456@g.us)" />
+	<input value={selecionado} oninput={handleInput} placeholder="ID do grupo (ex.: 123-456@g.us)" />
 {:else if grupos.length === 0}
 	<select disabled>
 		<option>Nenhum grupo encontrado</option>
 	</select>
 {:else}
+	{@const visiveis = filtro ? grupos.filter((g) => g.nome.toLowerCase().includes(filtro.toLowerCase())) : grupos}
 	<input
 		type="text"
 		bind:value={filtro}
@@ -41,9 +43,9 @@
 		class="filtro-grupo"
 	/>
 	<select onchange={handleChange}>
-		<option value="" selected={!value}>Selecione um grupo… ({visiveis.length})</option>
+		<option value="" selected={!selecionado}>Selecione um grupo… ({visiveis.length})</option>
 		{#each visiveis as g (g.id)}
-			<option value={g.id} selected={g.id === value}>{g.nome}</option>
+			<option value={g.id} selected={g.id === selecionado}>{g.nome}</option>
 		{/each}
 	</select>
 {/if}

@@ -57,12 +57,15 @@ describe('SeletorGrupo — seleção propaga valor', () => {
 
 	it('chama onselect com string vazia ao voltar pro placeholder', async () => {
 		const onselect = vi.fn();
-		render(SeletorGrupo, { props: { grupos: gruposMock, value: '120363430000000000@g.us', onselect } });
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
 
 		const select = screen.getByRole('combobox');
+		// Primeiro seleciona um grupo
+		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
+		// Depois volta pro placeholder
 		await fireEvent.change(select, { target: { value: '' } });
 
-		expect(onselect).toHaveBeenCalledWith('');
+		expect(onselect).toHaveBeenLastCalledWith('');
 	});
 
 	it('chama onselect várias vezes ao trocar seleção', async () => {
@@ -82,7 +85,7 @@ describe('SeletorGrupo — seleção propaga valor', () => {
 	it('o valor selecionado NÃO é resetado por re-render (o bug original)', async () => {
 		const onselect = vi.fn();
 		const { rerender } = render(SeletorGrupo, {
-			props: { grupos: gruposMock, value: '', onselect }
+			props: { grupos: gruposMock, onselect }
 		});
 
 		const select = screen.getByRole('combobox');
@@ -91,10 +94,10 @@ describe('SeletorGrupo — seleção propaga valor', () => {
 		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
 		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
 
-		// Re-render com o novo value (simula o parent atualizando)
-		await rerender({ grupos: gruposMock, value: '120363430000000000@g.us', onselect });
+		// Re-render com novos props (simula o parent re-renderizando)
+		await rerender({ grupos: gruposMock, onselect });
 
-		// A option selecionada deve estar marcada
+		// A option selecionada deve ainda estar marcada (estado interno do componente)
 		const selectedOption = select.querySelector('option[selected]');
 		expect(selectedOption).not.toBeNull();
 		expect(selectedOption.value).toBe('120363430000000000@g.us');
@@ -147,7 +150,11 @@ describe('SeletorGrupo — filtro', () => {
 
 	it('seleção persiste após digitar e apagar filtro', async () => {
 		const onselect = vi.fn();
-		render(SeletorGrupo, { props: { grupos: gruposMock, value: '120363430000000000@g.us', onselect } });
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
+
+		// Seleciona um grupo primeiro
+		const select = screen.getByRole('combobox');
+		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
 
 		const filtro = screen.getByPlaceholderText('Filtrar grupos…');
 
@@ -156,7 +163,6 @@ describe('SeletorGrupo — filtro', () => {
 		await fireEvent.input(filtro, { target: { value: '' } });
 
 		// A option com selected deve ainda estar correta
-		const select = screen.getByRole('combobox');
 		const selectedOption = select.querySelector('option[selected]');
 		expect(selectedOption).not.toBeNull();
 		expect(selectedOption.value).toBe('120363430000000000@g.us');
