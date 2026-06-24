@@ -131,9 +131,10 @@
 				{#if tipo === 'whatsapp'}
 					<SeletorGrupo
 						grupos={gruposWA}
-						bind:value={config}
+						value={config}
 						carregando={carregandoGrupos}
 						erro={erroGrupos}
+						onselect={(id) => { config = id; }}
 					/>
 				{:else}
 					<input id="config" bind:value={config} placeholder="@meucanal ou -1001234567890" required />

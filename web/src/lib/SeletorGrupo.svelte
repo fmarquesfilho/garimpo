@@ -2,25 +2,23 @@
 	/**
 	 * SeletorGrupo — select com filtro para grupos de WhatsApp.
 	 *
-	 * Props:
-	 *   grupos: Array<{id, nome}> — lista de grupos disponíveis
-	 *   value: string — group ID selecionado (bind:value)
-	 *   carregando: boolean
-	 *   erro: string|null
+	 * Em vez de usar bind:value no <select> (que tem bugs com opções dinâmicas
+	 * no Svelte 5), usa um callback onselect para notificar o parent.
 	 */
-	let { grupos = [], value = $bindable(''), carregando = false, erro = null } = $props();
+
+	/** @type {{grupos: Array<{id: string, nome: string}>, value: string, carregando: boolean, erro: string|null, onselect: (id: string) => void}} */
+	let { grupos = [], value = '', carregando = false, erro = null, onselect = () => {} } = $props();
 
 	let filtro = $state('');
 
-	// Filtra grupos pelo texto digitado
-	function filtrar(lista, texto) {
-		if (!texto) return lista;
-		const lower = texto.toLowerCase();
-		return lista.filter((g) => g.nome.toLowerCase().includes(lower));
-	}
+	let visiveis = $derived(
+		filtro
+			? grupos.filter((g) => g.nome.toLowerCase().includes(filtro.toLowerCase()))
+			: grupos
+	);
 
-	function onSelect(e) {
-		value = e.target.value;
+	function handleChange(e) {
+		onselect(e.target.value);
 	}
 </script>
 
@@ -30,23 +28,22 @@
 	</select>
 {:else if erro}
 	<div class="erro-inline">{erro}</div>
-	<input bind:value placeholder="ID do grupo (ex.: 123-456@g.us)" />
+	<input value={value} oninput={(e) => onselect(e.target.value)} placeholder="ID do grupo (ex.: 123-456@g.us)" />
 {:else if grupos.length === 0}
 	<select disabled>
 		<option>Nenhum grupo encontrado</option>
 	</select>
 {:else}
-	{@const visiveis = filtrar(grupos, filtro)}
 	<input
 		type="text"
 		bind:value={filtro}
 		placeholder="Filtrar grupos…"
 		class="filtro-grupo"
 	/>
-	<select value={value} onchange={onSelect}>
-		<option value="">Selecione um grupo… ({visiveis.length})</option>
+	<select onchange={handleChange}>
+		<option value="" selected={!value}>Selecione um grupo… ({visiveis.length})</option>
 		{#each visiveis as g (g.id)}
-			<option value={g.id}>{g.nome}</option>
+			<option value={g.id} selected={g.id === value}>{g.nome}</option>
 		{/each}
 	</select>
 {/if}
