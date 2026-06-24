@@ -41,9 +41,11 @@
 		aberto = true;
 	}
 
-	function onBlur() {
-		// Delay para permitir clique no dropdown antes de fechar
-		setTimeout(() => { aberto = false; }, 200);
+	function onBlur(e) {
+		// Se o clique foi dentro do container (dropdown), não fecha
+		const container = e.target.closest('.seletor-container');
+		if (container && container.contains(e.relatedTarget)) return;
+		setTimeout(() => { aberto = false; }, 150);
 	}
 </script>
 
@@ -81,10 +83,10 @@
 		{#if aberto}
 			{@const lista = filtrados()}
 			{#if lista.length > 0}
-				<ul class="dropdown">
+				<ul class="dropdown" onpointerdown={(e) => e.preventDefault()}>
 					{#each lista as g (g.id)}
 						<li>
-							<button type="button" onmousedown={() => selecionar(g)}>
+							<button type="button" onclick={() => selecionar(g)}>
 								{g.nome}
 							</button>
 						</li>

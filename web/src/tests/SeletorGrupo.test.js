@@ -56,7 +56,7 @@ describe('SeletorGrupo — dropdown e seleção', () => {
 
 		// Clica no primeiro grupo
 		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.mouseDown(botaoGrupo);
+		await fireEvent.click(botaoGrupo);
 
 		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
 	});
@@ -69,7 +69,7 @@ describe('SeletorGrupo — dropdown e seleção', () => {
 		await fireEvent.focus(input);
 
 		const botaoGrupo = screen.getByText('Famílias da Pipa');
-		await fireEvent.mouseDown(botaoGrupo);
+		await fireEvent.click(botaoGrupo);
 
 		expect(input.value).toBe('Famílias da Pipa');
 	});
@@ -81,7 +81,7 @@ describe('SeletorGrupo — dropdown e seleção', () => {
 		await fireEvent.focus(input);
 
 		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.mouseDown(botaoGrupo);
+		await fireEvent.click(botaoGrupo);
 
 		expect(input.classList.contains('selecionado')).toBe(true);
 	});
@@ -119,7 +119,7 @@ describe('SeletorGrupo — filtragem', () => {
 
 		// Seleciona
 		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.mouseDown(botaoGrupo);
+		await fireEvent.click(botaoGrupo);
 		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
 
 		// Edita o texto
@@ -139,7 +139,7 @@ describe('SeletorGrupo — limpar seleção', () => {
 		await fireEvent.focus(input);
 
 		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.mouseDown(botaoGrupo);
+		await fireEvent.click(botaoGrupo);
 
 		expect(screen.getByTitle('Limpar')).toBeInTheDocument();
 	});
@@ -152,7 +152,7 @@ describe('SeletorGrupo — limpar seleção', () => {
 		await fireEvent.focus(input);
 
 		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.mouseDown(botaoGrupo);
+		await fireEvent.click(botaoGrupo);
 
 		const limpar = screen.getByTitle('Limpar');
 		await fireEvent.click(limpar);
