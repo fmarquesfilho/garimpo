@@ -63,6 +63,9 @@ jobs:
       - name: npm run build
         run: npm run build
 
+      - name: Testes unitários (Vitest — componentes Svelte)
+        run: npx vitest run
+
       - name: Instalar Playwright
         run: npx playwright install chromium --with-deps
 
