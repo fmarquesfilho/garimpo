@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { listarDestinos, salvarDestino, deletarDestino, listarGruposWhatsApp } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
+	import SeletorGrupo from '$lib/SeletorGrupo.svelte';
 
 	let destinos = $state([]);
 	let carregando = $state(true);
@@ -18,28 +19,6 @@
 	let gruposWA = $state([]);
 	let carregandoGrupos = $state(false);
 	let erroGrupos = $state(null);
-	let filtroGrupo = $state('');
-
-	$effect(() => {
-		// Reseta filtro quando muda de tipo
-		if (tipo !== 'whatsapp') {
-			filtroGrupo = '';
-		}
-	});
-
-	let gruposFiltrados = $derived(
-		filtroGrupo
-			? gruposWA.filter((g) => g.nome.toLowerCase().includes(filtroGrupo.toLowerCase()))
-			: gruposWA
-	);
-
-	// Quando o filtro muda e o grupo selecionado não está mais na lista filtrada, limpa a seleção
-	$effect(() => {
-		if (tipo === 'whatsapp' && config && gruposFiltrados.length > 0) {
-			const ainda = gruposFiltrados.some((g) => g.id === config);
-			if (!ainda) config = '';
-		}
-	});
 
 	onMount(carregar);
 
@@ -57,7 +36,7 @@
 	}
 
 	async function carregarGruposWA() {
-		if (gruposWA.length > 0) return; // já carregado
+		if (gruposWA.length > 0) return;
 		carregandoGrupos = true;
 		erroGrupos = null;
 		try {
@@ -109,10 +88,6 @@
 
 	const tipoIcone = { telegram: '✈️', whatsapp: '💬' };
 	const tipoLabel = { telegram: 'Telegram', whatsapp: 'WhatsApp' };
-	const configPlaceholder = {
-		telegram: '@meucanal ou -1001234567890',
-		whatsapp: 'Selecione um grupo'
-	};
 </script>
 
 <svelte:head>
@@ -154,33 +129,14 @@
 			<div class="campo">
 				<label for="config">Destino ({tipoLabel[tipo]})</label>
 				{#if tipo === 'whatsapp'}
-					{#if carregandoGrupos}
-						<select id="config" disabled>
-							<option>Carregando grupos…</option>
-						</select>
-					{:else if erroGrupos}
-						<div class="erro-inline">{erroGrupos}</div>
-						<input id="config" bind:value={config} placeholder="ID do grupo (ex.: 123-456@g.us)" required />
-					{:else if gruposWA.length === 0}
-						<select id="config" disabled>
-							<option>Nenhum grupo encontrado</option>
-						</select>
-					{:else}
-						<input
-							type="text"
-							bind:value={filtroGrupo}
-							placeholder="Filtrar grupos…"
-							class="filtro-grupo"
-						/>
-						<select id="config" bind:value={config} onchange={(e) => { config = e.target.value; }} required>
-							<option value="">Selecione um grupo… ({gruposFiltrados.length})</option>
-							{#each gruposFiltrados as g (g.id)}
-								<option value={g.id}>{g.nome}</option>
-							{/each}
-						</select>
-					{/if}
+					<SeletorGrupo
+						grupos={gruposWA}
+						bind:value={config}
+						carregando={carregandoGrupos}
+						erro={erroGrupos}
+					/>
 				{:else}
-					<input id="config" bind:value={config} placeholder={configPlaceholder[tipo]} required />
+					<input id="config" bind:value={config} placeholder="@meucanal ou -1001234567890" required />
 				{/if}
 			</div>
 			<button type="submit" disabled={salvando || !nome.trim() || !config.trim()}>
@@ -228,8 +184,8 @@
 	}
 	.campo { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px; }
 	.campo label { font-size: 0.78rem; font-weight: 600; color: var(--tinta-suave); }
-	.campo input, .campo select { padding: 8px 12px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
-	.campo input:focus, .campo select:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
+	.campo :global(input), .campo :global(select) { padding: 8px 12px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
+	.campo :global(input:focus), .campo :global(select:focus) { outline: 2px solid var(--ouro); outline-offset: 1px; }
 	.form-destino > button {
 		padding: 8px 20px; background: var(--ouro); color: white;
 		font-weight: 600; font-size: 0.88rem; border: none; border-radius: 8px; cursor: pointer;
@@ -252,6 +208,4 @@
 		cursor: pointer; color: var(--tinta-suave); font-size: 1rem;
 	}
 	.btn-remover:hover { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
-	.erro-inline { font-size: 0.8rem; color: #b91c1c; margin-bottom: 4px; }
-	.filtro-grupo { padding: 6px 10px; border: 1px solid var(--linha); border-radius: 6px; font-size: 0.82rem; margin-bottom: 4px; width: 100%; }
 </style>
