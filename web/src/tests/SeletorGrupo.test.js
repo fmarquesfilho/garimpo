@@ -15,12 +15,12 @@ const gruposMock = [
 describe('SeletorGrupo — renderização', () => {
 	it('mostra "Carregando…" quando carregando=true', () => {
 		render(SeletorGrupo, { props: { grupos: [], carregando: true, onselect: () => {} } });
-		expect(screen.getByText('Carregando grupos…')).toBeInTheDocument();
+		expect(screen.getByPlaceholderText('Carregando grupos…')).toBeInTheDocument();
 	});
 
 	it('mostra "Nenhum grupo encontrado" quando lista vazia', () => {
 		render(SeletorGrupo, { props: { grupos: [], carregando: false, onselect: () => {} } });
-		expect(screen.getByText('Nenhum grupo encontrado')).toBeInTheDocument();
+		expect(screen.getByPlaceholderText('Nenhum grupo encontrado')).toBeInTheDocument();
 	});
 
 	it('mostra mensagem de erro e input manual quando há erro', () => {
@@ -29,154 +29,135 @@ describe('SeletorGrupo — renderização', () => {
 		expect(screen.getByPlaceholderText(/ID do grupo/)).toBeInTheDocument();
 	});
 
-	it('renderiza select com todos os grupos', () => {
+	it('renderiza input de busca quando tem grupos', () => {
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
-		const select = screen.getByRole('combobox');
-		// 5 grupos + 1 placeholder
-		expect(select.options).toHaveLength(6);
-		expect(select.options[1].textContent).toBe('#1 Garimpo Hoje');
-	});
-
-	it('renderiza campo de filtro', () => {
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
-		expect(screen.getByPlaceholderText('Filtrar grupos…')).toBeInTheDocument();
+		expect(screen.getByPlaceholderText('Digite para buscar um grupo…')).toBeInTheDocument();
 	});
 });
 
-describe('SeletorGrupo — seleção propaga valor', () => {
-	it('chama onselect com o ID do grupo ao selecionar', async () => {
+describe('SeletorGrupo — dropdown e seleção', () => {
+	it('mostra dropdown ao focar no input', async () => {
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
+
+		// Deve mostrar todos os grupos no dropdown
+		const items = screen.getAllByRole('button').filter(b => b.closest('ul'));
+		expect(items.length).toBe(5);
+	});
+
+	it('clicar num grupo chama onselect com o ID', async () => {
 		const onselect = vi.fn();
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
 
-		const select = screen.getByRole('combobox');
-		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
 
-		expect(onselect).toHaveBeenCalledTimes(1);
+		// Clica no primeiro grupo
+		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
+		await fireEvent.mouseDown(botaoGrupo);
+
 		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
 	});
 
-	it('chama onselect com string vazia ao voltar pro placeholder', async () => {
+	it('após selecionar, o input mostra o nome do grupo', async () => {
 		const onselect = vi.fn();
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
 
-		const select = screen.getByRole('combobox');
-		// Primeiro seleciona um grupo
-		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
-		// Depois volta pro placeholder
-		await fireEvent.change(select, { target: { value: '' } });
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
 
+		const botaoGrupo = screen.getByText('Famílias da Pipa');
+		await fireEvent.mouseDown(botaoGrupo);
+
+		expect(input.value).toBe('Famílias da Pipa');
+	});
+
+	it('após selecionar, input fica com estilo "selecionado"', async () => {
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
+
+		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
+		await fireEvent.mouseDown(botaoGrupo);
+
+		expect(input.classList.contains('selecionado')).toBe(true);
+	});
+});
+
+describe('SeletorGrupo — filtragem', () => {
+	it('digitar filtra a lista de grupos', async () => {
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
+		await fireEvent.input(input, { target: { value: 'garimpo' } });
+
+		const items = screen.getAllByRole('button').filter(b => b.closest('ul'));
+		expect(items.length).toBe(1);
+		expect(items[0].textContent).toBe('#1 Garimpo Hoje');
+	});
+
+	it('filtro sem resultado mostra mensagem', async () => {
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
+		await fireEvent.input(input, { target: { value: 'xyzabc123' } });
+
+		expect(screen.getByText('Nenhum grupo encontrado')).toBeInTheDocument();
+	});
+
+	it('digitar após selecionar limpa a seleção e chama onselect vazio', async () => {
+		const onselect = vi.fn();
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
+
+		// Seleciona
+		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
+		await fireEvent.mouseDown(botaoGrupo);
+		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
+
+		// Edita o texto
+		await fireEvent.focus(input);
+		await fireEvent.input(input, { target: { value: 'outro texto' } });
+
+		// Deve ter chamado onselect com '' (limpou seleção)
 		expect(onselect).toHaveBeenLastCalledWith('');
 	});
-
-	it('chama onselect várias vezes ao trocar seleção', async () => {
-		const onselect = vi.fn();
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
-
-		const select = screen.getByRole('combobox');
-
-		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
-		await fireEvent.change(select, { target: { value: '120363410893012870@g.us' } });
-		await fireEvent.change(select, { target: { value: '558491629647-1486926372@g.us' } });
-
-		expect(onselect).toHaveBeenCalledTimes(3);
-		expect(onselect).toHaveBeenLastCalledWith('558491629647-1486926372@g.us');
-	});
-
-	it('o valor selecionado NÃO é resetado por re-render (o bug original)', async () => {
-		const onselect = vi.fn();
-		const { rerender } = render(SeletorGrupo, {
-			props: { grupos: gruposMock, onselect }
-		});
-
-		const select = screen.getByRole('combobox');
-
-		// Seleciona um grupo
-		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
-		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
-
-		// Re-render com novos props (simula o parent re-renderizando)
-		await rerender({ grupos: gruposMock, onselect });
-
-		// A option selecionada deve ainda estar marcada (estado interno do componente)
-		const selectedOption = select.querySelector('option[selected]');
-		expect(selectedOption).not.toBeNull();
-		expect(selectedOption.value).toBe('120363430000000000@g.us');
-	});
 });
 
-describe('SeletorGrupo — filtro', () => {
-	it('filtrar reduz as opções visíveis', async () => {
+describe('SeletorGrupo — limpar seleção', () => {
+	it('botão limpar aparece após seleção', async () => {
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
 
-		const filtro = screen.getByPlaceholderText('Filtrar grupos…');
-		await fireEvent.input(filtro, { target: { value: 'garimpo' } });
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
 
-		const select = screen.getByRole('combobox');
-		// 1 grupo filtrado + 1 placeholder
-		expect(select.options).toHaveLength(2);
-		expect(select.options[1].textContent).toBe('#1 Garimpo Hoje');
+		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
+		await fireEvent.mouseDown(botaoGrupo);
+
+		expect(screen.getByTitle('Limpar')).toBeInTheDocument();
 	});
 
-	it('limpar filtro mostra todos os grupos', async () => {
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
-
-		const filtro = screen.getByPlaceholderText('Filtrar grupos…');
-
-		// Filtra
-		await fireEvent.input(filtro, { target: { value: 'garimpo' } });
-		let select = screen.getByRole('combobox');
-		expect(select.options).toHaveLength(2);
-
-		// Limpa
-		await fireEvent.input(filtro, { target: { value: '' } });
-		select = screen.getByRole('combobox');
-		expect(select.options).toHaveLength(6); // 5 + placeholder
-	});
-
-	it('filtrar e selecionar propaga o valor correto', async () => {
+	it('clicar limpar reseta tudo e chama onselect vazio', async () => {
 		const onselect = vi.fn();
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
 
-		// Filtra por "pipa"
-		const filtro = screen.getByPlaceholderText('Filtrar grupos…');
-		await fireEvent.input(filtro, { target: { value: 'pipa' } });
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
 
-		// Seleciona o resultado filtrado
-		const select = screen.getByRole('combobox');
-		await fireEvent.change(select, { target: { value: '558491629647-1486926372@g.us' } });
+		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
+		await fireEvent.mouseDown(botaoGrupo);
 
-		expect(onselect).toHaveBeenCalledWith('558491629647-1486926372@g.us');
-	});
+		const limpar = screen.getByTitle('Limpar');
+		await fireEvent.click(limpar);
 
-	it('seleção persiste após digitar e apagar filtro', async () => {
-		const onselect = vi.fn();
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
-
-		// Seleciona um grupo primeiro
-		const select = screen.getByRole('combobox');
-		await fireEvent.change(select, { target: { value: '120363430000000000@g.us' } });
-
-		const filtro = screen.getByPlaceholderText('Filtrar grupos…');
-
-		// Digita algo e apaga
-		await fireEvent.input(filtro, { target: { value: 'xyz' } });
-		await fireEvent.input(filtro, { target: { value: '' } });
-
-		// A option com selected deve ainda estar correta
-		const selectedOption = select.querySelector('option[selected]');
-		expect(selectedOption).not.toBeNull();
-		expect(selectedOption.value).toBe('120363430000000000@g.us');
-	});
-});
-
-describe('SeletorGrupo — modo erro (input manual)', () => {
-	it('input manual chama onselect ao digitar', async () => {
-		const onselect = vi.fn();
-		render(SeletorGrupo, { props: { grupos: [], erro: 'falhou', onselect } });
-
-		const input = screen.getByPlaceholderText(/ID do grupo/);
-		await fireEvent.input(input, { target: { value: '123-456@g.us' } });
-
-		expect(onselect).toHaveBeenCalledWith('123-456@g.us');
+		expect(input.value).toBe('');
+		expect(onselect).toHaveBeenLastCalledWith('');
 	});
 });
