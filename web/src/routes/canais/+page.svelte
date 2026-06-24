@@ -15,6 +15,12 @@
 	let tipo = $state('telegram');
 	let salvando = $state(false);
 
+	// Edição
+	let editandoId = $state(null);
+	let editNome = $state('');
+	let editConfig = $state('');
+	let editSalvando = $state(false);
+
 	// Grupos WhatsApp (carregados sob demanda)
 	let gruposWA = $state([]);
 	let carregandoGrupos = $state(false);
@@ -22,7 +28,6 @@
 
 	onMount(async () => {
 		await carregar();
-		// Carrega nomes dos grupos WA para exibição na lista de destinos
 		carregarGruposWA();
 	});
 
@@ -79,6 +84,36 @@
 		}
 	}
 
+	function iniciarEdicao(d) {
+		editandoId = d.id;
+		editNome = d.nome;
+		editConfig = d.config;
+	}
+
+	function cancelarEdicao() {
+		editandoId = null;
+		editNome = '';
+		editConfig = '';
+	}
+
+	async function salvarEdicao(d) {
+		if (!editNome.trim() || !editConfig.trim()) return;
+		editSalvando = true;
+		erro = null;
+		try {
+			const atualizado = { id: d.id, nome: editNome.trim(), config: editConfig.trim(), tipo: d.tipo };
+			await salvarDestino(atualizado);
+			destinos = destinos.map(x => x.id === d.id ? { ...x, nome: atualizado.nome, config: atualizado.config } : x);
+			editandoId = null;
+			sucesso = 'Destino atualizado!';
+			setTimeout(() => (sucesso = ''), 3000);
+		} catch (e) {
+			erro = e.message;
+		} finally {
+			editSalvando = false;
+		}
+	}
+
 	async function remover(id) {
 		if (!confirm(`Remover o destino "${id}"?`)) return;
 		erro = null;
@@ -117,7 +152,7 @@
 			<div class="sucesso">{sucesso}</div>
 		{/if}
 
-		<!-- Form -->
+		<!-- Form novo destino -->
 		<form class="form-destino" onsubmit={(e) => { e.preventDefault(); adicionar(); }}>
 			<div class="campo">
 				<label for="tipo">Tipo</label>
@@ -156,23 +191,59 @@
 		{:else}
 			<div class="lista">
 				{#each destinos as d (d.id)}
-					<div class="card-destino">
-						<div class="info">
-							<span class="tipo-badge">{tipoIcone[d.tipo] ?? '📤'} {tipoLabel[d.tipo] ?? d.tipo}</span>
-							<strong>{d.nome}</strong>
-							{#if d.tipo === 'whatsapp' && gruposWA.length > 0}
-								<div class="grupos-lista">
-									{#each d.config.split(',') as gid (gid)}
-										{@const grupo = gruposWA.find(g => g.id === gid.trim())}
-										<span class="grupo-nome">{grupo?.nome ?? gid.trim()}</span>
-									{/each}
+					{#if editandoId === d.id}
+						<!-- Modo edição -->
+						<div class="card-destino editando">
+							<div class="edit-form">
+								<div class="campo-edit">
+									<label>Nome</label>
+									<input bind:value={editNome} placeholder="Nome do destino" />
 								</div>
-							{:else}
-								<code>{d.config}</code>
-							{/if}
+								<div class="campo-edit">
+									<label>Grupos</label>
+									{#if d.tipo === 'whatsapp'}
+										<SeletorGrupo
+											grupos={gruposWA}
+											carregando={carregandoGrupos}
+											erro={erroGrupos}
+											onselect={(id) => { editConfig = id; }}
+											inicial={editConfig}
+										/>
+									{:else}
+										<input bind:value={editConfig} placeholder="@canal ou chat_id" />
+									{/if}
+								</div>
+								<div class="edit-acoes">
+									<button class="btn-salvar" onclick={() => salvarEdicao(d)} disabled={editSalvando || !editNome.trim() || !editConfig.trim()}>
+										{editSalvando ? 'Salvando…' : 'Salvar'}
+									</button>
+									<button class="btn-cancelar" onclick={cancelarEdicao}>Cancelar</button>
+								</div>
+							</div>
 						</div>
-						<button class="btn-remover" onclick={() => remover(d.id)} title="Remover">✕</button>
-					</div>
+					{:else}
+						<!-- Modo visualização -->
+						<div class="card-destino">
+							<div class="info">
+								<span class="tipo-badge">{tipoIcone[d.tipo] ?? '📤'} {tipoLabel[d.tipo] ?? d.tipo}</span>
+								<strong>{d.nome}</strong>
+								{#if d.tipo === 'whatsapp' && gruposWA.length > 0}
+									<div class="grupos-lista">
+										{#each d.config.split(',') as gid (gid)}
+											{@const grupo = gruposWA.find(g => g.id === gid.trim())}
+											<span class="grupo-nome">{grupo?.nome ?? gid.trim()}</span>
+										{/each}
+									</div>
+								{:else}
+									<code>{d.config}</code>
+								{/if}
+							</div>
+							<div class="card-acoes">
+								<button class="btn-editar" onclick={() => iniciarEdicao(d)} title="Editar">✎</button>
+								<button class="btn-remover" onclick={() => remover(d.id)} title="Remover">✕</button>
+							</div>
+						</div>
+					{/if}
 				{/each}
 			</div>
 		{/if}
@@ -211,16 +282,39 @@
 		display: flex; align-items: center; justify-content: space-between;
 		padding: var(--r3) var(--r4); border: 1px solid var(--linha); border-radius: 10px; background: white;
 	}
+	.card-destino.editando {
+		border-color: var(--ouro); background: #fffbeb;
+	}
 	.card-destino .info { display: flex; flex-direction: column; gap: 2px; }
 	.card-destino strong { font-size: 0.92rem; }
 	.card-destino code { font-size: 0.8rem; color: var(--tinta-suave); }
 	.tipo-badge { font-size: 0.72rem; font-weight: 600; color: var(--tinta-suave); }
-	.btn-remover {
+
+	.card-acoes { display: flex; gap: 4px; }
+	.btn-editar, .btn-remover {
 		background: none; border: 1px solid var(--linha); border-radius: 6px;
 		width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
 		cursor: pointer; color: var(--tinta-suave); font-size: 1rem;
 	}
+	.btn-editar:hover { color: var(--ouro); border-color: var(--ouro); background: #fffbeb; }
 	.btn-remover:hover { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+
+	.edit-form { width: 100%; display: flex; flex-direction: column; gap: var(--r3); }
+	.campo-edit { display: flex; flex-direction: column; gap: 4px; }
+	.campo-edit label { font-size: 0.78rem; font-weight: 600; color: var(--tinta-suave); }
+	.campo-edit input { padding: 8px 12px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
+	.campo-edit input:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
+	.edit-acoes { display: flex; gap: var(--r2); }
+	.btn-salvar {
+		padding: 6px 16px; background: var(--ouro); color: white;
+		font-weight: 600; font-size: 0.82rem; border: none; border-radius: 6px; cursor: pointer;
+	}
+	.btn-salvar:disabled { opacity: 0.5; cursor: not-allowed; }
+	.btn-cancelar {
+		padding: 6px 16px; background: transparent; color: var(--tinta-suave);
+		font-weight: 600; font-size: 0.82rem; border: 1px solid var(--linha); border-radius: 6px; cursor: pointer;
+	}
+
 	.grupos-lista { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
 	.grupo-nome { font-size: 0.78rem; color: var(--tinta-suave); padding: 1px 6px; background: #f0fdf4; border-radius: 4px; border: 1px solid #bbf7d0; }
 </style>

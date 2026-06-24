@@ -5,11 +5,22 @@
 	 */
 	const MAX_GRUPOS = 5;
 
-	let { grupos = [], carregando = false, erro = null, onselect = () => {} } = $props();
+	let { grupos = [], carregando = false, erro = null, onselect = () => {}, inicial = '' } = $props();
 
 	let busca = $state('');
 	let aberto = $state(false);
 	let selecionados = $state([]);
+
+	// Inicializa com grupos pré-selecionados (modo edição)
+	$effect(() => {
+		if (inicial && grupos.length > 0 && selecionados.length === 0) {
+			const ids = inicial.split(',').map(id => id.trim()).filter(Boolean);
+			const encontrados = ids.map(id => grupos.find(g => g.id === id)).filter(Boolean);
+			if (encontrados.length > 0) {
+				selecionados = encontrados;
+			}
+		}
+	});
 
 	function filtrados() {
 		const idsJaSelecionados = new Set(selecionados.map(g => g.id));
