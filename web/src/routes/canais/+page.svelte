@@ -22,7 +22,9 @@
 
 	$effect(() => {
 		// Reseta filtro quando muda de tipo
-		if (tipo !== 'whatsapp') filtroGrupo = '';
+		if (tipo !== 'whatsapp') {
+			filtroGrupo = '';
+		}
 	});
 
 	let gruposFiltrados = $derived(
@@ -30,6 +32,14 @@
 			? gruposWA.filter((g) => g.nome.toLowerCase().includes(filtroGrupo.toLowerCase()))
 			: gruposWA
 	);
+
+	// Quando o filtro muda e o grupo selecionado não está mais na lista filtrada, limpa a seleção
+	$effect(() => {
+		if (tipo === 'whatsapp' && config && gruposFiltrados.length > 0) {
+			const ainda = gruposFiltrados.some((g) => g.id === config);
+			if (!ainda) config = '';
+		}
+	});
 
 	onMount(carregar);
 
@@ -162,7 +172,7 @@
 							placeholder="Filtrar grupos…"
 							class="filtro-grupo"
 						/>
-						<select id="config" bind:value={config} required>
+						<select id="config" bind:value={config} onchange={(e) => { config = e.target.value; }} required>
 							<option value="">Selecione um grupo… ({gruposFiltrados.length})</option>
 							{#each gruposFiltrados as g (g.id)}
 								<option value={g.id}>{g.nome}</option>
