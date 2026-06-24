@@ -1,40 +1,47 @@
 <script>
 	/**
-	 * SeletorGrupo — input com autocomplete dropdown para selecionar grupo WhatsApp.
-	 * Controlado 100% por JavaScript (sem <select> nativo).
+	 * SeletorGrupo — input com autocomplete para selecionar 1-5 grupos de WhatsApp.
+	 * Seleções aparecem como chips/badges acima do input.
 	 */
+	const MAX_GRUPOS = 5;
+
 	let { grupos = [], carregando = false, erro = null, onselect = () => {} } = $props();
 
 	let busca = $state('');
 	let aberto = $state(false);
-	let grupoSelecionado = $state(null);
+	let selecionados = $state([]);
 
 	function filtrados() {
-		if (!busca) return grupos;
-		const lower = busca.toLowerCase();
-		return grupos.filter((g) => g.nome.toLowerCase().includes(lower));
+		const idsJaSelecionados = new Set(selecionados.map(g => g.id));
+		let lista = grupos.filter(g => !idsJaSelecionados.has(g.id));
+		if (busca) {
+			const lower = busca.toLowerCase();
+			lista = lista.filter(g => g.nome.toLowerCase().includes(lower));
+		}
+		return lista;
 	}
 
 	function selecionar(grupo) {
-		grupoSelecionado = grupo;
-		busca = grupo.nome;
+		if (selecionados.length >= MAX_GRUPOS) return;
+		selecionados = [...selecionados, grupo];
+		busca = '';
 		aberto = false;
-		onselect(grupo.id);
+		emitir();
 	}
 
-	function limpar() {
-		grupoSelecionado = null;
-		busca = '';
-		onselect('');
+	function removerGrupo(id) {
+		selecionados = selecionados.filter(g => g.id !== id);
+		emitir();
+	}
+
+	function emitir() {
+		// Emite os IDs separados por vírgula (formato do config)
+		const ids = selecionados.map(g => g.id).join(',');
+		onselect(ids);
 	}
 
 	function onInput() {
 		aberto = true;
-		// Se editou o texto depois de selecionar, limpa a seleção
-		if (grupoSelecionado && busca !== grupoSelecionado.nome) {
-			grupoSelecionado = null;
-			onselect('');
-		}
 	}
 
 	function onFocus() {
@@ -42,7 +49,6 @@
 	}
 
 	function onBlur(e) {
-		// Se o clique foi dentro do container (dropdown), não fecha
 		const container = e.target.closest('.seletor-container');
 		if (container && container.contains(e.relatedTarget)) return;
 		setTimeout(() => { aberto = false; }, 150);
@@ -56,9 +62,9 @@
 {:else if erro}
 	<div class="erro-inline">{erro}</div>
 	<input
-		bind:value={busca}
-		oninput={() => onselect(busca)}
-		placeholder="ID do grupo (ex.: 123-456@g.us)"
+		value={selecionados.map(g => g.id).join(',')}
+		oninput={(e) => onselect(e.target.value)}
+		placeholder="IDs dos grupos separados por vírgula"
 	/>
 {:else if grupos.length === 0}
 	<div class="seletor-container">
@@ -66,37 +72,48 @@
 	</div>
 {:else}
 	<div class="seletor-container">
-		<div class="input-wrapper">
-			<input
-				type="text"
-				bind:value={busca}
-				oninput={onInput}
-				onfocus={onFocus}
-				onblur={onBlur}
-				placeholder="Digite para buscar um grupo…"
-				class:selecionado={grupoSelecionado}
-			/>
-			{#if grupoSelecionado}
-				<button type="button" class="btn-limpar" onclick={limpar} title="Limpar">✕</button>
+		{#if selecionados.length > 0}
+			<div class="chips">
+				{#each selecionados as g (g.id)}
+					<span class="chip">
+						{g.nome}
+						<button type="button" onclick={() => removerGrupo(g.id)} title="Remover">✕</button>
+					</span>
+				{/each}
+			</div>
+		{/if}
+
+		{#if selecionados.length < MAX_GRUPOS}
+			<div class="input-wrapper">
+				<input
+					type="text"
+					bind:value={busca}
+					oninput={onInput}
+					onfocus={onFocus}
+					onblur={onBlur}
+					placeholder={selecionados.length === 0 ? 'Digite para buscar um grupo…' : 'Adicionar outro grupo…'}
+				/>
+			</div>
+			{#if aberto}
+				{@const lista = filtrados()}
+				{#if lista.length > 0}
+					<ul class="dropdown" onpointerdown={(e) => e.preventDefault()}>
+						{#each lista as g (g.id)}
+							<li>
+								<button type="button" onclick={() => selecionar(g)}>
+									{g.nome}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<ul class="dropdown">
+						<li class="vazio">Nenhum grupo encontrado</li>
+					</ul>
+				{/if}
 			{/if}
-		</div>
-		{#if aberto}
-			{@const lista = filtrados()}
-			{#if lista.length > 0}
-				<ul class="dropdown" onpointerdown={(e) => e.preventDefault()}>
-					{#each lista as g (g.id)}
-						<li>
-							<button type="button" onclick={() => selecionar(g)}>
-								{g.nome}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<ul class="dropdown">
-					<li class="vazio">Nenhum grupo encontrado</li>
-				</ul>
-			{/if}
+		{:else}
+			<p class="limite">Limite de {MAX_GRUPOS} grupos atingido</p>
 		{/if}
 	</div>
 {/if}
@@ -119,21 +136,38 @@
 		width: 100%;
 	}
 	input:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
-	input.selecionado {
-		background: #f0fdf4;
-		border-color: #86efac;
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		margin-bottom: 6px;
 	}
-	.btn-limpar {
-		position: absolute;
-		right: 8px;
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 3px 8px;
+		background: #f0fdf4;
+		border: 1px solid #86efac;
+		border-radius: 6px;
+		font-size: 0.78rem;
+		color: #166534;
+	}
+	.chip button {
 		background: none;
 		border: none;
 		cursor: pointer;
-		color: var(--tinta-suave);
-		font-size: 0.9rem;
-		padding: 4px;
+		color: #166534;
+		font-size: 0.75rem;
+		padding: 0 2px;
+		line-height: 1;
 	}
-	.btn-limpar:hover { color: #b91c1c; }
+	.chip button:hover { color: #b91c1c; }
+	.limite {
+		font-size: 0.78rem;
+		color: var(--tinta-suave);
+		margin: 4px 0 0;
+	}
 	.dropdown {
 		position: absolute;
 		top: 100%;

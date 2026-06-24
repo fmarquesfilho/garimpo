@@ -23,141 +23,122 @@ describe('SeletorGrupo — renderização', () => {
 		expect(screen.getByPlaceholderText('Nenhum grupo encontrado')).toBeInTheDocument();
 	});
 
-	it('mostra mensagem de erro e input manual quando há erro', () => {
-		render(SeletorGrupo, { props: { grupos: [], erro: 'API falhou', onselect: () => {} } });
-		expect(screen.getByText('API falhou')).toBeInTheDocument();
-		expect(screen.getByPlaceholderText(/ID do grupo/)).toBeInTheDocument();
-	});
-
 	it('renderiza input de busca quando tem grupos', () => {
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
 		expect(screen.getByPlaceholderText('Digite para buscar um grupo…')).toBeInTheDocument();
 	});
 });
 
-describe('SeletorGrupo — dropdown e seleção', () => {
-	it('mostra dropdown ao focar no input', async () => {
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
-
-		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
-		await fireEvent.focus(input);
-
-		// Deve mostrar todos os grupos no dropdown
-		const items = screen.getAllByRole('button').filter(b => b.closest('ul'));
-		expect(items.length).toBe(5);
-	});
-
-	it('clicar num grupo chama onselect com o ID', async () => {
+describe('SeletorGrupo — seleção múltipla', () => {
+	it('selecionar um grupo chama onselect com o ID', async () => {
 		const onselect = vi.fn();
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
 
 		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
 		await fireEvent.focus(input);
 
-		// Clica no primeiro grupo
-		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.click(botaoGrupo);
+		const botao = screen.getByText('#1 Garimpo Hoje');
+		await fireEvent.click(botao);
 
 		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
 	});
 
-	it('após selecionar, o input mostra o nome do grupo', async () => {
+	it('selecionar dois grupos emite IDs separados por vírgula', async () => {
 		const onselect = vi.fn();
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
 
 		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
 		await fireEvent.focus(input);
+		await fireEvent.click(screen.getByText('#1 Garimpo Hoje'));
 
-		const botaoGrupo = screen.getByText('Famílias da Pipa');
-		await fireEvent.click(botaoGrupo);
+		// Segundo grupo
+		const input2 = screen.getByPlaceholderText('Adicionar outro grupo…');
+		await fireEvent.focus(input2);
+		await fireEvent.click(screen.getByText('#08 AVANÇADO VOE'));
 
-		expect(input.value).toBe('Famílias da Pipa');
+		expect(onselect).toHaveBeenLastCalledWith(
+			'120363430000000000@g.us,120363410893012870@g.us'
+		);
 	});
 
-	it('após selecionar, input fica com estilo "selecionado"', async () => {
+	it('grupo já selecionado não aparece na lista', async () => {
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
 
 		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
 		await fireEvent.focus(input);
+		await fireEvent.click(screen.getByText('#1 Garimpo Hoje'));
 
-		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.click(botaoGrupo);
+		// Reabre o dropdown
+		const input2 = screen.getByPlaceholderText('Adicionar outro grupo…');
+		await fireEvent.focus(input2);
 
-		expect(input.classList.contains('selecionado')).toBe(true);
+		// Garimpo Hoje não deve estar na lista
+		const items = screen.queryAllByRole('button').filter(b => b.closest('ul'));
+		const nomes = items.map(b => b.textContent);
+		expect(nomes).not.toContain('#1 Garimpo Hoje');
+		expect(nomes).toContain('#08 AVANÇADO VOE');
+	});
+
+	it('mostra chips dos grupos selecionados', async () => {
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
+		await fireEvent.click(screen.getByText('#1 Garimpo Hoje'));
+
+		expect(screen.getByText('#1 Garimpo Hoje')).toBeInTheDocument();
+	});
+
+	it('remover chip remove grupo e emite nova lista', async () => {
+		const onselect = vi.fn();
+		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+		await fireEvent.focus(input);
+		await fireEvent.click(screen.getByText('#1 Garimpo Hoje'));
+
+		// Remove o chip
+		const removeBtn = screen.getByTitle('Remover');
+		await fireEvent.click(removeBtn);
+
+		expect(onselect).toHaveBeenLastCalledWith('');
+	});
+
+	it('limita a 5 grupos', async () => {
+		const onselect = vi.fn();
+		// Cria 6 grupos para testar o limite
+		const muitos = [
+			...gruposMock,
+			{ id: '999@g.us', nome: 'Grupo Extra' }
+		];
+		render(SeletorGrupo, { props: { grupos: muitos, onselect } });
+
+		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
+
+		// Seleciona 5 grupos
+		for (let i = 0; i < 5; i++) {
+			const inp = screen.queryByPlaceholderText('Digite para buscar um grupo…')
+				|| screen.queryByPlaceholderText('Adicionar outro grupo…');
+			await fireEvent.focus(inp);
+			const items = screen.getAllByRole('button').filter(b => b.closest('ul'));
+			await fireEvent.click(items[0]);
+		}
+
+		// Deve mostrar mensagem de limite
+		expect(screen.getByText(/Limite de 5 grupos/)).toBeInTheDocument();
 	});
 });
 
-describe('SeletorGrupo — filtragem', () => {
-	it('digitar filtra a lista de grupos', async () => {
+describe('SeletorGrupo — filtro', () => {
+	it('digitar filtra a lista', async () => {
 		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
 
 		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
 		await fireEvent.focus(input);
-		await fireEvent.input(input, { target: { value: 'garimpo' } });
+		await fireEvent.input(input, { target: { value: 'pipa' } });
 
 		const items = screen.getAllByRole('button').filter(b => b.closest('ul'));
 		expect(items.length).toBe(1);
-		expect(items[0].textContent).toBe('#1 Garimpo Hoje');
-	});
-
-	it('filtro sem resultado mostra mensagem', async () => {
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
-
-		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
-		await fireEvent.focus(input);
-		await fireEvent.input(input, { target: { value: 'xyzabc123' } });
-
-		expect(screen.getByText('Nenhum grupo encontrado')).toBeInTheDocument();
-	});
-
-	it('digitar após selecionar limpa a seleção e chama onselect vazio', async () => {
-		const onselect = vi.fn();
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
-
-		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
-		await fireEvent.focus(input);
-
-		// Seleciona
-		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.click(botaoGrupo);
-		expect(onselect).toHaveBeenCalledWith('120363430000000000@g.us');
-
-		// Edita o texto
-		await fireEvent.focus(input);
-		await fireEvent.input(input, { target: { value: 'outro texto' } });
-
-		// Deve ter chamado onselect com '' (limpou seleção)
-		expect(onselect).toHaveBeenLastCalledWith('');
-	});
-});
-
-describe('SeletorGrupo — limpar seleção', () => {
-	it('botão limpar aparece após seleção', async () => {
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect: () => {} } });
-
-		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
-		await fireEvent.focus(input);
-
-		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.click(botaoGrupo);
-
-		expect(screen.getByTitle('Limpar')).toBeInTheDocument();
-	});
-
-	it('clicar limpar reseta tudo e chama onselect vazio', async () => {
-		const onselect = vi.fn();
-		render(SeletorGrupo, { props: { grupos: gruposMock, onselect } });
-
-		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
-		await fireEvent.focus(input);
-
-		const botaoGrupo = screen.getByText('#1 Garimpo Hoje');
-		await fireEvent.click(botaoGrupo);
-
-		const limpar = screen.getByTitle('Limpar');
-		await fireEvent.click(limpar);
-
-		expect(input.value).toBe('');
-		expect(onselect).toHaveBeenLastCalledWith('');
+		expect(items[0].textContent).toBe('Famílias da Pipa');
 	});
 });

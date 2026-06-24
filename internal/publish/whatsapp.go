@@ -12,8 +12,8 @@ import (
 )
 
 // WhatsAppSender implementa Sender para a Maytapi (cloud-hosted).
-// Cada chamada a Enviar recebe o group_id via `config` — a mesma sessão
-// serve N destinos (grupos).
+// Config pode conter múltiplos group IDs separados por vírgula.
+// A mesma mensagem é enviada para todos os grupos listados.
 //
 // Referência: https://maytapi.com/whatsapp-api-documentation
 type WhatsAppSender struct {
@@ -24,7 +24,6 @@ type WhatsAppSender struct {
 }
 
 // NovoWhatsAppSender cria um sender para o Maytapi.
-// Requer WHATSAPP_PRODUCT_ID, WHATSAPP_PHONE_ID e WHATSAPP_API_KEY no ambiente.
 func NovoWhatsAppSender(productID, phoneID, token string) *WhatsAppSender {
 	return &WhatsAppSender{
 		productID: productID,
@@ -40,21 +39,49 @@ func (w *WhatsAppSender) base() string {
 	return fmt.Sprintf("https://api.maytapi.com/api/%s", w.productID)
 }
 
-func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, groupID string) (Resultado, error) {
-	msg := o.LegendaHTML
-	if msg == "" {
-		msg = o.MensagemWhatsApp()
+// Enviar publica a oferta para um ou mais grupos (config com IDs separados por vírgula).
+func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, config string) (Resultado, error) {
+	grupos := parseGrupos(config)
+	if len(grupos) == 0 {
+		return Resultado{Canal: "whatsapp", Enviado: false, Detalhe: "nenhum grupo configurado"},
+			fmt.Errorf("whatsapp: config vazio")
 	}
+
+	// Monta a mensagem (converte HTML se necessário)
+	msg := prepararMensagemWA(o)
 
 	// Adiciona link ao final
 	if o.Link != "" {
 		msg = msg + "\n\n🛒 " + o.Link
 	}
 
+	// Envia para cada grupo
+	var ultimoErro error
+	enviados := 0
+	for _, groupID := range grupos {
+		err := w.enviarParaGrupo(ctx, o, groupID, msg)
+		if err != nil {
+			ultimoErro = err
+		} else {
+			enviados++
+		}
+	}
+
+	if enviados == 0 {
+		return Resultado{Canal: "whatsapp", Enviado: false, Mensagem: msg, Detalhe: ultimoErro.Error()}, ultimoErro
+	}
+
+	detalhe := fmt.Sprintf("enviado para %d/%d grupos", enviados, len(grupos))
+	if ultimoErro != nil {
+		detalhe += " (alguns falharam)"
+	}
+	return Resultado{Canal: "whatsapp", Enviado: true, Mensagem: msg, Detalhe: detalhe}, nil
+}
+
+func (w *WhatsAppSender) enviarParaGrupo(ctx context.Context, o Oferta, groupID, msg string) error {
 	var payload map[string]any
 
 	if o.Imagem != "" {
-		// Envia imagem com caption
 		payload = map[string]any{
 			"to_number": groupID,
 			"type":      "media",
@@ -62,7 +89,6 @@ func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, groupID string) (
 			"text":      msg,
 		}
 	} else {
-		// Envia texto simples
 		payload = map[string]any{
 			"to_number": groupID,
 			"type":      "text",
@@ -75,41 +101,44 @@ func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, groupID string) (
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
 	if err != nil {
-		return Resultado{}, err
+		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-maytapi-key", w.token)
 
 	resp, err := w.http.Do(req)
 	if err != nil {
-		return Resultado{Canal: "whatsapp", Enviado: false, Mensagem: msg, Detalhe: err.Error()}, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	var r struct {
 		Success bool   `json:"success"`
 		Message string `json:"message"`
-		Data    struct {
-			MsgID string `json:"msgId"`
-		} `json:"data"`
 	}
 	_ = json.NewDecoder(resp.Body).Decode(&r)
 
 	if !r.Success {
-		detalhe := r.Message
-		if detalhe == "" {
-			detalhe = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		msg := r.Message
+		if msg == "" {
+			msg = fmt.Sprintf("HTTP %d", resp.StatusCode)
 		}
-		return Resultado{Canal: "whatsapp", Enviado: false, Mensagem: msg, Detalhe: detalhe},
-			fmt.Errorf("whatsapp: %s", detalhe)
+		return fmt.Errorf("grupo %s: %s", groupID, msg)
 	}
-	return Resultado{Canal: "whatsapp", Enviado: true, Mensagem: msg, Detalhe: "enviado"}, nil
+	return nil
 }
 
 // ─── Formatação WhatsApp ─────────────────────────────────────────────────────
 
+// prepararMensagemWA converte a legenda HTML ou gera texto com formatação WhatsApp.
+func prepararMensagemWA(o Oferta) string {
+	if o.LegendaHTML != "" {
+		return htmlParaWhatsApp(o.LegendaHTML)
+	}
+	return o.MensagemWhatsApp()
+}
+
 // MensagemWhatsApp monta o texto com formatação WhatsApp (bold = *, italic = _).
-// WhatsApp não suporta HTML, então usamos a marcação nativa.
 func (o Oferta) MensagemWhatsApp() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "✨ *%s*\n", strings.TrimSpace(o.Nome))
@@ -120,6 +149,65 @@ func (o Oferta) MensagemWhatsApp() string {
 		fmt.Fprintf(&b, "💸 *R$ %.2f*", o.Preco)
 	}
 	return strings.TrimRight(b.String(), "\n")
+}
+
+// htmlParaWhatsApp converte HTML (do editor Tiptap/Telegram) para formatação WhatsApp.
+// WhatsApp aceita: *bold*, _italic_, ~strikethrough~, ```monospace```
+func htmlParaWhatsApp(html string) string {
+	r := strings.NewReplacer(
+		"<b>", "*", "</b>", "*",
+		"<strong>", "*", "</strong>", "*",
+		"<i>", "_", "</i>", "_",
+		"<em>", "_", "</em>", "_",
+		"<s>", "~", "</s>", "~",
+		"<del>", "~", "</del>", "~",
+		"<u>", "", "</u>", "", // WhatsApp não suporta underline
+		"<code>", "```", "</code>", "```",
+		"<pre>", "```\n", "</pre>", "\n```",
+		"<p>", "", "</p>", "\n",
+		"<br>", "\n", "<br/>", "\n", "<br />", "\n",
+	)
+	result := r.Replace(html)
+
+	// Remove quaisquer tags HTML restantes (ex.: <a>, <span>, etc.)
+	result = stripHTMLTags(result)
+
+	// Limpa linhas vazias duplicadas
+	for strings.Contains(result, "\n\n\n") {
+		result = strings.ReplaceAll(result, "\n\n\n", "\n\n")
+	}
+	return strings.TrimSpace(result)
+}
+
+// stripHTMLTags remove todas as tags HTML restantes.
+func stripHTMLTags(s string) string {
+	var b strings.Builder
+	inTag := false
+	for _, r := range s {
+		switch {
+		case r == '<':
+			inTag = true
+		case r == '>':
+			inTag = false
+		case !inTag:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// parseGrupos extrai os group IDs de uma config com vírgulas.
+func parseGrupos(config string) []string {
+	var grupos []string
+	for _, g := range strings.Split(config, ",") {
+		g = strings.TrimSpace(g)
+		if g != "" {
+			grupos = append(grupos, g)
+		}
+	}
+	return grupos
 }
 
 // ─── Factory helper ──────────────────────────────────────────────────────────
