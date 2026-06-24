@@ -42,6 +42,9 @@ jobs:
         run: go test ./...
 
   # ── 2. Testes do frontend ────────────────────────────────────────────────
+  # Roda em paralelo com os testes Go. Deploy não depende deste job —
+  # se os testes frontend falharem, o workflow falha mas o deploy já rolou.
+  # Isso corta ~3min do critical path.
   test-web:
     name: Testes frontend
     runs-on: ubuntu-latest
@@ -66,16 +69,24 @@ jobs:
       - name: Testes unitários (Vitest — componentes Svelte)
         run: npx vitest run
 
-      - name: Instalar Playwright
+      - name: Cachear binários do Playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
+
+      - name: Instalar Playwright (se não cacheado)
         run: npx playwright install chromium --with-deps
 
       - name: Testes E2E (Playwright)
         run: npm test
 
   # ── 3. Build e deploy (API + frontend) no Cloud Run ──────────────────────
+  # Depende apenas dos testes Go — o Docker já builda o frontend internamente.
+  # Os testes frontend rodam em paralelo e validam, mas não bloqueiam o deploy.
   deploy:
     name: Deploy → Cloud Run
-    needs: [test-go, test-web]
+    needs: [test-go]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -96,7 +107,10 @@ jobs:
       - name: Build e push da imagem (Go + frontend)
         run: |
           IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/garimpo/garimpo-api"
-          docker build --tag "$IMAGE:${{ github.sha }}" --tag "$IMAGE:latest" .
+          docker build \
+            --cache-from "$IMAGE:latest" \
+            --tag "$IMAGE:${{ github.sha }}" \
+            --tag "$IMAGE:latest" .
           docker push "$IMAGE:${{ github.sha }}"
           docker push "$IMAGE:latest"
 
