@@ -6,35 +6,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
-// WhatsAppSender implementa Sender para a WaSenderAPI (cloud-hosted).
+// WhatsAppSender implementa Sender para a Maytapi (cloud-hosted).
 // Cada chamada a Enviar recebe o group_id via `config` — a mesma sessão
 // serve N destinos (grupos).
 //
-// Referência: https://wasenderapi.com/api-docs/groups/send-group-message
+// Referência: https://maytapi.com/whatsapp-api-documentation
 type WhatsAppSender struct {
-	apiKey  string
-	http    *http.Client
-	apiBase string // vazio = "https://www.wasenderapi.com"
+	productID string
+	phoneID   string
+	token     string
+	http      *http.Client
 }
 
-func NovoWhatsAppSender(apiKey string) *WhatsAppSender {
+// NovoWhatsAppSender cria um sender para o Maytapi.
+// Requer WHATSAPP_PRODUCT_ID, WHATSAPP_PHONE_ID e WHATSAPP_API_KEY no ambiente.
+func NovoWhatsAppSender(productID, phoneID, token string) *WhatsAppSender {
 	return &WhatsAppSender{
-		apiKey: apiKey,
-		http:   &http.Client{Timeout: 30 * time.Second},
+		productID: productID,
+		phoneID:   phoneID,
+		token:     token,
+		http:      &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
 func (w *WhatsAppSender) Tipo() string { return "whatsapp" }
 
 func (w *WhatsAppSender) base() string {
-	if w.apiBase != "" {
-		return w.apiBase
-	}
-	return "https://www.wasenderapi.com"
+	return fmt.Sprintf("https://api.maytapi.com/api/%s", w.productID)
 }
 
 func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, groupID string) (Resultado, error) {
@@ -43,35 +46,39 @@ func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, groupID string) (
 		msg = o.MensagemWhatsApp()
 	}
 
-	payload := map[string]any{
-		"to":   groupID,
-		"text": msg,
+	// Adiciona link ao final
+	if o.Link != "" {
+		msg = msg + "\n\n🛒 " + o.Link
 	}
 
-	// Se tem imagem, envia junto como imageUrl
+	var payload map[string]any
+
 	if o.Imagem != "" {
-		payload["imageUrl"] = o.Imagem
-	}
-
-	// Se tem link e não tem imagem, inclui o link no texto (WhatsApp gera preview)
-	if o.Link != "" && o.Imagem == "" && !strings.Contains(msg, o.Link) {
-		payload["text"] = msg + "\n\n🛒 " + o.Link
-	}
-
-	// Se tem link e tem imagem, adiciona o link ao final do texto (caption)
-	if o.Link != "" && o.Imagem != "" {
-		payload["text"] = msg + "\n\n🛒 " + o.Link
+		// Envia imagem com caption
+		payload = map[string]any{
+			"to_number": groupID,
+			"type":      "media",
+			"message":   o.Imagem,
+			"text":      msg,
+		}
+	} else {
+		// Envia texto simples
+		payload = map[string]any{
+			"to_number": groupID,
+			"type":      "text",
+			"message":   msg,
+		}
 	}
 
 	corpo, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/api/send-message", w.base())
+	url := fmt.Sprintf("%s/%s/sendMessage", w.base(), w.phoneID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
 	if err != nil {
 		return Resultado{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+w.apiKey)
+	req.Header.Set("x-maytapi-key", w.token)
 
 	resp, err := w.http.Do(req)
 	if err != nil {
@@ -83,8 +90,7 @@ func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, groupID string) (
 		Success bool   `json:"success"`
 		Message string `json:"message"`
 		Data    struct {
-			MsgID  int    `json:"msgId"`
-			Status string `json:"status"`
+			MsgID string `json:"msgId"`
 		} `json:"data"`
 	}
 	_ = json.NewDecoder(resp.Body).Decode(&r)
@@ -114,4 +120,18 @@ func (o Oferta) MensagemWhatsApp() string {
 		fmt.Fprintf(&b, "💸 *R$ %.2f*", o.Preco)
 	}
 	return strings.TrimRight(b.String(), "\n")
+}
+
+// ─── Factory helper ──────────────────────────────────────────────────────────
+
+// NovoWhatsAppSenderFromEnv cria o sender a partir das variáveis de ambiente.
+// Retorna nil se as variáveis não estiverem definidas.
+func NovoWhatsAppSenderFromEnv() *WhatsAppSender {
+	productID := os.Getenv("WHATSAPP_PRODUCT_ID")
+	phoneID := os.Getenv("WHATSAPP_PHONE_ID")
+	token := os.Getenv("WHATSAPP_API_KEY")
+	if productID == "" || phoneID == "" || token == "" {
+		return nil
+	}
+	return NovoWhatsAppSender(productID, phoneID, token)
 }

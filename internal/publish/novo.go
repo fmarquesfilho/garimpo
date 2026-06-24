@@ -20,9 +20,10 @@ func NovoComDestinos(destinos DestinoStore) Publicador {
 	token := os.Getenv("TELEGRAM_BOT_TOKEN")
 	chatPadrao := os.Getenv("TELEGRAM_CHAT_ID")
 	waKey := os.Getenv("WHATSAPP_API_KEY")
+	waProductID := os.Getenv("WHATSAPP_PRODUCT_ID")
 
 	// Sem nenhum provedor configurado → mock
-	if token == "" && waKey == "" {
+	if token == "" && (waKey == "" || waProductID == "") {
 		return NovoMock("telegram")
 	}
 	if destinos == nil {
@@ -34,8 +35,8 @@ func NovoComDestinos(destinos DestinoStore) Publicador {
 	if token != "" {
 		senders = append(senders, NovoTelegramSender(token))
 	}
-	if waKey != "" {
-		senders = append(senders, NovoWhatsAppSender(waKey))
+	if waSender := NovoWhatsAppSenderFromEnv(); waSender != nil {
+		senders = append(senders, waSender)
 	}
 
 	// Tipo padrão: Telegram se configurado, senão WhatsApp

@@ -18,6 +18,18 @@
 	let gruposWA = $state([]);
 	let carregandoGrupos = $state(false);
 	let erroGrupos = $state(null);
+	let filtroGrupo = $state('');
+
+	$effect(() => {
+		// Reseta filtro quando muda de tipo
+		if (tipo !== 'whatsapp') filtroGrupo = '';
+	});
+
+	let gruposFiltrados = $derived(
+		filtroGrupo
+			? gruposWA.filter((g) => g.nome.toLowerCase().includes(filtroGrupo.toLowerCase()))
+			: gruposWA
+	);
 
 	onMount(carregar);
 
@@ -144,9 +156,15 @@
 							<option>Nenhum grupo encontrado</option>
 						</select>
 					{:else}
+						<input
+							type="text"
+							bind:value={filtroGrupo}
+							placeholder="Filtrar grupos…"
+							class="filtro-grupo"
+						/>
 						<select id="config" bind:value={config} required>
-							<option value="">Selecione um grupo…</option>
-							{#each gruposWA as g (g.id)}
+							<option value="">Selecione um grupo… ({gruposFiltrados.length})</option>
+							{#each gruposFiltrados as g (g.id)}
 								<option value={g.id}>{g.nome}</option>
 							{/each}
 						</select>
@@ -225,4 +243,5 @@
 	}
 	.btn-remover:hover { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
 	.erro-inline { font-size: 0.8rem; color: #b91c1c; margin-bottom: 4px; }
+	.filtro-grupo { padding: 6px 10px; border: 1px solid var(--linha); border-radius: 6px; font-size: 0.82rem; margin-bottom: 4px; width: 100%; }
 </style>
