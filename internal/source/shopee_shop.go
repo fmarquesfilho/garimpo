@@ -69,7 +69,7 @@ func (s *ShopeeShopSource) buildQuery(shopID int64, page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ shopOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl } pageInfo { page hasNextPage } } }`,
+		`{ shopOfferV2(%s) { nodes { productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }
@@ -155,8 +155,10 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 			}
 
 			for _, n := range gql.Data.ShopOfferV2.Nodes {
+				// shopOfferV2 não retorna itemId diretamente — extraímos do productLink
+				prodID := extractItemIDFromLink(n.ProductLink)
 				produtos = append(produtos, domain.Product{
-					ID:         string(n.ItemID),
+					ID:         prodID,
 					Name:       n.ProductName,
 					Category:   s.CategoryLabel,
 					Price:      float64(n.PriceMin),
@@ -186,6 +188,36 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 		}
 	}
 	return produtos, nil
+}
+
+// extractItemIDFromLink extrai o item ID de uma URL de produto Shopee.
+// Formatos: /Produto-i.SHOP.ITEM ou /product/SHOP/ITEM
+func extractItemIDFromLink(link string) string {
+	// Tenta padrão -i.SHOP.ITEM
+	if idx := strings.LastIndex(link, "-i."); idx >= 0 {
+		parts := strings.Split(link[idx+3:], ".")
+		if len(parts) >= 2 {
+			// Remove query params do último segmento
+			itemID := parts[1]
+			if qIdx := strings.IndexByte(itemID, '?'); qIdx >= 0 {
+				itemID = itemID[:qIdx]
+			}
+			return itemID
+		}
+	}
+	// Tenta padrão /product/SHOP/ITEM
+	if idx := strings.Index(link, "/product/"); idx >= 0 {
+		parts := strings.Split(link[idx+9:], "/")
+		if len(parts) >= 2 {
+			itemID := parts[1]
+			if qIdx := strings.IndexByte(itemID, '?'); qIdx >= 0 {
+				itemID = itemID[:qIdx]
+			}
+			return itemID
+		}
+	}
+	// Fallback: usa o productLink como ID (garante unicidade)
+	return link
 }
 
 // shopGQLResponse é a resposta do shopOfferV2 (mesma estrutura de nodes).

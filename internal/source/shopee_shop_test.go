@@ -16,7 +16,7 @@ func TestShopeeShopSourceFetchOK(t *testing.T) {
 					{
 						"itemId": "111",
 						"productName": "Sérum Coreano",
-						"productLink": "https://shopee.com.br/serum",
+						"productLink": "https://shopee.com.br/Serum-Coreano-i.99999.111",
 						"offerLink": "https://shope.ee/aff111",
 						"priceMin": 59.90,
 						"sales": 120,
@@ -28,7 +28,7 @@ func TestShopeeShopSourceFetchOK(t *testing.T) {
 					{
 						"itemId": "222",
 						"productName": "Tônico Facial",
-						"productLink": "https://shopee.com.br/tonico",
+						"productLink": "https://shopee.com.br/Tonico-Facial-i.99999.222",
 						"offerLink": "https://shope.ee/aff222",
 						"priceMin": 35.00,
 						"sales": 50,
