@@ -215,12 +215,6 @@
 	{/if}
 </section>
 
-<!-- ── Nota ─────────────────────────────────────────────────────────────────── -->
-<p class="nota">
-	Comissão alta com zero venda costuma ser produto-fantasma. O piso de vendas e a nota mínima
-	deixam na peneira só o que já tem tração.{#if fonteAtiva}<span class="fonte"> · fonte: {fonteAtiva}</span>{/if}
-</p>
-
 <!-- ── Resultados ──────────────────────────────────────────────────────────── -->
 {#if carregando}
 	<p class="aviso">Garimpando os melhores produtos…</p>
@@ -273,12 +267,6 @@
 	h1 { font-size: clamp(2rem, 6vw, 3.2rem); margin: var(--r2) 0 var(--r4); }
 	.sub { color: var(--tinta-suave); font-size: 1.05rem; margin: 0; }
 	.controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--r4); margin-bottom: var(--r4); }
-
-	.nota {
-		margin: 0 0 var(--r8); font-size: 0.85rem; color: var(--tinta-suave);
-		max-width: 60ch; border-left: 2px solid var(--ouro-claro); padding-left: var(--r3);
-	}
-	.fonte { opacity: 0.8; }
 
 	/* ── Resultados ─────────────────────────────────────────────────────── */
 	.grade {
