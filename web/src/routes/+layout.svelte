@@ -32,7 +32,7 @@
 <header class="topo">
 	<div class="casca barra">
 		<a class="marca" href="/" onclick={fecharMenu}>
-			Garimpo<span class="pingo">.</span>
+			Garimpei<span class="pingo">.</span>
 		</a>
 		{#if $usuario}
 			<div class="acoes-barra">
@@ -84,7 +84,7 @@
 	<!-- Landing page para usuários não logados -->
 	<main class="casca landing">
 		<section class="hero">
-			<h1>Garimpo<span class="pingo">.</span></h1>
+			<h1>Garimpei<span class="pingo">.</span></h1>
 			<p class="hero-sub">
 				Curadoria inteligente de afiliados Shopee.<br>
 				Encontre os melhores produtos, monitore lojas e publique com um clique.

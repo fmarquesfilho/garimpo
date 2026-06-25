@@ -169,7 +169,7 @@
 </script>
 
 <svelte:head>
-	<title>Lojas — Garimpo</title>
+	<title>Lojas — Garimpei</title>
 </svelte:head>
 
 <section class="lojas-page">

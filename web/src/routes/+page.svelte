@@ -231,7 +231,7 @@
 	<div class="msg-erro">
 		<p><strong>Não consegui falar com a API.</strong></p>
 		<p>{erro}</p>
-		<p class="dica">Confira se o servidor está rodando: <code>go run ./cmd/garimpo-api</code></p>
+		<p class="dica">Confira se o servidor está rodando: <code>go run ./cmd/garimpei-api</code></p>
 	</div>
 {:else if f.modo === 'comparar' && pares}
 	<div class="comparacao">

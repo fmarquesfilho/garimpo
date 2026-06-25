@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: Garimpo API
+  title: Garimpei API
   description: |
-    API do Garimpo — curadoria inteligente de produtos de afiliados Shopee.
+    API do Garimpei — curadoria inteligente de produtos de afiliados Shopee.
     Backend Go servindo JSON. Autenticação via Firebase Auth (Bearer token).
   version: 1.0.0
   contact:

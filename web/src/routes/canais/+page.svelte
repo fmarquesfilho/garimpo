@@ -130,7 +130,7 @@
 </script>
 
 <svelte:head>
-	<title>Configurações — Garimpo</title>
+	<title>Configurações — Garimpei</title>
 </svelte:head>
 
 <section class="config-page">
@@ -141,7 +141,7 @@
 	{:else}
 		<h2>📡 Destinos de publicação</h2>
 		<p class="subtitulo">
-			Configure os grupos e canais onde o Garimpo publica. Cada destino usa o bot
+			Configure os grupos e canais onde o Garimpei publica. Cada destino usa o bot
 			configurado para o tipo (Telegram, WhatsApp). Adicione o bot como admin do grupo.
 		</p>
 

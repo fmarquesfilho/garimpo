@@ -32,7 +32,7 @@ const swaggerHTML = `<!DOCTYPE html>
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Garimpo API — Documentação</title>
+  <title>Garimpei API — Documentação</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"/>
   <style>
     body { margin: 0; background: #fafafa; }

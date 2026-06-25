@@ -70,7 +70,7 @@
 </script>
 
 <svelte:head>
-	<title>Publicações — Garimpo</title>
+	<title>Publicações — Garimpei</title>
 </svelte:head>
 
 <section class="publicacoes-page">

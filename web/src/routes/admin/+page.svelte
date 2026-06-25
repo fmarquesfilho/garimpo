@@ -51,7 +51,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin — Garimpo</title>
+	<title>Admin — Garimpei</title>
 </svelte:head>
 
 <section class="admin-page">

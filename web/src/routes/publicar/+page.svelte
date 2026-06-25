@@ -215,7 +215,7 @@
 </script>
 
 <svelte:head>
-	<title>Publicar — Garimpo</title>
+	<title>Publicar — Garimpei</title>
 </svelte:head>
 
 <section class="publicar-page">

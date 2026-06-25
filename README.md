@@ -1,4 +1,4 @@
-# Garimpo
+# Garimpei
 
 Plataforma de curadoria e publicação automatizada para afiliados Shopee.
 Busca produtos, monitora lojas, rankeia por estratégia, e publica em canais
