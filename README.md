@@ -12,7 +12,8 @@ de conversão.
 - **Monitoramento de lojas** — acompanha lojas específicas via `shopOfferV2`,
   detecta novos produtos e variações de preço.
 - **Publicação rica** — templates customizáveis, editor WYSIWYG, foto do produto,
-  botão inline "Comprar", envio para múltiplos destinos (Telegram, WhatsApp futuro).
+  botão inline "Comprar", envio para múltiplos destinos (Telegram, WhatsApp).
+  WhatsApp suporta até 5 grupos por destino.
 - **Agendamento** — publica no horário configurado via Cloud Scheduler.
 - **Rastreamento** — cada publicação gera um `sub_id` que identifica canal +
   estratégia + data, cruzável com o `validatedReport` da Shopee.
@@ -39,19 +40,27 @@ A API escuta na porta 8080; o front aponta para ela automaticamente em dev.
 ## Testes
 
 ```bash
-go test ./...                    # todos os pacotes
-go test ./... -cover             # com cobertura
-cd web && npm run build          # verifica o frontend
+go test ./...                    # todos os pacotes Go
+cd web && npx vitest run         # testes de componente Svelte (Vitest)
+cd web && npm test               # testes E2E (Playwright)
 ```
 
-Cobertura atual: publish 91%, scoring 90%, source 87%, strategy 86%, engine 85%.
+- **Go**: cobertura ~90% nos pacotes publish, scoring, source, strategy
+- **Vitest**: testa componentes Svelte reais (SeletorGrupo, etc.) com jsdom
+- **Playwright**: smoke tests, validação de rotas, mocks de API
 
 ## Deploy (GCP)
 
 Push para `main` dispara o workflow `deploy-gcp.yml`:
-1. Testes Go + build do frontend
-2. Build da imagem Docker (com `-tags gcp` para BigQuery)
-3. Deploy no Cloud Run + Firebase Hosting
+1. Testes Go (gate de qualidade)
+2. Build da imagem Docker multi-stage (Node + Go, com `-tags gcp`)
+3. Deploy no Cloud Run (API + frontend numa única imagem)
+4. Testes frontend rodam em paralelo (Vitest + Playwright)
+
+O frontend é servido pelo próprio Go no Cloud Run (SPA handler com fallback).
+Não usa Firebase Hosting.
+
+URL de produção: `https://garimpo-api-vj6afttbza-rj.a.run.app`
 
 Detalhes em `docs/DEPLOY_GCP.md`.
 
@@ -66,7 +75,7 @@ internal/
   strategy/          estratégias (Niche, Diversified) + Pipeline de filtros
   scoring/           matemática: valor esperado, normalização, suspeito
   source/            adaptadores de entrada (CSV, Shopee keyword, Shopee shop)
-  publish/           saída: Dispatcher, Sender (Telegram), Templates, Destinos
+  publish/           saída: Dispatcher, Sender (Telegram, WhatsApp/Maytapi), Templates, Destinos
   httpapi/           handlers HTTP (rotas com método explícito, Go 1.22+)
   store/             persistência (NopStore / BigQueryStore com -tags gcp)
   scheduler/         Cloud Scheduler (cria jobs de coleta e publicação)
@@ -101,6 +110,8 @@ docs/                documentação detalhada
 | POST | `/api/templates/preview` | Renderiza preview de template |
 | GET/POST | `/api/publicacoes` | Publicações agendadas/enviadas/erros |
 | POST | `/api/publicar-pendentes` | Executa publicações agendadas vencidas |
+| GET | `/api/whatsapp/grupos` | Lista grupos WhatsApp disponíveis (Maytapi) |
+| POST | `/api/resolver-link` | Resolve link curto da Shopee |
 
 ## Variáveis de ambiente
 
@@ -109,9 +120,13 @@ docs/                documentação detalhada
 | `SHOPEE_APP_ID` | Secret Manager | Credencial da API de afiliados |
 | `SHOPEE_SECRET` | Secret Manager | Assinatura HMAC-SHA256 |
 | `TELEGRAM_BOT_TOKEN` | Secret Manager | Bot do Telegram (@BotFather) |
+| `WHATSAPP_PRODUCT_ID` | Secret Manager | Maytapi Product ID |
+| `WHATSAPP_PHONE_ID` | Secret Manager | Maytapi Phone ID |
+| `WHATSAPP_API_KEY` | Secret Manager | Maytapi API Token |
 | `COLETA_TOKEN` | Secret Manager | Protege endpoints de coleta/scheduler |
 | `GOOGLE_CLOUD_PROJECT` | Cloud Run env | Projeto GCP |
 | `BQ_DATASET` | Cloud Run env | Dataset BigQuery (default: `garimpo`) |
+| `WEB_DIR` | Cloud Run env | Diretório do frontend (default: `/web`) |
 
 ## Documentação
 

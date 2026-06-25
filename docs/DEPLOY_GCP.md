@@ -1,21 +1,25 @@
-# Deploy na GCP (Cloud Run + BigQuery + Firebase Hosting)
+# Deploy na GCP (Cloud Run + BigQuery)
 
-Arquitetura analytics-first: a API Go roda no **Cloud Run**, os dados minerados
-e as decisões de curadoria vão para o **BigQuery** (análise barata + Looker
-Studio), e o front estático fica no **Firebase Hosting**, que faz rewrite de
-`/api` para o Cloud Run — uma origem só, sem CORS.
+Arquitetura serverless: a API Go roda no **Cloud Run** e serve tanto a API quanto
+o frontend estático (SPA). Os dados minerados e as decisões de curadoria vão para
+o **BigQuery** (análise barata + Looker Studio).
 
 ```
-navegador ──https──> Firebase Hosting ──┬─ /        -> site estático (web/build)
-                                         └─ /api/**  -> Cloud Run (garimpo-api)
-                                                          ├─ Secret Manager: SHOPEE_*
-                                                          └─ grava eventos -> BigQuery
-                                                                                  └─ Looker Studio / Python
+navegador ──https──> Cloud Run (garimpo-api)
+                       ├─ /           -> frontend estático (SPA, web/build)
+                       ├─ /api/**     -> API JSON (curadoria, publicação, coleta)
+                       ├─ Secret Manager: SHOPEE_*, TELEGRAM_*, WHATSAPP_*
+                       └─ grava eventos -> BigQuery
+                                              └─ Looker Studio / Python
 ```
 
 Custo no seu volume: Cloud Run praticamente de graça (escala a zero), BigQuery
-dentro do free tier (10 GB de storage + 1 TB de consulta/mês), Firebase Hosting
-free tier. Deve ficar bem abaixo de R$50 — confirme no Billing.
+dentro do free tier (10 GB de storage + 1 TB de consulta/mês).
+Deve ficar bem abaixo de R$50 — confirme no Billing.
+
+> **Nota histórica**: o frontend era servido pelo Firebase Hosting com rewrite
+> para Cloud Run, mas a região `southamerica-east1` causava hangs no CDN.
+> Desde jun/2026, o Go serve o frontend diretamente (Dockerfile multi-stage).
 
 ## RUNBOOK: do zero ao ar (checklist ordenado)
 

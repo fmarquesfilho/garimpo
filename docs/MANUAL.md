@@ -37,7 +37,7 @@ Ao clicar "Publicar" em qualquer produto, ou ao acessar direto:
 
 1. **Cole um link** da Shopee (opcional) — preenche os dados automaticamente.
 2. **Edite o produto** — nome, categoria, preço são editáveis inline.
-3. **Escolha o destino** — qual grupo Telegram (ou WhatsApp futuro) vai receber.
+3. **Escolha o destino** — qual grupo Telegram ou WhatsApp vai receber.
 4. **Escolha o template** — modelo de mensagem (com ou sem foto 📷).
 5. **Edite a legenda** — editor rico (negrito, itálico, links) com preview WYSIWYG.
 6. **Envie ou agende** — imediato ou para um horário futuro.
@@ -51,8 +51,12 @@ Histórico de tudo que foi publicado:
 
 ### 📡 Destinos & Conversões
 
-- **Destinos** — gerencie onde o Garimpo publica (grupos Telegram, WhatsApp).
-  Cada destino tem tipo + config (chat_id ou telefone).
+- **Destinos** — gerencie onde o Garimpo publica. Cada destino tem tipo
+  (Telegram ou WhatsApp) e configuração (chat_id ou grupo(s) WhatsApp).
+  - WhatsApp suporta até **5 grupos por destino** (a mensagem é enviada para todos).
+  - Ao criar/editar um destino WhatsApp, o app mostra um autocomplete com os
+    grupos disponíveis (selecione pelo nome, sem lidar com IDs).
+  - Botão ✎ para editar um destino existente (adicionar/remover grupos).
 - **Conversões** — relatório de publicações por canal/sub_id, mostrando volume
   e comissão estimada.
 
@@ -62,8 +66,9 @@ Histórico das coletas periódicas (snapshots gravados pelo scheduler).
 
 ### 📊 Estatísticas
 
-Resumo descritivo dos dados coletados por categoria: comissão média/mediana,
-preço médio, vendas média, teor médio.
+Análise de mercado baseada nos dados coletados por categoria: comissão
+média/mediana, preço médio, vendas média, teor médio. Permite comparar
+janelas de 7, 30 ou 90 dias.
 
 ## Os termos
 
