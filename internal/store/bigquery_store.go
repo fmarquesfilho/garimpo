@@ -301,15 +301,17 @@ func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
 // ListarBuscas devolve o estado atual: o último registro por ID (append-only),
 // filtrando os removidos (ativo = false).
 func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
+	// Query compatível com tabelas que não têm as colunas novas (shop_ids, rotation_cursor, full_scan_at).
+	// Usa SELECT * no CTE e seleciona apenas as colunas base. Os campos novos são lidos
+	// via query separada se necessário, ou adicionados via ALTER TABLE na migração.
 	q := s.client.Query(`
 		WITH ranked AS (
 		  SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
 		  FROM ` + "`" + s.dataset + ".buscas`" + `
 		)
-		SELECT id, keywords, IFNULL(shop_ids, '') as shop_ids, categoria, estrategia,
-		       comissao_min, vendas_min, nota_min, top, cron, ativo, owner_uid,
-		       IFNULL(rotation_cursor, '') as rotation_cursor,
-		       IFNULL(full_scan_at, '') as full_scan_at, salvo_em
+		SELECT id, keywords, categoria, estrategia,
+		       comissao_min, vendas_min, nota_min, top, cron, ativo,
+		       IFNULL(owner_uid, '') as owner_uid, salvo_em
 		FROM ranked WHERE rn = 1 AND ativo = TRUE
 		ORDER BY id
 	`)
@@ -319,7 +321,20 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 	}
 	var out []Busca
 	for {
-		var r linhaBuscaBQ
+		var r struct {
+			ID          string    `bigquery:"id"`
+			Keywords    string    `bigquery:"keywords"`
+			Categoria   string    `bigquery:"categoria"`
+			Estrategia  string    `bigquery:"estrategia"`
+			ComissaoMin float64   `bigquery:"comissao_min"`
+			VendasMin   int       `bigquery:"vendas_min"`
+			NotaMin     float64   `bigquery:"nota_min"`
+			Top         int       `bigquery:"top"`
+			Cron        string    `bigquery:"cron"`
+			Ativo       bool      `bigquery:"ativo"`
+			OwnerUID    string    `bigquery:"owner_uid"`
+			SalvoEm     time.Time `bigquery:"salvo_em"`
+		}
 		err := it.Next(&r)
 		if err == iterator.Done {
 			break
@@ -328,9 +343,7 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 			return nil, err
 		}
 		var kws []string
-		// tenta deserializar o JSON array; cai num slice com o valor bruto se falhar
 		if e2 := json.Unmarshal([]byte(r.Keywords), &kws); e2 != nil {
-			// compatibilidade: campo keywords pode ser string simples em dados antigos
 			if r.Keywords != "" {
 				kws = strings.Split(r.Keywords, ",")
 				for i := range kws {
@@ -338,26 +351,74 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 				}
 			}
 		}
-		var shopIDs []int64
-		if r.ShopIDs != "" {
-			_ = json.Unmarshal([]byte(r.ShopIDs), &shopIDs)
-		}
-		var rotCursor map[int64]int
-		if r.RotationCursor != "" {
-			_ = json.Unmarshal([]byte(r.RotationCursor), &rotCursor)
-		}
-		var fullScan map[int64]string
-		if r.FullScanAt != "" {
-			_ = json.Unmarshal([]byte(r.FullScanAt), &fullScan)
-		}
 		out = append(out, Busca{
-			ID: r.ID, Keywords: kws, ShopIDs: shopIDs, Categoria: r.Categoria, Estrategia: r.Estrategia,
+			ID: r.ID, Keywords: kws, Categoria: r.Categoria, Estrategia: r.Estrategia,
 			ComissaoMin: r.ComissaoMin, VendasMin: r.VendasMin, NotaMin: r.NotaMin, Top: r.Top,
-			Cron: r.Cron, Ativo: r.Ativo, OwnerUID: r.OwnerUID,
-			RotationCursor: rotCursor, FullScanAt: fullScan, SalvoEm: r.SalvoEm,
+			Cron: r.Cron, Ativo: r.Ativo, OwnerUID: r.OwnerUID, SalvoEm: r.SalvoEm,
 		})
 	}
+
+	// Tenta ler campos novos (shop_ids, rotation_cursor, full_scan_at) se existirem.
+	// Se a query falhar (colunas não existem), retorna o resultado sem esses campos.
+	s.enriquecerBuscasComCamposNovos(ctx, out)
+
 	return out, nil
+}
+
+// enriquecerBuscasComCamposNovos tenta ler shop_ids, rotation_cursor e full_scan_at.
+// Se as colunas não existirem na tabela, simplesmente não faz nada (graceful degradation).
+func (s *BigQueryStore) enriquecerBuscasComCamposNovos(ctx context.Context, buscas []Busca) {
+	q := s.client.Query(`
+		WITH ranked AS (
+		  SELECT id, shop_ids, rotation_cursor, full_scan_at,
+		         ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
+		  FROM ` + "`" + s.dataset + ".buscas`" + `
+		)
+		SELECT id, IFNULL(shop_ids, '') as shop_ids,
+		       IFNULL(rotation_cursor, '') as rotation_cursor,
+		       IFNULL(full_scan_at, '') as full_scan_at
+		FROM ranked WHERE rn = 1
+	`)
+	it, err := q.Read(ctx)
+	if err != nil {
+		// Colunas não existem — ignora silenciosamente
+		return
+	}
+
+	// Mapa para lookup rápido
+	byID := make(map[string]int, len(buscas))
+	for i := range buscas {
+		byID[buscas[i].ID] = i
+	}
+
+	for {
+		var r struct {
+			ID             string `bigquery:"id"`
+			ShopIDs        string `bigquery:"shop_ids"`
+			RotationCursor string `bigquery:"rotation_cursor"`
+			FullScanAt     string `bigquery:"full_scan_at"`
+		}
+		err := it.Next(&r)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return // erro inesperado — para sem poluir
+		}
+		idx, ok := byID[r.ID]
+		if !ok {
+			continue
+		}
+		if r.ShopIDs != "" {
+			_ = json.Unmarshal([]byte(r.ShopIDs), &buscas[idx].ShopIDs)
+		}
+		if r.RotationCursor != "" {
+			_ = json.Unmarshal([]byte(r.RotationCursor), &buscas[idx].RotationCursor)
+		}
+		if r.FullScanAt != "" {
+			_ = json.Unmarshal([]byte(r.FullScanAt), &buscas[idx].FullScanAt)
+		}
+	}
 }
 
 // HistoricoColetas retorna os snapshots agrupados por execução (keyword + timestamp)
@@ -557,10 +618,9 @@ type linhaPublicacaoBQ struct {
 }
 
 func (s *BigQueryStore) SalvarPublicacao(ctx context.Context, p Publicacao) error {
-	criadaEm, _ := time.Parse(time.RFC3339, p.CriadaEm)
-	if criadaEm.IsZero() {
-		criadaEm = time.Now().UTC()
-	}
+	// Sempre usa time.Now() como criada_em para garantir que o registro mais recente
+	// prevalece no ROW_NUMBER() (append-only, último registro por id = estado atual).
+	criadaEm := time.Now().UTC()
 	row := linhaPublicacaoBQ{
 		ID: p.ID, ProdutoID: p.ProdutoID, Nome: p.Nome, Categoria: p.Categoria,
 		Preco: p.Preco, Comissao: p.Comissao, Link: p.Link, Imagem: p.Imagem,
