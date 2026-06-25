@@ -24,12 +24,54 @@ Configure um **cron** (ex.: todo dia 8h) para coleta automática.
 
 ### 🏪 Lojas
 
-Monitore lojas específicas da Shopee. Selecione uma busca com shop_ids e veja:
+Monitore lojas específicas da Shopee. Adicione diretamente pela página (cole a
+URL ou ID numérico) — não precisa mais ir à Curadoria.
 
+- **Adicionar loja** — formulário no topo aceita:
+  - URL: `https://shopee.com.br/shop/123456`
+  - ID numérico: `123456`
+- **Remover** — botão ✕ no card da loja.
 - **Produtos** — lista completa da loja (sem filtro de elegibilidade), com botão
   de publicar direto.
 - **🆕 Novidades** — produtos que apareceram pela primeira vez nos últimos 7 dias.
-- **📉 Preços** — variações de preço detectadas (verde = baixou, vermelho = subiu).
+- **📉 Preços** — variações de preço com badges coloridos (verde ↓ queda,
+  vermelho ↑ subida). Botão 📤 para publicar direto como oferta.
+- **🔔 Alertas Telegram** — painel colapsável para configurar notificações
+  automáticas de preço (ver seção Alertas abaixo).
+
+### 🔔 Alertas de Preço
+
+Notificações automáticas enviadas para um grupo de Telegram quando variações
+significativas de preço são detectadas nas lojas monitoradas.
+
+**Configuração (na página /lojas → 🔔 Alertas Telegram):**
+- **Chat ID** — ID do grupo Telegram (ex.: `-1001234567890`).
+- **Threshold** — variação mínima para disparar alerta (padrão: 15%).
+- **Apenas quedas** — se ativo, só notifica quedas de preço (oportunidades).
+- **Testar** — envia uma mensagem de confirmação ao grupo.
+
+**Como funciona:** a cada coleta periódica de uma loja, o sistema compara preços
+com os snapshots anteriores. Se detectar variação acima do threshold, envia
+mensagem formatada ao grupo configurado.
+
+**Formato da mensagem:**
+```
+🔔 Alerta de Preço
+🏪 Loja: loja-123456
+
+📉 Sérum Vitamina C 30ml
+   R$ 89.90 → R$ 69.90 (↓22.2%)
+
+⏰ 25/06 08:15
+```
+
+Também notifica produtos novos detectados (🆕).
+
+**Env vars necessárias (Cloud Run):**
+- `ALERTAS_TELEGRAM_CHAT_ID` — chat_id do grupo
+- `ALERTAS_THRESHOLD` — ex.: `0.15` para 15%
+- `ALERTAS_APENAS_QUEDAS` — `true` ou `false`
+- `TELEGRAM_BOT_TOKEN` — já deve estar configurado
 
 ### 📤 Publicar (página de publicação)
 
@@ -69,6 +111,12 @@ Histórico das coletas periódicas (snapshots gravados pelo scheduler).
 Análise de mercado baseada nos dados coletados por categoria: comissão
 média/mediana, preço médio, vendas média, teor médio. Permite comparar
 janelas de 7, 30 ou 90 dias.
+
+**📈 Evolução de preço — Lojas monitoradas** (visível quando logado):
+- Cards de resumo global (lojas, produtos, preço médio, variação, quedas, altas).
+- Mini gráfico de barras por loja (preço médio por dia, com cores indicando
+  direção: verde = caiu, vermelho = subiu).
+- Top 3 quedas e altas de cada loja com badges de variação.
 
 ## Os termos
 

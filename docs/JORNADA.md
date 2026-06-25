@@ -15,8 +15,12 @@ mercado Shopee ─► COLETA ─► CURADORIA ─► DECISÃO ─► PUBLICAÇÃ
                      │                                    │
                      └── LOJAS ──► novidades             editor
                         (shopOfferV2)  variações preço   WYSIWYG
-                                                         templates
-                                                         agendamento
+                          rotação       │                 templates
+                          throttling    ▼                 agendamento
+                                    ALERTAS
+                                  (Telegram)
+                                   threshold
+                                   automático
 ```
 
 ## Etapas, valor e decisão

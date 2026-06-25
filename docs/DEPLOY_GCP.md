@@ -177,6 +177,41 @@ na tabela `snapshots`. O **Cloud Scheduler** chama esse endpoint em cron.
      "$URL/api/coletar?fonte=shopee&categoria=perfumaria&keyword=perfume&top=20&vendas_min=5"
    ```
 
+## Alertas de preço (Telegram)
+
+Alertas automáticos ao detectar variações significativas de preço nas lojas
+monitoradas. Requisitos: `TELEGRAM_BOT_TOKEN` já configurado + bot adicionado
+ao grupo da Mileny.
+
+1. **Descubra o chat_id do grupo:**
+   ```bash
+   curl -s "https://api.telegram.org/bot$(gcloud secrets versions access latest --secret=TELEGRAM_BOT_TOKEN)/getUpdates" \
+     | python3 -m json.tool | grep -A2 '"chat"'
+   ```
+
+2. **Configure as env vars:**
+   ```bash
+   gcloud run services update garimpo-api --region $REGION \
+     --update-env-vars="ALERTAS_TELEGRAM_CHAT_ID=-100XXXXXXXXXX,ALERTAS_THRESHOLD=0.15,ALERTAS_APENAS_QUEDAS=true"
+   ```
+
+   | Variável | Descrição | Exemplo |
+   |----------|-----------|---------|
+   | `ALERTAS_TELEGRAM_CHAT_ID` | chat_id do grupo (começa com -100) | `-1001234567890` |
+   | `ALERTAS_THRESHOLD` | variação mínima para alerta (0-1) | `0.15` (=15%) |
+   | `ALERTAS_APENAS_QUEDAS` | só alertar quedas (oportunidades) | `true` |
+
+3. **Teste pela UI:** página /lojas → 🔔 Alertas Telegram → botão "Testar".
+
+4. **Ou via API:**
+   ```bash
+   curl -s -X POST "$URL/api/alertas/testar" \
+     -H "Authorization: Bearer TOKEN_FIREBASE" \
+     -H "Content-Type: application/json"
+   ```
+
+Os alertas disparam automaticamente a cada coleta de loja com `busca_id`.
+
 ## Análises
 
 - **Looker Studio** (grátis): conecte ao dataset `garimpo` e monte painéis.

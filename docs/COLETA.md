@@ -13,7 +13,7 @@ o uso é o mesmo, só não grava.
 |---|---|---|---|
 | `snapshots` | `POST /api/coletar` | coleta agendada (Cloud Scheduler) | série temporal do mercado por categoria (preço, comissão, vendas, nota, teor, posição) com `coletado_em` |
 | `eventos` | `POST /api/eventos` (seleção) e `POST /api/publicar` | quando ela garimpa/publica | comportamento de curadoria + atribuição (`sub_id`, canal) |
-| `buscas` | `POST /api/buscas` | ao salvar um perfil de busca | perfis de coleta (filtros + cron + shop_ids), append-only/versionado |
+| `buscas` | `POST /api/buscas` ou `POST /api/lojas` | ao salvar perfil ou adicionar loja | perfis de coleta (filtros + cron + shop_ids + rotation_cursor), append-only |
 | `destinos` | `POST /api/destinos` | ao cadastrar canal Telegram/WhatsApp | canais de publicação (tipo + config), append-only |
 | `templates` | `POST /api/templates` | ao criar modelo de mensagem | modelos de legenda (corpo + com_foto), append-only |
 | `publicacoes` | `POST /api/publicacoes` | ao publicar/agendar | histórico completo (status, destino, template, sub_id) |
@@ -44,6 +44,9 @@ do app. Internamente é uma consulta agregada na tabela `snapshots`.
                                                     ▼
                                  BigQuery `snapshots`  ──►  /api/estatisticas
                                   (com coletado_em)            (tela Estatísticas)
+                                         │
+                                         ▼
+                               Alertas Telegram (se variação > threshold)
 ```
 
 Uma **busca salva** é um conjunto nomeado de filtros (keyword, categoria,
@@ -51,6 +54,26 @@ estratégia, pisos, top) com um **cron** opcional. Ela serve para dois fins:
 reusar filtros num clique (manual) e definir a coleta periódica (automático).
 Vivem no navegador (localStorage) **e** sincronizam no servidor (BigQuery), para
 a coleta não depender do navegador estar aberto.
+
+### Monitoramento de lojas
+
+Lojas adicionadas via `POST /api/lojas` criam automaticamente uma busca com
+`shop_ids` e cron padrão (`0 */4 * * *`). A coleta usa o `ShopeeShopSource`
+com dois mecanismos adicionais:
+
+**Amostragem rotativa:** em vez de sempre buscar as mesmas 2 primeiras páginas,
+o sistema mantém um cursor (`rotation_cursor`) por loja. A cada coleta:
+1. Busca N páginas a partir do cursor (default: 2 páginas × 50 produtos)
+2. Se o catálogo terminar (hasNextPage=false), reseta o cursor para a página 1
+3. Se não terminar, avança o cursor para a próxima página não lida
+4. Registra `full_scan_at` quando completa uma varredura do catálogo inteiro
+
+Assim, uma loja com 500 produtos é coberta inteiramente em ~5 coletas (10 páginas ÷ 2/ciclo).
+
+**Throttling:** para não exceder o rate limit da Shopee (~10 req/s):
+- 200ms de delay entre requisições de páginas da mesma loja
+- 60s de delay entre lojas diferentes numa mesma execução
+- Se receber HTTP 429, espera 30s e tenta até 3× antes de pular a loja
 
 ## Começar a coletar AGORA (passo a passo)
 

@@ -77,6 +77,11 @@ offerLink, imageUrl). Aceita `keyword` para filtrar dentro da loja. Implementado
 no Garimpo como `ShopeeShopSource` — usado para monitoramento de lojas (detecta
 novos produtos e variações de preço via diff de snapshots).
 
+O Garimpo usa amostragem rotativa: em vez de sempre buscar as mesmas 2 páginas,
+mantém um cursor que avança a cada coleta. Assim cobre o catálogo inteiro de
+lojas grandes (500+ produtos) ao longo de múltiplos ciclos sem estourar o rate
+limit. Throttling: 200ms entre páginas, 60s entre lojas.
+
 ### 1.3 O que isso destrava
 
 A atribuição fecha **dentro da própria Shopee**: `generateShortLink(subIds)` na
