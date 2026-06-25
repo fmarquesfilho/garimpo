@@ -43,8 +43,15 @@ func ConfigFromEnv() Config {
 	}
 	apenasQuedas := os.Getenv("ALERTAS_APENAS_QUEDAS") == "true"
 
+	// Token de alertas: usa ALERTAS_TELEGRAM_TOKEN se disponível,
+	// senão cai pro TELEGRAM_BOT_TOKEN (bot de publicações como fallback).
+	token := os.Getenv("ALERTAS_TELEGRAM_TOKEN")
+	if token == "" {
+		token = os.Getenv("TELEGRAM_BOT_TOKEN")
+	}
+
 	return Config{
-		TelegramToken:  os.Getenv("TELEGRAM_BOT_TOKEN"),
+		TelegramToken:  token,
 		TelegramChatID: os.Getenv("ALERTAS_TELEGRAM_CHAT_ID"),
 		Threshold:      threshold,
 		ApenasQuedas:   apenasQuedas,
