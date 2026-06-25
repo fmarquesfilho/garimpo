@@ -2,4 +2,4 @@
 
 # Firebase cache
 .firebase/
-*.cache
+*.cache*.out
