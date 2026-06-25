@@ -25,14 +25,6 @@
 
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
-		// Auto-aplica a primeira busca salva se nenhuma keyword está definida
-		if (!f.busca.trim()) {
-			const salvas = get(buscasSalvas);
-			const ativa = salvas.find(b => b.ativo !== false);
-			if (ativa) {
-				aplicarBusca(ativa);
-			}
-		}
 	});
 
 	// ── Nova busca ────────────────────────────────────────────────────────────
@@ -95,6 +87,13 @@
 
 	// ── Carregar candidatos ───────────────────────────────────────────────────
 	async function carregar() {
+		// Não busca sem keyword (mostra estado vazio)
+		if (!f.busca.trim()) {
+			lista = [];
+			pares = null;
+			carregando = false;
+			return;
+		}
 		carregando = true;
 		erro = null;
 		pares = null;
@@ -256,8 +255,8 @@
 {:else if lista.length === 0}
 	<div class="vazio">
 		{#if f.busca.trim() === ''}
-			<p>Nenhum produto recomendado no momento.</p>
-			<p class="dica">Tente digitar um termo de busca ou ajuste os filtros.</p>
+			<p>🔍 Digite um termo de busca para encontrar produtos.</p>
+			<p class="dica">Ex: "skincare", "perfume", "maquiagem" — ou use uma busca salva abaixo.</p>
 		{:else}
 			<p>Nada na peneira para "{f.busca}".</p>
 			<p class="dica">Tente outro termo, ou afrouxe os pisos de comissão, vendas e nota.</p>
