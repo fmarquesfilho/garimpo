@@ -269,7 +269,7 @@
 							class:ativa={buscaSelecionada?.id === b.id}
 							onclick={() => selecionarBusca(b)}
 						>
-							<strong>{b.id}</strong>
+							<strong>{b.nome || b.id}</strong>
 							<span class="loja-meta">
 								🏪 {b.shop_ids.length} {b.shop_ids.length === 1 ? 'loja' : 'lojas'}
 								{#if b.keywords?.length > 0}

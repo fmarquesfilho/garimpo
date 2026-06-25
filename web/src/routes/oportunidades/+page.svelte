@@ -18,17 +18,25 @@
 
 	let buscasComLojas = $derived(($buscasSalvas ?? []).filter(b => b.shop_ids?.length > 0));
 
+	// Mapa de busca_id → nome amigável
+	let nomesLojas = $derived(Object.fromEntries(
+		buscasComLojas.map(b => [b.id, b.nome || b.id])
+	));
+
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
+		// Aguarda um tick para o $derived atualizar
+		await new Promise(r => setTimeout(r, 50));
 		carregar();
 	});
 
 	async function carregar() {
+		if (buscasComLojas.length === 0) {
+			carregando = false;
+			return;
+		}
 		carregando = true;
 		erro = null;
-		quedas = [];
-		altas = [];
-		novos = [];
 
 		try {
 			// Busca novidades de TODAS as lojas em paralelo
@@ -39,26 +47,33 @@
 			);
 			const resultados = await Promise.all(promises);
 
+			const novasQuedas = [];
+			const novasAltas = [];
+			const novosItens = [];
+
 			for (const r of resultados) {
 				if (!r) continue;
 				for (const v of (r.variacoes ?? [])) {
 					const item = { ...v, loja: r.loja };
 					if (v.variacao_pct < 0) {
-						quedas.push(item);
+						novasQuedas.push(item);
 					} else {
-						altas.push(item);
+						novasAltas.push(item);
 					}
 				}
 				for (const p of (r.produtos_novos ?? [])) {
-					novos.push({ ...p, loja: r.loja });
+					novosItens.push({ ...p, loja: r.loja });
 				}
 			}
 
 			// Ordena por magnitude (maiores variações primeiro)
-			quedas.sort((a, b) => a.variacao_pct - b.variacao_pct);
-			altas.sort((a, b) => b.variacao_pct - a.variacao_pct);
-			// Novos: mais recentes primeiro
-			novos.sort((a, b) => (b.detectado_em ?? '').localeCompare(a.detectado_em ?? ''));
+			novasQuedas.sort((a, b) => a.variacao_pct - b.variacao_pct);
+			novasAltas.sort((a, b) => b.variacao_pct - a.variacao_pct);
+			novosItens.sort((a, b) => (b.detectado_em ?? '').localeCompare(a.detectado_em ?? ''));
+
+			quedas = novasQuedas;
+			altas = novasAltas;
+			novos = novosItens;
 		} catch (e) {
 			erro = e.message;
 		} finally {
@@ -76,8 +91,10 @@
 		goto(`/publicar?dados=${dados}`);
 	}
 
-	// Recarrega quando muda o período
-	$effect(() => { dias; if (!carregando) carregar(); });
+	function mudarPeriodo(novoDias) {
+		dias = novoDias;
+		carregar();
+	}
 </script>
 
 <svelte:head>
@@ -96,10 +113,10 @@
 	{:else}
 		<div class="controles">
 			<div class="filtro-periodo">
-				<button class:ativo={dias === 1} onclick={() => (dias = 1)}>Hoje</button>
-				<button class:ativo={dias === 3} onclick={() => (dias = 3)}>3 dias</button>
-				<button class:ativo={dias === 7} onclick={() => (dias = 7)}>7 dias</button>
-				<button class:ativo={dias === 14} onclick={() => (dias = 14)}>14 dias</button>
+				<button class:ativo={dias === 1} onclick={() => mudarPeriodo(1)}>Hoje</button>
+				<button class:ativo={dias === 3} onclick={() => mudarPeriodo(3)}>3 dias</button>
+				<button class:ativo={dias === 7} onclick={() => mudarPeriodo(7)}>7 dias</button>
+				<button class:ativo={dias === 14} onclick={() => mudarPeriodo(14)}>14 dias</button>
 			</div>
 			<span class="meta">{buscasComLojas.length} {buscasComLojas.length === 1 ? 'loja' : 'lojas'} monitoradas</span>
 		</div>
@@ -146,7 +163,7 @@
 							<div class="card-oportunidade queda">
 								<div class="card-header">
 									<span class="badge-variacao badge-queda">↓ {Math.abs(item.variacao_pct * 100).toFixed(0)}%</span>
-									<span class="loja-tag">{item.loja}</span>
+									<span class="loja-tag">{nomesLojas[item.loja] ?? item.loja}</span>
 									<span class="tempo">{tempoAtras(item.detectado_em)}</span>
 								</div>
 								<h3 class="card-nome">{item.nome}</h3>
@@ -176,7 +193,7 @@
 							<div class="card-oportunidade novo">
 								<div class="card-header">
 									<span class="badge-novo">Novo</span>
-									<span class="loja-tag">{item.loja}</span>
+									<span class="loja-tag">{nomesLojas[item.loja] ?? item.loja}</span>
 									<span class="tempo">{tempoAtras(item.detectado_em)}</span>
 								</div>
 								<h3 class="card-nome">{item.nome}</h3>
@@ -210,7 +227,7 @@
 							<div class="card-oportunidade alta">
 								<div class="card-header">
 									<span class="badge-variacao badge-alta">↑ {Math.abs(item.variacao_pct * 100).toFixed(0)}%</span>
-									<span class="loja-tag">{item.loja}</span>
+									<span class="loja-tag">{nomesLojas[item.loja] ?? item.loja}</span>
 									<span class="tempo">{tempoAtras(item.detectado_em)}</span>
 								</div>
 								<h3 class="card-nome">{item.nome}</h3>

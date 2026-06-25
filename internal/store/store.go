@@ -57,6 +57,7 @@ type Estatisticas struct {
 // normaliza para `Keywords` com um único elemento.
 type Busca struct {
 	ID          string    `json:"id"`
+	Nome        string    `json:"nome,omitempty"`       // nome amigável (da loja ou perfil)
 	Keywords    []string  `json:"keywords"`             // um ou mais termos de busca
 	ShopIDs     []int64   `json:"shop_ids,omitempty"`   // IDs de lojas a monitorar (shopOfferV2)
 	Categoria   string    `json:"categoria"`

@@ -99,6 +99,7 @@ type adicionarLojaResp struct {
 	Status string `json:"status"`
 	ID     string `json:"id"`
 	ShopID int64  `json:"shop_id"`
+	Nome   string `json:"nome"`
 }
 
 // adicionarLoja aceita uma URL de loja Shopee ou ID numérico, extrai o shopID
@@ -122,7 +123,7 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shopID, err := srv.parseShopInput(input)
+	shopID, shopName, err := srv.parseShopInputWithName(input)
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
@@ -149,6 +150,7 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 
 	busca := store.NormalizarBusca(store.Busca{
 		ShopIDs:    []int64{shopID},
+		Nome:       shopName,
 		Estrategia: "nicho",
 		Cron:       cron,
 		Ativo:      true,
@@ -177,6 +179,7 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 
 	srv.Logger.Info("loja adicionada",
 		slog.String("busca_id", busca.ID),
+		slog.String("nome", shopName),
 		slog.Int64("shop_id", shopID),
 		slog.String("owner", user.UID),
 	)
@@ -185,11 +188,18 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 		Status: "ok",
 		ID:     busca.ID,
 		ShopID: shopID,
+		Nome:   shopName,
 	})
 }
 
 // parseShopInput extrai o shop ID a partir de URL ou valor numérico.
 func (srv *Server) parseShopInput(input string) (int64, error) {
+	id, _, err := srv.parseShopInputWithName(input)
+	return id, err
+}
+
+// parseShopInputWithName extrai o shop ID e tenta obter o nome da loja.
+func (srv *Server) parseShopInputWithName(input string) (int64, string, error) {
 	// Limpa query params e fragments
 	input = cleanURL(input)
 
@@ -197,42 +207,83 @@ func (srv *Server) parseShopInput(input string) (int64, error) {
 	if reShortLink.MatchString(input) {
 		resolved, err := srv.resolveShortLink(input)
 		if err != nil {
-			return 0, fmt.Errorf("não consegui resolver o link curto: %v", err)
+			return 0, "", fmt.Errorf("não consegui resolver o link curto: %v", err)
 		}
 		input = cleanURL(resolved)
-		// Continua o parsing com a URL resolvida
 	}
 
 	// 1. URL com /shop/{id}
 	if m := reShopIDURL.FindStringSubmatch(input); len(m) == 2 {
-		return strconv.ParseInt(m[1], 10, 64)
+		id, err := strconv.ParseInt(m[1], 10, 64)
+		if err != nil {
+			return 0, "", err
+		}
+		nome := srv.buscarNomeLoja(id)
+		return id, nome, nil
 	}
 
 	// 2. URL de produto com -i.SHOP_ID.ITEM_ID — extrai o shop_id
 	if m := reProductURL.FindStringSubmatch(input); len(m) == 2 {
-		return strconv.ParseInt(m[1], 10, 64)
+		id, err := strconv.ParseInt(m[1], 10, 64)
+		if err != nil {
+			return 0, "", err
+		}
+		nome := srv.buscarNomeLoja(id)
+		return id, nome, nil
 	}
 
 	// 3. URL com slug (https://shopee.com.br/{slug})
 	if m := reSlugURL.FindStringSubmatch(input); len(m) == 2 {
 		slug := m[1]
 		if pathsReservados[slug] {
-			return 0, fmt.Errorf("'%s' é um caminho reservado da Shopee, não um slug de loja", slug)
+			return 0, "", fmt.Errorf("'%s' é um caminho reservado da Shopee, não um slug de loja", slug)
 		}
-		// Tenta resolver o slug para shop_id via scrape da página
-		shopID, err := srv.resolveShopSlug(input)
+		id, nome, err := srv.resolveShopSlugWithName(input)
 		if err != nil {
-			return 0, fmt.Errorf("não consegui encontrar o ID da loja '%s'. Tente copiar a URL no formato shopee.com.br/shop/123456 ou use o ID numérico", slug)
+			return 0, "", fmt.Errorf("não consegui encontrar o ID da loja '%s'. Tente copiar a URL no formato shopee.com.br/shop/123456 ou use o ID numérico", slug)
 		}
-		return shopID, nil
+		return id, nome, nil
 	}
 
 	// 4. ID numérico puro
 	if reNumericID.MatchString(input) {
-		return strconv.ParseInt(input, 10, 64)
+		id, err := strconv.ParseInt(input, 10, 64)
+		if err != nil {
+			return 0, "", err
+		}
+		nome := srv.buscarNomeLoja(id)
+		return id, nome, nil
 	}
 
-	return 0, fmt.Errorf("formato não reconhecido. Aceitos: URL da Shopee (shopee.com.br/shop/ID, link curto s.shopee.com.br/..., ou link de produto) ou ID numérico (5-15 dígitos)")
+	return 0, "", fmt.Errorf("formato não reconhecido. Aceitos: URL da Shopee (shopee.com.br/shop/ID, link curto s.shopee.com.br/..., ou link de produto) ou ID numérico (5-15 dígitos)")
+}
+
+// buscarNomeLoja consulta a API pública da Shopee para obter o nome da loja via shopId.
+func (srv *Server) buscarNomeLoja(shopID int64) string {
+	client := &http.Client{Timeout: 5 * time.Second}
+	apiURL := fmt.Sprintf("https://shopee.com.br/api/v4/shop/get_shop_detail?shopid=%d", shopID)
+
+	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Data struct {
+			Name string `json:"name"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return ""
+	}
+	return result.Data.Name
 }
 
 // resolveShortLink segue redirects de um link curto da Shopee e retorna a URL final.
@@ -262,17 +313,17 @@ func (srv *Server) resolveShortLink(shortURL string) (string, error) {
 	return resp.Request.URL.String(), nil
 }
 
-// reShopIDInPage busca o shopid no body da página Shopee (presente em script tags / meta).
-var reShopIDInPage = regexp.MustCompile(`"shopid":(\d+)`)
-
-// resolveShopSlug resolve um username/slug de loja para o shopId numérico
-// usando a API pública v4 da Shopee (mesma que a SPA usa).
-// Endpoint: GET https://shopee.com.br/api/v4/shop/get_shop_detail?username={slug}
+// resolveShopSlug resolve um username/slug de loja para o shopId numérico.
 func (srv *Server) resolveShopSlug(shopURL string) (int64, error) {
-	// Extrai o slug da URL
+	id, _, err := srv.resolveShopSlugWithName(shopURL)
+	return id, err
+}
+
+// resolveShopSlugWithName resolve slug → (shopId, nome) via API pública v4 da Shopee.
+func (srv *Server) resolveShopSlugWithName(shopURL string) (int64, string, error) {
 	m := reSlugURL.FindStringSubmatch(cleanURL(shopURL))
 	if len(m) < 2 {
-		return 0, fmt.Errorf("slug não encontrado na URL")
+		return 0, "", fmt.Errorf("slug não encontrado na URL")
 	}
 	slug := m[1]
 
@@ -281,13 +332,13 @@ func (srv *Server) resolveShopSlug(shopURL string) (int64, error) {
 
 	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, fmt.Errorf("falha ao consultar Shopee: %v", err)
+		return 0, "", fmt.Errorf("falha ao consultar Shopee: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -301,16 +352,16 @@ func (srv *Server) resolveShopSlug(shopURL string) (int64, error) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return 0, fmt.Errorf("resposta inválida da Shopee: %v", err)
+		return 0, "", fmt.Errorf("resposta inválida da Shopee: %v", err)
 	}
 	if result.Error != 0 {
-		return 0, fmt.Errorf("Shopee retornou erro: %s", result.ErrorMsg)
+		return 0, "", fmt.Errorf("Shopee retornou erro: %s", result.ErrorMsg)
 	}
 	if result.Data.ShopID <= 0 {
-		return 0, fmt.Errorf("shopId não encontrado para '%s'", slug)
+		return 0, "", fmt.Errorf("shopId não encontrado para '%s'", slug)
 	}
 
-	return result.Data.ShopID, nil
+	return result.Data.ShopID, result.Data.Name, nil
 }
 
 // cleanURL remove query params e fragments de uma URL.

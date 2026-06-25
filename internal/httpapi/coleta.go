@@ -103,6 +103,9 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 		categoria = srv.Categoria
 	}
 	keyword := q.Get("keyword")
+	if keyword == "" && buscaID != "" {
+		keyword = buscaID // usa busca_id como keyword para lojas (identifica nos snapshots)
+	}
 	if keyword == "" {
 		keyword = srv.Keyword
 	}

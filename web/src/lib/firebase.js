@@ -42,6 +42,9 @@ export const usuario = criarUserStore();
 export async function login() {
 	if (!auth) return;
 	const provider = new GoogleAuthProvider();
+	// Força seleção de conta — mesmo que já tenha sessão Google,
+	// mostra a tela de escolher conta (permite trocar de usuário).
+	provider.setCustomParameters({ prompt: 'select_account' });
 	await signInWithPopup(auth, provider);
 }
 
