@@ -52,8 +52,70 @@ type cacheEntry struct {
 	em       time.Time
 }
 
-// Handler monta o mux com todas as rotas.
+// Handler monta o mux com todas as rotas, organizadas por domínio.
 func (srv *Server) Handler() http.Handler {
+	srv.inicializar()
+
+	mux := http.NewServeMux()
+
+	// ── Curadoria ─────────────────────────────────────────────────────────
+	mux.HandleFunc("GET /api/candidatos", srv.candidatos)
+	mux.HandleFunc("GET /api/comparar", srv.comparar)
+	mux.HandleFunc("POST /api/eventos", srv.eventos)
+	mux.HandleFunc("GET /api/buscas", srv.listarBuscas)
+	mux.HandleFunc("POST /api/buscas", srv.salvarBusca)
+	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
+
+	// ── Lojas (monitoramento) ─────────────────────────────────────────────
+	mux.HandleFunc("GET /api/lojas", srv.listarLojas)
+	mux.HandleFunc("POST /api/lojas", srv.adicionarLoja)
+	mux.HandleFunc("DELETE /api/lojas", srv.removerLoja)
+	mux.HandleFunc("GET /api/lojas/novidades", srv.novidades)
+	mux.HandleFunc("GET /api/lojas/evolucao", srv.evolucaoLojas)
+
+	// ── Alertas ───────────────────────────────────────────────────────────
+	mux.HandleFunc("GET /api/alertas", srv.alertasConfig)
+	mux.HandleFunc("POST /api/alertas/testar", srv.alertasTestar)
+	mux.HandleFunc("POST /api/alertas/configurar", srv.alertasAtualizar)
+
+	// ── Publicação ────────────────────────────────────────────────────────
+	mux.HandleFunc("POST /api/publicar", srv.publicar)
+	mux.HandleFunc("GET /api/publicacoes", srv.listarPublicacoes)
+	mux.HandleFunc("POST /api/publicacoes", srv.agendarPublicacao)
+	mux.HandleFunc("POST /api/publicar-pendentes", srv.publicarPendentes)
+
+	// ── Destinos e Templates ──────────────────────────────────────────────
+	mux.HandleFunc("GET /api/destinos", srv.listarDestinos)
+	mux.HandleFunc("POST /api/destinos", srv.salvarDestino)
+	mux.HandleFunc("DELETE /api/destinos", srv.deletarDestino)
+	mux.HandleFunc("GET /api/templates", srv.listarTemplates)
+	mux.HandleFunc("POST /api/templates", srv.salvarTemplate)
+	mux.HandleFunc("DELETE /api/templates", srv.deletarTemplate)
+	mux.HandleFunc("POST /api/templates/preview", srv.templatePreview)
+	mux.HandleFunc("GET /api/whatsapp/grupos", srv.whatsappGrupos)
+
+	// ── Coleta e Análise ──────────────────────────────────────────────────
+	mux.HandleFunc("POST /api/coletar", srv.coletar)
+	mux.HandleFunc("GET /api/estatisticas", srv.estatisticas)
+	mux.HandleFunc("GET /api/coletas", srv.coletas)
+	mux.HandleFunc("GET /api/conversoes", srv.conversoes)
+
+	// ── Admin ─────────────────────────────────────────────────────────────
+	mux.HandleFunc("GET /api/health", srv.health)
+	mux.HandleFunc("GET /api/admin/logs", srv.adminLogs)
+	mux.HandleFunc("POST /api/admin/log-level", srv.adminLogLevel)
+	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
+	mux.HandleFunc("GET /api/docs", srv.apiDocs)
+	mux.HandleFunc("GET /api/openapi.yaml", srv.openapiSpec)
+
+	// ── Frontend (SPA fallback) ───────────────────────────────────────────
+	mux.Handle("/", srv.spaHandler())
+
+	return cors(srv.logRequests(mux))
+}
+
+// inicializar preenche campos com defaults quando não injetados (dev/local).
+func (srv *Server) inicializar() {
 	if srv.CacheTTL == 0 {
 		srv.CacheTTL = 60 * time.Second
 	}
@@ -76,52 +138,6 @@ func (srv *Server) Handler() http.Handler {
 		srv.Logger = slog.Default()
 	}
 	srv.cache = map[string]*cacheEntry{}
-
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /api/health", srv.health)
-	mux.HandleFunc("GET /api/candidatos", srv.candidatos)
-	mux.HandleFunc("GET /api/comparar", srv.comparar)
-	mux.HandleFunc("POST /api/eventos", srv.eventos)
-	mux.HandleFunc("POST /api/publicar", srv.publicar)
-	mux.HandleFunc("POST /api/coletar", srv.coletar)
-	mux.HandleFunc("GET /api/estatisticas", srv.estatisticas)
-	mux.HandleFunc("GET /api/coletas", srv.coletas)
-	mux.HandleFunc("GET /api/conversoes", srv.conversoes)
-	mux.HandleFunc("GET /api/buscas", srv.listarBuscas)
-	mux.HandleFunc("POST /api/buscas", srv.salvarBusca)
-	mux.HandleFunc("GET /api/destinos", srv.listarDestinos)
-	mux.HandleFunc("POST /api/destinos", srv.salvarDestino)
-	mux.HandleFunc("DELETE /api/destinos", srv.deletarDestino)
-	mux.HandleFunc("GET /api/templates", srv.listarTemplates)
-	mux.HandleFunc("POST /api/templates", srv.salvarTemplate)
-	mux.HandleFunc("DELETE /api/templates", srv.deletarTemplate)
-	mux.HandleFunc("POST /api/templates/preview", srv.templatePreview)
-	mux.HandleFunc("GET /api/publicacoes", srv.listarPublicacoes)
-	mux.HandleFunc("POST /api/publicacoes", srv.agendarPublicacao)
-	mux.HandleFunc("POST /api/publicar-pendentes", srv.publicarPendentes)
-	mux.HandleFunc("GET /api/lojas/novidades", srv.novidades)
-	mux.HandleFunc("GET /api/lojas/evolucao", srv.evolucaoLojas)
-	mux.HandleFunc("GET /api/lojas", srv.listarLojas)
-	mux.HandleFunc("POST /api/lojas", srv.adicionarLoja)
-	mux.HandleFunc("DELETE /api/lojas", srv.removerLoja)
-	mux.HandleFunc("GET /api/alertas", srv.alertasConfig)
-	mux.HandleFunc("POST /api/alertas/testar", srv.alertasTestar)
-	mux.HandleFunc("POST /api/alertas/configurar", srv.alertasAtualizar)
-	mux.HandleFunc("GET /api/admin/logs", srv.adminLogs)
-	mux.HandleFunc("POST /api/admin/log-level", srv.adminLogLevel)
-	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
-	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
-	mux.HandleFunc("GET /api/whatsapp/grupos", srv.whatsappGrupos)
-	mux.HandleFunc("GET /api/docs", srv.apiDocs)
-	mux.HandleFunc("GET /api/openapi.yaml", srv.openapiSpec)
-
-	// Serve o frontend estático (SPA). Qualquer rota que não seja /api/*
-	// devolve o arquivo correspondente ou o fallback (200.html) para o
-	// SvelteKit resolver no client-side.
-	mux.Handle("/", srv.spaHandler())
-
-	return cors(srv.logRequests(mux))
 }
 
 // spaHandler serve os arquivos estáticos do frontend (web/build) com fallback
