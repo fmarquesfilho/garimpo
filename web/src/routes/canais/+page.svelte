@@ -280,10 +280,10 @@
 	.lista { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-destino {
 		display: flex; align-items: center; justify-content: space-between;
-		padding: var(--r3) var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); background: white;
+		padding: var(--r3) var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); background: var(--branco);
 	}
 	.card-destino.editando {
-		border-color: var(--ouro); background: #fffbeb;
+		border-color: var(--ouro); background: var(--branco)beb;
 	}
 	.card-destino .info { display: flex; flex-direction: column; gap: 2px; }
 	.card-destino strong { font-size: 0.92rem; }
@@ -296,8 +296,8 @@
 		width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
 		cursor: pointer; color: var(--tinta-suave); font-size: 1rem;
 	}
-	.btn-editar:hover { color: var(--ouro); border-color: var(--ouro); background: #fffbeb; }
-	.btn-remover:hover { color: var(--erro-texto); border-color: #fca5a5; background: var(--erro-fundo); }
+	.btn-editar:hover { color: var(--ouro); border-color: var(--ouro); background: var(--branco)beb; }
+	.btn-remover:hover { color: var(--erro-texto); border-color: var(--erro-borda); background: var(--erro-fundo); }
 
 	.edit-form { width: 100%; display: flex; flex-direction: column; gap: var(--r3); }
 	.campo-edit { display: flex; flex-direction: column; gap: 4px; }

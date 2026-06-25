@@ -318,7 +318,7 @@
 	.seta { display: inline-block; transition: transform 0.15s ease; font-size: 0.8rem; }
 	.seta.girada { transform: rotate(90deg); }
 	.badge-contagem {
-		font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e;
+		font-size: 0.7rem; background: var(--ouro-fundo); color: var(--ouro-escuro);
 		padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700;
 	}
 	.btn-nova {
@@ -347,7 +347,7 @@
 	.form-acoes { display: flex; justify-content: flex-end; }
 	.salvar {
 		border: 1px solid var(--linha); background: var(--ouro-fundo);
-		color: #7a5a1e; font-weight: 600; font-size: 0.85rem;
+		color: var(--ouro-escuro); font-weight: 600; font-size: 0.85rem;
 		padding: 9px 18px; border-radius: var(--raio-sm); cursor: pointer;
 	}
 	.salvar:disabled { opacity: 0.5; cursor: not-allowed; }

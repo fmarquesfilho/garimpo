@@ -199,7 +199,7 @@
 		display: flex; align-items: center; gap: 6px;
 	}
 	.abas-pub button.ativa { color: var(--tinta); border-bottom-color: var(--ouro); }
-	.badge-n { font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e; padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700; }
+	.badge-n { font-size: 0.7rem; background: var(--ouro-fundo); color: var(--ouro-escuro); padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700; }
 
 	.filtros-pub {
 		display: flex; gap: 2px; margin-bottom: var(--r5);
@@ -221,11 +221,11 @@
 	.lista { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-pub {
 		padding: var(--r3) var(--r4); border: 1px solid var(--linha);
-		border-radius: var(--raio-sm); background: white; border-left: 3px solid var(--linha);
+		border-radius: var(--raio-sm); background: var(--branco); border-left: 3px solid var(--linha);
 	}
 	.card-pub.enviada { border-left-color: var(--sucesso-texto); }
 	.card-pub.agendada { border-left-color: var(--ouro); }
-	.card-pub.erro { border-left-color: #ef4444; }
+	.card-pub.erro { border-left-color: var(--erro-texto); }
 
 	.pub-principal { display: flex; align-items: center; gap: var(--r3); flex-wrap: wrap; }
 	.status-badge {

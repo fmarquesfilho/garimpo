@@ -150,13 +150,13 @@
 	/* Stats */
 	.stats-row { display: flex; gap: var(--r3); margin-bottom: var(--r5); flex-wrap: wrap; }
 	.stat-card {
-		border: 1px solid var(--linha); background: white; border-radius: var(--raio-sm);
+		border: 1px solid var(--linha); background: var(--branco); border-radius: var(--raio-sm);
 		padding: var(--r3) var(--r4); text-align: center; cursor: pointer;
 		display: flex; flex-direction: column; gap: 2px; min-width: 70px;
 	}
 	.stat-card.ativo { border-color: var(--ouro); background: var(--ouro-fundo); }
-	.stat-card.erro-card.ativo { border-color: #fca5a5; background: var(--erro-fundo); }
-	.stat-card.warn-card.ativo { border-color: #fde047; background: var(--aviso-fundo); }
+	.stat-card.erro-card.ativo { border-color: var(--erro-borda); background: var(--erro-fundo); }
+	.stat-card.warn-card.ativo { border-color: var(--aviso-borda); background: var(--aviso-fundo); }
 	.stat-card.info-card.ativo { border-color: var(--sucesso-borda); background: var(--sucesso-fundo); }
 	.stat-num { font-size: 1.3rem; font-weight: 700; font-family: var(--mono); }
 	.stat-label { font-size: 0.7rem; color: var(--tinta-suave); text-transform: uppercase; }

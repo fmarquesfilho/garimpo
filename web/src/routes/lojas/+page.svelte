@@ -449,7 +449,7 @@
 		border: 1px solid var(--linha);
 		border-radius: 8px;
 		font-size: 0.9rem;
-		background: white;
+		background: var(--branco);
 	}
 	.input-loja:focus {
 		outline: none;
@@ -511,7 +511,7 @@
 	}
 	.abas button.ativa { color: var(--tinta); border-bottom-color: var(--ouro); }
 	.badge-n {
-		font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e;
+		font-size: 0.7rem; background: var(--ouro-fundo); color: var(--ouro-escuro);
 		padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700;
 	}
 	.badge-n.alerta { background: var(--erro-fundo); color: var(--erro-texto); }
@@ -520,7 +520,7 @@
 	.grade-produtos { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-produto-loja {
 		display: flex; gap: var(--r3); padding: var(--r3) var(--r4);
-		border: 1px solid var(--linha); border-radius: var(--raio-sm); background: white;
+		border: 1px solid var(--linha); border-radius: var(--raio-sm); background: var(--branco);
 		align-items: center;
 	}
 	.prod-thumb { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
@@ -622,7 +622,7 @@
 		border-top: none;
 		border-radius: 0 0 10px 10px;
 		padding: var(--r4);
-		background: white;
+		background: var(--branco);
 	}
 	.campo-alerta {
 		margin-bottom: var(--r3);
@@ -674,7 +674,7 @@
 	}
 	.btn-salvar { background: var(--ouro); color: white; border-color: var(--ouro); }
 	.btn-salvar:hover:not(:disabled) { opacity: 0.9; }
-	.btn-testar { background: white; }
+	.btn-testar { background: var(--branco); }
 	.btn-testar:hover:not(:disabled) { border-color: var(--ouro); }
 	.btn-salvar:disabled, .btn-testar:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

@@ -419,13 +419,13 @@
 		color: white; font-weight: 600; font-size: 0.85rem;
 		border-radius: var(--raio-sm); cursor: pointer; white-space: nowrap;
 	}
-	.btn-colar:hover:not(:disabled) { background: #a3782f; }
+	.btn-colar:hover:not(:disabled) { background: var(--ouro-escuro); }
 	.btn-colar:disabled { opacity: 0.5; cursor: not-allowed; }
 
 	/* Produto editável */
 	.nome-edit {
 		font-size: 1rem; font-weight: 700;
-		border: 1px solid var(--linha); background: white;
+		border: 1px solid var(--linha); background: var(--branco);
 		border-radius: 8px;
 		width: 100%; padding: 8px 12px;
 	}
@@ -460,7 +460,7 @@
 		font-weight: 700; font-size: 0.95rem; border: none; border-radius: var(--raio-sm);
 		cursor: pointer;
 	}
-	.btn-enviar:hover { background: #8f4c62; }
+	.btn-enviar:hover { background: var(--rosa-escuro); }
 	.btn-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
 
 	.resultado { padding: var(--r3) var(--r4); border-radius: var(--raio-sm); font-size: 0.88rem; }
@@ -474,13 +474,13 @@
 	.preview-col h2 { font-size: 1rem; margin: 0 0 var(--r3); color: var(--tinta-suave); }
 	.preview-card {
 		border: 1px solid var(--linha); border-radius: var(--raio); overflow: hidden;
-		background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+		background: var(--branco); box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 	}
 	.preview-img { width: 100%; max-height: 240px; object-fit: cover; }
 	.preview-corpo { padding: var(--r4); font-size: 0.92rem; line-height: 1.5; }
 	.preview-botao { padding: 0 var(--r4) var(--r4); }
 	.btn-fake {
-		display: inline-block; padding: 8px 18px; background: #0088cc;
+		display: inline-block; padding: 8px 18px; background: var(--ouro);
 		color: white; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
 	}
 	.preview-nota { font-size: 0.75rem; color: var(--tinta-suave); margin-top: var(--r2); font-style: italic; }

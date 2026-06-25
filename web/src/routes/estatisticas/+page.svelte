@@ -256,7 +256,7 @@
 		border-radius: var(--raio);
 		padding: var(--r4);
 		margin-bottom: var(--r4);
-		background: white;
+		background: var(--branco);
 	}
 	.loja-evo-header {
 		display: flex; justify-content: space-between; align-items: center;

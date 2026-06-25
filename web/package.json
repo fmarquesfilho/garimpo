@@ -7,6 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
+    "lint:css": "stylelint 'src/routes/**/*.svelte' --custom-syntax=postcss-html",
     "test": "playwright test",
     "test:unit": "vitest run",
     "test:ui": "playwright test --ui"
@@ -19,6 +20,9 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/svelte": "^5.4.2",
     "jsdom": "^29.1.1",
+    "postcss-html": "^1.8.1",
+    "stylelint": "^17.14.0",
+    "stylelint-config-standard": "^40.0.0",
     "svelte": "^5.56.4",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"

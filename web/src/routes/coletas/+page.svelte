@@ -206,7 +206,7 @@
 	.badge-cron {
 		font-size: 0.7rem; font-family: var(--mono);
 		padding: 2px 8px; border-radius: var(--raio-full);
-		background: var(--ouro-fundo); color: #7a5a1e;
+		background: var(--ouro-fundo); color: var(--ouro-escuro);
 	}
 	.badge-manual {
 		font-size: 0.7rem; padding: 2px 8px; border-radius: var(--raio-full);

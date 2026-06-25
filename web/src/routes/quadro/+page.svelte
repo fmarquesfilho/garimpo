@@ -139,7 +139,7 @@
 		border: 1px solid var(--linha);
 	}
 	.contagem.estourou {
-		color: #fff;
+		color: var(--branco);
 		background: var(--alerta);
 		border-color: var(--alerta);
 	}
@@ -221,10 +221,10 @@
 	.avancar {
 		margin-left: auto;
 		background: var(--tinta);
-		color: #fff;
+		color: var(--branco);
 		border-color: var(--tinta);
 	}
 	.avancar:hover {
-		background: #43304a;
+		background: var(--tinta);
 	}
 </style>

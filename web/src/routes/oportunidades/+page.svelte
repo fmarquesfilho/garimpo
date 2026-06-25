@@ -258,7 +258,7 @@
 		cursor: pointer;
 	}
 	.filtro-periodo button.ativo {
-		background: white;
+		background: var(--branco);
 		color: var(--tinta);
 		box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 	}
@@ -281,7 +281,7 @@
 	}
 	.resumo-item.queda { background: var(--sucesso-fundo); color: var(--sucesso-texto); }
 	.resumo-item.alta { background: var(--erro-fundo); color: var(--erro-texto); }
-	.resumo-item.novo { background: var(--ouro-fundo); color: #7a5a1e; }
+	.resumo-item.novo { background: var(--ouro-fundo); color: var(--ouro-escuro); }
 	.resumo-numero { font-size: 1.3rem; font-weight: 700; }
 
 	/* Seções */
@@ -296,7 +296,7 @@
 		border: 1px solid var(--linha);
 		border-radius: var(--raio);
 		padding: var(--r4);
-		background: white;
+		background: var(--branco);
 		transition: border-color 0.15s;
 	}
 	.card-oportunidade:hover { border-color: var(--ouro-claro); }
@@ -324,7 +324,7 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		background: var(--ouro-fundo);
-		color: #7a5a1e;
+		color: var(--ouro-escuro);
 	}
 	.loja-tag {
 		font-size: 0.72rem;
@@ -367,7 +367,7 @@
 		padding: 6px 14px;
 		border: 1px solid var(--ouro-claro);
 		background: var(--ouro-fundo);
-		color: #7a5a1e;
+		color: var(--ouro-escuro);
 		border-radius: var(--raio-sm);
 		font-size: 0.82rem;
 		font-weight: 600;

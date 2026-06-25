@@ -386,7 +386,7 @@
 		box-shadow: 0 4px 12px rgba(184, 142, 58, 0.3);
 	}
 	.btn-entrar:hover {
-		background: #a3782f;
+		background: var(--ouro-escuro);
 		box-shadow: 0 6px 20px rgba(184, 142, 58, 0.4);
 	}
 

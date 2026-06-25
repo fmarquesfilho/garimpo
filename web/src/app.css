@@ -13,10 +13,13 @@
 	--ouro: #b8893a; /* acento primário: valor / teor */
 	--ouro-claro: #e8d2a0; /* preenchimento dourado claro */
 	--ouro-fundo: #f3e8d2; /* chip dourado bem claro */
+	--ouro-escuro: #7a5a1e; /* texto sobre fundo dourado */
 	--rosa: #a35c72; /* marca o nicho (beleza) */
+	--rosa-escuro: #8f4c62; /* hover rosa */
 	--ardosia: #5c6b6b; /* marca a diversificada */
 	--linha: #e4dad6; /* hairlines / bordas */
 	--alerta: #9c4a3c; /* erros, em tom terroso */
+	--branco: #ffffff;
 
 	/* semânticas — feedback */
 	--erro-fundo: #fef2f2;
