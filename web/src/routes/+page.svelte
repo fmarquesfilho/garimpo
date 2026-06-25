@@ -291,14 +291,14 @@
 	.empilhado { display: flex; flex-direction: column; gap: var(--r4); }
 	.tit-col { font-size: 1.3rem; margin-bottom: var(--r4); padding-bottom: var(--r2); border-bottom: 2px solid; }
 	.tit-col.rosa { color: var(--rosa); }
-	.tit-col.ardosia { color: var(--ardosia); }
+	.tit-col.ardosia { color: var(--tinta-suave); }
 
 	.aviso { color: var(--tinta-suave); font-style: italic; }
 	.vazio, .msg-erro {
 		background: var(--nevoa); border: 1px solid var(--linha);
 		border-radius: var(--raio); padding: var(--r8); text-align: center;
 	}
-	.msg-erro { border-color: color-mix(in srgb, var(--alerta) 30%, var(--linha)); }
+	.msg-erro { border-color: color-mix(in srgb, var(--erro-texto) 30%, var(--linha)); }
 	.msg-erro p { margin: var(--r2) 0; }
 	.dica { color: var(--tinta-suave); font-size: 0.85rem; }
 	code { background: var(--ouro-fundo); padding: 2px 6px; border-radius: 6px; }

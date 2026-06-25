@@ -52,6 +52,6 @@
 		background: var(--rosa);
 	}
 	.ativo.div {
-		background: var(--ardosia);
+		background: var(--tinta-suave);
 	}
 </style>

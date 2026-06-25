@@ -211,6 +211,6 @@
 		border-radius: 6px;
 	}
 	.limpar:hover {
-		color: var(--alerta);
+		color: var(--erro-texto);
 	}
 </style>

@@ -122,12 +122,12 @@
 		border-radius: 999px;
 	}
 	.selo.alerta {
-		background: color-mix(in srgb, var(--alerta) 14%, var(--porcelana));
-		color: var(--alerta);
+		background: color-mix(in srgb, var(--erro-texto) 14%, var(--porcelana));
+		color: var(--erro-texto);
 	}
 	.selo.explor {
-		background: color-mix(in srgb, var(--ardosia) 14%, var(--porcelana));
-		color: var(--ardosia);
+		background: color-mix(in srgb, var(--tinta-suave) 14%, var(--porcelana));
+		color: var(--tinta-suave);
 	}
 	.cat {
 		font-size: 0.72rem;

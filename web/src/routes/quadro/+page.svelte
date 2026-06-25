@@ -93,8 +93,8 @@
 		border-radius: var(--raio-full);
 	}
 	.limpar:hover {
-		border-color: var(--alerta);
-		color: var(--alerta);
+		border-color: var(--erro-texto);
+		color: var(--erro-texto);
 	}
 	.quadro {
 		display: grid;
@@ -140,8 +140,8 @@
 	}
 	.contagem.estourou {
 		color: var(--branco);
-		background: var(--alerta);
-		border-color: var(--alerta);
+		background: var(--erro-texto);
+		border-color: var(--erro-texto);
 	}
 	.vazio-col {
 		font-size: 0.8rem;
@@ -184,8 +184,8 @@
 		color: var(--rosa);
 	}
 	.tag.diversificada {
-		background: color-mix(in srgb, var(--ardosia) 18%, white);
-		color: var(--ardosia);
+		background: color-mix(in srgb, var(--tinta-suave) 18%, white);
+		color: var(--tinta-suave);
 	}
 	.mini h3 {
 		font-size: 0.98rem;

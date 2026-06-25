@@ -74,5 +74,5 @@
 		border: none; background: transparent; color: var(--tinta-suave);
 		font-size: 0.72rem; cursor: pointer; padding: 2px 4px;
 	}
-	.x:hover { color: var(--alerta); }
+	.x:hover { color: var(--erro-texto); }
 </style>

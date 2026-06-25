@@ -14,14 +14,14 @@
 		comissao: 'var(--ouro)',
 		valor_esperado: 'var(--ouro-claro)',
 		avaliacao: 'var(--rosa)',
-		demanda: 'var(--ardosia)'
+		demanda: 'var(--tinta-suave)'
 	};
 
 	// componentes aditivos (exclui o multiplicador de nicho)
 	const partes = $derived(
 		Object.entries(componentes)
 			.filter(([k]) => k !== 'multiplicador_nicho')
-			.map(([k, v]) => ({ chave: k, rotulo: rotulos[k] ?? k, valor: Math.max(0, v), cor: cores[k] ?? 'var(--ardosia)' }))
+			.map(([k, v]) => ({ chave: k, rotulo: rotulos[k] ?? k, valor: Math.max(0, v), cor: cores[k] ?? 'var(--tinta-suave)' }))
 	);
 	const somaPartes = $derived(partes.reduce((s, p) => s + p.valor, 0) || 1);
 	const mult = $derived(componentes.multiplicador_nicho);

@@ -460,7 +460,7 @@
 		font-weight: 700; font-size: 0.95rem; border: none; border-radius: var(--raio-sm);
 		cursor: pointer;
 	}
-	.btn-enviar:hover { background: var(--rosa-escuro); }
+	.btn-enviar:hover { background: var(--rosa-hover); }
 	.btn-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
 
 	.resultado { padding: var(--r3) var(--r4); border-radius: var(--raio-sm); font-size: 0.88rem; }
