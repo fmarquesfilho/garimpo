@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/store"
@@ -76,6 +77,12 @@ var reSlugURL = regexp.MustCompile(`^https?://shopee\.com\.br/([a-zA-Z0-9._-]+)`
 
 // reNumericID casa com IDs numéricos puros (5-15 dígitos)
 var reNumericID = regexp.MustCompile(`^\d{5,15}$`)
+
+// reShortLink casa com links curtos da Shopee (s.shopee.com.br/HASH)
+var reShortLink = regexp.MustCompile(`^https?://s\.shopee\.com\.br/`)
+
+// reProductURL casa com URLs de produto que contêm shop_id: /Nome-i.SHOP_ID.ITEM_ID
+var reProductURL = regexp.MustCompile(`-i\.(\d+)\.\d+`)
 
 // pathsReservados são segmentos de URL Shopee que não são slugs de loja
 var pathsReservados = map[string]bool{
@@ -186,27 +193,68 @@ func (srv *Server) parseShopInput(input string) (int64, error) {
 	// Limpa query params e fragments
 	input = cleanURL(input)
 
+	// 0. Short link (s.shopee.com.br/HASH) — resolve redirect primeiro
+	if reShortLink.MatchString(input) {
+		resolved, err := srv.resolveShortLink(input)
+		if err != nil {
+			return 0, fmt.Errorf("não consegui resolver o link curto: %v", err)
+		}
+		input = cleanURL(resolved)
+		// Continua o parsing com a URL resolvida
+	}
+
 	// 1. URL com /shop/{id}
 	if m := reShopIDURL.FindStringSubmatch(input); len(m) == 2 {
 		return strconv.ParseInt(m[1], 10, 64)
 	}
 
-	// 2. URL com slug (https://shopee.com.br/{slug})
+	// 2. URL de produto com -i.SHOP_ID.ITEM_ID — extrai o shop_id
+	if m := reProductURL.FindStringSubmatch(input); len(m) == 2 {
+		return strconv.ParseInt(m[1], 10, 64)
+	}
+
+	// 3. URL com slug (https://shopee.com.br/{slug})
 	if m := reSlugURL.FindStringSubmatch(input); len(m) == 2 {
 		slug := m[1]
 		if pathsReservados[slug] {
 			return 0, fmt.Errorf("'%s' é um caminho reservado da Shopee, não um slug de loja", slug)
 		}
-		// Por enquanto não temos API de resolução de slug → erro explicativo
 		return 0, fmt.Errorf("URLs com slug de loja ainda não são suportadas. Use o ID numérico (encontrado na URL da loja após /shop/) ou cole a URL no formato shopee.com.br/shop/123456")
 	}
 
-	// 3. ID numérico puro
+	// 4. ID numérico puro
 	if reNumericID.MatchString(input) {
 		return strconv.ParseInt(input, 10, 64)
 	}
 
-	return 0, fmt.Errorf("formato não reconhecido. Aceitos: URL (shopee.com.br/shop/ID) ou ID numérico (5-15 dígitos)")
+	return 0, fmt.Errorf("formato não reconhecido. Aceitos: URL da Shopee (shopee.com.br/shop/ID, link curto s.shopee.com.br/..., ou link de produto) ou ID numérico (5-15 dígitos)")
+}
+
+// resolveShortLink segue redirects de um link curto da Shopee e retorna a URL final.
+func (srv *Server) resolveShortLink(shortURL string) (string, error) {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) > 5 {
+				return fmt.Errorf("muitos redirects")
+			}
+			return nil
+		},
+	}
+
+	resp, err := client.Head(shortURL)
+	if err != nil {
+		// Fallback: tenta GET se HEAD falhar
+		resp, err = client.Get(shortURL)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+	} else {
+		defer resp.Body.Close()
+	}
+
+	return resp.Request.URL.String(), nil
 }
 
 // cleanURL remove query params e fragments de uma URL.

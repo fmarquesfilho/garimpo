@@ -53,6 +53,29 @@ func TestParseShopInputShopURL(t *testing.T) {
 	}
 }
 
+func TestParseShopInputProductURL(t *testing.T) {
+	srv := &Server{}
+	// URLs de produto no formato -i.SHOP_ID.ITEM_ID extraem o shop_id
+	casos := []struct {
+		input    string
+		expected int64
+	}{
+		{"https://shopee.com.br/Sérum-Vitamina-C-30ml-i.123456.789012", 123456},
+		{"https://shopee.com.br/Perfume-100ml-i.99999.88888?sp_atk=abc", 99999},
+		{"https://shopee.com.br/Kit-Skincare-Coreano-i.555555.666666", 555555},
+	}
+	for _, c := range casos {
+		id, err := srv.parseShopInput(c.input)
+		if err != nil {
+			t.Errorf("input=%q: erro inesperado: %v", c.input, err)
+			continue
+		}
+		if id != c.expected {
+			t.Errorf("input=%q: esperava %d, veio %d", c.input, c.expected, id)
+		}
+	}
+}
+
 func TestParseShopInputSlugURLRetornsError(t *testing.T) {
 	srv := &Server{}
 	// URLs com slug devem retornar erro (resolução não implementada)
