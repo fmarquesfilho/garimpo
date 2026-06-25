@@ -3,3 +3,4 @@
 # Firebase cache
 .firebase/
 *.cache*.out
+cloudflare-worker/.wrangler/
