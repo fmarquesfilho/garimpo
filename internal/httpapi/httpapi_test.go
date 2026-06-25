@@ -68,6 +68,13 @@ func (s *spyStore) Conversoes(_ context.Context, _ int) ([]store.ConversaoResumo
 	return nil, nil
 }
 func (s *spyStore) SalvarPublicacao(_ context.Context, p store.Publicacao) error {
+	// Upsert: se já existe, atualiza; senão, appenda.
+	for i, existing := range s.publicacoes {
+		if existing.ID == p.ID {
+			s.publicacoes[i] = p
+			return nil
+		}
+	}
 	s.publicacoes = append(s.publicacoes, p)
 	return nil
 }

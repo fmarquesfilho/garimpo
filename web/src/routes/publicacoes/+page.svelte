@@ -36,6 +36,37 @@
 
 	const statusIcon = { agendada: '⏱', enviada: '✓', erro: '✕' };
 	const statusClass = { agendada: 'agendada', enviada: 'enviada', erro: 'erro' };
+
+	/** Formata ISO 8601 para dd/mm/yyyy HH:mm no fuso local. */
+	function formatarData(iso) {
+		if (!iso) return '';
+		try {
+			const d = new Date(iso);
+			if (isNaN(d)) return iso;
+			return d.toLocaleString('pt-BR', {
+				day: '2-digit', month: '2-digit', year: 'numeric',
+				hour: '2-digit', minute: '2-digit'
+			});
+		} catch {
+			return iso;
+		}
+	}
+
+	/** Extrai o canal do sub_id (ex: whatsapp_nicho_20260625 → WhatsApp). */
+	function canalDoDetalhe(detalhe) {
+		if (!detalhe) return '';
+		if (detalhe.startsWith('whatsapp')) return '💬 WhatsApp';
+		if (detalhe.startsWith('telegram')) return '✈️ Telegram';
+		return '';
+	}
+
+	/** Extrai a estratégia do sub_id. */
+	function estrategiaDoDetalhe(detalhe) {
+		if (!detalhe) return '';
+		const parts = detalhe.split('_');
+		if (parts.length >= 2) return parts[1];
+		return '';
+	}
 </script>
 
 <svelte:head>
@@ -82,27 +113,35 @@
 					<div class="card-pub {statusClass[p.status] ?? ''}">
 						<div class="pub-principal">
 							<span class="status-badge">{statusIcon[p.status] ?? '?'} {p.status}</span>
-							<strong class="pub-nome">{p.nome}</strong>
-							<span class="pub-preco">R$ {p.preco?.toFixed(2)}</span>
+							<strong class="pub-nome">{p.nome || '(sem título)'}</strong>
+							{#if p.preco > 0}
+								<span class="pub-preco">R$ {p.preco?.toFixed(2)}</span>
+							{/if}
 						</div>
 						<div class="pub-meta">
 							{#if p.destino_id}
 								<span>📡 {p.destino_id}</span>
 							{/if}
-							{#if p.template_id}
-								<span>🎨 {p.template_id}</span>
+							{#if p.estrategia}
+								<span>🎯 {p.estrategia}</span>
 							{/if}
 							{#if p.agendada_em}
-								<span>⏱ {p.agendada_em}</span>
+								<span>⏱ Agendada: {formatarData(p.agendada_em)}</span>
 							{/if}
 							{#if p.enviada_em}
-								<span>✓ {p.enviada_em}</span>
+								<span>✓ Enviada: {formatarData(p.enviada_em)}</span>
+							{/if}
+							{#if !p.enviada_em && p.criada_em}
+								<span>📅 Criada: {formatarData(p.criada_em)}</span>
 							{/if}
 						</div>
 						{#if p.detalhe && p.status === 'erro'}
 							<p class="pub-detalhe erro-txt">{p.detalhe}</p>
-						{:else if p.detalhe}
-							<p class="pub-detalhe"><code>{p.detalhe}</code></p>
+						{:else if p.detalhe && p.status === 'enviada'}
+							{@const canal = canalDoDetalhe(p.detalhe)}
+							{#if canal}
+								<p class="pub-detalhe">{canal} · {estrategiaDoDetalhe(p.detalhe)}</p>
+							{/if}
 						{/if}
 					</div>
 				{/each}
@@ -133,7 +172,7 @@
 									<td class="nome-col">{c.nome}</td>
 									<td class="num">{c.publicacoes}</td>
 									<td class="num">R$ {c.comissao_estimada?.toFixed(2) ?? '—'}</td>
-									<td class="data">{c.publicado_em}</td>
+									<td class="data">{formatarData(c.publicado_em)}</td>
 								</tr>
 							{/each}
 						</tbody>

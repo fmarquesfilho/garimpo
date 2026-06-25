@@ -167,13 +167,18 @@ func (srv *Server) publicarPendentes(w http.ResponseWriter, r *http.Request) {
 
 		res, err := srv.Publicador.Publicar(r.Context(), oferta)
 		if err != nil {
-			_ = srv.Eventos.AtualizarPublicacao(r.Context(), p.ID, "erro", err.Error())
+			p.Status = "erro"
+			p.Detalhe = err.Error()
+			_ = srv.Eventos.SalvarPublicacao(r.Context(), p)
 			erros++
 			srv.Logger.Error("publicar-pendentes falhou",
 				slog.String("id", p.ID), slog.String("erro", err.Error()))
 		} else {
 			subID := publish.SubID(res.Canal, p.Estrategia, agora)
-			_ = srv.Eventos.AtualizarPublicacao(r.Context(), p.ID, "enviada", subID)
+			p.Status = "enviada"
+			p.Detalhe = subID
+			p.EnviadaEm = agora.Format(time.RFC3339)
+			_ = srv.Eventos.SalvarPublicacao(r.Context(), p)
 			enviadas++
 
 			// Registra evento de publicação
