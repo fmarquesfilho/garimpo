@@ -388,7 +388,7 @@
 	.layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--r8); }
 	@media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
 
-	.config { display: flex; flex-direction: column; gap: var(--r5); }
+	.config { display: flex; flex-direction: column; gap: var(--r6); }
 
 	.card-produto {
 		display: flex; gap: var(--r4); padding: var(--r4);

@@ -67,6 +67,7 @@ func (srv *Server) buildSource(q url.Values) (source.ProductSource, string) {
 		sh.ProductCatID = cat
 		sh.CategoryLabel = categoria
 		sh.Keyword = keyword
+		sh.MaxPages = 2 // 100 produtos por busca (2 × 50)
 		chave := "shopee|" + strconv.Itoa(cat) + "|" + categoria + "|" + keyword
 		return sh, chave
 
@@ -146,5 +147,5 @@ func topN(q url.Values) int {
 			return n
 		}
 	}
-	return 10
+	return 20
 }

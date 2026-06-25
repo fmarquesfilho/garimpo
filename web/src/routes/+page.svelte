@@ -23,7 +23,17 @@
 	let pares = $state(null);
 	let fonteAtiva = $state('');
 
-	onMount(() => buscasSalvas.sincronizarDoServidor());
+	onMount(async () => {
+		await buscasSalvas.sincronizarDoServidor();
+		// Auto-aplica a primeira busca salva se nenhuma keyword está definida
+		if (!f.busca.trim()) {
+			const salvas = get(buscasSalvas);
+			const ativa = salvas.find(b => b.ativo !== false);
+			if (ativa) {
+				aplicarBusca(ativa);
+			}
+		}
+	});
 
 	// ── Nova busca ────────────────────────────────────────────────────────────
 	let mostrarFormBusca = $state(false);
