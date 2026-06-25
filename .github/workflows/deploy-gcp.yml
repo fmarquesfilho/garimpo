@@ -66,6 +66,9 @@ jobs:
       - name: npm run build
         run: npm run build
 
+      - name: Lint CSS (design tokens)
+        run: npm run lint:css
+
       - name: Testes unitários (Vitest — componentes Svelte)
         run: npx vitest run
 
