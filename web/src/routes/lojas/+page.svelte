@@ -421,20 +421,20 @@
 	h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--tinta); }
 	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r6); }
 
-	.aviso, .vazio { background: var(--porcelana); padding: var(--r4); border-radius: 10px; color: var(--tinta-suave); }
+	.aviso, .vazio { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
 	.vazio a { color: var(--ouro); text-decoration: underline; }
 	.dica { font-size: 0.85rem; margin-top: 4px; }
 	.vazio-tab { color: var(--tinta-suave); font-size: 0.9rem; font-style: italic; }
-	.msg-erro { background: #fef2f2; color: #b91c1c; padding: var(--r3) var(--r4); border-radius: 8px; margin-bottom: var(--r4); }
-	.msg-erro-inline { color: #b91c1c; font-size: 0.85rem; margin-top: 6px; }
-	.msg-sucesso { color: #16a34a; font-size: 0.85rem; margin-top: 6px; }
+	.msg-erro { background: var(--erro-fundo); color: var(--erro-texto); padding: var(--r3) var(--r4); border-radius: 8px; margin-bottom: var(--r4); }
+	.msg-erro-inline { color: var(--erro-texto); font-size: 0.85rem; margin-top: 6px; }
+	.msg-sucesso { color: var(--sucesso-texto); font-size: 0.85rem; margin-top: 6px; }
 	.loading { color: var(--tinta-suave); font-style: italic; }
 
 	/* Formulário de adicionar loja */
 	.form-loja {
 		background: var(--nevoa);
 		border: 1px solid var(--linha);
-		border-radius: 12px;
+		border-radius: var(--raio);
 		padding: var(--r4);
 		margin-bottom: var(--r5);
 	}
@@ -475,7 +475,7 @@
 	.loja-card-wrapper { position: relative; }
 	.loja-card {
 		border: 1px solid var(--linha); background: var(--nevoa);
-		border-radius: 10px; padding: var(--r3) var(--r4);
+		border-radius: var(--raio-sm); padding: var(--r3) var(--r4);
 		padding-right: 32px;
 		cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px;
 	}
@@ -499,7 +499,7 @@
 		align-items: center;
 		justify-content: center;
 	}
-	.btn-remover:hover { background: #fef2f2; color: #b91c1c; }
+	.btn-remover:hover { background: var(--erro-fundo); color: var(--erro-texto); }
 
 	/* Abas */
 	.abas { display: flex; gap: 2px; margin-bottom: var(--r5); border-bottom: 2px solid var(--linha); }
@@ -512,15 +512,15 @@
 	.abas button.ativa { color: var(--tinta); border-bottom-color: var(--ouro); }
 	.badge-n {
 		font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e;
-		padding: 1px 6px; border-radius: 999px; font-weight: 700;
+		padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700;
 	}
-	.badge-n.alerta { background: #fef2f2; color: #b91c1c; }
+	.badge-n.alerta { background: var(--erro-fundo); color: var(--erro-texto); }
 
 	/* Grade de produtos */
 	.grade-produtos { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-produto-loja {
 		display: flex; gap: var(--r3); padding: var(--r3) var(--r4);
-		border: 1px solid var(--linha); border-radius: 10px; background: white;
+		border: 1px solid var(--linha); border-radius: var(--raio-sm); background: white;
 		align-items: center;
 	}
 	.prod-thumb { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
@@ -543,8 +543,8 @@
 	.grade-novidades { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-novidade {
 		display: flex; gap: var(--r3); padding: var(--r3) var(--r4);
-		border: 1px solid #bbf7d0; border-left: 3px solid #22c55e;
-		border-radius: 10px; background: #f0fdf4;
+		border: 1px solid var(--sucesso-borda); border-left: 3px solid var(--sucesso-texto);
+		border-radius: var(--raio-sm); background: var(--sucesso-fundo);
 	}
 	.novidade-badge { font-size: 1.2rem; }
 	.novidade-info { flex: 1; }
@@ -563,14 +563,14 @@
 	.badge-variacao {
 		display: inline-block;
 		padding: 2px 8px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 		font-size: 0.78rem;
 		font-weight: 700;
 	}
-	.badge-baixou { background: #dcfce7; color: #16a34a; }
-	.badge-subiu { background: #fef2f2; color: #dc2626; }
-	tr.baixou .preco-atual { color: #16a34a; }
-	tr.subiu .preco-atual { color: #dc2626; }
+	.badge-baixou { background: var(--sucesso-fundo); color: var(--sucesso-texto); }
+	.badge-subiu { background: var(--erro-fundo); color: var(--erro-texto); }
+	tr.baixou .preco-atual { color: var(--sucesso-texto); }
+	tr.subiu .preco-atual { color: var(--erro-texto); }
 	.data { font-size: 0.78rem; color: var(--tinta-suave); }
 
 	/* Responsivo mobile */
@@ -592,7 +592,7 @@
 		gap: 8px;
 		padding: 10px 16px;
 		border: 1px solid var(--linha);
-		border-radius: 10px;
+		border-radius: var(--raio-sm);
 		background: var(--nevoa);
 		cursor: pointer;
 		font-size: 0.9rem;
@@ -603,18 +603,18 @@
 	.btn-toggle-alertas:hover { border-color: var(--ouro); }
 	.badge-ativo {
 		font-size: 0.7rem;
-		background: #dcfce7;
-		color: #16a34a;
+		background: var(--sucesso-fundo);
+		color: var(--sucesso-texto);
 		padding: 2px 8px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 		font-weight: 700;
 	}
 	.badge-inativo {
 		font-size: 0.7rem;
-		background: #fef2f2;
-		color: #b91c1c;
+		background: var(--erro-fundo);
+		color: var(--erro-texto);
 		padding: 2px 8px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 		font-weight: 700;
 	}
 	.alertas-config {

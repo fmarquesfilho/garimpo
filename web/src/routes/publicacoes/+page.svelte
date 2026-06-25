@@ -199,7 +199,7 @@
 		display: flex; align-items: center; gap: 6px;
 	}
 	.abas-pub button.ativa { color: var(--tinta); border-bottom-color: var(--ouro); }
-	.badge-n { font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e; padding: 1px 6px; border-radius: 999px; font-weight: 700; }
+	.badge-n { font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e; padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700; }
 
 	.filtros-pub {
 		display: flex; gap: 2px; margin-bottom: var(--r5);
@@ -214,23 +214,23 @@
 
 	.aviso, .msg-erro { padding: var(--r3) var(--r4); border-radius: 8px; font-size: 0.88rem; margin-bottom: var(--r4); }
 	.aviso { background: var(--porcelana); color: var(--tinta-suave); }
-	.msg-erro { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+	.msg-erro { background: var(--erro-fundo); color: var(--erro-texto); border: 1px solid var(--erro-borda); }
 
 	.loading, .vazio { color: var(--tinta-suave); font-size: 0.9rem; }
 
 	.lista { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-pub {
 		padding: var(--r3) var(--r4); border: 1px solid var(--linha);
-		border-radius: 10px; background: white; border-left: 3px solid var(--linha);
+		border-radius: var(--raio-sm); background: white; border-left: 3px solid var(--linha);
 	}
-	.card-pub.enviada { border-left-color: #22c55e; }
+	.card-pub.enviada { border-left-color: var(--sucesso-texto); }
 	.card-pub.agendada { border-left-color: var(--ouro); }
 	.card-pub.erro { border-left-color: #ef4444; }
 
 	.pub-principal { display: flex; align-items: center; gap: var(--r3); flex-wrap: wrap; }
 	.status-badge {
 		font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
-		border-radius: 999px; background: var(--porcelana);
+		border-radius: var(--raio-full); background: var(--porcelana);
 	}
 	.pub-nome { font-size: 0.92rem; flex: 1; }
 	.pub-preco { font-weight: 700; color: var(--ouro); font-size: 0.88rem; }
@@ -241,7 +241,7 @@
 	}
 	.pub-detalhe { font-size: 0.78rem; margin: 4px 0 0; color: var(--tinta-suave); }
 	.pub-detalhe code { font-size: 0.72rem; background: var(--porcelana); padding: 2px 6px; border-radius: 4px; }
-	.erro-txt { color: #b91c1c; }
+	.erro-txt { color: var(--erro-texto); }
 	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin-top: var(--r2); }
 
 	/* Desempenho */

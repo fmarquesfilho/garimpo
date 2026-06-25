@@ -258,13 +258,13 @@
 
 	.aviso, .erro, .sucesso { padding: var(--r3) var(--r4); border-radius: 8px; font-size: 0.88rem; margin-bottom: var(--r4); }
 	.aviso { background: var(--porcelana); color: var(--tinta-suave); }
-	.erro { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-	.sucesso { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+	.erro { background: var(--erro-fundo); color: var(--erro-texto); border: 1px solid var(--erro-borda); }
+	.sucesso { background: var(--sucesso-fundo); color: var(--sucesso-texto); border: 1px solid var(--sucesso-borda); }
 
 	.form-destino {
 		display: flex; flex-wrap: wrap; gap: var(--r3); align-items: flex-end;
 		margin-bottom: var(--r5); padding: var(--r4);
-		border: 1px solid var(--linha); border-radius: 12px; background: var(--porcelana);
+		border: 1px solid var(--linha); border-radius: var(--raio); background: var(--porcelana);
 	}
 	.campo { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px; }
 	.campo label { font-size: 0.78rem; font-weight: 600; color: var(--tinta-suave); }
@@ -280,7 +280,7 @@
 	.lista { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-destino {
 		display: flex; align-items: center; justify-content: space-between;
-		padding: var(--r3) var(--r4); border: 1px solid var(--linha); border-radius: 10px; background: white;
+		padding: var(--r3) var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); background: white;
 	}
 	.card-destino.editando {
 		border-color: var(--ouro); background: #fffbeb;
@@ -297,7 +297,7 @@
 		cursor: pointer; color: var(--tinta-suave); font-size: 1rem;
 	}
 	.btn-editar:hover { color: var(--ouro); border-color: var(--ouro); background: #fffbeb; }
-	.btn-remover:hover { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+	.btn-remover:hover { color: var(--erro-texto); border-color: #fca5a5; background: var(--erro-fundo); }
 
 	.edit-form { width: 100%; display: flex; flex-direction: column; gap: var(--r3); }
 	.campo-edit { display: flex; flex-direction: column; gap: 4px; }
@@ -316,5 +316,5 @@
 	}
 
 	.grupos-lista { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
-	.grupo-nome { font-size: 0.78rem; color: var(--tinta-suave); padding: 1px 6px; background: #f0fdf4; border-radius: 4px; border: 1px solid #bbf7d0; }
+	.grupo-nome { font-size: 0.78rem; color: var(--tinta-suave); padding: 1px 6px; background: var(--sucesso-fundo); border-radius: 4px; border: 1px solid var(--sucesso-borda); }
 </style>

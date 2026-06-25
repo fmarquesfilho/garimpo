@@ -253,7 +253,7 @@
 	/* Loja evolução */
 	.loja-evo {
 		border: 1px solid var(--linha);
-		border-radius: 12px;
+		border-radius: var(--raio);
 		padding: var(--r4);
 		margin-bottom: var(--r4);
 		background: white;
@@ -283,7 +283,7 @@
 	.var-item { display: flex; align-items: center; gap: var(--r2); font-size: 0.8rem; padding: 4px 0; border-bottom: 1px solid var(--linha); }
 	.var-item:last-child { border-bottom: none; }
 	.var-nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
-	.badge-var { padding: 1px 6px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
+	.badge-var { padding: 1px 6px; border-radius: var(--raio-full); font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
 	.badge-baixou { background: var(--sucesso-fundo); color: var(--sucesso-texto); }
 	.badge-subiu { background: var(--erro-fundo); color: var(--erro-texto); }
 	.var-precos { font-size: 0.72rem; color: var(--tinta-suave); white-space: nowrap; }

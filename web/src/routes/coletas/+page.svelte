@@ -205,17 +205,17 @@
 	.card-id { font-weight: 700; font-size: 0.92rem; }
 	.badge-cron {
 		font-size: 0.7rem; font-family: var(--mono);
-		padding: 2px 8px; border-radius: 999px;
+		padding: 2px 8px; border-radius: var(--raio-full);
 		background: var(--ouro-fundo); color: #7a5a1e;
 	}
 	.badge-manual {
-		font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+		font-size: 0.7rem; padding: 2px 8px; border-radius: var(--raio-full);
 		background: var(--porcelana); color: var(--tinta-suave); border: 1px solid var(--linha);
 	}
 	.card-kws { display: flex; flex-wrap: wrap; gap: 4px; }
 	.kw-tag {
 		font-size: 0.78rem; font-weight: 600; padding: 2px 8px;
-		border-radius: 999px; background: var(--porcelana);
+		border-radius: var(--raio-full); background: var(--porcelana);
 		border: 1px solid var(--linha); color: var(--tinta);
 	}
 	.card-info { font-size: 0.75rem; color: var(--tinta-suave); }

@@ -243,14 +243,14 @@
 		display: flex;
 		gap: 2px;
 		background: var(--porcelana);
-		border-radius: 10px;
+		border-radius: var(--raio-sm);
 		padding: 3px;
 		border: 1px solid var(--linha);
 	}
 	.filtro-periodo button {
 		padding: 6px 14px;
 		border: none;
-		border-radius: 8px;
+		border-radius: var(--raio-sm);
 		background: transparent;
 		font-size: 0.82rem;
 		font-weight: 600;
@@ -275,7 +275,7 @@
 		align-items: center;
 		gap: 6px;
 		padding: 8px 16px;
-		border-radius: 10px;
+		border-radius: var(--raio-sm);
 		font-weight: 600;
 		font-size: 0.85rem;
 	}
@@ -294,7 +294,7 @@
 
 	.card-oportunidade {
 		border: 1px solid var(--linha);
-		border-radius: 12px;
+		border-radius: var(--raio);
 		padding: var(--r4);
 		background: white;
 		transition: border-color 0.15s;
@@ -312,7 +312,7 @@
 	}
 	.badge-variacao {
 		padding: 2px 8px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 		font-size: 0.72rem;
 		font-weight: 700;
 	}
@@ -320,7 +320,7 @@
 	.badge-alta { background: var(--erro-fundo); color: var(--erro-texto); }
 	.badge-novo {
 		padding: 2px 8px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 		font-size: 0.72rem;
 		font-weight: 700;
 		background: var(--ouro-fundo);
@@ -368,7 +368,7 @@
 		border: 1px solid var(--ouro-claro);
 		background: var(--ouro-fundo);
 		color: #7a5a1e;
-		border-radius: 8px;
+		border-radius: var(--raio-sm);
 		font-size: 0.82rem;
 		font-weight: 600;
 		cursor: pointer;

@@ -311,7 +311,7 @@
 	.btn-auth {
 		border: 1px solid var(--linha); background: var(--porcelana);
 		color: var(--tinta); font-size: 0.8rem; font-weight: 600;
-		padding: 6px 14px; border-radius: 999px; cursor: pointer;
+		padding: 6px 14px; border-radius: var(--raio-full); cursor: pointer;
 		width: fit-content;
 	}
 	.btn-auth:hover { border-color: var(--ouro); color: var(--ouro); }
@@ -381,7 +381,7 @@
 		font-weight: 700;
 		font-size: 1rem;
 		border: none;
-		border-radius: 12px;
+		border-radius: var(--raio);
 		cursor: pointer;
 		box-shadow: 0 4px 12px rgba(184, 142, 58, 0.3);
 	}

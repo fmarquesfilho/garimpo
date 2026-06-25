@@ -90,7 +90,7 @@
 		font-size: 0.82rem;
 		font-weight: 600;
 		padding: 7px 14px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 	}
 	.limpar:hover {
 		border-color: var(--alerta);
@@ -135,7 +135,7 @@
 		color: var(--tinta-suave);
 		background: var(--nevoa);
 		padding: 2px 8px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 		border: 1px solid var(--linha);
 	}
 	.contagem.estourou {
@@ -157,7 +157,7 @@
 	.mini {
 		background: var(--nevoa);
 		border: 1px solid var(--linha);
-		border-radius: 10px;
+		border-radius: var(--raio-sm);
 		padding: var(--r3);
 		box-shadow: var(--sombra);
 	}
@@ -176,7 +176,7 @@
 		font-size: 0.62rem;
 		font-weight: 700;
 		padding: 1px 7px;
-		border-radius: 999px;
+		border-radius: var(--raio-full);
 		text-transform: lowercase;
 	}
 	.tag.nicho {

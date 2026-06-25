@@ -319,12 +319,12 @@
 	.seta.girada { transform: rotate(90deg); }
 	.badge-contagem {
 		font-size: 0.7rem; background: var(--ouro-fundo); color: #7a5a1e;
-		padding: 1px 6px; border-radius: 999px; font-weight: 700;
+		padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700;
 	}
 	.btn-nova {
 		border: 1px solid var(--linha); background: var(--porcelana);
 		color: var(--tinta); font-size: 0.82rem; font-weight: 600;
-		padding: 6px 14px; border-radius: 999px; cursor: pointer;
+		padding: 6px 14px; border-radius: var(--raio-full); cursor: pointer;
 	}
 	.btn-nova:hover { border-color: var(--ouro); color: var(--ouro); }
 
@@ -340,7 +340,7 @@
 	.campo-estrategia { display: flex; flex-direction: column; gap: 5px; }
 	.campo-estrategia select {
 		font-family: var(--mono); font-size: 0.9rem; padding: 9px 12px;
-		border-radius: 10px; border: 1px solid var(--linha);
+		border-radius: var(--raio-sm); border: 1px solid var(--linha);
 		background: var(--porcelana); color: var(--tinta);
 	}
 	.dica-kw { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
@@ -348,7 +348,7 @@
 	.salvar {
 		border: 1px solid var(--linha); background: var(--ouro-fundo);
 		color: #7a5a1e; font-weight: 600; font-size: 0.85rem;
-		padding: 9px 18px; border-radius: 10px; cursor: pointer;
+		padding: 9px 18px; border-radius: var(--raio-sm); cursor: pointer;
 	}
 	.salvar:disabled { opacity: 0.5; cursor: not-allowed; }
 
