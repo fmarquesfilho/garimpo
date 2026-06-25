@@ -4,6 +4,7 @@
 	import { buscarCandidatos, buscarNovidades, adicionarLoja, removerLoja, buscarAlertasConfig, testarAlertas, configurarAlertas } from '$lib/api.js';
 	import { buscasSalvas } from '$lib/buscas.js';
 	import { usuario } from '$lib/firebase.js';
+	import { brl, pct } from '$lib/formatters.js';
 
 	let buscasComLojas = $derived(($buscasSalvas ?? []).filter(b => b.shop_ids?.length > 0));
 	let buscaSelecionada = $state(null);
@@ -165,9 +166,6 @@
 		const dados = encodeURIComponent(JSON.stringify(c));
 		goto(`/publicar?dados=${dados}`);
 	}
-
-	const brl = (v) => v?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) ?? '';
-	const pct = (v) => `${(v * 100).toFixed(1)}%`;
 </script>
 
 <svelte:head>

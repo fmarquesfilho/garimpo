@@ -18,6 +18,17 @@
 	--linha: #e4dad6; /* hairlines / bordas */
 	--alerta: #9c4a3c; /* erros, em tom terroso */
 
+	/* semânticas — feedback */
+	--erro-fundo: #fef2f2;
+	--erro-texto: #b91c1c;
+	--erro-borda: #fecaca;
+	--sucesso-fundo: #f0fdf4;
+	--sucesso-texto: #166534;
+	--sucesso-borda: #bbf7d0;
+	--aviso-fundo: #fefce8;
+	--aviso-texto: #ca8a04;
+	--aviso-borda: #fde047;
+
 	/* tipografia */
 	--display: 'Fraunces', Georgia, serif;
 	--ui: 'Archivo', system-ui, sans-serif;
@@ -115,3 +126,85 @@ button {
 		transition-duration: 0.001ms !important;
 	}
 }
+
+/* ============================================================
+   Utility classes — eliminam duplicação entre páginas
+   ============================================================ */
+
+/* ── Feedback messages ─────────────────────────────────────── */
+.msg-erro {
+	background: var(--erro-fundo);
+	color: var(--erro-texto);
+	border: 1px solid var(--erro-borda);
+	padding: var(--r3) var(--r4);
+	border-radius: 10px;
+	font-size: 0.88rem;
+}
+
+.msg-sucesso {
+	background: var(--sucesso-fundo);
+	color: var(--sucesso-texto);
+	border: 1px solid var(--sucesso-borda);
+	padding: var(--r3) var(--r4);
+	border-radius: 10px;
+	font-size: 0.88rem;
+}
+
+.msg-aviso {
+	background: var(--aviso-fundo);
+	color: var(--aviso-texto);
+	border: 1px solid var(--aviso-borda);
+	padding: var(--r3) var(--r4);
+	border-radius: 10px;
+	font-size: 0.88rem;
+}
+
+.msg-erro-inline { color: var(--erro-texto); font-size: 0.85rem; margin-top: 6px; }
+.msg-sucesso-inline { color: var(--sucesso-texto); font-size: 0.85rem; margin-top: 6px; }
+
+/* ── States ────────────────────────────────────────────────── */
+.loading {
+	color: var(--tinta-suave);
+	font-style: italic;
+	font-size: 0.9rem;
+}
+
+.vazio {
+	background: var(--porcelana);
+	border: 1px solid var(--linha);
+	border-radius: var(--raio);
+	padding: var(--r8);
+	text-align: center;
+	color: var(--tinta-suave);
+}
+
+.vazio .dica {
+	font-size: 0.85rem;
+	margin-top: var(--r2);
+	color: var(--tinta-suave);
+}
+
+.vazio a {
+	color: var(--ouro);
+	text-decoration: underline;
+}
+
+/* ── Typography utilities ──────────────────────────────────── */
+.subtitulo {
+	color: var(--tinta-suave);
+	font-size: 0.9rem;
+	margin-bottom: var(--r6);
+}
+
+/* ── Layout panels ─────────────────────────────────────────── */
+.painel {
+	background: var(--nevoa);
+	border: 1px solid var(--linha);
+	border-radius: 12px;
+	padding: var(--r4);
+}
+
+/* ── Color utilities ───────────────────────────────────────── */
+.cor-sucesso { color: var(--sucesso-texto); }
+.cor-erro { color: var(--erro-texto); }
+.cor-ouro { color: var(--ouro); font-weight: 700; }
