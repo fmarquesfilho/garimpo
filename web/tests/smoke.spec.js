@@ -13,7 +13,7 @@ test.describe('Landing page (não logado)', () => {
 
 	test('mostra o nome do app', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('.marca')).toContainText('Garimpo');
+		await expect(page.locator('.marca')).toContainText('Garimpei');
 	});
 
 	test('mostra features na landing', async ({ page }) => {
