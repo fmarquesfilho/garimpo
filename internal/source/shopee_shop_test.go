@@ -11,7 +11,7 @@ import (
 func TestShopeeShopSourceFetchOK(t *testing.T) {
 	respBody := `{
 		"data": {
-			"shopOfferV2": {
+			"productOfferV2": {
 				"nodes": [
 					{
 						"itemId": "111",
@@ -47,8 +47,8 @@ func TestShopeeShopSourceFetchOK(t *testing.T) {
 		// Verifica que a query contém shopId
 		body := make([]byte, r.ContentLength)
 		r.Body.Read(body)
-		if !strings.Contains(string(body), "shopOfferV2") {
-			t.Errorf("query deveria conter shopOfferV2: %s", string(body))
+		if !strings.Contains(string(body), "productOfferV2") {
+			t.Errorf("query deveria conter productOfferV2: %s", string(body))
 		}
 		w.Write([]byte(respBody))
 	}))
@@ -83,7 +83,7 @@ func TestShopeeShopSourceComKeyword(t *testing.T) {
 		var req map[string]string
 		json.Unmarshal(body, &req)
 		queryRecebida = req["query"]
-		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[],"pageInfo":{"page":1,"hasNextPage":false}}}}`))
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[],"pageInfo":{"page":1,"hasNextPage":false}}}}`))
 	}))
 	defer srv.Close()
 
@@ -138,7 +138,7 @@ func TestShopeeShopSourceMultiplasLojas(t *testing.T) {
 	chamadas := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		chamadas++
-		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"` +
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[{"itemId":"` +
 			string(rune('0'+chamadas)) + `","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],` +
 			`"pageInfo":{"page":1,"hasNextPage":false}}}}`))
 	}))
@@ -239,7 +239,7 @@ func TestShopeeShopSourceStartPageRotation(t *testing.T) {
 				paginasRecebidas = append(paginasRecebidas, page)
 			}
 		}
-		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":true}}}}`))
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":true}}}}`))
 	}))
 	defer srv.Close()
 
@@ -283,7 +283,7 @@ func TestShopeeShopSourceStartPageRotation(t *testing.T) {
 func TestShopeeShopSourceRotationResetsOnEndOfCatalog(t *testing.T) {
 	// Servidor retorna hasNextPage=false para simular fim do catálogo
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":5,"hasNextPage":false}}}}`))
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":5,"hasNextPage":false}}}}`))
 	}))
 	defer srv.Close()
 
@@ -328,7 +328,7 @@ func TestShopeeShopSourceDefaultStartPage(t *testing.T) {
 				paginasRecebidas = append(paginasRecebidas, page)
 			}
 		}
-		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[],"pageInfo":{"page":1,"hasNextPage":false}}}}`))
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[],"pageInfo":{"page":1,"hasNextPage":false}}}}`))
 	}))
 	defer srv.Close()
 
@@ -359,7 +359,7 @@ func TestShopeeShopSourceMultipleShopsHaveIndependentPageInfo(t *testing.T) {
 		if requestCount > 2 {
 			hasNext = "false"
 		}
-		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":` + hasNext + `}}}}`))
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":` + hasNext + `}}}}`))
 	}))
 	defer srv.Close()
 
@@ -395,7 +395,7 @@ func TestShopeeShopSourceMultipleShopsHaveIndependentPageInfo(t *testing.T) {
 func TestShopeeShopSourcePageDelay(t *testing.T) {
 	// Testa que PageDelay funciona sem deadlock (não verifica timing exato)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":true}}}}`))
+		w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":true}}}}`))
 	}))
 	defer srv.Close()
 

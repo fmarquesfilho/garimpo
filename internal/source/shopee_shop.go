@@ -69,7 +69,7 @@ func (s *ShopeeShopSource) buildQuery(shopID int64, page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ shopOfferV2(%s) { nodes { productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl } pageInfo { page hasNextPage } } }`,
+		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate imageUrl } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }
@@ -154,11 +154,9 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 					gql.Errors[0].Extensions.Code, gql.Errors[0].Message)
 			}
 
-			for _, n := range gql.Data.ShopOfferV2.Nodes {
-				// shopOfferV2 não retorna itemId diretamente — extraímos do productLink
-				prodID := extractItemIDFromLink(n.ProductLink)
+			for _, n := range gql.Data.ProductOfferV2.Nodes {
 				produtos = append(produtos, domain.Product{
-					ID:         prodID,
+					ID:         string(n.ItemID),
 					Name:       n.ProductName,
 					Category:   s.CategoryLabel,
 					Price:      float64(n.PriceMin),
@@ -171,7 +169,7 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 			}
 
 			pagesFetched++
-			if !gql.Data.ShopOfferV2.PageInfo.HasNextPage {
+			if !gql.Data.ProductOfferV2.PageInfo.HasNextPage {
 				// Catálogo terminou — próxima coleta volta pra página 1
 				nextPage = 1
 				hasMore = false
@@ -190,46 +188,16 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 	return produtos, nil
 }
 
-// extractItemIDFromLink extrai o item ID de uma URL de produto Shopee.
-// Formatos: /Produto-i.SHOP.ITEM ou /product/SHOP/ITEM
-func extractItemIDFromLink(link string) string {
-	// Tenta padrão -i.SHOP.ITEM
-	if idx := strings.LastIndex(link, "-i."); idx >= 0 {
-		parts := strings.Split(link[idx+3:], ".")
-		if len(parts) >= 2 {
-			// Remove query params do último segmento
-			itemID := parts[1]
-			if qIdx := strings.IndexByte(itemID, '?'); qIdx >= 0 {
-				itemID = itemID[:qIdx]
-			}
-			return itemID
-		}
-	}
-	// Tenta padrão /product/SHOP/ITEM
-	if idx := strings.Index(link, "/product/"); idx >= 0 {
-		parts := strings.Split(link[idx+9:], "/")
-		if len(parts) >= 2 {
-			itemID := parts[1]
-			if qIdx := strings.IndexByte(itemID, '?'); qIdx >= 0 {
-				itemID = itemID[:qIdx]
-			}
-			return itemID
-		}
-	}
-	// Fallback: usa o productLink como ID (garante unicidade)
-	return link
-}
-
-// shopGQLResponse é a resposta do shopOfferV2 (mesma estrutura de nodes).
+// shopGQLResponse é a resposta do productOfferV2 filtrado por shopId.
 type shopGQLResponse struct {
 	Data struct {
-		ShopOfferV2 struct {
+		ProductOfferV2 struct {
 			Nodes    []productNode `json:"nodes"`
 			PageInfo struct {
 				Page        int  `json:"page"`
 				HasNextPage bool `json:"hasNextPage"`
 			} `json:"pageInfo"`
-		} `json:"shopOfferV2"`
+		} `json:"productOfferV2"`
 	} `json:"data"`
 	Errors []struct {
 		Message    string `json:"message"`
