@@ -78,16 +78,36 @@ func TestParseShopInputProductURL(t *testing.T) {
 
 func TestParseShopInputSlugURLRetornsError(t *testing.T) {
 	srv := &Server{}
-	// URLs com slug devem retornar erro (resolução não implementada)
+	// Paths reservados devem retornar erro sem tentar resolver
 	casos := []string{
-		"https://shopee.com.br/loja-da-mileny",
-		"https://shopee.com.br/superstore_oficial",
+		"https://shopee.com.br/product",
+		"https://shopee.com.br/m",
+		"https://shopee.com.br/daily_discover",
 	}
 	for _, input := range casos {
 		_, err := srv.parseShopInput(input)
 		if err == nil {
-			t.Errorf("input=%q: deveria retornar erro para URL com slug", input)
+			t.Errorf("input=%q: deveria retornar erro para path reservado", input)
 		}
+	}
+}
+
+func TestParseShopInputSlugURLResolvesIfShopeeReturnsShopID(t *testing.T) {
+	// Slug que existe na Shopee (koksara.br é uma loja real) — depende de rede
+	if testing.Short() {
+		t.Skip("depende de rede — skip em -short")
+	}
+	srv := &Server{}
+	id, err := srv.parseShopInput("https://shopee.com.br/koksara.br")
+	if err != nil {
+		t.Skipf("não conseguiu resolver (rede indisponível ou Shopee bloqueou): %v", err)
+	}
+	if id <= 0 {
+		t.Errorf("deveria retornar um shop_id positivo, veio %d", id)
+	}
+	// koksara.br tem shopid 457864097
+	if id != 457864097 {
+		t.Errorf("esperava shopid 457864097 para koksara.br, veio %d", id)
 	}
 }
 
