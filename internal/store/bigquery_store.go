@@ -879,3 +879,141 @@ func (s *BigQueryStore) Novidades(ctx context.Context, buscaID string, dias int)
 
 	return result, nil
 }
+
+// EvolucaoLojas retorna dados de evolução de preço das lojas monitoradas ao longo do tempo.
+// Agrega: preço médio diário por keyword (=loja), total de produtos, variações.
+func (s *BigQueryStore) EvolucaoLojas(ctx context.Context, dias int) (EvolucaoLojasResult, error) {
+	if dias <= 0 {
+		dias = 30
+	}
+	result := EvolucaoLojasResult{DiasJanela: dias}
+
+	// 1. Busca as buscas ativas que têm shop_ids (são lojas monitoradas)
+	buscas, err := s.ListarBuscas(ctx)
+	if err != nil {
+		return result, err
+	}
+	var buscasLoja []Busca
+	for _, b := range buscas {
+		if len(b.ShopIDs) > 0 && b.Ativo {
+			buscasLoja = append(buscasLoja, b)
+		}
+	}
+	if len(buscasLoja) == 0 {
+		return result, nil
+	}
+
+	// 2. Query: preço médio diário dos snapshots que correspondem a lojas
+	q := s.client.Query(`
+		SELECT
+		  keyword,
+		  FORMAT_TIMESTAMP('%Y-%m-%d', coletado_em) AS dia,
+		  AVG(preco) AS preco_medio,
+		  COUNT(DISTINCT produto_id) AS produtos
+		FROM ` + "`" + s.dataset + ".snapshots`" + `
+		WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+		  AND keyword LIKE 'loja-%'
+		GROUP BY keyword, dia
+		ORDER BY keyword, dia
+	`)
+	q.Parameters = []bigquery.QueryParameter{{Name: "dias", Value: dias}}
+
+	it, err := q.Read(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	// Agrupa pontos por keyword (busca_id da loja)
+	pontosPorLoja := map[string][]PontoEvolucao{}
+	for {
+		var row struct {
+			Keyword    string  `bigquery:"keyword"`
+			Dia        string  `bigquery:"dia"`
+			PrecoMedio float64 `bigquery:"preco_medio"`
+			Produtos   int     `bigquery:"produtos"`
+		}
+		err := it.Next(&row)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return result, err
+		}
+		pontosPorLoja[row.Keyword] = append(pontosPorLoja[row.Keyword], PontoEvolucao{
+			Data:       row.Dia,
+			PrecoMedio: row.PrecoMedio,
+			Produtos:   row.Produtos,
+		})
+	}
+
+	// 3. Monta resultado por loja
+	var totalProdutos int
+	var somaVariacao float64
+	var totalQuedas, totalAltas int
+	var somaPreco float64
+	var contaPreco int
+
+	for _, b := range buscasLoja {
+		pontos := pontosPorLoja[b.ID]
+		if len(pontos) == 0 {
+			continue
+		}
+
+		evo := EvolucaoLoja{
+			BuscaID: b.ID,
+			Coletas: len(pontos),
+			Pontos:  pontos,
+		}
+
+		// Primeiro e último ponto para calcular variação
+		primeiro := pontos[0]
+		ultimo := pontos[len(pontos)-1]
+		evo.PrecoMedioInicio = primeiro.PrecoMedio
+		evo.PrecoMedioAtual = ultimo.PrecoMedio
+		evo.TotalProdutos = ultimo.Produtos
+
+		if primeiro.PrecoMedio > 0 {
+			evo.VariacaoMedia = (ultimo.PrecoMedio - primeiro.PrecoMedio) / primeiro.PrecoMedio
+		}
+
+		// Busca novidades dessa loja para popular top_quedas e top_altas
+		novidades, _ := s.Novidades(ctx, b.ID, dias)
+		for _, v := range novidades.Variacoes {
+			if v.Variacao < -0.10 {
+				evo.TopQuedas = append(evo.TopQuedas, v)
+				totalQuedas++
+			}
+			if v.Variacao > 0.10 {
+				evo.TopAltas = append(evo.TopAltas, v)
+				totalAltas++
+			}
+		}
+		// Limita top 5
+		if len(evo.TopQuedas) > 5 {
+			evo.TopQuedas = evo.TopQuedas[:5]
+		}
+		if len(evo.TopAltas) > 5 {
+			evo.TopAltas = evo.TopAltas[:5]
+		}
+
+		result.Lojas = append(result.Lojas, evo)
+		totalProdutos += evo.TotalProdutos
+		somaVariacao += evo.VariacaoMedia
+		somaPreco += evo.PrecoMedioAtual
+		contaPreco++
+	}
+
+	// Resumo global
+	result.Resumo = EvolucaoResumo{
+		TotalLojas:    len(result.Lojas),
+		TotalProdutos: totalProdutos,
+		TotalQuedas:   totalQuedas,
+		TotalAltas:    totalAltas,
+	}
+	if contaPreco > 0 {
+		result.Resumo.PrecoMedioGlobal = somaPreco / float64(contaPreco)
+		result.Resumo.VariacaoMediaGlobal = somaVariacao / float64(contaPreco)
+	}
+
+	return result, nil
+}

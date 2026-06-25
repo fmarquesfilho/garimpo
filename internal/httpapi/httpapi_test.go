@@ -103,6 +103,9 @@ func (s *spyStore) AtualizarPublicacao(_ context.Context, id, status, detalhe st
 func (s *spyStore) Novidades(_ context.Context, buscaID string, dias int) (store.NovidadesLojas, error) {
 	return store.NovidadesLojas{BuscaID: buscaID, DiasJanela: dias}, nil
 }
+func (s *spyStore) EvolucaoLojas(_ context.Context, dias int) (store.EvolucaoLojasResult, error) {
+	return store.EvolucaoLojasResult{DiasJanela: dias}, nil
+}
 func (s *spyStore) EnsureSchema(_ context.Context) error { return nil }
 
 type spyPub struct {

@@ -365,3 +365,46 @@ type shopSourceConfig struct {
 	StartPage int
 	MaxPages  int
 }
+
+
+// --- Testes de GET /api/lojas/evolucao ────────────────────────────────────
+
+func TestEvolucaoLojasExigeAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/lojas/evolucao", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
+	}
+}
+
+func TestEvolucaoLojasComAuth(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/lojas/evolucao?dias=30", nil,
+		map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("com auth deveria dar 200, veio %d: %s", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		DiasJanela int `json:"dias_janela"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.DiasJanela != 30 {
+		t.Errorf("dias_janela deveria ser 30, veio %d", resp.DiasJanela)
+	}
+}
+
+func TestEvolucaoLojasCustomDias(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/lojas/evolucao?dias=7", nil,
+		map[string]string{"Authorization": "Bearer tok"})
+	if rec.Code != 200 {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var resp struct {
+		DiasJanela int `json:"dias_janela"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if resp.DiasJanela != 7 {
+		t.Errorf("dias_janela deveria ser 7, veio %d", resp.DiasJanela)
+	}
+}

@@ -206,6 +206,11 @@ export function buscarNovidades({ buscaId = '', dias = 7 } = {}) {
 	return pegar(`/api/lojas/novidades?${p}`);
 }
 
+/** Evolução de preço das lojas monitoradas ao longo do tempo. */
+export function buscarEvolucaoLojas({ dias = 30 } = {}) {
+	return pegar(`/api/lojas/evolucao?dias=${dias}`);
+}
+
 /** Adiciona uma loja ao monitoramento (aceita URL ou ID numérico). */
 export function adicionarLoja({ input, cron } = {}) {
 	const corpo = { input };

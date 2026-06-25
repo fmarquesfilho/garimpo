@@ -157,6 +157,8 @@ type EventoStore interface {
 	AtualizarPublicacao(ctx context.Context, id, status, detalhe string) error
 	// Novidades de lojas monitoradas (diff de snapshots)
 	Novidades(ctx context.Context, buscaID string, dias int) (NovidadesLojas, error)
+	// Evolução de preços das lojas monitoradas ao longo do tempo
+	EvolucaoLojas(ctx context.Context, dias int) (EvolucaoLojasResult, error)
 	EnsureSchema(ctx context.Context) error
 	Nome() string
 }
@@ -189,6 +191,43 @@ type VariacaoPreco struct {
 	PrecoAtual   float64 `json:"preco_atual"`
 	Variacao     float64 `json:"variacao_pct"` // ex.: -0.20 = baixou 20%
 	DetectadoEm  string  `json:"detectado_em"`
+}
+
+// EvolucaoLojasResult contém os dados de evolução de preço das lojas monitoradas.
+type EvolucaoLojasResult struct {
+	DiasJanela int                   `json:"dias_janela"`
+	Lojas      []EvolucaoLoja        `json:"lojas"`
+	Resumo     EvolucaoResumo        `json:"resumo"`
+}
+
+// EvolucaoLoja agrupa a evolução de uma loja específica.
+type EvolucaoLoja struct {
+	BuscaID        string                `json:"busca_id"`
+	TotalProdutos  int                   `json:"total_produtos"`
+	PrecoMedioAtual float64              `json:"preco_medio_atual"`
+	PrecoMedioInicio float64             `json:"preco_medio_inicio"`
+	VariacaoMedia  float64              `json:"variacao_media_pct"` // ex.: -0.05 = queda de 5%
+	Coletas        int                   `json:"coletas"`           // número de snapshots na janela
+	Pontos         []PontoEvolucao       `json:"pontos"`            // série temporal
+	TopQuedas      []VariacaoPreco       `json:"top_quedas"`        // maiores quedas
+	TopAltas       []VariacaoPreco       `json:"top_altas"`         // maiores altas
+}
+
+// PontoEvolucao é um ponto na série temporal (preço médio por dia/coleta).
+type PontoEvolucao struct {
+	Data       string  `json:"data"`        // YYYY-MM-DD
+	PrecoMedio float64 `json:"preco_medio"`
+	Produtos   int     `json:"produtos"`    // quantos produtos naquele dia
+}
+
+// EvolucaoResumo agrega métricas de todas as lojas monitoradas.
+type EvolucaoResumo struct {
+	TotalLojas        int     `json:"total_lojas"`
+	TotalProdutos     int     `json:"total_produtos"`
+	PrecoMedioGlobal  float64 `json:"preco_medio_global"`
+	VariacaoMediaGlobal float64 `json:"variacao_media_global_pct"`
+	TotalQuedas       int     `json:"total_quedas"`
+	TotalAltas        int     `json:"total_altas"`
 }
 
 // Publicacao representa uma publicação agendada ou executada (espelhado do publish).
@@ -284,6 +323,9 @@ func (NopStore) ListarPublicacoes(context.Context, string) ([]Publicacao, error)
 func (NopStore) AtualizarPublicacao(context.Context, string, string, string) error { return nil }
 func (NopStore) Novidades(_ context.Context, buscaID string, dias int) (NovidadesLojas, error) {
 	return NovidadesLojas{BuscaID: buscaID, DiasJanela: dias}, nil
+}
+func (NopStore) EvolucaoLojas(_ context.Context, dias int) (EvolucaoLojasResult, error) {
+	return EvolucaoLojasResult{DiasJanela: dias}, nil
 }
 func (NopStore) EnsureSchema(context.Context) error { return nil }
 func (NopStore) Nome() string                       { return "nop" }

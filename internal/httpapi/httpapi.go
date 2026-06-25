@@ -101,6 +101,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/publicacoes", srv.agendarPublicacao)
 	mux.HandleFunc("POST /api/publicar-pendentes", srv.publicarPendentes)
 	mux.HandleFunc("GET /api/lojas/novidades", srv.novidades)
+	mux.HandleFunc("GET /api/lojas/evolucao", srv.evolucaoLojas)
 	mux.HandleFunc("GET /api/lojas", srv.listarLojas)
 	mux.HandleFunc("POST /api/lojas", srv.adicionarLoja)
 	mux.HandleFunc("DELETE /api/lojas", srv.removerLoja)

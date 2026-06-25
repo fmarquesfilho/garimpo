@@ -41,6 +41,31 @@ func (srv *Server) novidades(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, novidades)
 }
 
+// evolucaoLojas retorna a evolução de preço das lojas monitoradas ao longo do tempo.
+func (srv *Server) evolucaoLojas(w http.ResponseWriter, r *http.Request) {
+	user := srv.usuarioDoRequest(r)
+	if user == nil {
+		writeErr(w, http.StatusUnauthorized, "faça login para ver evolução de lojas")
+		return
+	}
+
+	dias := 30
+	if s := r.URL.Query().Get("dias"); s != "" {
+		if v, err := strconv.Atoi(s); err == nil && v > 0 {
+			dias = v
+		}
+	}
+
+	evolucao, err := srv.Eventos.EvolucaoLojas(r.Context(), dias)
+	if err != nil {
+		srv.Logger.Error("evolução lojas falhou", slog.String("erro", err.Error()))
+		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, evolucao)
+}
+
 // ── Adicionar loja ────────────────────────────────────────────────────────
 
 // reShopIDURL casa com https://shopee.com.br/shop/123456
