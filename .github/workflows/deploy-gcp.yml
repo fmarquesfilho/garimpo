@@ -122,8 +122,8 @@ jobs:
             --region "${{ env.GCP_REGION }}" \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=garimpo,BQ_TABELA=eventos,BQ_TABELA_SNAP=snapshots,GCP_REGION=${{ env.GCP_REGION }},ADMIN_EMAILS=${{ vars.ADMIN_EMAILS }}" \
-            --update-secrets "SHOPEE_APP_ID=SHOPEE_APP_ID:latest,SHOPEE_SECRET=SHOPEE_SECRET:latest,COLETA_TOKEN=COLETA_TOKEN:latest,TELEGRAM_BOT_TOKEN=TELEGRAM_BOT_TOKEN:latest,WHATSAPP_API_KEY=WHATSAPP_API_KEY:latest,WHATSAPP_PRODUCT_ID=WHATSAPP_PRODUCT_ID:latest,WHATSAPP_PHONE_ID=WHATSAPP_PHONE_ID:latest" \
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=garimpo,BQ_TABELA=eventos,BQ_TABELA_SNAP=snapshots,GCP_REGION=${{ env.GCP_REGION }},ADMIN_EMAILS=${{ vars.ADMIN_EMAILS }},ALERTAS_TELEGRAM_CHAT_ID=${{ vars.ALERTAS_TELEGRAM_CHAT_ID }},ALERTAS_THRESHOLD=0.15,ALERTAS_APENAS_QUEDAS=true" \
+            --update-secrets "SHOPEE_APP_ID=SHOPEE_APP_ID:latest,SHOPEE_SECRET=SHOPEE_SECRET:latest,COLETA_TOKEN=COLETA_TOKEN:latest,TELEGRAM_BOT_TOKEN=TELEGRAM_BOT_TOKEN:latest,WHATSAPP_API_KEY=WHATSAPP_API_KEY:latest,WHATSAPP_PRODUCT_ID=WHATSAPP_PRODUCT_ID:latest,WHATSAPP_PHONE_ID=WHATSAPP_PHONE_ID:latest,ALERTAS_TELEGRAM_TOKEN=ALERTAS_TELEGRAM_TOKEN:latest" \
             --args="-fonte,shopee" \
             --quiet
           # Atualiza a URL do scheduler
