@@ -8,6 +8,7 @@ import (
 "strconv"
 "time"
 
+"github.com/fmarquesfilho/garimpo/internal/alerts"
 "github.com/fmarquesfilho/garimpo/internal/engine"
 "github.com/fmarquesfilho/garimpo/internal/scheduler"
 "github.com/fmarquesfilho/garimpo/internal/source"
@@ -135,6 +136,19 @@ slog.String("estrategia", estrategia),
 slog.Int("coletados", len(snap.Itens)),
 slog.String("store", srv.Eventos.Nome()),
 	)
+
+	// Dispara alertas em background se é coleta de loja com busca_id
+	if buscaID != "" && srv.fonteAtiva(q) == "shopee-shop" {
+		go func() {
+			alertCfg := alerts.ConfigFromEnv()
+			alertCfg.Logger = srv.Logger
+			if alertCfg.Ativo() {
+				alerter := alerts.Novo(alertCfg)
+				alerter.VerificarENotificar(context.Background(), srv.Eventos, buscaID)
+				alerter.VerificarNovos(context.Background(), srv.Eventos, buscaID)
+			}
+		}()
+	}
 
 	writeJSON(w, http.StatusAccepted, map[string]any{
 "categoria":  categoria,

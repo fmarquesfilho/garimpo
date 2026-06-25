@@ -211,6 +211,26 @@ export function buscarEvolucaoLojas({ dias = 30 } = {}) {
 	return pegar(`/api/lojas/evolucao?dias=${dias}`);
 }
 
+/** Configuração atual dos alertas de preço. */
+export function buscarAlertasConfig() {
+	return pegar('/api/alertas');
+}
+
+/** Envia um alerta de teste (verifica bot + chat_id). */
+export function testarAlertas({ buscaId } = {}) {
+	const corpo = buscaId ? { busca_id: buscaId } : {};
+	return postar('/api/alertas/testar', corpo);
+}
+
+/** Atualiza configuração de alertas em runtime. */
+export function configurarAlertas({ chatId, threshold, apenasQuedas } = {}) {
+	const corpo = {};
+	if (chatId != null) corpo.chat_id = chatId;
+	if (threshold != null) corpo.threshold = threshold;
+	if (apenasQuedas != null) corpo.apenas_quedas = apenasQuedas;
+	return postar('/api/alertas/configurar', corpo);
+}
+
 /** Adiciona uma loja ao monitoramento (aceita URL ou ID numérico). */
 export function adicionarLoja({ input, cron } = {}) {
 	const corpo = { input };
