@@ -45,10 +45,14 @@ export async function login() {
 	await signInWithPopup(auth, provider);
 }
 
-/** Logout. */
+/** Logout — limpa sessão e força reload para estado limpo. */
 export async function logout() {
 	if (!auth) return;
 	await signOut(auth);
+	// Força reload para garantir que nenhum cache/state residual mantenha o usuário.
+	// O signOut limpa o IndexedDB do Firebase, mas stores reativos e cache
+	// de fetch podem manter dados stale. Reload é a forma mais segura.
+	window.location.href = '/';
 }
 
 /** Retorna o ID token JWT do usuário logado (para enviar ao backend). */
