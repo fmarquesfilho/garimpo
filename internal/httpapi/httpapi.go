@@ -142,11 +142,16 @@ func (srv *Server) spaHandler() http.Handler {
 		// Verifica se o arquivo existe
 		fullPath := dir + path
 		if _, err := os.Stat(fullPath); err == nil {
-			// Cache headers para assets imutáveis (SvelteKit _app/immutable/)
+			// Cache headers por tipo de asset
 			if len(path) > 17 && path[:17] == "/_app/immutable/" {
+				// Assets com hash no nome — nunca mudam, cache forever
 				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 			} else if len(path) > 5 && path[:5] == "/_app" {
+				// Assets do SvelteKit sem hash — revalidar sempre
 				w.Header().Set("Cache-Control", "no-cache")
+			} else {
+				// HTML, favicon, etc — nunca cachear (Safari iPad cacheia agressivamente)
+				w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			}
 			http.ServeFile(w, r, fullPath)
 			return
