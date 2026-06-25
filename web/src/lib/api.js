@@ -206,6 +206,30 @@ export function buscarNovidades({ buscaId = '', dias = 7 } = {}) {
 	return pegar(`/api/lojas/novidades?${p}`);
 }
 
+/** Adiciona uma loja ao monitoramento (aceita URL ou ID numérico). */
+export function adicionarLoja({ input, cron } = {}) {
+	const corpo = { input };
+	if (cron) corpo.cron = cron;
+	return postar('/api/lojas', corpo);
+}
+
+/** Remove uma loja do monitoramento. */
+export async function removerLoja(id) {
+	const headers = { ...(await authHeaders()) };
+	const resp = await fetch(`${BASE}/api/lojas?id=${encodeURIComponent(id)}`, {
+		method: 'DELETE',
+		headers
+	});
+	if (!resp.ok) {
+		let detalhe = '';
+		try {
+			detalhe = (await resp.json())?.erro ?? '';
+		} catch { /* */ }
+		throw new Error(detalhe || `Falha ${resp.status}`);
+	}
+	return resp.json();
+}
+
 /** Resolve um link curto da Shopee para obter URL final + dados do produto. */
 export function resolverLinkShopee(url) {
 	return postar('/api/resolver-link', { url });

@@ -70,6 +70,11 @@ type Busca struct {
 	OwnerUID    string    `json:"owner_uid,omitempty"` // uid do Firebase Auth
 	SalvoEm     time.Time `json:"salvo_em"`
 
+	// Rotação de catálogo: próxima página a coletar por loja (JSON map shopID→page)
+	RotationCursor map[int64]int `json:"rotation_cursor,omitempty"`
+	// Timestamp da última varredura completa do catálogo (por loja)
+	FullScanAt map[int64]string `json:"full_scan_at,omitempty"`
+
 	// Legado
 	KeywordLegado string `json:"keyword,omitempty"`
 	NomeLegado    string `json:"nome,omitempty"`

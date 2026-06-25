@@ -92,6 +92,7 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 	bSchema := bigquery.Schema{
 		{Name: "id", Type: bigquery.StringFieldType},
 		{Name: "keywords", Type: bigquery.StringFieldType}, // JSON array
+		{Name: "shop_ids", Type: bigquery.StringFieldType}, // JSON array de int64
 		{Name: "categoria", Type: bigquery.StringFieldType},
 		{Name: "estrategia", Type: bigquery.StringFieldType},
 		{Name: "comissao_min", Type: bigquery.FloatFieldType},
@@ -101,6 +102,8 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "cron", Type: bigquery.StringFieldType},
 		{Name: "ativo", Type: bigquery.BooleanFieldType},
 		{Name: "owner_uid", Type: bigquery.StringFieldType},
+		{Name: "rotation_cursor", Type: bigquery.StringFieldType}, // JSON map
+		{Name: "full_scan_at", Type: bigquery.StringFieldType},    // JSON map
 		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
 	}
 	if err := criarSeNaoExistir(ctx, ds, "buscas", bSchema, "salvo_em"); err != nil {
@@ -258,18 +261,21 @@ func (s *BigQueryStore) RegistrarSnapshot(ctx context.Context, snap Snapshot) er
 // linhaBuscaBQ mapeia a Busca para a tabela `buscas`.
 // Keywords é serializado como JSON array para caber em uma coluna STRING.
 type linhaBuscaBQ struct {
-	ID          string    `bigquery:"id"`
-	Keywords    string    `bigquery:"keywords"` // JSON array
-	Categoria   string    `bigquery:"categoria"`
-	Estrategia  string    `bigquery:"estrategia"`
-	ComissaoMin float64   `bigquery:"comissao_min"`
-	VendasMin   int       `bigquery:"vendas_min"`
-	NotaMin     float64   `bigquery:"nota_min"`
-	Top         int       `bigquery:"top"`
-	Cron        string    `bigquery:"cron"`
-	Ativo       bool      `bigquery:"ativo"`
-	OwnerUID    string    `bigquery:"owner_uid"`
-	SalvoEm     time.Time `bigquery:"salvo_em"`
+	ID             string    `bigquery:"id"`
+	Keywords       string    `bigquery:"keywords"` // JSON array
+	ShopIDs        string    `bigquery:"shop_ids"` // JSON array de int64
+	Categoria      string    `bigquery:"categoria"`
+	Estrategia     string    `bigquery:"estrategia"`
+	ComissaoMin    float64   `bigquery:"comissao_min"`
+	VendasMin      int       `bigquery:"vendas_min"`
+	NotaMin        float64   `bigquery:"nota_min"`
+	Top            int       `bigquery:"top"`
+	Cron           string    `bigquery:"cron"`
+	Ativo          bool      `bigquery:"ativo"`
+	OwnerUID       string    `bigquery:"owner_uid"`
+	RotationCursor string    `bigquery:"rotation_cursor"` // JSON map shopID→page
+	FullScanAt     string    `bigquery:"full_scan_at"`    // JSON map shopID→timestamp
+	SalvoEm        time.Time `bigquery:"salvo_em"`
 }
 
 func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
@@ -278,10 +284,16 @@ func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
 		b.SalvoEm = time.Now().UTC()
 	}
 	kw, _ := json.Marshal(b.Keywords)
+	shopIDs, _ := json.Marshal(b.ShopIDs)
+	rotCursor, _ := json.Marshal(b.RotationCursor)
+	fullScan, _ := json.Marshal(b.FullScanAt)
 	row := linhaBuscaBQ{
-		ID: b.ID, Keywords: string(kw), Categoria: b.Categoria, Estrategia: b.Estrategia,
+		ID: b.ID, Keywords: string(kw), ShopIDs: string(shopIDs),
+		Categoria: b.Categoria, Estrategia: b.Estrategia,
 		ComissaoMin: b.ComissaoMin, VendasMin: b.VendasMin, NotaMin: b.NotaMin, Top: b.Top,
-		Cron: b.Cron, Ativo: b.Ativo, OwnerUID: b.OwnerUID, SalvoEm: b.SalvoEm,
+		Cron: b.Cron, Ativo: b.Ativo, OwnerUID: b.OwnerUID,
+		RotationCursor: string(rotCursor), FullScanAt: string(fullScan),
+		SalvoEm: b.SalvoEm,
 	}
 	return s.client.Dataset(s.dataset).Table("buscas").Inserter().Put(ctx, row)
 }
@@ -294,8 +306,10 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 		  SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
 		  FROM ` + "`" + s.dataset + ".buscas`" + `
 		)
-		SELECT id, keywords, categoria, estrategia, comissao_min, vendas_min,
-		       nota_min, top, cron, ativo, owner_uid, salvo_em
+		SELECT id, keywords, IFNULL(shop_ids, '') as shop_ids, categoria, estrategia,
+		       comissao_min, vendas_min, nota_min, top, cron, ativo, owner_uid,
+		       IFNULL(rotation_cursor, '') as rotation_cursor,
+		       IFNULL(full_scan_at, '') as full_scan_at, salvo_em
 		FROM ranked WHERE rn = 1 AND ativo = TRUE
 		ORDER BY id
 	`)
@@ -324,10 +338,23 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 				}
 			}
 		}
+		var shopIDs []int64
+		if r.ShopIDs != "" {
+			_ = json.Unmarshal([]byte(r.ShopIDs), &shopIDs)
+		}
+		var rotCursor map[int64]int
+		if r.RotationCursor != "" {
+			_ = json.Unmarshal([]byte(r.RotationCursor), &rotCursor)
+		}
+		var fullScan map[int64]string
+		if r.FullScanAt != "" {
+			_ = json.Unmarshal([]byte(r.FullScanAt), &fullScan)
+		}
 		out = append(out, Busca{
-			ID: r.ID, Keywords: kws, Categoria: r.Categoria, Estrategia: r.Estrategia,
+			ID: r.ID, Keywords: kws, ShopIDs: shopIDs, Categoria: r.Categoria, Estrategia: r.Estrategia,
 			ComissaoMin: r.ComissaoMin, VendasMin: r.VendasMin, NotaMin: r.NotaMin, Top: r.Top,
-			Cron: r.Cron, Ativo: r.Ativo, OwnerUID: r.OwnerUID, SalvoEm: r.SalvoEm,
+			Cron: r.Cron, Ativo: r.Ativo, OwnerUID: r.OwnerUID,
+			RotationCursor: rotCursor, FullScanAt: fullScan, SalvoEm: r.SalvoEm,
 		})
 	}
 	return out, nil

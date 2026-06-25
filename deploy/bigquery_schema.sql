@@ -49,6 +49,7 @@ PARTITION BY DATE(coletado_em);
 CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.buscas` (
   id           STRING,       -- slug da keyword principal (ex.: "perfumaria-japonesa")
   keywords     STRING,       -- JSON array de termos (ex.: '["kenzo","shiseido"]')
+  shop_ids     STRING,       -- JSON array de IDs de lojas (ex.: '[12345,67890]')
   categoria    STRING,
   estrategia   STRING,       -- "nicho" | "diversificada" | "ambas"
   comissao_min FLOAT64,
@@ -57,6 +58,9 @@ CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.buscas` (
   top          INT64,
   cron         STRING,       -- periodicidade da coleta (ex.: "0 8 * * *")
   ativo        BOOL,         -- FALSE = removida (tombstone)
+  owner_uid    STRING,       -- uid do Firebase Auth
+  rotation_cursor STRING,    -- JSON map shopID→próxima página (rotação de catálogo)
+  full_scan_at STRING,       -- JSON map shopID→timestamp da última varredura completa
   salvo_em     TIMESTAMP
 )
 PARTITION BY DATE(salvo_em);

@@ -19,6 +19,7 @@ type Job struct {
 
 // ColetaParams são os parâmetros de uma coleta agendada.
 type ColetaParams struct {
+	BuscaID     string  // ID da busca (para rotação de catálogo)
 	Categoria   string
 	Estrategia  string
 	Top         int

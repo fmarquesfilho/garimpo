@@ -110,6 +110,9 @@ func (s *GCPScheduler) criarOuAtualizar(ctx context.Context, jobID, cron, uri st
 
 func (s *GCPScheduler) buildURI(keyword string, p ColetaParams) string {
 	q := url.Values{}
+	if p.BuscaID != "" {
+		q.Set("busca_id", p.BuscaID)
+	}
 	if len(p.ShopIDs) > 0 {
 		q.Set("fonte", "shopee-shop")
 		ids := make([]string, 0, len(p.ShopIDs))

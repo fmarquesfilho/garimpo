@@ -27,9 +27,23 @@ type ShopeeShopSource struct {
 	CategoryLabel string
 	Limit         int
 	MaxPages      int
+	StartPage     int           // página inicial (rotação); 0 ou 1 = primeira página
+	PageDelay     time.Duration // delay entre páginas (throttling); 0 = sem delay
+	ShopDelay     time.Duration // delay entre lojas (throttling); 0 = sem delay
 
 	Endpoint   string
 	HTTPClient *http.Client
+
+	// LastPageInfo é preenchido após Fetch() com info de paginação por loja.
+	// Chave: shopID, Valor: próxima página a buscar (para rotação).
+	LastPageInfo map[int64]PageResult
+}
+
+// PageResult guarda o resultado de paginação para uma loja após Fetch.
+type PageResult struct {
+	NextPage    int  // próxima página a buscar na próxima coleta
+	HasMore     bool // true se ainda há mais páginas no catálogo
+	PagesFetched int // quantas páginas foram buscadas neste ciclo
 }
 
 func NewShopeeShopSource(appID, secret string, shopIDs []int64) *ShopeeShopSource {
@@ -83,10 +97,30 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 	if maxPages <= 0 {
 		maxPages = 1
 	}
+	startPage := s.StartPage
+	if startPage <= 0 {
+		startPage = 1
+	}
+
+	s.LastPageInfo = make(map[int64]PageResult)
 
 	var produtos []domain.Product
-	for _, shopID := range s.ShopIDs {
-		for page := 1; page <= maxPages; page++ {
+	for i, shopID := range s.ShopIDs {
+		// Throttling: delay entre lojas (exceto antes da primeira)
+		if i > 0 && s.ShopDelay > 0 {
+			time.Sleep(s.ShopDelay)
+		}
+
+		pagesFetched := 0
+		hasMore := false
+		nextPage := startPage
+
+		for page := startPage; page < startPage+maxPages; page++ {
+			// Throttling: delay entre páginas (exceto antes da primeira)
+			if page > startPage && s.PageDelay > 0 {
+				time.Sleep(s.PageDelay)
+			}
+
 			body, _ := json.Marshal(map[string]string{"query": s.buildQuery(shopID, page)})
 
 			ts := strconv.FormatInt(time.Now().Unix(), 10)
@@ -134,9 +168,21 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 				})
 			}
 
+			pagesFetched++
 			if !gql.Data.ShopOfferV2.PageInfo.HasNextPage {
+				// Catálogo terminou — próxima coleta volta pra página 1
+				nextPage = 1
+				hasMore = false
 				break
 			}
+			hasMore = true
+			nextPage = page + 1
+		}
+
+		s.LastPageInfo[shopID] = PageResult{
+			NextPage:     nextPage,
+			HasMore:      hasMore,
+			PagesFetched: pagesFetched,
 		}
 	}
 	return produtos, nil

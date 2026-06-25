@@ -1,13 +1,19 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { buscarCandidatos, buscarNovidades } from '$lib/api.js';
+	import { buscarCandidatos, buscarNovidades, adicionarLoja, removerLoja } from '$lib/api.js';
 	import { buscasSalvas } from '$lib/buscas.js';
 	import { usuario } from '$lib/firebase.js';
 
 	let buscasComLojas = $derived(($buscasSalvas ?? []).filter(b => b.shop_ids?.length > 0));
 	let buscaSelecionada = $state(null);
 	let aba = $state('produtos'); // 'produtos' | 'novidades' | 'precos'
+
+	// Formulário de adicionar loja
+	let inputLoja = $state('');
+	let adicionando = $state(false);
+	let erroAdicionar = $state(null);
+	let sucessoAdicionar = $state(null);
 
 	// Produtos da loja
 	let produtos = $state([]);
@@ -20,6 +26,46 @@
 	let erroNovidades = $state(null);
 
 	onMount(() => buscasSalvas.sincronizarDoServidor());
+
+	async function handleAdicionarLoja() {
+		const valor = inputLoja.trim();
+		if (!valor) return;
+
+		adicionando = true;
+		erroAdicionar = null;
+		sucessoAdicionar = null;
+
+		try {
+			const r = await adicionarLoja({ input: valor });
+			sucessoAdicionar = `Loja ${r.shop_id} adicionada com sucesso!`;
+			inputLoja = '';
+			// Recarrega a lista de buscas do servidor
+			await buscasSalvas.sincronizarDoServidor();
+			// Seleciona a nova loja automaticamente
+			setTimeout(() => {
+				const nova = buscasComLojas.find(b => b.id === r.id);
+				if (nova) selecionarBusca(nova);
+				sucessoAdicionar = null;
+			}, 2000);
+		} catch (e) {
+			erroAdicionar = e.message;
+		} finally {
+			adicionando = false;
+		}
+	}
+
+	async function handleRemoverLoja(b) {
+		if (!confirm(`Remover monitoramento da loja "${b.id}"?`)) return;
+		try {
+			await removerLoja(b.id);
+			await buscasSalvas.sincronizarDoServidor();
+			if (buscaSelecionada?.id === b.id) {
+				buscaSelecionada = null;
+			}
+		} catch (e) {
+			alert('Erro ao remover: ' + e.message);
+		}
+	}
 
 	async function selecionarBusca(b) {
 		buscaSelecionada = b;
@@ -87,143 +133,187 @@
 
 	{#if !$usuario}
 		<div class="aviso">Faça login para ver as lojas monitoradas.</div>
-	{:else if buscasComLojas.length === 0}
-		<div class="vazio">
-			<p>Nenhuma busca com lojas configurada.</p>
-			<p class="dica">Na página de <a href="/">Curadoria</a>, crie uma nova busca e adicione IDs de lojas no campo "🏪 Lojas Shopee".</p>
-		</div>
 	{:else}
-		<!-- Lista de buscas com lojas -->
-		<div class="lojas-lista">
-			{#each buscasComLojas as b (b.id)}
-				<button
-					class="loja-card"
-					class:ativa={buscaSelecionada?.id === b.id}
-					onclick={() => selecionarBusca(b)}
-				>
-					<strong>{b.id}</strong>
-					<span class="loja-meta">
-						🏪 {b.shop_ids.length} {b.shop_ids.length === 1 ? 'loja' : 'lojas'}
-						{#if b.keywords?.length > 0}
-							· 🔑 {b.keywords.join(', ')}
-						{/if}
-					</span>
-				</button>
-			{/each}
+		<!-- Formulário para adicionar loja -->
+		<div class="form-loja">
+			<h2>Adicionar loja</h2>
+			<form onsubmit={(e) => { e.preventDefault(); handleAdicionarLoja(); }}>
+				<div class="form-row">
+					<input
+						type="text"
+						bind:value={inputLoja}
+						placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"
+						disabled={adicionando}
+						class="input-loja"
+					/>
+					<button type="submit" disabled={adicionando || !inputLoja.trim()} class="btn-adicionar">
+						{adicionando ? '⏳' : '➕'} Adicionar
+					</button>
+				</div>
+				{#if erroAdicionar}
+					<p class="msg-erro-inline">{erroAdicionar}</p>
+				{/if}
+				{#if sucessoAdicionar}
+					<p class="msg-sucesso">{sucessoAdicionar}</p>
+				{/if}
+			</form>
 		</div>
 
-		{#if buscaSelecionada}
-			<!-- Abas -->
-			<nav class="abas">
-				<button class:ativa={aba === 'produtos'} onclick={() => (aba = 'produtos')}>
-					Produtos {#if produtos.length > 0}<span class="badge-n">{produtos.length}</span>{/if}
-				</button>
-				<button class:ativa={aba === 'novidades'} onclick={() => (aba = 'novidades')}>
-					🆕 Novidades {#if novidades?.produtos_novos?.length}<span class="badge-n alerta">{novidades.produtos_novos.length}</span>{/if}
-				</button>
-				<button class:ativa={aba === 'precos'} onclick={() => (aba = 'precos')}>
-					📉 Preços {#if novidades?.variacoes?.length}<span class="badge-n">{novidades.variacoes.length}</span>{/if}
-				</button>
-			</nav>
-
-			{#if aba === 'produtos'}
-				{#if carregandoProdutos}
-					<p class="loading">Buscando produtos da loja…</p>
-				{:else if erroProdutos}
-					<div class="msg-erro">{erroProdutos}</div>
-				{:else if produtos.length === 0}
-					<p class="vazio-tab">Nenhum produto encontrado. A coleta periódica pode ainda não ter rodado.</p>
-				{:else}
-					<div class="grade-produtos">
-						{#each produtos as p, i (p.id)}
-							<div class="card-produto-loja">
-								{#if p.imagem}
-									<img src={p.imagem} alt={p.nome} class="prod-thumb" />
+		{#if buscasComLojas.length === 0}
+			<div class="vazio">
+				<p>Nenhuma loja monitorada ainda.</p>
+				<p class="dica">Use o formulário acima para adicionar uma loja Shopee.</p>
+			</div>
+		{:else}
+			<!-- Lista de buscas com lojas -->
+			<div class="lojas-lista">
+				{#each buscasComLojas as b (b.id)}
+					<div class="loja-card-wrapper">
+						<button
+							class="loja-card"
+							class:ativa={buscaSelecionada?.id === b.id}
+							onclick={() => selecionarBusca(b)}
+						>
+							<strong>{b.id}</strong>
+							<span class="loja-meta">
+								🏪 {b.shop_ids.length} {b.shop_ids.length === 1 ? 'loja' : 'lojas'}
+								{#if b.keywords?.length > 0}
+									· 🔑 {b.keywords.join(', ')}
 								{/if}
-								<div class="prod-info">
-									<h4>{p.nome}</h4>
-									<div class="prod-dados">
-										<span class="prod-preco">{brl(p.preco)}</span>
-										<span class="prod-comissao">{pct(p.comissao)}</span>
-										<span class="prod-vendas">{p.vendas} vendas</span>
-										<span class="prod-nota">★ {p.avaliacao?.toFixed(1)}</span>
-									</div>
-									<div class="prod-score">teor: {p.score?.toFixed(3)}</div>
-								</div>
-								<button class="btn-pub-mini" onclick={() => irParaPublicar(p)} title="Publicar este produto">
-									📤
-								</button>
-							</div>
-						{/each}
+							</span>
+						</button>
+						<button
+							class="btn-remover"
+							onclick={() => handleRemoverLoja(b)}
+							title="Remover monitoramento"
+						>✕</button>
 					</div>
-				{/if}
+				{/each}
+			</div>
 
-			{:else if aba === 'novidades'}
-				{#if carregandoNovidades}
-					<p class="loading">Analisando novidades…</p>
-				{:else if erroNovidades}
-					<div class="msg-erro">{erroNovidades}</div>
-				{:else if !novidades || novidades.produtos_novos?.length === 0}
-					<p class="vazio-tab">Nenhum produto novo detectado nos últimos {novidades?.dias_janela ?? 7} dias.</p>
-				{:else}
-					<p class="info-novidades">
-						<strong>{novidades.produtos_novos.length}</strong> produto(s) novo(s) detectado(s)
-						nos últimos {novidades.dias_janela} dias.
-					</p>
-					<div class="grade-novidades">
-						{#each novidades.produtos_novos as p (p.produto_id)}
-							<div class="card-novidade">
-								<div class="novidade-badge">🆕</div>
-								<div class="novidade-info">
-									<strong>{p.nome}</strong>
-									<div class="novidade-dados">
-										<span>{brl(p.preco)}</span>
-										<span>{pct(p.comissao)} comissão</span>
-										<span>{p.vendas} vendas</span>
+			{#if buscaSelecionada}
+				<!-- Abas -->
+				<nav class="abas">
+					<button class:ativa={aba === 'produtos'} onclick={() => (aba = 'produtos')}>
+						Produtos {#if produtos.length > 0}<span class="badge-n">{produtos.length}</span>{/if}
+					</button>
+					<button class:ativa={aba === 'novidades'} onclick={() => (aba = 'novidades')}>
+						🆕 Novidades {#if novidades?.produtos_novos?.length}<span class="badge-n alerta">{novidades.produtos_novos.length}</span>{/if}
+					</button>
+					<button class:ativa={aba === 'precos'} onclick={() => (aba = 'precos')}>
+						📉 Preços {#if novidades?.variacoes?.length}<span class="badge-n">{novidades.variacoes.length}</span>{/if}
+					</button>
+				</nav>
+
+				{#if aba === 'produtos'}
+					{#if carregandoProdutos}
+						<p class="loading">Buscando produtos da loja…</p>
+					{:else if erroProdutos}
+						<div class="msg-erro">{erroProdutos}</div>
+					{:else if produtos.length === 0}
+						<p class="vazio-tab">Nenhum produto encontrado. A coleta periódica pode ainda não ter rodado.</p>
+					{:else}
+						<div class="grade-produtos">
+							{#each produtos as p, i (p.id)}
+								<div class="card-produto-loja">
+									{#if p.imagem}
+										<img src={p.imagem} alt={p.nome} class="prod-thumb" />
+									{/if}
+									<div class="prod-info">
+										<h4>{p.nome}</h4>
+										<div class="prod-dados">
+											<span class="prod-preco">{brl(p.preco)}</span>
+											<span class="prod-comissao">{pct(p.comissao)}</span>
+											<span class="prod-vendas">{p.vendas} vendas</span>
+											<span class="prod-nota">★ {p.avaliacao?.toFixed(1)}</span>
+										</div>
+										<div class="prod-score">teor: {p.score?.toFixed(3)}</div>
 									</div>
-									<span class="novidade-data">Detectado: {p.detectado_em?.split('T')[0]}</span>
+									<button class="btn-pub-mini" onclick={() => irParaPublicar(p)} title="Publicar este produto">
+										📤
+									</button>
 								</div>
-							</div>
-						{/each}
-					</div>
-				{/if}
+							{/each}
+						</div>
+					{/if}
 
-			{:else if aba === 'precos'}
-				{#if carregandoNovidades}
-					<p class="loading">Analisando variações…</p>
-				{:else if !novidades || novidades.variacoes?.length === 0}
-					<p class="vazio-tab">Nenhuma variação de preço detectada nos últimos {novidades?.dias_janela ?? 7} dias.</p>
-				{:else}
-					<p class="info-novidades">
-						<strong>{novidades.variacoes.length}</strong> variação(ões) de preço detectada(s).
-					</p>
-					<div class="tabela-variacoes">
-						<table>
-							<thead>
-								<tr>
-									<th>Produto</th>
-									<th>Antes</th>
-									<th>Agora</th>
-									<th>Variação</th>
-									<th>Detectado</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each novidades.variacoes as v (v.produto_id)}
-									<tr class:baixou={v.variacao_pct < 0} class:subiu={v.variacao_pct > 0}>
-										<td class="nome-col">{v.nome}</td>
-										<td>{brl(v.preco_anterior)}</td>
-										<td class="preco-atual">{brl(v.preco_atual)}</td>
-										<td class="variacao">
-											{v.variacao_pct > 0 ? '↑' : '↓'}
-											{Math.abs(v.variacao_pct * 100).toFixed(1)}%
-										</td>
-										<td class="data">{v.detectado_em?.split('T')[0]}</td>
+				{:else if aba === 'novidades'}
+					{#if carregandoNovidades}
+						<p class="loading">Analisando novidades…</p>
+					{:else if erroNovidades}
+						<div class="msg-erro">{erroNovidades}</div>
+					{:else if !novidades || novidades.produtos_novos?.length === 0}
+						<p class="vazio-tab">Nenhum produto novo detectado nos últimos {novidades?.dias_janela ?? 7} dias.</p>
+					{:else}
+						<p class="info-novidades">
+							<strong>{novidades.produtos_novos.length}</strong> produto(s) novo(s) detectado(s)
+							nos últimos {novidades.dias_janela} dias.
+						</p>
+						<div class="grade-novidades">
+							{#each novidades.produtos_novos as p (p.produto_id)}
+								<div class="card-novidade">
+									<div class="novidade-badge">🆕</div>
+									<div class="novidade-info">
+										<strong>{p.nome}</strong>
+										<div class="novidade-dados">
+											<span>{brl(p.preco)}</span>
+											<span>{pct(p.comissao)} comissão</span>
+											<span>{p.vendas} vendas</span>
+										</div>
+										<span class="novidade-data">Detectado: {p.detectado_em?.split('T')[0]}</span>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+
+				{:else if aba === 'precos'}
+					{#if carregandoNovidades}
+						<p class="loading">Analisando variações…</p>
+					{:else if !novidades || novidades.variacoes?.length === 0}
+						<p class="vazio-tab">Nenhuma variação de preço detectada nos últimos {novidades?.dias_janela ?? 7} dias.</p>
+					{:else}
+						<p class="info-novidades">
+							<strong>{novidades.variacoes.length}</strong> variação(ões) de preço detectada(s).
+						</p>
+						<div class="tabela-variacoes">
+							<table>
+								<thead>
+									<tr>
+										<th>Produto</th>
+										<th>Antes</th>
+										<th>Agora</th>
+										<th>Variação</th>
+										<th>Detectado</th>
+										<th></th>
 									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
+								</thead>
+								<tbody>
+									{#each novidades.variacoes as v (v.produto_id)}
+										<tr class:baixou={v.variacao_pct < 0} class:subiu={v.variacao_pct > 0}>
+											<td class="nome-col">{v.nome}</td>
+											<td>{brl(v.preco_anterior)}</td>
+											<td class="preco-atual">{brl(v.preco_atual)}</td>
+											<td class="variacao">
+												<span class="badge-variacao" class:badge-baixou={v.variacao_pct < 0} class:badge-subiu={v.variacao_pct > 0}>
+													{v.variacao_pct < 0 ? '↓' : '↑'}
+													{Math.abs(v.variacao_pct * 100).toFixed(1)}%
+												</span>
+											</td>
+											<td class="data">{v.detectado_em?.split('T')[0]}</td>
+											<td>
+												<button class="btn-pub-mini" onclick={() => irParaPublicar({
+													id: v.produto_id,
+													nome: v.nome,
+													preco: v.preco_atual
+												})} title="Publicar esta oferta">📤</button>
+											</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					{/if}
 				{/if}
 			{/if}
 		{/if}
@@ -233,6 +323,7 @@
 <style>
 	.lojas-page { max-width: 900px; }
 	h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+	h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--tinta); }
 	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r6); }
 
 	.aviso, .vazio { background: var(--porcelana); padding: var(--r4); border-radius: 10px; color: var(--tinta-suave); }
@@ -240,19 +331,80 @@
 	.dica { font-size: 0.85rem; margin-top: 4px; }
 	.vazio-tab { color: var(--tinta-suave); font-size: 0.9rem; font-style: italic; }
 	.msg-erro { background: #fef2f2; color: #b91c1c; padding: var(--r3) var(--r4); border-radius: 8px; margin-bottom: var(--r4); }
+	.msg-erro-inline { color: #b91c1c; font-size: 0.85rem; margin-top: 6px; }
+	.msg-sucesso { color: #16a34a; font-size: 0.85rem; margin-top: 6px; }
 	.loading { color: var(--tinta-suave); font-style: italic; }
+
+	/* Formulário de adicionar loja */
+	.form-loja {
+		background: var(--nevoa);
+		border: 1px solid var(--linha);
+		border-radius: 12px;
+		padding: var(--r4);
+		margin-bottom: var(--r5);
+	}
+	.form-row {
+		display: flex;
+		gap: var(--r3);
+		align-items: stretch;
+	}
+	.input-loja {
+		flex: 1;
+		padding: 10px 14px;
+		border: 1px solid var(--linha);
+		border-radius: 8px;
+		font-size: 0.9rem;
+		background: white;
+	}
+	.input-loja:focus {
+		outline: none;
+		border-color: var(--ouro);
+		box-shadow: 0 0 0 2px var(--ouro-fundo);
+	}
+	.btn-adicionar {
+		padding: 10px 18px;
+		background: var(--ouro);
+		color: white;
+		border: none;
+		border-radius: 8px;
+		font-weight: 600;
+		font-size: 0.9rem;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.btn-adicionar:hover:not(:disabled) { opacity: 0.9; }
+	.btn-adicionar:disabled { opacity: 0.5; cursor: not-allowed; }
 
 	/* Lista de buscas com lojas */
 	.lojas-lista { display: flex; flex-wrap: wrap; gap: var(--r3); margin-bottom: var(--r5); }
+	.loja-card-wrapper { position: relative; }
 	.loja-card {
 		border: 1px solid var(--linha); background: var(--nevoa);
 		border-radius: 10px; padding: var(--r3) var(--r4);
+		padding-right: 32px;
 		cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px;
 	}
 	.loja-card:hover { border-color: var(--ouro); }
 	.loja-card.ativa { border-color: var(--ouro); background: var(--ouro-fundo); }
 	.loja-card strong { font-size: 0.9rem; }
 	.loja-meta { font-size: 0.78rem; color: var(--tinta-suave); }
+	.btn-remover {
+		position: absolute;
+		top: 4px;
+		right: 4px;
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		border: none;
+		background: transparent;
+		color: var(--tinta-suave);
+		font-size: 0.75rem;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.btn-remover:hover { background: #fef2f2; color: #b91c1c; }
 
 	/* Abas */
 	.abas { display: flex; gap: 2px; margin-bottom: var(--r5); border-bottom: 2px solid var(--linha); }
@@ -313,9 +465,24 @@
 	.nome-col { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	.preco-atual { font-weight: 700; }
 	.variacao { font-weight: 700; }
-	tr.baixou .variacao { color: #16a34a; }
+	.badge-variacao {
+		display: inline-block;
+		padding: 2px 8px;
+		border-radius: 999px;
+		font-size: 0.78rem;
+		font-weight: 700;
+	}
+	.badge-baixou { background: #dcfce7; color: #16a34a; }
+	.badge-subiu { background: #fef2f2; color: #dc2626; }
 	tr.baixou .preco-atual { color: #16a34a; }
-	tr.subiu .variacao { color: #dc2626; }
 	tr.subiu .preco-atual { color: #dc2626; }
 	.data { font-size: 0.78rem; color: var(--tinta-suave); }
+
+	/* Responsivo mobile */
+	@media (max-width: 600px) {
+		.form-row { flex-direction: column; }
+		.btn-adicionar { width: 100%; }
+		.abas { overflow-x: auto; }
+		.abas button { padding: 8px 12px; font-size: 0.8rem; }
+	}
 </style>

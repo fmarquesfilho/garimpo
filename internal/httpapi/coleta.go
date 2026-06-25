@@ -10,6 +10,7 @@ import (
 
 "github.com/fmarquesfilho/garimpo/internal/engine"
 "github.com/fmarquesfilho/garimpo/internal/scheduler"
+"github.com/fmarquesfilho/garimpo/internal/source"
 "github.com/fmarquesfilho/garimpo/internal/store"
 )
 
@@ -25,11 +26,69 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 		estrategia = v
 	}
 
+	// Amostragem rotativa: se é coleta de loja com busca_id, usa o cursor.
+	buscaID := q.Get("busca_id")
+	var busca *store.Busca
+	if buscaID != "" && srv.fonteAtiva(q) == "shopee-shop" {
+		buscas, _ := srv.Eventos.ListarBuscas(r.Context())
+		for _, b := range buscas {
+			if b.ID == buscaID && b.Ativo {
+				busca = &b
+				break
+			}
+		}
+	}
+
 	src, chave := srv.fonte(q)
+
+	// Aplica rotação e throttling se é uma coleta de loja
+	if busca != nil {
+		if shopSrc, ok := src.(*source.ShopeeShopSource); ok {
+			// Determina startPage a partir do cursor
+			if busca.RotationCursor != nil && len(busca.ShopIDs) > 0 {
+				firstShop := busca.ShopIDs[0]
+				if pg, exists := busca.RotationCursor[firstShop]; exists && pg > 1 {
+					shopSrc.StartPage = pg
+				}
+			}
+			// Throttling: 200ms entre páginas, 60s entre lojas
+			shopSrc.PageDelay = 200 * time.Millisecond
+			shopSrc.ShopDelay = 60 * time.Second
+		}
+		// Bypass cache para coletas rotativas (cada ciclo busca páginas diferentes)
+		chave = chave + "|rot"
+	}
+
 	produtos, err := srv.fetchCacheado(src, chave)
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
+	}
+
+	// Atualiza o rotation cursor após busca bem-sucedida
+	if busca != nil {
+		if shopSrc, ok := src.(*source.ShopeeShopSource); ok && shopSrc.LastPageInfo != nil {
+			if busca.RotationCursor == nil {
+				busca.RotationCursor = make(map[int64]int)
+			}
+			if busca.FullScanAt == nil {
+				busca.FullScanAt = make(map[int64]string)
+			}
+			for shopID, info := range shopSrc.LastPageInfo {
+				busca.RotationCursor[shopID] = info.NextPage
+				if !info.HasMore {
+					// Catálogo completo — registra timestamp
+					busca.FullScanAt[shopID] = time.Now().UTC().Format(time.RFC3339)
+				}
+			}
+			// Persiste o cursor atualizado
+			go func() {
+				if err := srv.Eventos.SalvarBusca(context.Background(), *busca); err != nil {
+					srv.Logger.Error("atualizar rotation cursor falhou",
+						slog.String("busca", busca.ID), slog.String("erro", err.Error()))
+				}
+			}()
+		}
 	}
 
 	scored := engine.Rankear(produtos, strategyDe(estrategia), srv.elegibilidade(q))
@@ -133,7 +192,7 @@ func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		params := scheduler.ColetaParams{
-			Categoria: b.Categoria, Estrategia: b.Estrategia,
+			BuscaID: b.ID, Categoria: b.Categoria, Estrategia: b.Estrategia,
 			Top: b.Top, VendasMin: b.VendasMin, NotaMin: b.NotaMin, ShopIDs: b.ShopIDs,
 		}
 		var err error

@@ -213,3 +213,203 @@ func TestShopeeAPISourceBuildQueryComKeyword(t *testing.T) {
 		t.Errorf("query não deveria ter itemId quando só keyword é usado:\n%s", queryRecebida)
 	}
 }
+
+// --- Testes de amostragem rotativa ─────────────────────────────────────────
+
+func TestShopeeShopSourceStartPageRotation(t *testing.T) {
+	// Servidor retorna hasNextPage=true sempre para simular catálogo grande
+	paginasRecebidas := []int{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+		var req map[string]string
+		json.Unmarshal(body, &req)
+		query := req["query"]
+		// Extrai o número da página da query
+		for _, part := range strings.Split(query, ",") {
+			part = strings.TrimSpace(part)
+			if strings.HasPrefix(part, "page:") {
+				pageStr := strings.TrimSpace(strings.TrimPrefix(part, "page:"))
+				page := 0
+				for _, c := range pageStr {
+					if c >= '0' && c <= '9' {
+						page = page*10 + int(c-'0')
+					}
+				}
+				paginasRecebidas = append(paginasRecebidas, page)
+			}
+		}
+		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":true}}}}`))
+	}))
+	defer srv.Close()
+
+	source := NewShopeeShopSource("app", "secret", []int64{12345})
+	source.Endpoint = srv.URL
+	source.StartPage = 3 // Simula rotação: começa na página 3
+	source.MaxPages = 2  // Busca 2 páginas
+
+	_, err := source.Fetch()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Deveria ter buscado páginas 3 e 4
+	if len(paginasRecebidas) != 2 {
+		t.Fatalf("esperava 2 requests, veio %d", len(paginasRecebidas))
+	}
+	if paginasRecebidas[0] != 3 {
+		t.Errorf("primeira página deveria ser 3, veio %d", paginasRecebidas[0])
+	}
+	if paginasRecebidas[1] != 4 {
+		t.Errorf("segunda página deveria ser 4, veio %d", paginasRecebidas[1])
+	}
+
+	// LastPageInfo deve indicar próxima página = 5
+	info, ok := source.LastPageInfo[12345]
+	if !ok {
+		t.Fatal("LastPageInfo deveria ter entrada para shop 12345")
+	}
+	if info.NextPage != 5 {
+		t.Errorf("NextPage deveria ser 5, veio %d", info.NextPage)
+	}
+	if !info.HasMore {
+		t.Error("HasMore deveria ser true (catálogo não acabou)")
+	}
+	if info.PagesFetched != 2 {
+		t.Errorf("PagesFetched deveria ser 2, veio %d", info.PagesFetched)
+	}
+}
+
+func TestShopeeShopSourceRotationResetsOnEndOfCatalog(t *testing.T) {
+	// Servidor retorna hasNextPage=false para simular fim do catálogo
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":5,"hasNextPage":false}}}}`))
+	}))
+	defer srv.Close()
+
+	source := NewShopeeShopSource("app", "secret", []int64{99999})
+	source.Endpoint = srv.URL
+	source.StartPage = 5
+	source.MaxPages = 3
+
+	_, err := source.Fetch()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	info := source.LastPageInfo[99999]
+	if info.NextPage != 1 {
+		t.Errorf("NextPage deveria resetar para 1 (fim do catálogo), veio %d", info.NextPage)
+	}
+	if info.HasMore {
+		t.Error("HasMore deveria ser false (catálogo acabou)")
+	}
+}
+
+func TestShopeeShopSourceDefaultStartPage(t *testing.T) {
+	// StartPage = 0 deve ser tratado como 1
+	paginasRecebidas := []int{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+		var req map[string]string
+		json.Unmarshal(body, &req)
+		query := req["query"]
+		for _, part := range strings.Split(query, ",") {
+			part = strings.TrimSpace(part)
+			if strings.HasPrefix(part, "page:") {
+				pageStr := strings.TrimSpace(strings.TrimPrefix(part, "page:"))
+				page := 0
+				for _, c := range pageStr {
+					if c >= '0' && c <= '9' {
+						page = page*10 + int(c-'0')
+					}
+				}
+				paginasRecebidas = append(paginasRecebidas, page)
+			}
+		}
+		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[],"pageInfo":{"page":1,"hasNextPage":false}}}}`))
+	}))
+	defer srv.Close()
+
+	source := NewShopeeShopSource("app", "secret", []int64{11111})
+	source.Endpoint = srv.URL
+	// StartPage não definido (0) → deve buscar a partir de 1
+
+	_, err := source.Fetch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(paginasRecebidas) == 0 {
+		t.Fatal("deveria ter feito pelo menos 1 request")
+	}
+	if paginasRecebidas[0] != 1 {
+		t.Errorf("sem StartPage, deveria começar da 1, veio %d", paginasRecebidas[0])
+	}
+}
+
+func TestShopeeShopSourceMultipleShopsHaveIndependentPageInfo(t *testing.T) {
+	requestCount := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+		// Segunda loja retorna hasNextPage=false
+		hasNext := "true"
+		if requestCount > 2 {
+			hasNext = "false"
+		}
+		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":` + hasNext + `}}}}`))
+	}))
+	defer srv.Close()
+
+	source := NewShopeeShopSource("app", "secret", []int64{111, 222})
+	source.Endpoint = srv.URL
+	source.StartPage = 1
+	source.MaxPages = 2
+
+	_, err := source.Fetch()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Loja 111: buscou 2 páginas (ambas hasNextPage=true) → NextPage=3
+	info111 := source.LastPageInfo[111]
+	if info111.NextPage != 3 {
+		t.Errorf("loja 111: NextPage deveria ser 3, veio %d", info111.NextPage)
+	}
+	if !info111.HasMore {
+		t.Error("loja 111: HasMore deveria ser true")
+	}
+
+	// Loja 222: primeira request retorna hasNextPage=false → NextPage=1 (reset)
+	info222 := source.LastPageInfo[222]
+	if info222.NextPage != 1 {
+		t.Errorf("loja 222: NextPage deveria ser 1 (reset), veio %d", info222.NextPage)
+	}
+	if info222.HasMore {
+		t.Error("loja 222: HasMore deveria ser false")
+	}
+}
+
+func TestShopeeShopSourcePageDelay(t *testing.T) {
+	// Testa que PageDelay funciona sem deadlock (não verifica timing exato)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"data":{"shopOfferV2":{"nodes":[{"itemId":"1","productName":"P","offerLink":"","priceMin":10,"sales":1,"ratingStar":4,"commissionRate":0.1,"shopName":"S","imageUrl":""}],"pageInfo":{"page":1,"hasNextPage":true}}}}`))
+	}))
+	defer srv.Close()
+
+	source := NewShopeeShopSource("app", "secret", []int64{12345})
+	source.Endpoint = srv.URL
+	source.StartPage = 1
+	source.MaxPages = 3
+	source.PageDelay = 1 // 1ns — não trava mas exercita o código
+
+	produtos, err := source.Fetch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(produtos) != 3 {
+		t.Errorf("esperava 3 produtos (1 por página × 3 páginas), veio %d", len(produtos))
+	}
+}
