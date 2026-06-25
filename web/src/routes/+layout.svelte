@@ -52,6 +52,7 @@
 			<div class="menu-secao">
 				<span class="menu-titulo">Principal</span>
 				<a href="/" class:atual={$page.url.pathname === '/'}>🔍 Curadoria</a>
+				<a href="/oportunidades" class:atual={$page.url.pathname === '/oportunidades'}>🎯 Oportunidades</a>
 				<a href="/lojas" class:atual={$page.url.pathname === '/lojas'}>🏪 Lojas</a>
 				<a href="/quadro" class:atual={$page.url.pathname === '/quadro'}>📋 Quadro</a>
 			</div>
