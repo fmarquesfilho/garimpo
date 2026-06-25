@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "OpenAPI Sync Reminder",
+  "description": "Reminds to update docs/openapi.yaml when API route registration changes in httpapi.go",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/httpapi/httpapi.go"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "The file httpapi.go was edited. If new routes were added to the mux (HandleFunc calls), remind the user to also update docs/openapi.yaml with the new endpoint documentation. Check the diff for new mux.HandleFunc lines."
+  }
+}
