@@ -29,7 +29,7 @@
 
 	// ── Nova busca ────────────────────────────────────────────────────────────
 	let mostrarFormBusca = $state(false);
-	let buscasColapsadas = $state(false);
+	let buscasColapsadas = $state(true);
 	let keywordsNovas = $state([]);
 	let shopIdsNovas = $state([]);
 	let cronNova = $state('');

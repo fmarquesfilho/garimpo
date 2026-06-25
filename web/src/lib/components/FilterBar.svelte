@@ -27,12 +27,17 @@
 	{/if}
 	<label class="campo">
 		<span class="rotulo">categoria</span>
-		<select bind:value={categoria} class="dado">
-			<option value="cosméticos">cosméticos</option>
-			<option value="perfumaria">perfumaria</option>
-			<option value="bem-estar">bem-estar</option>
-			<option value="">sem rótulo</option>
-		</select>
+		<input type="text" list="categorias-sugeridas" bind:value={categoria} placeholder="ex.: cosméticos" class="entrada" />
+		<datalist id="categorias-sugeridas">
+			<option value="cosméticos" />
+			<option value="perfumaria" />
+			<option value="skincare" />
+			<option value="maquiagem" />
+			<option value="bem-estar" />
+			<option value="eletrônicos" />
+			<option value="casa" />
+			<option value="moda" />
+		</datalist>
 	</label>
 	<label class="campo">
 		<span class="rotulo">comissão mín.</span>
