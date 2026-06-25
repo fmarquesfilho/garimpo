@@ -1,5 +1,5 @@
 # ── 1. Build do frontend ────────────────────────────────────────────────────
-FROM node:20-alpine AS web
+FROM node:24-alpine AS web
 WORKDIR /web
 
 COPY web/package.json web/package-lock.json ./
@@ -9,7 +9,7 @@ COPY web/ .
 RUN npm run build
 
 # ── 2. Build do backend Go ──────────────────────────────────────────────────
-FROM golang:1.25 AS build
+FROM golang:1.26 AS build
 WORKDIR /src
 
 COPY go.mod go.sum ./
