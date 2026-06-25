@@ -113,6 +113,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
 	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
 	mux.HandleFunc("GET /api/whatsapp/grupos", srv.whatsappGrupos)
+	mux.HandleFunc("GET /api/docs", srv.apiDocs)
+	mux.HandleFunc("GET /api/openapi.yaml", srv.openapiSpec)
 
 	// Serve o frontend estático (SPA). Qualquer rota que não seja /api/*
 	// devolve o arquivo correspondente ou o fallback (200.html) para o

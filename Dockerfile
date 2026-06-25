@@ -22,6 +22,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -tags gcp -ldflags="-s -w" -o /out/garimpo
 # ── 3. Imagem final (binário + frontend estático) ───────────────────────────
 FROM gcr.io/distroless/static-debian12
 COPY --from=build /out/garimpo-api /garimpo-api
+COPY --from=build /src/docs/openapi.yaml /docs/openapi.yaml
 COPY --from=web /web/build /web
 ENV WEB_DIR=/web
 ENTRYPOINT ["/garimpo-api"]
