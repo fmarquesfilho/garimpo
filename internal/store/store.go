@@ -78,7 +78,7 @@ type Busca struct {
 
 	// Legado
 	KeywordLegado string `json:"keyword,omitempty"`
-	NomeLegado    string `json:"nome,omitempty"`
+	NomeLegado    string `json:"-"` // deprecated: use Nome
 }
 
 // NormalizarBusca garante que a busca tenha um ID e que Keywords esteja
@@ -89,6 +89,9 @@ func NormalizarBusca(b Busca) Busca {
 	}
 	if b.ID == "" && b.NomeLegado != "" {
 		b.ID = slugificar(b.NomeLegado)
+	}
+	if b.ID == "" && b.Nome != "" {
+		b.ID = slugificar(b.Nome)
 	}
 	if b.ID == "" && len(b.Keywords) > 0 {
 		b.ID = slugificar(b.Keywords[0])
