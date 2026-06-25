@@ -19,12 +19,29 @@
 		menuAberto = false;
 	}
 
+	function toggleMenu() {
+		menuAberto = !menuAberto;
+	}
+
+	// Fecha menu ao navegar
+	$effect(() => {
+		$page.url.pathname;
+		menuAberto = false;
+	});
+
 	// Verifica role quando o usuário loga
 	$effect(() => {
 		if ($usuario) {
 			verificarAdmin().then(r => { isAdmin = r?.admin ?? false; }).catch(() => { isAdmin = false; });
 		} else {
 			isAdmin = false;
+		}
+	});
+
+	// Trava scroll do body quando menu está aberto (mobile)
+	$effect(() => {
+		if (typeof document !== 'undefined') {
+			document.body.style.overflow = menuAberto ? 'hidden' : '';
 		}
 	});
 </script>
@@ -40,15 +57,26 @@
 				<button class="btn-auth" onclick={logout}>Sair</button>
 				<button
 					class="hamburguer"
-					onclick={() => (menuAberto = !menuAberto)}
+					onclick={toggleMenu}
 					aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
 					aria-expanded={menuAberto}
 				>{#if menuAberto}✕{:else}☰{/if}</button>
 			</div>
 		{/if}
 	</div>
-	{#if menuAberto && $usuario}
-		<nav class="nav-menu" onclick={fecharMenu}>
+</header>
+
+<!-- Drawer lateral -->
+{#if menuAberto && $usuario}
+	<!-- Backdrop -->
+	<div class="backdrop" onclick={fecharMenu} aria-hidden="true"></div>
+	<!-- Menu slide -->
+	<nav class="drawer" aria-label="Menu de navegação">
+		<div class="drawer-header">
+			<span class="drawer-titulo">Menu</span>
+			<button class="drawer-fechar" onclick={fecharMenu} aria-label="Fechar menu">✕</button>
+		</div>
+		<div class="drawer-conteudo">
 			<div class="menu-secao">
 				<span class="menu-titulo">Principal</span>
 				<a href="/" class:atual={$page.url.pathname === '/'}>🔍 Curadoria</a>
@@ -73,16 +101,19 @@
 				<span class="menu-titulo">Configurações</span>
 				<a href="/canais" class:atual={$page.url.pathname === '/canais'}>📡 Destinos</a>
 			</div>
-		</nav>
-	{/if}
-</header>
+		</div>
+		<div class="drawer-footer">
+			<span class="drawer-user">{$usuario.nome ?? $usuario.email}</span>
+			<button class="btn-auth" onclick={logout}>Sair</button>
+		</div>
+	</nav>
+{/if}
 
 {#if $usuario}
 	<main class="casca">
 		{@render children()}
 	</main>
 {:else}
-	<!-- Landing page para usuários não logados -->
 	<main class="casca landing">
 		<section class="hero">
 			<h1>Garimpei<span class="pingo">.</span></h1>
@@ -162,25 +193,86 @@
 	}
 	.hamburguer:hover { border-color: var(--ouro); color: var(--ouro); }
 
-	/* ── Menu expandido ───────────────────────────────────────────────── */
-	.nav-menu {
+	/* ── Backdrop ─────────────────────────────────────────────────────── */
+	.backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(43, 29, 46, 0.4);
+		z-index: 90;
+		animation: fadeIn 0.2s ease;
+	}
+
+	/* ── Drawer (menu lateral) ────────────────────────────────────────── */
+	.drawer {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		width: 280px;
+		max-width: 85vw;
+		background: var(--nevoa);
+		z-index: 100;
 		display: flex;
 		flex-direction: column;
-		padding: var(--r5) var(--r6) var(--r6);
+		box-shadow: -4px 0 24px rgba(43, 29, 46, 0.15);
+		animation: slideIn 0.25s ease;
+		overflow: hidden;
+	}
+
+	.drawer-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--r4) var(--r5);
+		border-bottom: 1px solid var(--linha);
+		flex-shrink: 0;
+	}
+	.drawer-titulo {
+		font-family: var(--display);
+		font-weight: 600;
+		font-size: 1.1rem;
+	}
+	.drawer-fechar {
+		border: none;
+		background: transparent;
+		font-size: 1.2rem;
+		color: var(--tinta-suave);
+		cursor: pointer;
+		padding: 4px 8px;
+		border-radius: 6px;
+	}
+	.drawer-fechar:hover { background: var(--porcelana); color: var(--tinta); }
+
+	.drawer-conteudo {
+		flex: 1;
+		overflow-y: auto;
+		padding: var(--r3) var(--r5);
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.drawer-footer {
 		border-top: 1px solid var(--linha);
-		background: color-mix(in srgb, var(--porcelana) 95%, white);
+		padding: var(--r4) var(--r5);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-shrink: 0;
 	}
-	@media (min-width: 600px) {
-		.nav-menu {
-			max-width: 300px;
-			margin-left: auto;
-		}
+	.drawer-user {
+		font-size: 0.78rem;
+		color: var(--tinta-suave);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		max-width: 150px;
 	}
+
+	/* ── Seções do menu ───────────────────────────────────────────────── */
 	.menu-secao {
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
-		padding: var(--r4) 0;
+		padding: var(--r3) 0;
 		border-bottom: 1px solid var(--linha);
 	}
 	.menu-secao:last-child { border-bottom: none; }
@@ -193,17 +285,27 @@
 		opacity: 0.7;
 		margin-bottom: var(--r2);
 	}
-	.nav-menu a {
+	.drawer a {
 		text-decoration: none;
 		font-weight: 600;
-		font-size: 0.95rem;
+		font-size: 0.92rem;
 		color: var(--tinta-suave);
 		padding: 10px 12px;
 		border-radius: 8px;
 		display: block;
 	}
-	.nav-menu a:hover { color: var(--tinta); background: var(--porcelana); }
-	.nav-menu a.atual { color: var(--tinta); background: var(--ouro-fundo); }
+	.drawer a:hover { color: var(--tinta); background: var(--porcelana); }
+	.drawer a.atual { color: var(--tinta); background: var(--ouro-fundo); }
+
+	/* ── Animações ────────────────────────────────────────────────────── */
+	@keyframes slideIn {
+		from { transform: translateX(100%); }
+		to { transform: translateX(0); }
+	}
+	@keyframes fadeIn {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
 
 	/* ── Auth button ──────────────────────────────────────────────────── */
 	.btn-auth {
@@ -214,9 +316,14 @@
 	}
 	.btn-auth:hover { border-color: var(--ouro); color: var(--ouro); }
 
-	/* ── Mobile: esconde nome do usuário ──────────────────────────────── */
+	/* ── Mobile: esconde nome do usuário na barra ─────────────────────── */
 	@media (max-width: 480px) {
 		.usuario-nome { display: none; }
+	}
+
+	/* ── Desktop: drawer mais largo ───────────────────────────────────── */
+	@media (min-width: 768px) {
+		.drawer { width: 320px; }
 	}
 
 	/* ── Main & footer ────────────────────────────────────────────────── */
@@ -292,5 +399,12 @@
 		border-top: 1px solid var(--linha);
 		font-size: 0.8rem;
 		color: var(--tinta-suave);
+	}
+
+	/* ── Reduced motion ───────────────────────────────────────────────── */
+	@media (prefers-reduced-motion: reduce) {
+		.drawer, .backdrop {
+			animation: none;
+		}
 	}
 </style>
