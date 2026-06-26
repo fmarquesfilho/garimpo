@@ -92,6 +92,7 @@ func extrairRotasDoHandler(_ http.Handler) []rotaInfo {
 		{"GET", "/api/admin/logs"},
 		{"POST", "/api/admin/log-level"},
 		{"GET", "/api/admin/me"},
+		{"GET", "/api/admin/shopee-introspect"},
 		{"POST", "/api/resolver-link"},
 		{"GET", "/api/whatsapp/grupos"},
 		{"GET", "/api/docs"},

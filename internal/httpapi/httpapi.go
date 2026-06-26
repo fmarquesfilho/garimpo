@@ -108,6 +108,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/admin/logs", srv.adminLogs)
 	mux.HandleFunc("POST /api/admin/log-level", srv.adminLogLevel)
 	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
+	mux.HandleFunc("GET /api/admin/shopee-introspect", srv.adminShopeeIntrospect)
 	mux.HandleFunc("GET /api/docs", srv.apiDocs)
 	mux.HandleFunc("GET /api/openapi.yaml", srv.openapiSpec)
 

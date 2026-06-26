@@ -690,6 +690,38 @@ paths:
                   admin: { type: boolean }
                   email: { type: string }
 
+  /api/admin/shopee-introspect:
+    get:
+      tags: [Admin]
+      summary: Introspecção do schema GraphQL da API Shopee
+      description: |
+        Faz 4 queries de introspecção na API de afiliados para descobrir campos
+        disponíveis (especialmente relacionados a origem do produto). Restrito a admin.
+      responses:
+        '200':
+          description: Resultados da introspecção
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  app_id: { type: string }
+                  endpoint: { type: string }
+                  resultados:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nome: { type: string }
+                        sucesso: { type: boolean }
+                        erro: { type: string }
+                        resposta: { type: object }
+                        campos_origem: { type: array, items: { type: string } }
+                  campos_origem_global: { type: array, items: { type: string } }
+                  conclusao: { type: string }
+        '403':
+          description: Não é admin
+
   /api/onboarding/status:
     get:
       tags: [Onboarding]
