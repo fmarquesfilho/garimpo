@@ -45,9 +45,9 @@
 </script>
 
 <PageHeader
-	rotulo="seu resumo"
+	rotulo="análise"
 	titulo="📊 Estatísticas"
-	subtitulo="Visão geral da sua operação — lojas, coletas e publicações."
+	subtitulo="Evolução de preço das lojas monitoradas e resumo da operação."
 />
 
 <label class="janela">
@@ -59,64 +59,29 @@
 	</select>
 </label>
 
-<!-- ── Resumo operacional ────────────────────────────────────────────────── -->
+<!-- ── Resumo ──────────────────────────────────────────────────────────────── -->
 {#if carregando}
-	<Loading mensagem="Carregando resumo…" />
+	<Loading mensagem="Carregando…" />
 {:else if erro}
 	<Alert variant="error"><p>{erro}</p></Alert>
 {:else}
 	<section class="secao">
-		<h2>Sua operação</h2>
 		<div class="resumo-cards">
 			<StatCard label="Lojas monitoradas" valor={String(lojasMonitoradas.length)} />
-			<StatCard label="Produtos rastreados" valor={num(dados?.total_amostras ?? 0)} />
-			<StatCard label="Publicações enviadas" valor={String(pubEnviadas.length)} variant="gold" />
-			{#if pubErros.length > 0}
-				<StatCard label="Erros de envio" valor={String(pubErros.length)} variant="negative" />
-			{/if}
+			<StatCard label="Produtos coletados" valor={num(dados?.total_amostras ?? 0)} />
+			<StatCard label="Publicações" valor={String(pubEnviadas.length)} variant="gold" />
 		</div>
-
-		<!-- Lista de lojas com última coleta -->
-		{#if lojasMonitoradas.length > 0}
-			<h3>Lojas monitoradas</h3>
-			<div class="lojas-resumo">
-				{#each lojasMonitoradas as loja (loja.id)}
-					<div class="loja-row">
-						<span class="loja-nome">{loja.nome || loja.id}</span>
-						<span class="loja-cron">⏱ {loja.cron || 'manual'}</span>
-					</div>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- Últimas publicações -->
-		{#if pubEnviadas.length > 0}
-			<h3>Últimas publicações</h3>
-			<div class="pub-resumo">
-				{#each pubEnviadas.slice(0, 5) as p (p.id)}
-					<div class="pub-row">
-						<span class="pub-nome">{p.nome || '(sem título)'}</span>
-						<span class="pub-tempo">{tempoAtras(p.enviada_em || p.criada_em)}</span>
-					</div>
-				{/each}
-			</div>
-		{/if}
 	</section>
 {/if}
 
-<!-- ── Evolução de Lojas Monitoradas ───────────────────────────────────── -->
-{#if $usuario}
-<section class="secao secao-lojas">
-	<h2>📈 Evolução de preço — Lojas monitoradas</h2>
-	<p class="sub">Acompanhe como os preços médios das lojas monitoradas evoluem ao longo do tempo.</p>
+<!-- ── Evolução de preço (só aparece com dados reais) ──────────────────── -->
+{#if $usuario && evolucao?.lojas?.length > 0}
+<section class="secao">
+	<h2>📈 Evolução de preço</h2>
+	<p class="sub">Como os preços das lojas monitoradas mudaram no período.</p>
 
 	{#if carregando}
-		<Loading mensagem="Calculando evolução…" />
-	{:else if !evolucao || evolucao.lojas?.length === 0}
-		<EmptyState
-			mensagem="Nenhuma loja monitorada com dados suficientes para análise."
-			dica='Adicione lojas em <a href="/lojas">Configurações → Lojas</a> e aguarde pelo menos 2 coletas.'
-		/>
+		<Loading mensagem="Calculando…" />
 	{:else}
 		<!-- Resumo geral -->
 		<div class="resumo-cards">
@@ -228,26 +193,7 @@
 		margin-bottom: var(--r6);
 	}
 
-	/* Lojas resumo */
-	h3 { font-size: 1rem; margin: var(--r5) 0 var(--r3); font-weight: 600; }
-	.lojas-resumo { display: flex; flex-direction: column; gap: var(--r2); margin-bottom: var(--r4); }
-	.loja-row {
-		display: flex; justify-content: space-between; align-items: center;
-		padding: var(--r2) var(--r3); background: var(--nevoa);
-		border: 1px solid var(--linha); border-radius: var(--raio-sm);
-	}
-	.loja-nome { font-weight: 600; font-size: var(--text-base); }
-	.loja-cron { font-size: var(--text-xs); color: var(--tinta-suave); font-family: var(--mono); }
-
-	/* Publicações resumo */
-	.pub-resumo { display: flex; flex-direction: column; gap: var(--r2); }
-	.pub-row {
-		display: flex; justify-content: space-between; align-items: center;
-		padding: var(--r2) var(--r3); border-bottom: 1px solid var(--linha);
-	}
-	.pub-row:last-child { border-bottom: none; }
-	.pub-nome { font-size: var(--text-base); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%; }
-	.pub-tempo { font-size: var(--text-xs); color: var(--tinta-suave); }
+	/* Lojas e evolução */
 
 	/* Loja evolução */
 	.loja-evo {
