@@ -112,15 +112,14 @@ Histórico das coletas periódicas (snapshots gravados pelo scheduler).
 
 ### 📊 Estatísticas
 
-Análise de mercado baseada nos dados coletados por categoria: comissão
-média/mediana, preço médio, vendas média, teor médio. Permite comparar
-janelas de 7, 30 ou 90 dias.
+Visão geral da sua operação — o que importa para o dia a dia:
 
-**📈 Evolução de preço — Lojas monitoradas** (visível quando logado):
-- Cards de resumo global (lojas, produtos, preço médio, variação, quedas, altas).
-- Mini gráfico de barras por loja (preço médio por dia, com cores indicando
-  direção: verde = caiu, vermelho = subiu).
-- Top 3 quedas e altas de cada loja com badges de variação.
+- **Cards de resumo:** lojas monitoradas, produtos rastreados, publicações enviadas
+- **Lojas monitoradas:** lista com nome e cron configurado
+- **Últimas publicações:** as 5 mais recentes com tempo relativo
+- **Evolução de preço:** mini gráficos por loja (quando houver 2+ coletas)
+
+Seletor de período: 7, 30 ou 90 dias.
 
 ## Os termos
 
@@ -130,10 +129,10 @@ produto rende pelo esforço. Combina:
 - **valor esperado** — comissão × preço × vendas (retorno provável)
 - **avaliação** — nota como sinal de confiança
 
-**Nicho vs. Diversificada** — duas estratégias de ranking:
-- *Nicho* bonifica cosméticos/perfumaria/bem-estar (foco editorial)
-- *Diversificada* ignora categoria, olha só retorno × demanda
-- *Comparar* mostra ambas lado a lado
+**Nicho vs. Diversificada** — duas estratégias de ranking (descontinuada da interface):
+- O sistema usa internamente a estratégia "nicho" (prioriza comissão + avaliação)
+- A interface simplificada não expõe essa escolha ao usuário
+- O ranking ordena automaticamente pelo melhor potencial de retorno
 
 **⚠ Suspeito** — comissão alta sem vendas/nota. Produto-fantasma. Marcado, não
 escondido — você decide.

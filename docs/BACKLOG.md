@@ -152,3 +152,12 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - [x] Endpoint POST /api/conversoes/sync (conversionReport Shopee)
 - [x] ESLint + knip adicionados ao CI
 - [x] 3 specs documentadas (entidades, conversões, estatísticas)
+- [x] Página Estatísticas reformulada (resumo operacional para Mileny)
+- [x] Badges de oportunidades com tooltips e labels claros
+- [x] Aba Desempenho em Publicações: explicação do ciclo de conversões
+- [x] Coletas movida para seção Admin no menu
+- [x] Max-width padronizado (900px em todas as páginas)
+- [x] Diagrama ER (docs/ENTIDADES.md) + teste de sincronização
+- [x] Estratégia "diversificada" descontinuada do service layer
+- [x] ESLint + knip + Stylelint: 0 erros em tudo
+- [x] 6 novos testes de regressão (conversões, buscas, service)

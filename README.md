@@ -48,11 +48,16 @@ A API escuta na porta 8080; o front aponta para ela automaticamente em dev.
 go test ./...                    # todos os pacotes Go
 cd web && npx vitest run         # testes de componente Svelte (Vitest)
 cd web && npm test               # testes E2E (Playwright)
+cd web && npm run lint           # ESLint + Stylelint
+cd web && npm run lint:dead      # knip (dead code)
 ```
 
-- **Go**: cobertura ~90% nos pacotes publish, scoring, source, strategy
+- **Go**: cobertura ~57% no httpapi, ~100% nos pacotes core (scoring, source, strategy)
 - **Vitest**: testa componentes Svelte reais (SeletorGrupo, etc.) com jsdom
-- **Playwright**: smoke tests, validação de rotas, mocks de API
+- **Playwright**: 43 testes E2E (smoke, rotas, features novas)
+- **ESLint**: 0 erros (12 warnings menores)
+- **Stylelint**: 0 erros (impede cores hex nas páginas)
+- **knip**: detecta código morto (arquivos e exports não referenciados)
 
 ## Deploy (GCP)
 
@@ -75,24 +80,26 @@ Detalhes em `docs/DEPLOY_GCP.md`.
 cmd/garimpo          CLI (composição: fonte + estratégia)
 cmd/garimpo-api      servidor HTTP (API JSON para o frontend)
 internal/
+  alerts/            alertas de preço via Telegram
+  auth/              Firebase Auth (verifica tokens)
+  coleta/            service layer: orquestra coleta ponta a ponta
   domain/            núcleo: Product, Scored
   engine/            orquestra: fonte → filtros → scoring → ranking
-  strategy/          estratégias (Niche, Diversified) + Pipeline de filtros
+  httpapi/           handlers HTTP (rotas com método explícito, Go 1.22+)
+  logs/              logging estruturado (slog)
+  publish/           saída: Dispatcher, Sender (Telegram, WhatsApp), Templates
+  scheduler/         Cloud Scheduler (cria jobs de coleta)
   scoring/           matemática: valor esperado, normalização, suspeito
   source/            adaptadores de entrada (CSV, Shopee keyword, Shopee shop)
-  publish/           saída: Dispatcher, Sender (Telegram, WhatsApp/Maytapi), Templates, Destinos
-  httpapi/           handlers HTTP (rotas com método explícito, Go 1.22+)
   store/             persistência (NopStore / BigQueryStore com -tags gcp)
-  scheduler/         Cloud Scheduler (cria jobs de coleta e publicação)
-  auth/              Firebase Auth (verifica tokens)
-  logs/              logging estruturado (slog)
-web/                 frontend SvelteKit 5 + Vite 6
-  src/lib/components/  componentes reutilizáveis (TagInput, FilterBar, BuscaCard,
-                       CandidateCard, RichEditor, ScoreMeter, StrategyToggle)
-  src/routes/          páginas: /, /lojas, /publicar, /publicacoes,
-                       /coletas, /canais, /quadro, /estatisticas
+  strategy/          estratégias de ranking (Niche — ativa; Diversified — legacy)
+web/                 frontend SvelteKit 5 + Vite 8
+  src/lib/components/  componentes reutilizáveis
+  src/routes/          páginas: /, /oportunidades, /lojas, /publicar,
+                       /publicacoes, /coletas, /canais, /estatisticas
 deploy/              systemd/nginx (VPS), schema BigQuery, scheduler
-docs/                documentação detalhada
+docs/                documentação + specs + diagrama ER + OpenAPI
+cloudflare-worker/   proxy para domínio garimpei.app.br
 ```
 
 ## API — endpoints
@@ -135,10 +142,14 @@ docs/                documentação detalhada
 
 ## Documentação
 
+- `docs/BACKLOG.md` — product backlog priorizado
+- `docs/ENTIDADES.md` — diagrama ER (Mermaid) + regras de negócio
+- `docs/BDD_STRATEGY.md` — estratégia de testes e rastreabilidade
 - `docs/DEPLOY_GCP.md` — runbook completo de deploy na GCP
 - `docs/COLETA.md` — o que é coletado, onde fica, como ligar
 - `docs/APIS.md` — referência das APIs Shopee e Instagram
 - `docs/MODELO.md` — modelo de negócio e roadmap
 - `docs/MANUAL.md` — manual de uso (teor, selos, fluxo)
 - `docs/JORNADA.md` — jornada do usuário e pontos de decisão
-- `docs/CIENCIA_DE_DADOS.md` — guia de análise por maturidade
+- `docs/openapi.yaml` — spec OpenAPI 3.1 (servida em /api/docs)
+- `.kiro/specs/` — specs de features (entity-model, conversions, statistics)
