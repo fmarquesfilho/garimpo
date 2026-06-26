@@ -207,23 +207,22 @@ func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go func() {
-		params := scheduler.ColetaParams{
-			BuscaID: b.ID, Categoria: b.Categoria, Estrategia: b.Estrategia,
-			Top: b.Top, VendasMin: b.VendasMin, NotaMin: b.NotaMin, ShopIDs: b.ShopIDs,
-		}
-		var err error
-		if b.Ativo {
-			err = srv.Scheduler.SyncBusca(context.Background(), b.ID, b.Keywords, b.Cron, params)
-		} else {
-			err = srv.Scheduler.DeletarBusca(context.Background(), b.ID, b.Keywords)
-		}
-		if err != nil {
+	// Scheduler sync síncrono (não usar goroutine — Cloud Run pode matar a instância)
+	params := scheduler.ColetaParams{
+		BuscaID: b.ID, Categoria: b.Categoria, Estrategia: b.Estrategia,
+		Top: b.Top, VendasMin: b.VendasMin, NotaMin: b.NotaMin, ShopIDs: b.ShopIDs,
+	}
+	if b.Ativo {
+		if err := srv.Scheduler.SyncBusca(r.Context(), b.ID, b.Keywords, b.Cron, params); err != nil {
 			srv.Logger.Error("scheduler sync falhou", slog.String("busca", b.ID), slog.String("erro", err.Error()))
 		} else {
 			srv.Logger.Info("scheduler sync", slog.String("busca", b.ID), slog.Bool("ativo", b.Ativo), slog.String("cron", b.Cron))
 		}
-	}()
+	} else {
+		if err := srv.Scheduler.DeletarBusca(r.Context(), b.ID, b.Keywords); err != nil {
+			srv.Logger.Error("scheduler delete falhou", slog.String("busca", b.ID), slog.String("erro", err.Error()))
+		}
+	}
 
 	srv.Logger.Info("busca salva", slog.String("id", b.ID), slog.Bool("ativo", b.Ativo))
 	writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "id": b.ID, "ativo": b.Ativo})

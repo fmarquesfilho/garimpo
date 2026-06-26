@@ -163,19 +163,18 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Registra job no scheduler
-	go func() {
-		params := scheduler.ColetaParams{
-			BuscaID:    busca.ID,
-			Estrategia: busca.Estrategia,
-			ShopIDs:    busca.ShopIDs,
-			Top:        100, // monitoramento pega mais
-		}
-		if err := srv.Scheduler.SyncBusca(r.Context(), busca.ID, busca.Keywords, busca.Cron, params); err != nil {
-			srv.Logger.Error("scheduler sync loja falhou",
-				slog.String("busca", busca.ID), slog.String("erro", err.Error()))
-		}
-	}()
+	// Registra job no scheduler (síncrono para garantir criação antes do Cloud Run matar a instância)
+	params := scheduler.ColetaParams{
+		BuscaID:    busca.ID,
+		Estrategia: busca.Estrategia,
+		ShopIDs:    busca.ShopIDs,
+		Top:        100,
+	}
+	if err := srv.Scheduler.SyncBusca(r.Context(), busca.ID, busca.Keywords, busca.Cron, params); err != nil {
+		srv.Logger.Error("scheduler sync loja falhou",
+			slog.String("busca", busca.ID), slog.String("erro", err.Error()))
+		// Não falha a request — a busca foi salva, o scheduler pode ser recriado depois
+	}
 
 	srv.Logger.Info("loja adicionada",
 		slog.String("busca_id", busca.ID),
