@@ -2,21 +2,31 @@ package source
 
 import "strings"
 
-// inferirOrigem tenta derivar o país de origem a partir dos campos disponíveis
-// na API de afiliados da Shopee. Retorna string vazia se não for possível.
+// inferirOrigemDeShopType tenta inferir se a loja é cross-border a partir do
+// campo shopType da API. O shopType é um enum com valores como "mall",
+// "preferred", "overseas". Se contiver "overseas" ou "cb" (cross-border),
+// retorna "Importado" — mas NÃO especifica o país. Para país específico,
+// o fallback origem_padrao da Busca é necessário.
 //
-// Campos candidatos (dependem de o que a API efetivamente retornar):
-//   - sellerLocation: localização informada pelo seller (ex.: "KR", "JP", "CN")
-//   - shopType: tipo de loja ("mall", "preferred", "overseas")
-//
-// Se a introspecção revelar campos adicionais no futuro, este é o ponto de extensão.
-func inferirOrigem(sellerLocation, shopType string) string {
-	loc := strings.TrimSpace(strings.ToLower(sellerLocation))
-	if loc == "" {
+// Retorna string vazia se shopType não indicar nada útil sobre origem.
+func inferirOrigemDeShopType(shopTypes []string) string {
+	for _, st := range shopTypes {
+		lower := strings.ToLower(strings.TrimSpace(st))
+		if lower == "overseas" || lower == "cb" || lower == "cross_border" || lower == "crossborder" {
+			return "Importado"
+		}
+	}
+	return ""
+}
+
+// NormalizarOrigem converte variações de nome de país para o formato padrão
+// usado nos badges do frontend.
+func NormalizarOrigem(origin string) string {
+	if origin == "" {
 		return ""
 	}
+	loc := strings.TrimSpace(strings.ToLower(origin))
 
-	// Mapeamento de códigos ISO ou nomes conhecidos para nomes legíveis em PT-BR
 	mapa := map[string]string{
 		"kr":          "Coreia",
 		"kor":         "Coreia",
@@ -40,6 +50,7 @@ func inferirOrigem(sellerLocation, shopType string) string {
 		"usa":         "EUA",
 		"tw":          "Taiwan",
 		"taiwan":      "Taiwan",
+		"importado":   "Importado",
 	}
 
 	if nome, ok := mapa[loc]; ok {
@@ -51,13 +62,4 @@ func inferirOrigem(sellerLocation, shopType string) string {
 		return strings.ToUpper(loc[:1]) + loc[1:]
 	}
 	return ""
-}
-
-// NormalizarOrigem converte variações de nome de país para o formato padrão
-// usado nos badges. Usado pelo frontend e pelo filtro.
-func NormalizarOrigem(origin string) string {
-	if origin == "" {
-		return ""
-	}
-	return inferirOrigem(origin, "")
 }
