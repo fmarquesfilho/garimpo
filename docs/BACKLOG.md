@@ -7,9 +7,9 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 ## 🔴 Alta prioridade (próximas sessões)
 
 ### UX — Fluxo de curadoria incompleto
-- **Problema observado:** Mileny busca produtos na Curadoria, vai para Publicar só para ver a imagem, e volta. O fluxo não permite ver detalhes sem sair da página.
-- **Solução proposta:** modal/drawer de detalhes do produto (imagem, preço, comissão, link) direto na Curadoria. Botão "Publicar" dentro do modal.
-- **Impacto:** reduz 3 cliques → 1 clique para publicar.
+- **Problema observado:** Mileny busca produtos na Curadoria, ia para Publicar só para ver a imagem, e voltava.
+- **Status:** ✅ Parcialmente resolvido (imagem full-width no card, filtros colapsáveis, título simplificado).
+- **Pendente:** modal de detalhes do produto (imagem ampliada + dados completos) sem sair da página. Cenário BDD já definido em BDD_STRATEGY.md.
 
 ### Admin — Dashboard de monitoramento
 - **Problema:** não há visibilidade sobre o que está funcionando (cron jobs, erros, consumo).
@@ -89,13 +89,24 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - [x] Evolução de preço nas estatísticas
 - [x] Página de Oportunidades (feed unificado)
 - [x] Menu drawer lateral
-- [x] Domínio garimpei.app.br configurado
+- [x] Domínio garimpei.app.br configurado (Cloudflare Worker)
 - [x] Paleta de cores harmonizada (WCAG AA)
-- [x] Design tokens + Stylelint
-- [x] Service layer para coleta (testável)
-- [x] Fix: scheduler sync síncrono
+- [x] Design tokens + Stylelint (0 cores hex nas páginas)
+- [x] Service layer para coleta (testável, 145→62 linhas no handler)
+- [x] Fix: scheduler sync síncrono (jobs não eram criados)
 - [x] Fix: logout + select_account
 - [x] Fix: shopOfferV2 → productOfferV2
-- [x] Fix: resolução de links curtos e slugs
-- [x] OpenAPI spec + Swagger UI
+- [x] Fix: resolução de links curtos, slugs e URLs de produto
+- [x] Fix: nome da loja (API v4 Shopee) em vez de "loja-457..."
+- [x] Fix: keyword no snapshot para estatísticas funcionarem
+- [x] Fix: publicações preservam título após envio
+- [x] OpenAPI spec + Swagger UI em /api/docs
 - [x] Testes de regressão (9 cenários de produção)
+- [x] 11 novos testes E2E (total: 43)
+- [x] Curadoria simplificada (sem jargão nicho/diversificada)
+- [x] FilterBar colapsável (busca proeminente, filtros escondidos)
+- [x] CandidateCard com imagem full-width
+- [x] Rebrand: Garimpo → Garimpei
+- [x] Dependências atualizadas (Vite 8, Go 1.26, Node 24)
+- [x] Migração BigQuery (colunas novas)
+- [x] Coletas manuais disparadas para popular dados iniciais

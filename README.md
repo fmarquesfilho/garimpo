@@ -7,10 +7,15 @@ de conversão.
 
 ## Funcionalidades
 
-- **Curadoria inteligente** — busca na Shopee por keyword ou categoria, rankeia
-  por "teor" (comissão × demanda × avaliação), filtra produto-fantasma.
-- **Monitoramento de lojas** — acompanha lojas específicas via `shopOfferV2`,
-  detecta novos produtos e variações de preço.
+- **Curadoria inteligente** — busca na Shopee por keyword, rankeia
+  por potencial de retorno (comissão × demanda × avaliação), filtra produto-fantasma.
+  Interface simplificada com busca proeminente e filtros colapsáveis.
+- **Monitoramento de lojas** — acompanha lojas específicas via `productOfferV2`,
+  detecta novos produtos e variações de preço. Aceita links curtos, slugs e IDs.
+- **Oportunidades** — feed unificado de todas as lojas com quedas de preço,
+  produtos novos e altas, filtráveis por período.
+- **Alertas automáticos** — notificações de preço via Telegram quando variações
+  significativas são detectadas (bot @AlertaGarimpeiBot).
 - **Publicação rica** — templates customizáveis, editor WYSIWYG, foto do produto,
   botão inline "Comprar", envio para múltiplos destinos (Telegram, WhatsApp).
   WhatsApp suporta até 5 grupos por destino.
@@ -60,7 +65,7 @@ Push para `main` dispara o workflow `deploy-gcp.yml`:
 O frontend é servido pelo próprio Go no Cloud Run (SPA handler com fallback).
 Não usa Firebase Hosting.
 
-URL de produção: `https://garimpo-api-vj6afttbza-rj.a.run.app`
+URL de produção: `https://garimpei.app.br`
 
 Detalhes em `docs/DEPLOY_GCP.md`.
 

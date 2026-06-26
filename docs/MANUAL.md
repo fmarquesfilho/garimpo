@@ -13,14 +13,18 @@ acessar. Sem login, nenhuma funcionalidade fica disponível.
 
 ### 🔍 Curadoria (página principal)
 
-A peneira do dia. Busque por produto (perfume, sérum, batom), ajuste os filtros
-e veja os melhores candidatos ordenados pelo **teor**.
+Busque produtos para divulgar. Digite um termo (perfume, sérum, batom) e veja
+os melhores resultados com foto, preço e comissão.
 
-**Filtros:** comissão mínima, vendas mínimas, nota mínima, quantidade de resultados,
-modo explorar (testa produtos fora do topo).
+**Busca:** campo principal no topo — basta digitar e os resultados aparecem.
+**Filtros avançados:** botão "⚙️ Filtros" ao lado da busca — expande opções
+de comissão mínima, vendas, nota e quantidade de resultados.
+**Cards de produto:** cada card mostra imagem, nome, preço, comissão, vendas,
+nota e um botão "📤 Publicar" para enviar direto.
 
-**Buscas salvas:** salve combinações de filtros + keywords + lojas para reusar.
-Configure um **cron** (ex.: todo dia 8h) para coleta automática.
+**Buscas salvas:** seção colapsável abaixo dos filtros. Permite salvar
+combinações de keywords + filtros para reusar. Configure um **cron** para
+coleta automática periódica.
 
 ### 🏪 Lojas
 
