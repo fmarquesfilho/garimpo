@@ -96,6 +96,12 @@ func extrairRotasDoHandler(_ http.Handler) []rotaInfo {
 		{"GET", "/api/whatsapp/grupos"},
 		{"GET", "/api/docs"},
 		{"GET", "/api/openapi.yaml"},
+		{"GET", "/api/onboarding/status"},
+		{"POST", "/api/onboarding/termos"},
+		{"POST", "/api/onboarding/shopee"},
+		{"POST", "/api/onboarding/telegram"},
+		{"POST", "/api/onboarding/validar"},
+		{"POST", "/api/onboarding/excluir-conta"},
 	}
 }
 
