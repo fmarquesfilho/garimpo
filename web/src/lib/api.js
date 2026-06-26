@@ -271,6 +271,39 @@ export function buscarColetas({ dias = 30 } = {}) {
 	return pegar(`/api/coletas?dias=${dias}`);
 }
 
+// ── Onboarding / Tenant ──────────────────────────────────────────────────
+
+/** Status do onboarding do tenant atual. */
+export function onboardingStatus() {
+	return pegar('/api/onboarding/status');
+}
+
+/** Step 1: Aceitar termos de uso. */
+export function onboardingTermos() {
+	return postar('/api/onboarding/termos', { aceito: true });
+}
+
+/** Step 2: Salvar credenciais Shopee. */
+export function onboardingShopee({ appId, secret }) {
+	return postar('/api/onboarding/shopee', { app_id: appId, secret });
+}
+
+/** Step 3: Configurar Telegram (ou pular). */
+export function onboardingTelegram({ token, chatId, pular = false } = {}) {
+	if (pular) return postar('/api/onboarding/telegram', { pular: true });
+	return postar('/api/onboarding/telegram', { token, chat_id: chatId });
+}
+
+/** Step 4: Validar credenciais Shopee com chamada de teste. */
+export function onboardingValidar() {
+	return postar('/api/onboarding/validar', {});
+}
+
+/** Excluir conta e dados (LGPD). */
+export function excluirConta() {
+	return postar('/api/onboarding/excluir-conta', { confirmar: true });
+}
+
 /** Lista os perfis de busca sincronizados no servidor (BigQuery). */
 export function listarBuscasServidor() {
 	return pegar('/api/buscas');

@@ -30,6 +30,7 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/publish"
 	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/store"
+	"github.com/fmarquesfilho/garimpo/internal/tenant"
 )
 
 func main() {
@@ -106,6 +107,7 @@ func main() {
 		Auth:       verifier,
 		Destinos:   destinos,
 		Templates:  templates,
+		Tenants:    tenant.NewMemoryStore(),
 		LogBuffer:  logs.NovoBuffer(500),
 	}
 	logger.Info("garimpo-api iniciando",

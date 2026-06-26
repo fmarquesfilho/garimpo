@@ -99,6 +99,7 @@
 				<span class="menu-titulo">Configurações</span>
 				<a href="/lojas" class:atual={$page.url.pathname === '/lojas'}>🏪 Lojas</a>
 				<a href="/canais" class:atual={$page.url.pathname === '/canais'}>📡 Destinos</a>
+				<a href="/configurar" class:atual={$page.url.pathname === '/configurar'}>⚙️ Conta</a>
 			</div>
 		</div>
 		<div class="drawer-footer">

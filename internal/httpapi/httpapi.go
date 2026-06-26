@@ -17,6 +17,7 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/source"
 	"github.com/fmarquesfilho/garimpo/internal/store"
+	"github.com/fmarquesfilho/garimpo/internal/tenant"
 )
 
 // Server guarda a configuração e dependências do servidor HTTP.
@@ -37,6 +38,7 @@ type Server struct {
 	Auth       auth.Verifier
 	Destinos   publish.DestinoStore
 	Templates  publish.TemplateStore
+	Tenants    tenant.Store
 
 	FonteFactory func(q url.Values) (source.ProductSource, string)
 	Logger       *slog.Logger
@@ -108,6 +110,14 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
 	mux.HandleFunc("GET /api/docs", srv.apiDocs)
 	mux.HandleFunc("GET /api/openapi.yaml", srv.openapiSpec)
+
+	// ── Onboarding / Tenant ──────────────────────────────────────────────
+	mux.HandleFunc("GET /api/onboarding/status", srv.onboardingStatus)
+	mux.HandleFunc("POST /api/onboarding/termos", srv.onboardingTermos)
+	mux.HandleFunc("POST /api/onboarding/shopee", srv.onboardingShopee)
+	mux.HandleFunc("POST /api/onboarding/telegram", srv.onboardingTelegram)
+	mux.HandleFunc("POST /api/onboarding/validar", srv.onboardingValidar)
+	mux.HandleFunc("POST /api/onboarding/excluir-conta", srv.onboardingExcluirConta)
 
 	// ── Frontend (SPA fallback) ───────────────────────────────────────────
 	mux.Handle("/", srv.spaHandler())
