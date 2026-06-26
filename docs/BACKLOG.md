@@ -6,19 +6,42 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 
 ## 🔴 Alta prioridade (próximas sessões)
 
+### SPEC NECESSÁRIA: Modelagem de entidades (Busca/Coleta/Loja)
+- **Problema:** uma "Busca" pode ser por keyword OU por loja, dispara processos distintos, mas usa a mesma struct. Isso gera confusão (ex: campo "keyword" preenchido com "loja-457...").
+- **Decisão necessária:** separar em entidades distintas? Usar composição? Interface?
+- **Impacto:** afeta BigQuery schema, API, scheduler, frontend.
+- **Questão de UX:** faz sentido monitorar múltiplas lojas numa mesma "busca"? (Mileny cadastra 1 loja por vez — manter 1:1 simplifica.)
+- **Ação:** criar spec em `.kiro/specs/entity-model/`
+
+### SPEC NECESSÁRIA: Rastreamento de conversões (fechar o ciclo)
+- **Problema:** aba "Desempenho" nas publicações não mostra conversões reais. A API da Shopee tem `conversionReport` que retorna vendas reais por `subId`.
+- **Impacto:** fundamental para estatística e estratégia — saber o que realmente converteu.
+- **Questão técnica:** precisa de poll periódico (webhook não existe na API de afiliados). O subId já é gerado em cada publicação.
+- **Ação:** criar spec em `.kiro/specs/conversions-tracking/`
+
+### SPEC NECESSÁRIA: Redefinir página de Estatísticas
+- **Problema:** seção "Mercado por categoria" não reflete os fluxos reais. Categorias são rótulos manuais, não dados reais da Shopee.
+- **O que deveria mostrar:** evolução de preço das lojas (já existe), performance por publicação (precisa de conversões), volume de coletas.
+- **Ação:** criar spec em `.kiro/specs/statistics-redesign/`
+
 ### UX — Fluxo de curadoria incompleto
-- **Problema observado:** Mileny busca produtos na Curadoria, ia para Publicar só para ver a imagem, e voltava.
 - **Status:** ✅ Parcialmente resolvido (imagem full-width no card, filtros colapsáveis, título simplificado).
 - **Pendente:** modal de detalhes do produto (imagem ampliada + dados completos) sem sair da página. Cenário BDD já definido em BDD_STRATEGY.md.
 
-### Admin — Dashboard de monitoramento
-- **Problema:** não há visibilidade sobre o que está funcionando (cron jobs, erros, consumo).
-- **Necessidade:** painel admin com: status dos jobs (última execução, sucesso/falha), volume de dados coletados, erros recentes, consumo de recursos (BigQuery, Cloud Run).
-- **Motivação:** dívida técnica — usando agentes se vai rápido mas se conhece menos sobre o que roda em produção.
+### UX — Página de Coletas precisa de redesign
+- **Problema:** mostra "buscas agendadas" como cards e "resumo por keyword" como tabela — ambos confusos (mostra loja-920... como keyword, categoria com traço).
+- **Solução:** colapsar cards em tabela expansível, mover para área de "logs do usuário" (não admin, mas visibilidade operacional).
+- **Ação:** redesenhar após spec de entidades.
 
-### Alertas — Verificar eficácia
-- **Pendência:** alertas foram configurados mas ainda não dispararam (precisa de 2+ coletas com variação). Monitorar se funcionam nas próximas 24h.
-- **Ação:** se não disparar em 48h, investigar se o threshold (15%) é adequado para as lojas monitoradas.
+### Regra de negócio — Simplificar filtros backend
+- **Problema:** API aplica filtros (comissão mín, vendas mín, nota mín) que não estão explícitos na interface simplificada. A Mileny não sabe que produtos estão sendo excluídos.
+- **Princípio:** se não está na UI, não deveria filtrar. Ou mostrar claramente "X produtos excluídos por filtros".
+- **Ação:** revisar elegibilidade no backend, alinhar com o que a UI mostra.
+
+### "Descobrir novos" — precisa de explicação na UI
+- **O que faz:** reserva ~20% dos resultados para produtos fora do topo (exploração).
+- **Problema:** Mileny não entende o que isso significa.
+- **Solução:** tooltip ou texto explicativo: "Mostra produtos que normalmente não aparecem no topo — ajuda a encontrar oportunidades escondidas."
 
 ---
 
@@ -79,6 +102,15 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 ### Frontend — Refator completo com componentes UI
 - **Status:** componentes existem (11) mas só 2 páginas usam.
 - **Quando fazer:** quando surgir uma reescrita de página por outro motivo.
+
+### Quadro Kanban
+- **Status:** ❌ Removido (26/06). Não estava sendo usado pela Mileny.
+- **Decisão:** se surgir necessidade de fluxo de trabalho visual no futuro, reavaliar.
+
+### Nicho vs Diversificada (estratégias de ranking)
+- **Status:** removido da UI (26/06). Backend ainda suporta ambas.
+- **Decisão futura:** quando houver dados de conversão (spec pendente), reavaliar se vale mostrar comparação de performance por estratégia.
+- **Dívida técnica:** código de Strategy pattern no backend permanece mas não é usado pelo frontend simplificado.
 
 ---
 

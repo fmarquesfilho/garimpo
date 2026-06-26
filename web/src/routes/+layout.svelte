@@ -79,10 +79,8 @@
 		<div class="drawer-conteudo">
 			<div class="menu-secao">
 				<span class="menu-titulo">Principal</span>
-				<a href="/" class:atual={$page.url.pathname === '/'}>🔍 Curadoria</a>
+				<a href="/" class:atual={$page.url.pathname === '/'}>🔍 Buscar</a>
 				<a href="/oportunidades" class:atual={$page.url.pathname === '/oportunidades'}>🎯 Oportunidades</a>
-				<a href="/lojas" class:atual={$page.url.pathname === '/lojas'}>🏪 Lojas</a>
-				<a href="/quadro" class:atual={$page.url.pathname === '/quadro'}>📋 Quadro</a>
 			</div>
 			<div class="menu-secao">
 				<span class="menu-titulo">Publicar</span>
@@ -99,6 +97,7 @@
 			</div>
 			<div class="menu-secao">
 				<span class="menu-titulo">Configurações</span>
+				<a href="/lojas" class:atual={$page.url.pathname === '/lojas'}>🏪 Lojas</a>
 				<a href="/canais" class:atual={$page.url.pathname === '/canais'}>📡 Destinos</a>
 			</div>
 		</div>

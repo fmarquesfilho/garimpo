@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { buscarCandidatos, compararEstrategias, registrarSelecao } from '$lib/api.js';
 	import { goto } from '$app/navigation';
-	import { quadro } from '$lib/board.js';
 	import { filtros as filtrosStore } from '$lib/filtros.js';
 	import { buscasSalvas, slugificar } from '$lib/buscas.js';
 	import { get } from 'svelte/store';
@@ -134,12 +133,8 @@
 	});
 
 	// ── Ações ─────────────────────────────────────────────────────────────────
-	function selecionar(c) {
-		quadro.selecionar(c);
-		registrarSelecao(c);
-	}
-
 	function publicarOferta(c) {
+		registrarSelecao(c);
 		goto(`/publicar?dados=${encodeURIComponent(JSON.stringify(c))}`);
 	}
 </script>
@@ -243,7 +238,7 @@
 {:else}
 	<div class="grade">
 		{#each (f.modo === 'comparar' && pares ? [...(pares.nicho ?? []), ...(pares.diversificada ?? [])] : lista) as c, i (c.id)}
-			<CandidateCard candidato={c} posicao={i + 1} onselecionar={selecionar} onpublicar={publicarOferta} />
+			<CandidateCard candidato={c} posicao={i + 1} onpublicar={publicarOferta} />
 		{/each}
 	</div>
 {/if}

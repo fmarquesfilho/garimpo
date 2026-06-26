@@ -37,6 +37,7 @@
 				bind:value={busca}
 				placeholder="🔍 Buscar produto… (ex: sérum, perfume, batom)"
 				class="busca-input"
+				onkeydown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
 			/>
 			<button
 				class="btn-avancado"

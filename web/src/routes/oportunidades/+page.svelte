@@ -187,7 +187,8 @@
 			<!-- Produtos novos -->
 			{#if novos.length > 0}
 				<section class="secao-feed">
-					<h2>🆕 Produtos novos</h2>
+					<h2>🆕 Produtos novos nas lojas</h2>
+					<p class="sub-secao">Apareceram pela primeira vez no catálogo das lojas monitoradas.</p>
 					<div class="feed">
 						{#each novos.slice(0, 20) as item (item.produto_id + item.loja)}
 							<div class="card-oportunidade novo">
