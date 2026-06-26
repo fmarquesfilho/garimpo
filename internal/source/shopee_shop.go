@@ -69,7 +69,7 @@ func (s *ShopeeShopSource) buildQuery(shopID int64, page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate imageUrl shopName productCatIds shopType sellerLocation } pageInfo { page hasNextPage } } }`,
+		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate imageUrl shopName productCatIds } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }

@@ -92,7 +92,7 @@ func (s *ShopeeAPISource) buildQuery(page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl productCatIds shopType sellerLocation } pageInfo { page hasNextPage } } }`,
+		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl productCatIds } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }
