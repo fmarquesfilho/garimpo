@@ -165,6 +165,7 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 					Rating:     float64(n.RatingStar),
 					Link:       n.OfferLink,
 					Image:      n.ImageURL,
+						ShopName:   n.ShopName,
 				})
 			}
 

@@ -21,7 +21,9 @@
 
 <article class="cartao" class:destaque>
 	{#if candidato.imagem}
-		<img src={candidato.imagem} alt={candidato.nome} class="thumb" loading="lazy" />
+		<a href={candidato.link || '#'} target="_blank" rel="noopener" class="thumb-link">
+			<img src={candidato.imagem} alt={candidato.nome} class="thumb" loading="lazy" />
+		</a>
 	{/if}
 
 	<div class="corpo">
@@ -32,12 +34,14 @@
 		<header>
 			<h3>{candidato.nome}</h3>
 			<div class="meta">
-				<span class="cat">{candidato.categoria}</span>
+				{#if candidato.loja}
+					<span class="loja">🏪 {candidato.loja}</span>
+				{/if}
+				{#if candidato.categoria}
+					<span class="cat">{candidato.categoria}</span>
+				{/if}
 				{#if candidato.suspeito}
 					<span class="selo alerta">⚠ suspeito</span>
-				{/if}
-				{#if candidato.exploracao}
-					<span class="selo explor">✦ exploração</span>
 				{/if}
 			</div>
 		</header>
@@ -57,13 +61,10 @@
 
 		<footer>
 			{#if onpublicar}
-				<button class="primario" onclick={() => onpublicar(candidato)}>📤 Publicar</button>
-			{/if}
-			{#if onselecionar}
-				<button class="secundario" onclick={() => onselecionar(candidato)}>Garimpar</button>
+				<button class="publicar-btn" onclick={() => onpublicar(candidato)}>📤 Publicar</button>
 			{/if}
 			<button class="ghost" onclick={copiarLink} disabled={!candidato.link}>
-				{copiado ? '✓' : '🔗'}
+				{copiado ? '✓ Copiado' : '🔗 Link'}
 			</button>
 		</footer>
 	</div>
@@ -92,6 +93,13 @@
 		object-fit: cover;
 		display: block;
 		background: var(--porcelana);
+	}
+	.thumb-link {
+		display: block;
+		text-decoration: none;
+	}
+	.thumb-link:hover .thumb {
+		opacity: 0.9;
 	}
 
 	.corpo {
@@ -131,6 +139,11 @@
 		color: var(--rosa);
 		text-transform: lowercase;
 	}
+	.loja {
+		font-size: var(--text-xs);
+		font-weight: 600;
+		color: var(--tinta-suave);
+	}
 	.selo {
 		font-size: 0.65rem;
 		font-weight: 700;
@@ -140,10 +153,6 @@
 	.selo.alerta {
 		background: var(--erro-fundo);
 		color: var(--erro-texto);
-	}
-	.selo.explor {
-		background: var(--porcelana);
-		color: var(--tinta-suave);
 	}
 
 	.dados {
@@ -185,18 +194,13 @@
 		font-weight: 600;
 		border: 1px solid transparent;
 	}
-	.primario {
-		background: var(--ouro);
-		color: var(--branco);
+	.publicar-btn {
+		background: var(--ouro-fundo);
+		border-color: var(--ouro-claro);
+		color: var(--ouro-escuro);
 		flex: 1;
 	}
-	.primario:hover { background: var(--ouro-hover); }
-	.secundario {
-		background: transparent;
-		border-color: var(--linha);
-		color: var(--tinta);
-	}
-	.secundario:hover { border-color: var(--ouro); color: var(--ouro); }
+	.publicar-btn:hover { background: var(--ouro-claro); }
 	.ghost {
 		background: transparent;
 		color: var(--tinta-suave);

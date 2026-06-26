@@ -13,6 +13,7 @@ type Product struct {
 	Rating     float64 // avaliação média, 0..5
 	Link       string  // link de afiliado (offerLink), quando a fonte fornece
 	Image      string  // URL da imagem principal do produto (quando disponível)
+	ShopName   string  // nome da loja do produto (quando disponível)
 }
 
 // Scored é um produto já pontuado por uma estratégia.

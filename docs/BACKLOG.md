@@ -161,3 +161,31 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - [x] Estratégia "diversificada" descontinuada do service layer
 - [x] ESLint + knip + Stylelint: 0 erros em tudo
 - [x] 6 novos testes de regressão (conversões, buscas, service)
+
+
+---
+
+## 📝 Itens para próxima sessão (documentados 27/06)
+
+### Feature: Origem do produto (Coréia/Japão)
+- **Regra de domínio da Mileny:** precisa saber se produto é de origem Coréia/Japão (muitos são falsificados).
+- **Implementação:** a API da Shopee retorna `shopName` — lojas coreanas/japonesas geralmente têm nomes identificáveis. Alternativa: verificar se a loja tem `shopLocation` via API v4.
+- **Ação:** investigar campo de localização da loja, mostrar badge "🇰🇷 Coréia" ou "🇯🇵 Japão" no card.
+
+### Feature: Categorias dinâmicas da API Shopee
+- **Problema:** categorias hoje são rótulos manuais digitados pelo usuário.
+- **Possibilidade:** API de afiliados aceita `productCatId` (numérico). Não expõe lista de categorias diretamente, mas pode-se introspeccionar via `__type` ou usar mapeamento fixo dos IDs de categoria de nível 1 do Brasil.
+- **Ação:** pesquisar quais `productCatId` existem e criar mapeamento.
+
+### UX: Feed infinito na busca
+- **Problema de Mileny:** retorna poucos produtos (6-9). Deveria funcionar como feed.
+- **Causa:** parâmetro `top` limita a 9 por padrão, e filtros de elegibilidade (comissão 7%) removem muitos.
+- **Solução:** aumentar `top` default para 20-50, remover filtros que não estão explícitos na UI, implementar scroll infinito (paginação).
+
+### UX: Modo debug para desenvolvedor
+- **Necessidade:** Fernando quer ver quais filtros estão sendo aplicados, o que a API retorna, e ter um botão "copiar como cURL" para testar no Postman.
+- **Implementação:** badge discreto "🔧" que mostra os params enviados + resposta crua + cURL.
+
+### Publicações: Informações úteis sobre conversões
+- **O que Mileny quer ver:** quando alguém compra pelo link, saber de onde veio (qual sub_id converteu, quais canais, quais produtos venderam).
+- **Dependência:** spec `conversions-tracking` (endpoint já criado, falta persistir + mostrar no frontend).

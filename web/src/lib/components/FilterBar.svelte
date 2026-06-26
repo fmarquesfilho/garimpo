@@ -91,22 +91,6 @@
 					<option value={4.5}>4,5+</option>
 				</select>
 			</label>
-			{#if mostrarQuantos && modo !== 'comparar'}
-				<label class="campo">
-					<span class="rotulo">resultados</span>
-					<select bind:value={quantos} class="dado">
-						<option value={6}>6</option>
-						<option value={9}>9</option>
-						<option value={12}>12</option>
-					</select>
-				</label>
-			{/if}
-			{#if mostrarExplorar && modo !== 'comparar'}
-				<label class="campo-check" title="Mostra produtos fora do topo para descobrir novidades">
-					<input type="checkbox" bind:checked={explorar} />
-					<span class="rotulo">descobrir novos</span>
-				</label>
-			{/if}
 		</div>
 	{/if}
 </div>
