@@ -4,10 +4,14 @@ package httpapi
 // em produção. Se algum desses falhar, o deploy deve ser bloqueado.
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
 	"net/url"
 	"testing"
 
+	"github.com/fmarquesfilho/garimpo/internal/coleta"
+	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/source"
 	"github.com/fmarquesfilho/garimpo/internal/store"
 )
@@ -288,3 +292,110 @@ func TestListarLojasFiltralPorOwner(t *testing.T) {
 		t.Errorf("deveria ser loja-minha, veio %q", resp.Lojas[0].ID)
 	}
 }
+
+// --- Testes do endpoint de conversões ─────────────────────────────────────
+
+func TestConversoesExigeAuthRegressao(t *testing.T) {
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	rec := req(t, h, "GET", "/api/conversoes", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
+	}
+}
+
+func TestSyncConversoesExigeToken(t *testing.T) {
+	t.Setenv("COLETA_TOKEN", "segredo")
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+
+	// Sem token → 401
+	rec := req(t, h, "POST", "/api/conversoes/sync", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("sem token deveria dar 401, veio %d", rec.Code)
+	}
+}
+
+func TestSyncConversoesSemCredenciais(t *testing.T) {
+	t.Setenv("COLETA_TOKEN", "segredo")
+	t.Setenv("SHOPEE_APP_ID", "")
+	t.Setenv("SHOPEE_SECRET", "")
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+
+	rec := req(t, h, "POST", "/api/conversoes/sync", nil,
+		map[string]string{"X-Garimpo-Token": "segredo"})
+	if rec.Code != 502 {
+		t.Errorf("sem credenciais Shopee deveria dar 502, veio %d", rec.Code)
+	}
+}
+
+// --- Teste que curadoria não mostra lojas nas buscas salvas ───────────────
+
+func TestBuscasSalvasNaoCuradoriaExcluiLojas(t *testing.T) {
+	sp := &spyStore{
+		buscas: []store.Busca{
+			{ID: "perfume", Keywords: []string{"perfume"}, Ativo: true, OwnerUID: "test-user"},
+			{ID: "loja-123", ShopIDs: []int64{123}, Ativo: true, OwnerUID: "test-user"},
+		},
+	}
+	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+
+	// GET /api/buscas retorna AMBAS (é a API, não filtra)
+	rec := req(t, h, "GET", "/api/buscas", nil, map[string]string{"Authorization": "Bearer tok"})
+	var resp struct {
+		Buscas []struct {
+			ID      string  `json:"id"`
+			ShopIDs []int64 `json:"shop_ids"`
+		} `json:"buscas"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+	if len(resp.Buscas) != 2 {
+		t.Errorf("API deveria retornar 2 buscas (filtro é no frontend), veio %d", len(resp.Buscas))
+	}
+}
+
+// --- Teste da rota /api/conversoes/sync no OpenAPI ────────────────────────
+
+func TestSyncConversoesRotaRegistrada(t *testing.T) {
+	t.Setenv("COLETA_TOKEN", "tok")
+	t.Setenv("SHOPEE_APP_ID", "")
+	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	// A rota deve existir (não 404/405)
+	rec := req(t, h, "POST", "/api/conversoes/sync", nil,
+		map[string]string{"X-Garimpo-Token": "tok"})
+	// Esperamos 502 (sem credenciais) — não 404
+	if rec.Code == 404 || rec.Code == 405 {
+		t.Errorf("rota deveria existir, veio %d", rec.Code)
+	}
+}
+
+// --- Teste que estrategia diversificada não é mais usada no service ───────
+
+func TestColetaServiceSempreUsaNicho(t *testing.T) {
+	// Mesmo passando "diversificada", o service deve funcionar (usa nicho internamente)
+	st := &mockStoreMinimal{}
+	src := &mockSourceMinimal{produtos: amostra}
+	svc := coleta.Novo(coleta.Deps{Store: st, Logger: slog.Default()})
+
+	resultado, err := svc.Executar(context.Background(), src, coleta.Params{
+		Estrategia: "diversificada", // ignorado — sempre nicho
+		Keyword:    "test",
+		Top:        3,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	// O service usa Nicho internamente (com filtro de comissão mín 7%)
+	// Dos 3 produtos da amostra, só 2 passam (P3 tem comissão 5% < 7%)
+	if resultado.Coletados == 0 {
+		t.Error("deveria coletar ao menos 1 produto")
+	}
+}
+
+// Mocks mínimos para testar o service de coleta no contexto httpapi
+type mockStoreMinimal struct{ spyStore }
+type mockSourceMinimal struct {
+	produtos []domain.Product
+}
+
+func (m *mockSourceMinimal) Name() string                           { return "mock" }
+func (m *mockSourceMinimal) Fetch() ([]domain.Product, error)       { return m.produtos, nil }

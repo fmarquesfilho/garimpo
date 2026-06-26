@@ -208,7 +208,7 @@
 
 <style>
 	h2 { font-size: 1.3rem; margin: 0 0 var(--r2); }
-	h3 { font-size: 1.1rem; margin: 0; }
+
 	h4 { font-size: 0.85rem; margin: 0 0 var(--r2); font-weight: 600; }
 	.sub { color: var(--tinta-suave); margin: 0 0 var(--r4); font-size: 0.9rem; }
 	.secao { margin-bottom: var(--r8); }
