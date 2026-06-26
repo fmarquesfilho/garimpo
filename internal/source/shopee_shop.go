@@ -69,7 +69,7 @@ func (s *ShopeeShopSource) buildQuery(shopID int64, page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate imageUrl } pageInfo { page hasNextPage } } }`,
+		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate imageUrl shopName productCatIds } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }
@@ -158,14 +158,15 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
 				produtos = append(produtos, domain.Product{
 					ID:         string(n.ItemID),
 					Name:       n.ProductName,
-					Category:   s.CategoryLabel,
+					Category:   NomeCategoriaPrincipal(n.ProductCatIDs),
 					Price:      float64(n.PriceMin),
 					Commission: float64(n.CommissionRate),
 					Sales30d:   int(n.Sales),
 					Rating:     float64(n.RatingStar),
 					Link:       n.OfferLink,
 					Image:      n.ImageURL,
-						ShopName:   n.ShopName,
+					ShopName:   n.ShopName,
+					CatIDs:     n.ProductCatIDs,
 				})
 			}
 

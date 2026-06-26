@@ -31,7 +31,7 @@ func TestShopeeFetchMapeiaCampos(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		// preços/notas como string, vendas como número — o caso real misturado
 		_, _ = w.Write([]byte(`{"data":{"productOfferV2":{"nodes":[
-			{"itemId":123,"productName":"Perfume Floral","priceMin":"99.90","sales":50,"ratingStar":"4.5","commissionRate":"0.085","offerLink":"https://s.shopee/x"}
+			{"itemId":123,"productName":"Perfume Floral","priceMin":"99.90","sales":50,"ratingStar":"4.5","commissionRate":"0.085","offerLink":"https://s.shopee/x","productCatIds":[100640]}
 		],"pageInfo":{"hasNextPage":false}}}}`))
 	}))
 	defer srv.Close()
@@ -48,7 +48,7 @@ func TestShopeeFetchMapeiaCampos(t *testing.T) {
 		t.Fatalf("esperava 1 produto, veio %d", len(produtos))
 	}
 	p := produtos[0]
-	if p.ID != "123" || p.Name != "Perfume Floral" || p.Category != "perfumaria" {
+	if p.ID != "123" || p.Name != "Perfume Floral" || p.Category != "Perfumaria" {
 		t.Errorf("texto/categoria errados: %+v", p)
 	}
 	if p.Price != 99.90 || p.Commission != 0.085 || p.Sales30d != 50 || p.Rating != 4.5 {
