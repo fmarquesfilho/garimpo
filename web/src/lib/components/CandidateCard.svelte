@@ -37,6 +37,9 @@
 				{#if candidato.loja}
 					<span class="loja">🏪 {candidato.loja}</span>
 				{/if}
+				{#if candidato.origem}
+					<span class="selo origem">{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{/if} {candidato.origem}</span>
+				{/if}
 				{#if candidato.categoria}
 					<span class="cat">{candidato.categoria}</span>
 				{/if}
@@ -153,6 +156,10 @@
 	.selo.alerta {
 		background: var(--erro-fundo);
 		color: var(--erro-texto);
+	}
+	.selo.origem {
+		background: var(--sucesso-fundo);
+		color: var(--sucesso-texto);
 	}
 
 	.dados {

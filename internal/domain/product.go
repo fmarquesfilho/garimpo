@@ -15,6 +15,7 @@ type Product struct {
 	Image      string  // URL da imagem principal do produto (quando disponível)
 	ShopName   string  // nome da loja do produto (quando disponível)
 	CatIDs     []int   // IDs de categorias Shopee (hierárquicos: nível 1, 2, 3)
+	Origin     string  // país de origem do produto (ex.: "Coreia", "Japão") — preenchido via API ou fallback por loja
 }
 
 // Scored é um produto já pontuado por uma estratégia.

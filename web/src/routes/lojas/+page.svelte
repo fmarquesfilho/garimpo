@@ -12,6 +12,7 @@
 
 	// Formulário de adicionar loja
 	let inputLoja = $state('');
+	let origemPadrao = $state('');
 	let adicionando = $state(false);
 	let erroAdicionar = $state(null);
 	let sucessoAdicionar = $state(null);
@@ -87,9 +88,10 @@
 		sucessoAdicionar = null;
 
 		try {
-			const r = await adicionarLoja({ input: valor });
+			const r = await adicionarLoja({ input: valor, origemPadrao: origemPadrao || undefined });
 			sucessoAdicionar = `Loja ${r.shop_id} adicionada com sucesso!`;
 			inputLoja = '';
+			origemPadrao = '';
 			// Recarrega a lista de buscas do servidor
 			await buscasSalvas.sincronizarDoServidor();
 			// Seleciona a nova loja automaticamente
@@ -197,6 +199,16 @@
 					<button type="submit" disabled={adicionando || !inputLoja.trim()} class="btn-adicionar">
 						{adicionando ? '⏳' : '➕'} Adicionar
 					</button>
+				</div>
+				<div class="form-row-origem">
+					<label for="origem-padrao">Origem dos produtos:</label>
+					<select id="origem-padrao" bind:value={origemPadrao} class="select-origem">
+						<option value="">— sem origem definida —</option>
+						<option value="Coreia">🇰🇷 Coreia</option>
+						<option value="Japão">🇯🇵 Japão</option>
+						<option value="China">🇨🇳 China</option>
+					</select>
+					<span class="hint">Se a loja vende só produtos de um país, marque aqui para badge automático.</span>
 				</div>
 				{#if erroAdicionar}
 					<p class="msg-erro-inline">{erroAdicionar}</p>
@@ -439,6 +451,29 @@
 		display: flex;
 		gap: var(--r3);
 		align-items: stretch;
+	}
+	.form-row-origem {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--r2);
+		margin-top: var(--r3);
+	}
+	.form-row-origem label {
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--tinta);
+	}
+	.select-origem {
+		padding: 6px 10px;
+		border: 1px solid var(--linha);
+		border-radius: 8px;
+		font-size: 0.85rem;
+		background: var(--branco);
+	}
+	.select-origem:focus {
+		outline: none;
+		border-color: var(--ouro);
 	}
 	.input-loja {
 		flex: 1;

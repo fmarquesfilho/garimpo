@@ -71,6 +71,10 @@ type Busca struct {
 	OwnerUID    string    `json:"owner_uid,omitempty"` // uid do Firebase Auth
 	SalvoEm     time.Time `json:"salvo_em"`
 
+	// Origem padrão da loja (ex.: "Coreia", "Japão"). Quando preenchido, produtos
+	// dessa busca herdam este valor como Origin se a API não fornecer.
+	OrigemPadrao string `json:"origem_padrao,omitempty"`
+
 	// Rotação de catálogo: próxima página a coletar por loja (JSON map shopID→page)
 	RotationCursor map[int64]int `json:"rotation_cursor,omitempty"`
 	// Timestamp da última varredura completa do catálogo (por loja)
@@ -289,6 +293,7 @@ type ItemSnapshot struct {
 	Vendas    int
 	Nota      float64
 	Score     float64
+	Origin    string // país de origem do produto (quando disponível)
 }
 
 // Snapshot é a foto periódica de uma categoria: os top N do momento. É o que

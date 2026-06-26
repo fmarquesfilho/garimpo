@@ -91,8 +91,9 @@ var pathsReservados = map[string]bool{
 }
 
 type adicionarLojaReq struct {
-	Input string `json:"input"` // URL ou ID numérico
-	Cron  string `json:"cron"`  // cron expression (opcional, default "0 */4 * * *")
+	Input        string `json:"input"`         // URL ou ID numérico
+	Cron         string `json:"cron"`          // cron expression (opcional, default "0 */4 * * *")
+	OrigemPadrao string `json:"origem_padrao"` // origem padrão dos produtos (ex: "Coreia", "Japão")
 }
 
 type adicionarLojaResp struct {
@@ -149,12 +150,13 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 	}
 
 	busca := store.NormalizarBusca(store.Busca{
-		ShopIDs:    []int64{shopID},
-		Nome:       shopName,
-		Estrategia: "nicho",
-		Cron:       cron,
-		Ativo:      true,
-		OwnerUID:   user.UID,
+		ShopIDs:      []int64{shopID},
+		Nome:         shopName,
+		Estrategia:   "nicho",
+		Cron:         cron,
+		Ativo:        true,
+		OwnerUID:     user.UID,
+		OrigemPadrao: req.OrigemPadrao,
 	})
 
 	if err := srv.Eventos.SalvarBusca(r.Context(), busca); err != nil {

@@ -91,6 +91,7 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 	// --- tabela buscas ---
 	bSchema := bigquery.Schema{
 		{Name: "id", Type: bigquery.StringFieldType},
+		{Name: "nome", Type: bigquery.StringFieldType},
 		{Name: "keywords", Type: bigquery.StringFieldType}, // JSON array
 		{Name: "shop_ids", Type: bigquery.StringFieldType}, // JSON array de int64
 		{Name: "categoria", Type: bigquery.StringFieldType},
@@ -102,6 +103,7 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "cron", Type: bigquery.StringFieldType},
 		{Name: "ativo", Type: bigquery.BooleanFieldType},
 		{Name: "owner_uid", Type: bigquery.StringFieldType},
+		{Name: "origem_padrao", Type: bigquery.StringFieldType},
 		{Name: "rotation_cursor", Type: bigquery.StringFieldType}, // JSON map
 		{Name: "full_scan_at", Type: bigquery.StringFieldType},    // JSON map
 		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
@@ -262,6 +264,7 @@ func (s *BigQueryStore) RegistrarSnapshot(ctx context.Context, snap Snapshot) er
 // Keywords é serializado como JSON array para caber em uma coluna STRING.
 type linhaBuscaBQ struct {
 	ID             string    `bigquery:"id"`
+	Nome           string    `bigquery:"nome"`
 	Keywords       string    `bigquery:"keywords"` // JSON array
 	ShopIDs        string    `bigquery:"shop_ids"` // JSON array de int64
 	Categoria      string    `bigquery:"categoria"`
@@ -273,6 +276,7 @@ type linhaBuscaBQ struct {
 	Cron           string    `bigquery:"cron"`
 	Ativo          bool      `bigquery:"ativo"`
 	OwnerUID       string    `bigquery:"owner_uid"`
+	OrigemPadrao   string    `bigquery:"origem_padrao"`
 	RotationCursor string    `bigquery:"rotation_cursor"` // JSON map shopID→page
 	FullScanAt     string    `bigquery:"full_scan_at"`    // JSON map shopID→timestamp
 	SalvoEm        time.Time `bigquery:"salvo_em"`
@@ -288,10 +292,11 @@ func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
 	rotCursor, _ := json.Marshal(b.RotationCursor)
 	fullScan, _ := json.Marshal(b.FullScanAt)
 	row := linhaBuscaBQ{
-		ID: b.ID, Keywords: string(kw), ShopIDs: string(shopIDs),
+		ID: b.ID, Nome: b.Nome, Keywords: string(kw), ShopIDs: string(shopIDs),
 		Categoria: b.Categoria, Estrategia: b.Estrategia,
 		ComissaoMin: b.ComissaoMin, VendasMin: b.VendasMin, NotaMin: b.NotaMin, Top: b.Top,
 		Cron: b.Cron, Ativo: b.Ativo, OwnerUID: b.OwnerUID,
+		OrigemPadrao: b.OrigemPadrao,
 		RotationCursor: string(rotCursor), FullScanAt: string(fullScan),
 		SalvoEm: b.SalvoEm,
 	}
@@ -365,18 +370,20 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 	return out, nil
 }
 
-// enriquecerBuscasComCamposNovos tenta ler shop_ids, rotation_cursor e full_scan_at.
+// enriquecerBuscasComCamposNovos tenta ler shop_ids, rotation_cursor, full_scan_at, nome e origem_padrao.
 // Se as colunas não existirem na tabela, simplesmente não faz nada (graceful degradation).
 func (s *BigQueryStore) enriquecerBuscasComCamposNovos(ctx context.Context, buscas []Busca) {
 	q := s.client.Query(`
 		WITH ranked AS (
 		  SELECT id, shop_ids, rotation_cursor, full_scan_at,
+		         IFNULL(nome, '') as nome, IFNULL(origem_padrao, '') as origem_padrao,
 		         ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
 		  FROM ` + "`" + s.dataset + ".buscas`" + `
 		)
 		SELECT id, IFNULL(shop_ids, '') as shop_ids,
 		       IFNULL(rotation_cursor, '') as rotation_cursor,
-		       IFNULL(full_scan_at, '') as full_scan_at
+		       IFNULL(full_scan_at, '') as full_scan_at,
+		       nome, origem_padrao
 		FROM ranked WHERE rn = 1
 	`)
 	it, err := q.Read(ctx)
@@ -397,6 +404,8 @@ func (s *BigQueryStore) enriquecerBuscasComCamposNovos(ctx context.Context, busc
 			ShopIDs        string `bigquery:"shop_ids"`
 			RotationCursor string `bigquery:"rotation_cursor"`
 			FullScanAt     string `bigquery:"full_scan_at"`
+			Nome           string `bigquery:"nome"`
+			OrigemPadrao   string `bigquery:"origem_padrao"`
 		}
 		err := it.Next(&r)
 		if err == iterator.Done {
@@ -417,6 +426,12 @@ func (s *BigQueryStore) enriquecerBuscasComCamposNovos(ctx context.Context, busc
 		}
 		if r.FullScanAt != "" {
 			_ = json.Unmarshal([]byte(r.FullScanAt), &buscas[idx].FullScanAt)
+		}
+		if r.Nome != "" {
+			buscas[idx].Nome = r.Nome
+		}
+		if r.OrigemPadrao != "" {
+			buscas[idx].OrigemPadrao = r.OrigemPadrao
 		}
 	}
 }

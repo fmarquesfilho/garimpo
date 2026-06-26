@@ -237,9 +237,10 @@ export function configurarAlertas({ chatId, threshold, apenasQuedas } = {}) {
 }
 
 /** Adiciona uma loja ao monitoramento (aceita URL ou ID numérico). */
-export function adicionarLoja({ input, cron } = {}) {
+export function adicionarLoja({ input, cron, origemPadrao } = {}) {
 	const corpo = { input };
 	if (cron) corpo.cron = cron;
+	if (origemPadrao) corpo.origem_padrao = origemPadrao;
 	return postar('/api/lojas', corpo);
 }
 

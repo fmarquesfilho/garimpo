@@ -72,6 +72,15 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 		return Resultado{}, err
 	}
 
+	// 2.5 Fallback de origem: se a Busca tem OrigemPadrao, aplicar nos produtos sem Origin
+	if busca != nil && busca.OrigemPadrao != "" {
+		for i := range produtos {
+			if produtos[i].Origin == "" {
+				produtos[i].Origin = busca.OrigemPadrao
+			}
+		}
+	}
+
 	// 3. Atualizar cursor de rotação
 	if busca != nil {
 		s.atualizarCursor(ctx, src, busca)
@@ -104,7 +113,7 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 		snap.Itens = append(snap.Itens, store.ItemSnapshot{
 			Posicao: i + 1, ProdutoID: p.ID, Nome: p.Name,
 			Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
-			Nota: p.Rating, Score: sc.Score,
+			Nota: p.Rating, Score: sc.Score, Origin: p.Origin,
 		})
 	}
 
