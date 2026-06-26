@@ -92,7 +92,7 @@ func (s *ShopeeAPISource) buildQuery(page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl productCatIds shopType } pageInfo { page hasNextPage } } }`,
+		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl productCatIds shopId } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }
@@ -109,7 +109,7 @@ type productNode struct {
 	ShopName       string     `json:"shopName"`
 	ImageURL       string     `json:"imageUrl"`
 	ProductCatIDs  []int      `json:"productCatIds"`
-	ShopType       []string   `json:"shopType"` // enum ShopType: "mall", "preferred", "overseas", etc.
+	ShopID         flexString `json:"shopId"`
 }
 
 type gqlResponse struct {
@@ -197,8 +197,8 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 				Link:       n.OfferLink,
 				Image:      n.ImageURL,
 				ShopName:   n.ShopName,
+				ShopID:     string(n.ShopID),
 				CatIDs:     n.ProductCatIDs,
-				Origin:     inferirOrigemDeShopType(n.ShopType),
 			})
 		}
 

@@ -15,6 +15,7 @@ type candidatoDTO struct {
 	Nome        string             `json:"nome"`
 	Categoria   string             `json:"categoria"`
 	Loja        string             `json:"loja,omitempty"`
+	LojaID      string             `json:"loja_id,omitempty"`
 	Origem      string             `json:"origem,omitempty"`
 	Preco       float64            `json:"preco"`
 	Comissao    float64            `json:"comissao"`
@@ -31,7 +32,7 @@ func toDTO(s domain.Scored) candidatoDTO {
 	p := s.Product
 	return candidatoDTO{
 		ID: p.ID, Nome: p.Name, Categoria: p.Category, Loja: p.ShopName,
-		Origem: p.Origin,
+		LojaID: p.ShopID, Origem: p.Origin,
 		Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
 		Avaliacao: p.Rating, Link: p.Link, Imagem: p.Image,
 		Score: s.Score, Componentes: s.Reasons,
