@@ -28,7 +28,7 @@ erDiagram
     SNAPSHOT {
         timestamp coletado_em PK
         string keyword "identifica a busca (= busca.id para lojas)"
-        string categoria
+        string categoria "nome da categoria (mapeado de productCatIds)"
         string estrategia
         int posicao
         string produto_id
@@ -126,5 +126,6 @@ erDiagram
 
 - **1:1 entre Busca e Loja** — cada loja monitorada é uma Busca separada.
 - **Estratégia sempre "nicho"** — diversificada foi descontinuada da UI e do service.
-- **Categorias são rótulos opcionais** — não vêm da API Shopee, são input do usuário.
+- **Categorias vêm da API Shopee** — `productCatIds` mapeados para nomes via `categories.go`.
 - **CONVERSAO_REAL** — tabela futura, endpoint `/api/conversoes/sync` já implementado.
+- **Origem do produto (Coréia/Japão)** — API de afiliados não expõe. Limitação documentada.

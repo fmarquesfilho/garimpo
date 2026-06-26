@@ -11,20 +11,21 @@ acessar. Sem login, nenhuma funcionalidade fica disponível.
 
 ## As telas
 
-### 🔍 Curadoria (página principal)
+### 🔍 Buscar (página principal)
 
 Busque produtos para divulgar. Digite um termo (perfume, sérum, batom) e veja
-os melhores resultados com foto, preço e comissão.
+os melhores resultados com foto, preço, comissão e nome da loja.
 
-**Busca:** campo principal no topo — basta digitar e os resultados aparecem.
-**Filtros avançados:** botão "⚙️ Filtros" ao lado da busca — expande opções
-de comissão mínima, vendas, nota e quantidade de resultados.
-**Cards de produto:** cada card mostra imagem, nome, preço, comissão, vendas,
-nota e um botão "📤 Publicar" para enviar direto.
-
-**Buscas salvas:** seção colapsável abaixo dos filtros. Permite salvar
-combinações de keywords + filtros para reusar. Configure um **cron** para
-coleta automática periódica.
+**Busca:** campo principal no topo — digita, aperta Enter, resultados aparecem.
+**Filtros avançados:** botão "⚙️ Filtros" — expande opções de comissão mínima,
+vendas, nota e categoria.
+**Cards de produto:** cada card mostra:
+- Imagem (clicável — abre o produto na Shopee)
+- Nome do produto
+- Nome da loja (🏪)
+- Categoria real da Shopee (Beleza, Moda, Eletrônicos, etc.)
+- Preço + comissão + vendas + nota
+- Botão "📤 Publicar" para enviar direto
 
 ### 🏪 Lojas
 

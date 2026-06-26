@@ -174,19 +174,15 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - **Status:** documentado como limitação técnica. Feature bloqueada até encontrar fonte de dados.
 
 ### Feature: Categorias dinâmicas da API Shopee
-- **Problema:** categorias hoje são rótulos manuais digitados pelo usuário.
-- **Descoberta:** a API de afiliados retorna `productCatIds` (array de IDs numéricos, ex: `[100630, 100664, 100896]`). São IDs de categoria hierárquicos da Shopee (nível 1 → 2 → 3).
-- **Limitação:** a API de afiliados não tem endpoint para listar categorias por nome. Seria necessário mapear IDs → nomes (scrapar a árvore de categorias do site, ou usar um mapeamento estático).
-- **Possibilidades:**
-  1. Adicionar `productCatIds` ao domínio e mostrar os IDs no card (pouco útil sem nomes)
-  2. Criar mapeamento estático dos ~20 IDs de nível 1 do Brasil (pesquisar)
-  3. Usar o `productCatId` como filtro de busca (já suportado pelo parâmetro `cat` na API)
-- **Status:** documentado. Próxima sessão: pesquisar mapeamento de IDs.
+- **Status:** ✅ Implementado (27/06)
+- **Solução:** mapeamento de ~20 IDs de categoria nível 1 da Shopee Brasil (empírico via productCatIds)
+- **Como funciona:** API retorna `productCatIds` → `NomeCategoriaPrincipal()` traduz para nome legível
+- **Próximo:** expandir mapeamento se novos IDs aparecerem nos dados; pesquisar se há endpoint oficial de árvore de categorias
 
 ### UX: Feed infinito na busca
-- **Problema de Mileny:** retorna poucos produtos (6-9). Deveria funcionar como feed.
-- **Causa:** parâmetro `top` limita a 9 por padrão, e filtros de elegibilidade (comissão 7%) removem muitos.
-- **Solução:** aumentar `top` default para 20-50, remover filtros que não estão explícitos na UI, implementar scroll infinito (paginação).
+- **Problema de Mileny:** retornava poucos produtos (6-9). Deveria funcionar como feed.
+- **Status:** ✅ Parcialmente resolvido — default aumentado para 20 resultados.
+- **Pendente:** scroll infinito (paginação — carregar mais ao rolar). Adicionar ao backlog da próxima sessão.
 
 ### UX: Modo debug para desenvolvedor
 - **Necessidade:** Fernando quer ver quais filtros estão sendo aplicados, o que a API retorna, e ter um botão "copiar como cURL" para testar no Postman.

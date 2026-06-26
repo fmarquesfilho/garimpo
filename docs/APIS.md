@@ -54,7 +54,8 @@ Campos retornados (mapeamento no adaptador):
 | `sales` | `Sales30d` | proxy de demanda — é o volume reportado, **não** janela fixa de 30d |
 | `ratingStar` | `Rating` | avaliação 0–5 |
 | `offerLink` | `Link` | já vem com seu tracking |
-| `productName`, `shopName` | `Name` | categoria não vem no nó: carimbamos via `productCatId` consultado |
+| `productName`, `shopName` | `Name`, `ShopName` | ShopName identifica a loja vendedora |
+| `productCatIds` | `CatIDs` | Array hierárquico de IDs de categoria (nível 1→2→3). Mapeado para nomes em `categories.go` |
 
 Isso é o ponto central: **demanda (`sales`) e avaliação (`ratingStar`) vêm de
 graça**, então o scoring não depende de proxy inventado.
