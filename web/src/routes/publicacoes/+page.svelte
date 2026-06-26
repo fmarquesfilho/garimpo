@@ -151,8 +151,12 @@
 		{:else if aba === 'desempenho'}
 			<!-- Relatório de desempenho das publicações por canal -->
 			{#if conversoes.length === 0}
-				<p class="vazio">Nenhuma publicação rastreada nos últimos 30 dias.</p>
-				<p class="dica">O desempenho aparece aqui quando publicações são enviadas com sub_id de rastreamento.</p>
+				<div class="info-desempenho">
+					<h3>📊 O que é o Desempenho?</h3>
+					<p>Aqui você vai ver quais publicações geraram vendas reais — com valor de comissão, produto e canal.</p>
+					<p>Cada publicação enviada gera um código de rastreamento (<code>sub_id</code>). Quando alguém compra pelo seu link, a Shopee registra a conversão com esse código.</p>
+					<p class="dica">O sistema consulta automaticamente o relatório de conversões da Shopee. Quando houver dados, eles aparecerão aqui.</p>
+				</div>
 			{:else}
 				<div class="tabela-desemp">
 					<table>
@@ -184,7 +188,7 @@
 </section>
 
 <style>
-	.publicacoes-page { max-width: 780px; }
+	.publicacoes-page { max-width: 900px; }
 	h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
 	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r5); }
 

@@ -89,9 +89,9 @@
 			</div>
 			<div class="menu-secao">
 				<span class="menu-titulo">Monitoramento</span>
-				<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>⏱ Coletas</a>
 				<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'}>📊 Estatísticas</a>
 				{#if isAdmin}
+					<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>⏱ Coletas</a>
 					<a href="/admin" class:atual={$page.url.pathname === '/admin'}>🛠 Admin</a>
 				{/if}
 			</div>

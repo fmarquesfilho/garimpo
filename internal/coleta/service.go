@@ -77,8 +77,8 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 		s.atualizarCursor(ctx, src, busca)
 	}
 
-	// 4. Rankear
-	scored := engine.Rankear(produtos, strategyDe(params.Estrategia), elegibilidade(params))
+	// 4. Rankear (sempre usa estratégia nicho — diversificada foi descontinuada da UI)
+	scored := engine.Rankear(produtos, strategy.NewNiche(), elegibilidade(params))
 	n := params.Top
 	if n <= 0 {
 		n = 20
@@ -198,13 +198,6 @@ func (s *Service) dispararAlertas(buscaID string) {
 }
 
 // ── Helpers (extraídos do httpapi para reuso) ─────────────────────────────────
-
-func strategyDe(nome string) strategy.Strategy {
-	if nome == "diversificada" {
-		return strategy.Diversified{}
-	}
-	return strategy.NewNiche()
-}
 
 func elegibilidade(p Params) strategy.Elegibilidade {
 	e := strategy.Elegibilidade{

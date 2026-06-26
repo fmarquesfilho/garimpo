@@ -251,7 +251,7 @@
 </section>
 
 <style>
-	.config-page { max-width: 640px; }
+	.config-page { max-width: 900px; }
 	h1 { font-size: 1.5rem; margin-bottom: var(--r6); }
 	h2 { font-size: 1.1rem; margin: 0 0 var(--r2); }
 	.subtitulo { color: var(--tinta-suave); font-size: 0.88rem; margin-bottom: var(--r5); }

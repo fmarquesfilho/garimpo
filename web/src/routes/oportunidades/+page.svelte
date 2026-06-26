@@ -135,21 +135,21 @@
 			<!-- Resumo rápido -->
 			<div class="resumo-rapido">
 				{#if quedas.length > 0}
-					<div class="resumo-item queda">
+					<div class="resumo-item queda" title="Produtos que caíram de preço acima do threshold configurado">
 						<span class="resumo-numero">{quedas.length}</span>
-						<span class="resumo-label">↓ Quedas</span>
+						<span class="resumo-label">↓ Quedas de preço</span>
 					</div>
 				{/if}
 				{#if altas.length > 0}
-					<div class="resumo-item alta">
+					<div class="resumo-item alta" title="Produtos que subiram de preço — pode indicar fim de promoção">
 						<span class="resumo-numero">{altas.length}</span>
-						<span class="resumo-label">↑ Altas</span>
+						<span class="resumo-label">↑ Altas de preço</span>
 					</div>
 				{/if}
 				{#if novos.length > 0}
-					<div class="resumo-item novo">
+					<div class="resumo-item novo" title="Produtos que apareceram pela primeira vez nas lojas monitoradas">
 						<span class="resumo-numero">{novos.length}</span>
-						<span class="resumo-label">🆕 Novos</span>
+						<span class="resumo-label">🆕 Novos no catálogo</span>
 					</div>
 				{/if}
 			</div>
@@ -247,7 +247,7 @@
 </section>
 
 <style>
-	.oportunidades-page { max-width: 800px; }
+	.oportunidades-page { max-width: 900px; }
 
 	.controles {
 		display: flex;
