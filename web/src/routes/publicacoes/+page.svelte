@@ -152,10 +152,15 @@
 			<!-- Relatório de desempenho das publicações por canal -->
 			{#if conversoes.length === 0}
 				<div class="info-desempenho">
-					<h3>📊 O que é o Desempenho?</h3>
-					<p>Aqui você vai ver quais publicações geraram vendas reais — com valor de comissão, produto e canal.</p>
-					<p>Cada publicação enviada gera um código de rastreamento (<code>sub_id</code>). Quando alguém compra pelo seu link, a Shopee registra a conversão com esse código.</p>
-					<p class="dica">O sistema consulta automaticamente o relatório de conversões da Shopee. Quando houver dados, eles aparecerão aqui.</p>
+					<h3>📊 Rastreamento de conversões</h3>
+					<p>Aqui você verá quais publicações geraram <strong>vendas reais</strong>:</p>
+					<ul class="lista-info">
+						<li>Qual <strong>produto</strong> vendeu</li>
+						<li>De qual <strong>canal</strong> veio (Telegram, WhatsApp)</li>
+						<li>Qual <strong>publicação</strong> gerou a venda (sub_id)</li>
+						<li>Valor da <strong>comissão</strong> recebida</li>
+					</ul>
+					<p class="dica">O sistema consulta automaticamente o relatório de conversões da Shopee. Cada publicação enviada gera um código de rastreamento único. Quando alguém compra pelo seu link, a venda aparece aqui.</p>
 				</div>
 			{:else}
 				<div class="tabela-desemp">
@@ -247,6 +252,14 @@
 	.pub-detalhe code { font-size: 0.72rem; background: var(--porcelana); padding: 2px 6px; border-radius: 4px; }
 	.erro-txt { color: var(--erro-texto); }
 	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin-top: var(--r2); }
+	.info-desempenho {
+		background: var(--nevoa); border: 1px solid var(--linha);
+		border-radius: var(--raio); padding: var(--r5);
+	}
+	.info-desempenho h3 { font-size: 1.1rem; margin: 0 0 var(--r3); }
+	.info-desempenho p { margin: var(--r2) 0; font-size: var(--text-base); }
+	.lista-info { padding-left: var(--r5); margin: var(--r3) 0; }
+	.lista-info li { margin: var(--r2) 0; font-size: var(--text-base); }
 
 	/* Desempenho */
 	.tabela-desemp { overflow-x: auto; }

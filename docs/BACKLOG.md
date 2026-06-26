@@ -168,14 +168,20 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 ## 📝 Itens para próxima sessão (documentados 27/06)
 
 ### Feature: Origem do produto (Coréia/Japão)
-- **Regra de domínio da Mileny:** precisa saber se produto é de origem Coréia/Japão (muitos são falsificados).
-- **Implementação:** a API da Shopee retorna `shopName` — lojas coreanas/japonesas geralmente têm nomes identificáveis. Alternativa: verificar se a loja tem `shopLocation` via API v4.
-- **Ação:** investigar campo de localização da loja, mostrar badge "🇰🇷 Coréia" ou "🇯🇵 Japão" no card.
+- **Regra de domínio da Mileny:** precisa saber se produto é de origem Coréia/Japão (muitos são falsificados). A Shopee mostra um campo "Origem" no produto e na loja.
+- **Limitação descoberta:** a API de afiliados (GraphQL) **não expõe** o campo de origem do produto. Campos disponíveis: productName, shopName, shopId, productCatIds, shopType, preço, vendas, comissão, imagem, link. A API pública v4 (`/api/v4/item/get`) que mostra o campo "Origem" exige cookie de sessão autenticada — não pode ser chamada server-side.
+- **Ação:** pesquisar se existe endpoint alternativo ou se a Shopee expõe isso em algum outro lugar. Alternativas: (1) scraping com sessão, (2) Mileny marca manualmente quais lojas são verificadas, (3) nova versão da API de afiliados pode expor no futuro.
+- **Status:** documentado como limitação técnica. Feature bloqueada até encontrar fonte de dados.
 
 ### Feature: Categorias dinâmicas da API Shopee
 - **Problema:** categorias hoje são rótulos manuais digitados pelo usuário.
-- **Possibilidade:** API de afiliados aceita `productCatId` (numérico). Não expõe lista de categorias diretamente, mas pode-se introspeccionar via `__type` ou usar mapeamento fixo dos IDs de categoria de nível 1 do Brasil.
-- **Ação:** pesquisar quais `productCatId` existem e criar mapeamento.
+- **Descoberta:** a API de afiliados retorna `productCatIds` (array de IDs numéricos, ex: `[100630, 100664, 100896]`). São IDs de categoria hierárquicos da Shopee (nível 1 → 2 → 3).
+- **Limitação:** a API de afiliados não tem endpoint para listar categorias por nome. Seria necessário mapear IDs → nomes (scrapar a árvore de categorias do site, ou usar um mapeamento estático).
+- **Possibilidades:**
+  1. Adicionar `productCatIds` ao domínio e mostrar os IDs no card (pouco útil sem nomes)
+  2. Criar mapeamento estático dos ~20 IDs de nível 1 do Brasil (pesquisar)
+  3. Usar o `productCatId` como filtro de busca (já suportado pelo parâmetro `cat` na API)
+- **Status:** documentado. Próxima sessão: pesquisar mapeamento de IDs.
 
 ### UX: Feed infinito na busca
 - **Problema de Mileny:** retorna poucos produtos (6-9). Deveria funcionar como feed.
