@@ -1,58 +1,57 @@
 <script>
 	import { onMount } from 'svelte';
-	import { buscarEstatisticas, buscarEvolucaoLojas } from '$lib/api.js';
+	import { buscarEstatisticas, buscarEvolucaoLojas, listarPublicacoes, listarBuscasServidor } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
-	import { brl, pct, num, pctSinal } from '$lib/formatters.js';
+	import { brl, pct, num, pctSinal, tempoAtras } from '$lib/formatters.js';
 	import { PageHeader, Loading, EmptyState, Alert, StatCard } from '$lib/components/ui/index.js';
 
-	let dias = $state(30);
-	let dados = $state(null);
+	let dias = $state(7);
 	let carregando = $state(true);
 	let erro = $state(null);
 
-	// Evolução de lojas
+	// Dados
+	let dados = $state(null);
 	let evolucao = $state(null);
-	let carregandoEvolucao = $state(false);
-	let erroEvolucao = $state(null);
+	let publicacoes = $state([]);
+	let buscas = $state([]);
 
 	async function carregar() {
 		carregando = true;
 		erro = null;
 		try {
-			dados = await buscarEstatisticas({ dias });
+			const [est, evo, pub, bus] = await Promise.all([
+				buscarEstatisticas({ dias }).catch(() => null),
+				buscarEvolucaoLojas({ dias }).catch(() => null),
+				listarPublicacoes({ status: '' }).catch(() => ({ publicacoes: [] })),
+				listarBuscasServidor().catch(() => ({ buscas: [] }))
+			]);
+			dados = est;
+			evolucao = evo;
+			publicacoes = pub?.publicacoes ?? [];
+			buscas = bus?.buscas ?? [];
 		} catch (e) {
 			erro = e.message;
 		} finally {
 			carregando = false;
 		}
-		if ($usuario) {
-			carregarEvolucao();
-		}
-	}
-
-	async function carregarEvolucao() {
-		carregandoEvolucao = true;
-		erroEvolucao = null;
-		try {
-			evolucao = await buscarEvolucaoLojas({ dias });
-		} catch (e) {
-			erroEvolucao = e.message;
-		} finally {
-			carregandoEvolucao = false;
-		}
 	}
 
 	onMount(carregar);
+
+	// Derivados
+	let lojasMonitoradas = $derived((buscas ?? []).filter(b => b.shop_ids?.length > 0));
+	let pubEnviadas = $derived((publicacoes ?? []).filter(p => p.status === 'enviada'));
+	let pubErros = $derived((publicacoes ?? []).filter(p => p.status === 'erro'));
 </script>
 
 <PageHeader
-	rotulo="análise de mercado"
-	titulo="Estatísticas"
-	subtitulo="Resumo dos dados coletados periodicamente. Mostra como cada categoria se comporta em comissão, preço e volume de vendas."
+	rotulo="seu resumo"
+	titulo="📊 Estatísticas"
+	subtitulo="Visão geral da sua operação — lojas, coletas e publicações."
 />
 
 <label class="janela">
-	janela:
+	período:
 	<select bind:value={dias} onchange={carregar} class="dado">
 		<option value={7}>7 dias</option>
 		<option value={30}>30 dias</option>
@@ -60,24 +59,48 @@
 	</select>
 </label>
 
-<!-- ── Resumo de coletas ─────────────────────────────────────────────────── -->
+<!-- ── Resumo operacional ────────────────────────────────────────────────── -->
 {#if carregando}
-	<Loading mensagem="Carregando dados…" />
+	<Loading mensagem="Carregando resumo…" />
 {:else if erro}
 	<Alert variant="error"><p>{erro}</p></Alert>
-{:else if !dados || dados.total_amostras === 0}
-	<EmptyState
-		mensagem="Ainda não há dados coletados nesta janela."
-		dica={dados?.fonte === 'nop'
-			? 'O servidor está sem o BigQuery ligado (modo local).'
-			: 'As coletas rodam periodicamente. Os dados aparecem aqui após as primeiras execuções.'}
-	/>
 {:else}
 	<section class="secao">
-		<h2>Resumo de coletas</h2>
-		<p class="meta dado">
-			{num(dados.total_amostras)} produtos coletados nos últimos {dados.dias_janela} dias
-		</p>
+		<h2>Sua operação</h2>
+		<div class="resumo-cards">
+			<StatCard label="Lojas monitoradas" valor={String(lojasMonitoradas.length)} />
+			<StatCard label="Produtos rastreados" valor={num(dados?.total_amostras ?? 0)} />
+			<StatCard label="Publicações enviadas" valor={String(pubEnviadas.length)} variant="gold" />
+			{#if pubErros.length > 0}
+				<StatCard label="Erros de envio" valor={String(pubErros.length)} variant="negative" />
+			{/if}
+		</div>
+
+		<!-- Lista de lojas com última coleta -->
+		{#if lojasMonitoradas.length > 0}
+			<h3>Lojas monitoradas</h3>
+			<div class="lojas-resumo">
+				{#each lojasMonitoradas as loja (loja.id)}
+					<div class="loja-row">
+						<span class="loja-nome">{loja.nome || loja.id}</span>
+						<span class="loja-cron">⏱ {loja.cron || 'manual'}</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Últimas publicações -->
+		{#if pubEnviadas.length > 0}
+			<h3>Últimas publicações</h3>
+			<div class="pub-resumo">
+				{#each pubEnviadas.slice(0, 5) as p (p.id)}
+					<div class="pub-row">
+						<span class="pub-nome">{p.nome || '(sem título)'}</span>
+						<span class="pub-tempo">{tempoAtras(p.enviada_em || p.criada_em)}</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</section>
 {/if}
 
@@ -87,14 +110,12 @@
 	<h2>📈 Evolução de preço — Lojas monitoradas</h2>
 	<p class="sub">Acompanhe como os preços médios das lojas monitoradas evoluem ao longo do tempo.</p>
 
-	{#if carregandoEvolucao}
+	{#if carregando}
 		<Loading mensagem="Calculando evolução…" />
-	{:else if erroEvolucao}
-		<Alert variant="error"><p>{erroEvolucao}</p></Alert>
 	{:else if !evolucao || evolucao.lojas?.length === 0}
 		<EmptyState
 			mensagem="Nenhuma loja monitorada com dados suficientes para análise."
-			dica='Adicione lojas na <a href="/lojas">página de lojas</a> e aguarde pelo menos 2 coletas.'
+			dica='Adicione lojas em <a href="/lojas">Configurações → Lojas</a> e aguarde pelo menos 2 coletas.'
 		/>
 	{:else}
 		<!-- Resumo geral -->
@@ -206,6 +227,27 @@
 		gap: var(--r3);
 		margin-bottom: var(--r6);
 	}
+
+	/* Lojas resumo */
+	h3 { font-size: 1rem; margin: var(--r5) 0 var(--r3); font-weight: 600; }
+	.lojas-resumo { display: flex; flex-direction: column; gap: var(--r2); margin-bottom: var(--r4); }
+	.loja-row {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: var(--r2) var(--r3); background: var(--nevoa);
+		border: 1px solid var(--linha); border-radius: var(--raio-sm);
+	}
+	.loja-nome { font-weight: 600; font-size: var(--text-base); }
+	.loja-cron { font-size: var(--text-xs); color: var(--tinta-suave); font-family: var(--mono); }
+
+	/* Publicações resumo */
+	.pub-resumo { display: flex; flex-direction: column; gap: var(--r2); }
+	.pub-row {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: var(--r2) var(--r3); border-bottom: 1px solid var(--linha);
+	}
+	.pub-row:last-child { border-bottom: none; }
+	.pub-nome { font-size: var(--text-base); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%; }
+	.pub-tempo { font-size: var(--text-xs); color: var(--tinta-suave); }
 
 	/* Loja evolução */
 	.loja-evo {
