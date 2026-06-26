@@ -60,48 +60,25 @@
 	</select>
 </label>
 
-<!-- ── Estatísticas por Categoria ───────────────────────────────────────── -->
-<section class="secao">
-	<h2>Mercado por categoria</h2>
-</section>
-
+<!-- ── Resumo de coletas ─────────────────────────────────────────────────── -->
 {#if carregando}
-	<Loading mensagem="Resumindo os dados…" />
+	<Loading mensagem="Carregando dados…" />
 {:else if erro}
-	<Alert variant="error"><p><strong>Não consegui carregar as estatísticas.</strong></p><p>{erro}</p></Alert>
+	<Alert variant="error"><p>{erro}</p></Alert>
 {:else if !dados || dados.total_amostras === 0}
 	<EmptyState
 		mensagem="Ainda não há dados coletados nesta janela."
 		dica={dados?.fonte === 'nop'
 			? 'O servidor está sem o BigQuery ligado (modo local).'
-			: 'Assim que a coleta periódica rodar, o resumo por categoria aparece aqui.'}
+			: 'As coletas rodam periodicamente. Os dados aparecem aqui após as primeiras execuções.'}
 	/>
 {:else}
-	<p class="meta dado">
-		fonte: {dados.fonte} · {num(dados.total_amostras)} amostras · janela {dados.dias_janela} dias
-	</p>
-	<div class="tabela">
-		<div class="cab">
-			<span>categoria</span>
-			<span>amostras</span>
-			<span>comissão méd.</span>
-			<span>comissão med.</span>
-			<span>preço méd.</span>
-			<span>vendas méd.</span>
-			<span>teor méd.</span>
-		</div>
-		{#each dados.por_categoria as c (c.categoria)}
-			<div class="linha">
-				<span class="cat">{c.categoria || '—'}</span>
-				<span class="dado">{num(c.amostras)}</span>
-				<span class="dado ouro">{pct(c.comissao_media)}</span>
-				<span class="dado">{pct(c.comissao_mediana)}</span>
-				<span class="dado">{brl(c.preco_medio)}</span>
-				<span class="dado">{num(c.vendas_media)}</span>
-				<span class="dado">{(c.teor_medio ?? 0).toFixed(3)}</span>
-			</div>
-		{/each}
-	</div>
+	<section class="secao">
+		<h2>Resumo de coletas</h2>
+		<p class="meta dado">
+			{num(dados.total_amostras)} produtos coletados nos últimos {dados.dias_janela} dias
+		</p>
+	</section>
 {/if}
 
 <!-- ── Evolução de Lojas Monitoradas ───────────────────────────────────── -->
@@ -217,30 +194,10 @@
 	.secao-lojas { margin-top: var(--r8); }
 	.janela { font-size: 0.85rem; color: var(--tinta-suave); margin-bottom: var(--r6); display: block; }
 	.janela select {
-		font-family: var(--mono); padding: 6px 10px; border-radius: 8px;
+		font-family: var(--mono); padding: 6px 10px; border-radius: var(--raio-sm);
 		border: 1px solid var(--linha); background: var(--porcelana); margin-left: 6px;
 	}
 	.meta { font-size: 0.8rem; color: var(--tinta-suave); margin: 0 0 var(--r4); }
-
-	/* Tabela de estatísticas */
-	.tabela {
-		border: 1px solid var(--linha); border-radius: var(--raio);
-		overflow: hidden; background: var(--nevoa);
-	}
-	.cab, .linha {
-		display: grid; grid-template-columns: 1.6fr repeat(6, 1fr);
-		gap: var(--r2); padding: var(--r3) var(--r4); align-items: center;
-	}
-	.cab {
-		background: color-mix(in srgb, var(--porcelana) 70%, white);
-		font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
-		text-transform: uppercase; color: var(--tinta-suave);
-		border-bottom: 1px solid var(--linha);
-	}
-	.linha { border-top: 1px solid var(--linha); font-size: 0.9rem; }
-	.linha:first-of-type { border-top: none; }
-	.cat { font-weight: 600; color: var(--rosa); }
-	.ouro { color: var(--ouro); font-weight: 700; }
 
 	/* Resumo cards */
 	.resumo-cards {

@@ -5,7 +5,7 @@
 	 */
 	let {
 		busca = $bindable(''),
-		categoria = $bindable('cosméticos'),
+		categoria = $bindable(''),
 		comissaoMin = $bindable(0.07),
 		vendasMin = $bindable(0),
 		notaMin = $bindable(0),
@@ -24,7 +24,7 @@
 		(comissaoMin > 0.07 ? 1 : 0) +
 		(vendasMin > 0 ? 1 : 0) +
 		(notaMin > 0 ? 1 : 0) +
-		(categoria !== 'cosméticos' && categoria !== '' ? 1 : 0)
+		(categoria !== '' ? 1 : 0)
 	);
 </script>
 
@@ -58,7 +58,7 @@
 		<div class="avancados">
 			<label class="campo">
 				<span class="rotulo">categoria</span>
-				<input type="text" list="categorias-sugeridas" bind:value={categoria} placeholder="ex.: cosméticos" class="entrada" />
+				<input type="text" list="categorias-sugeridas" bind:value={categoria} placeholder="todas (opcional)" class="entrada" />
 				<datalist id="categorias-sugeridas">
 					<option value="cosméticos" />
 					<option value="perfumaria" />
