@@ -55,20 +55,15 @@ func (srv *Server) buildSource(q url.Values) (source.ProductSource, string) {
 				cat = v
 			}
 		}
-		categoria := srv.Categoria
-		if v := q.Get("categoria"); v != "" {
-			categoria = v
-		}
 		keyword := srv.Keyword
 		if v := q.Get("keyword"); v != "" {
 			keyword = v
 		}
 		sh := source.NewShopeeAPISource(os.Getenv("SHOPEE_APP_ID"), os.Getenv("SHOPEE_SECRET"))
 		sh.ProductCatID = cat
-		sh.CategoryLabel = categoria
 		sh.Keyword = keyword
 		sh.MaxPages = 2 // 100 produtos por busca (2 × 50)
-		chave := "shopee|" + strconv.Itoa(cat) + "|" + categoria + "|" + keyword
+		chave := "shopee|" + strconv.Itoa(cat) + "|" + keyword
 		return sh, chave
 
 	case "shopee-shop":
@@ -80,13 +75,8 @@ func (srv *Server) buildSource(q url.Values) (source.ProductSource, string) {
 			}
 		}
 		keyword := q.Get("keyword")
-		categoria := q.Get("categoria")
-		if categoria == "" {
-			categoria = srv.Categoria
-		}
 		sh := source.NewShopeeShopSource(os.Getenv("SHOPEE_APP_ID"), os.Getenv("SHOPEE_SECRET"), shopIDs)
 		sh.Keyword = keyword
-		sh.CategoryLabel = categoria
 		chave := fmt.Sprintf("shop|%v|%s", shopIDs, keyword)
 		return sh, chave
 

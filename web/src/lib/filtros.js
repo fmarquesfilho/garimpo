@@ -13,7 +13,7 @@ export const FILTROS_PADRAO = {
 	comissaoMin: 0.07,
 	vendasMin: 5,
 	notaMin: 0,
-	quantos: 9,
+	quantos: 20,
 	explorar: false
 };
 

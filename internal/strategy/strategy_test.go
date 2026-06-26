@@ -19,17 +19,18 @@ func TestEligible(t *testing.T) {
 	}
 }
 
-// A estratégia de nicho deve preferir um produto do nicho a outro idêntico
-// fora do nicho — é o comportamento que a diferencia da diversificada.
-func TestNichePrefereCategoriaDoNicho(t *testing.T) {
+// O scoring é neutro em relação à categoria — dois produtos idênticos em
+// categorias diferentes devem ter o mesmo score.
+func TestNicheScoringNeutroCategoria(t *testing.T) {
 	dentro := domain.Product{ID: "a", Category: "cosméticos", Price: 100, Commission: 0.10, Sales30d: 50, Rating: 4.5}
 	fora := domain.Product{ID: "b", Category: "eletrônicos", Price: 100, Commission: 0.10, Sales30d: 50, Rating: 4.5}
 
 	s := scoring.Compute([]domain.Product{dentro, fora})
 	n := NewNiche()
 
-	if n.Score(dentro, s).Score <= n.Score(fora, s).Score {
-		t.Errorf("nicho deveria pontuar o produto do nicho acima do de fora")
+	if n.Score(dentro, s).Score != n.Score(fora, s).Score {
+		t.Errorf("scoring deveria ser neutro entre categorias: cosméticos=%.4f eletrônicos=%.4f",
+			n.Score(dentro, s).Score, n.Score(fora, s).Score)
 	}
 }
 
