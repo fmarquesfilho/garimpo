@@ -24,43 +24,50 @@
 		<div class="posicao dado">{posicao}</div>
 	{/if}
 
-	<header>
-		<span class="cat">{candidato.categoria}</span>
-		<h3>{candidato.nome}</h3>
-		{#if candidato.suspeito || candidato.exploracao}
-			<div class="selos">
-				{#if candidato.suspeito}
-					<span class="selo alerta" title="Comissão alta, mas sem vendas/nota — pode ser produto-fantasma">
-						⚠ suspeito
-					</span>
-				{/if}
-				{#if candidato.exploracao}
-					<span class="selo explor" title="Sorteado fora do topo para testar o que converte (exploração)">
-						✦ exploração
-					</span>
-				{/if}
-			</div>
+	<div class="cartao-corpo">
+		{#if candidato.imagem}
+			<img src={candidato.imagem} alt={candidato.nome} class="thumb" loading="lazy" />
 		{/if}
-	</header>
+		<div class="cartao-info">
+			<header>
+				<span class="cat">{candidato.categoria}</span>
+				<h3>{candidato.nome}</h3>
+				{#if candidato.suspeito || candidato.exploracao}
+					<div class="selos">
+						{#if candidato.suspeito}
+							<span class="selo alerta" title="Comissão alta, mas sem vendas/nota — pode ser produto-fantasma">
+								⚠ suspeito
+							</span>
+						{/if}
+						{#if candidato.exploracao}
+							<span class="selo explor" title="Sorteado fora do topo para testar o que converte (exploração)">
+								✦ exploração
+							</span>
+						{/if}
+					</div>
+				{/if}
+			</header>
 
-	<dl class="laudo">
-		<div>
-			<dt class="rotulo">preço</dt>
-			<dd class="dado">{brl(candidato.preco)}</dd>
+			<dl class="laudo">
+				<div>
+					<dt class="rotulo">preço</dt>
+					<dd class="dado">{brl(candidato.preco)}</dd>
+				</div>
+				<div>
+					<dt class="rotulo">comissão</dt>
+					<dd class="dado ouro">{pct(candidato.comissao)}</dd>
+				</div>
+				<div>
+					<dt class="rotulo">vendas</dt>
+					<dd class="dado">{candidato.vendas.toLocaleString('pt-BR')}</dd>
+				</div>
+				<div>
+					<dt class="rotulo">nota</dt>
+					<dd class="dado">{candidato.avaliacao.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</dd>
+				</div>
+			</dl>
 		</div>
-		<div>
-			<dt class="rotulo">comissão</dt>
-			<dd class="dado ouro">{pct(candidato.comissao)}</dd>
-		</div>
-		<div>
-			<dt class="rotulo">vendas</dt>
-			<dd class="dado">{candidato.vendas.toLocaleString('pt-BR')}</dd>
-		</div>
-		<div>
-			<dt class="rotulo">nota</dt>
-			<dd class="dado">{candidato.avaliacao.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</dd>
-		</div>
-	</dl>
+	</div>
 
 	<ScoreMeter score={candidato.score} componentes={candidato.componentes} animar={destaque} />
 
@@ -99,6 +106,25 @@
 	.destaque {
 		border-color: var(--ouro-claro);
 		background: linear-gradient(180deg, #fffaf1, var(--nevoa));
+	}
+	.cartao-corpo {
+		display: flex;
+		gap: var(--r4);
+	}
+	.thumb {
+		width: 80px;
+		height: 80px;
+		border-radius: var(--raio-sm);
+		object-fit: cover;
+		flex-shrink: 0;
+		background: var(--porcelana);
+	}
+	.cartao-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--r3);
 	}
 	.posicao {
 		position: absolute;
