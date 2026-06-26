@@ -1,18 +1,14 @@
 package httpapi
 
 import (
-"context"
-"encoding/json"
-"log/slog"
-"net/http"
-"strconv"
-"time"
+	"encoding/json"
+	"log/slog"
+	"net/http"
+	"strconv"
 
-"github.com/fmarquesfilho/garimpo/internal/alerts"
-"github.com/fmarquesfilho/garimpo/internal/engine"
-"github.com/fmarquesfilho/garimpo/internal/scheduler"
-"github.com/fmarquesfilho/garimpo/internal/source"
-"github.com/fmarquesfilho/garimpo/internal/store"
+	"github.com/fmarquesfilho/garimpo/internal/coleta"
+	"github.com/fmarquesfilho/garimpo/internal/scheduler"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
@@ -22,143 +18,60 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := r.URL.Query()
-	estrategia := "nicho"
-	if v := q.Get("estrategia"); v != "" {
-		estrategia = v
-	}
 
-	// Amostragem rotativa: se é coleta de loja com busca_id, usa o cursor.
-	buscaID := q.Get("busca_id")
-	var busca *store.Busca
-	if buscaID != "" && srv.fonteAtiva(q) == "shopee-shop" {
-		buscas, _ := srv.Eventos.ListarBuscas(r.Context())
-		for _, b := range buscas {
-			if b.ID == buscaID && b.Ativo {
-				busca = &b
-				break
-			}
+	// Parse dos parâmetros HTTP → struct de domínio
+	params := coleta.Params{
+		Estrategia:  q.Get("estrategia"),
+		Categoria:   q.Get("categoria"),
+		Keyword:     q.Get("keyword"),
+		Top:         topN(q),
+		BuscaID:     q.Get("busca_id"),
+		VendasMin:   srv.VendasMin,
+		NotaMin:     srv.NotaMin,
+		ComissaoMin: 0.07,
+	}
+	if params.Estrategia == "" {
+		params.Estrategia = "nicho"
+	}
+	if params.Categoria == "" {
+		params.Categoria = srv.Categoria
+	}
+	if params.Keyword == "" {
+		params.Keyword = srv.Keyword
+	}
+	if s := q.Get("comissao_min"); s != "" {
+		if v, err := strconv.ParseFloat(s, 64); err == nil {
+			params.ComissaoMin = v
+		}
+	}
+	if s := q.Get("vendas_min"); s != "" {
+		if v, err := strconv.Atoi(s); err == nil {
+			params.VendasMin = v
+		}
+	}
+	if s := q.Get("nota_min"); s != "" {
+		if v, err := strconv.ParseFloat(s, 64); err == nil {
+			params.NotaMin = v
 		}
 	}
 
-	src, chave := srv.fonte(q)
+	// Resolve a fonte de produtos
+	src, _ := srv.fonte(q)
 
-	// Aplica rotação e throttling se é uma coleta de loja
-	if busca != nil {
-		if shopSrc, ok := src.(*source.ShopeeShopSource); ok {
-			// Determina startPage a partir do cursor
-			if busca.RotationCursor != nil && len(busca.ShopIDs) > 0 {
-				firstShop := busca.ShopIDs[0]
-				if pg, exists := busca.RotationCursor[firstShop]; exists && pg > 1 {
-					shopSrc.StartPage = pg
-				}
-			}
-			// Throttling: 200ms entre páginas, 60s entre lojas
-			shopSrc.PageDelay = 200 * time.Millisecond
-			shopSrc.ShopDelay = 60 * time.Second
-		}
-		// Bypass cache para coletas rotativas (cada ciclo busca páginas diferentes)
-		chave = chave + "|rot"
-	}
+	// Delega toda a lógica ao Service
+	svc := coleta.Novo(coleta.Deps{
+		Store:  srv.Eventos,
+		Logger: srv.Logger,
+	})
 
-	produtos, err := srv.fetchCacheado(src, chave)
+	resultado, err := svc.Executar(r.Context(), src, params)
 	if err != nil {
+		srv.Logger.Error("coleta falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
 
-	// Atualiza o rotation cursor após busca bem-sucedida
-	if busca != nil {
-		if shopSrc, ok := src.(*source.ShopeeShopSource); ok && shopSrc.LastPageInfo != nil {
-			if busca.RotationCursor == nil {
-				busca.RotationCursor = make(map[int64]int)
-			}
-			if busca.FullScanAt == nil {
-				busca.FullScanAt = make(map[int64]string)
-			}
-			for shopID, info := range shopSrc.LastPageInfo {
-				busca.RotationCursor[shopID] = info.NextPage
-				if !info.HasMore {
-					// Catálogo completo — registra timestamp
-					busca.FullScanAt[shopID] = time.Now().UTC().Format(time.RFC3339)
-				}
-			}
-			// Persiste o cursor atualizado
-			go func() {
-				if err := srv.Eventos.SalvarBusca(context.Background(), *busca); err != nil {
-					srv.Logger.Error("atualizar rotation cursor falhou",
-						slog.String("busca", busca.ID), slog.String("erro", err.Error()))
-				}
-			}()
-		}
-	}
-
-	scored := engine.Rankear(produtos, strategyDe(estrategia), srv.elegibilidade(q))
-	n := topN(q)
-	if n > len(scored) {
-		n = len(scored)
-	}
-
-	categoria := q.Get("categoria")
-	if categoria == "" {
-		categoria = srv.Categoria
-	}
-	keyword := q.Get("keyword")
-	if keyword == "" && buscaID != "" {
-		keyword = buscaID // usa busca_id como keyword para lojas (identifica nos snapshots)
-	}
-	if keyword == "" {
-		keyword = srv.Keyword
-	}
-
-	snap := store.Snapshot{
-		Categoria:  categoria,
-		Keyword:    keyword,
-		Estrategia: estrategia,
-		Em:         time.Now().UTC(),
-	}
-	for i, s := range scored[:n] {
-		p := s.Product
-		snap.Itens = append(snap.Itens, store.ItemSnapshot{
-Posicao: i + 1, ProdutoID: p.ID, Nome: p.Name,
-Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
-Nota: p.Rating, Score: s.Score,
-})
-	}
-
-	if err := srv.Eventos.RegistrarSnapshot(r.Context(), snap); err != nil {
-		srv.Logger.Error("coleta falhou ao gravar snapshot",
-slog.String("categoria", categoria), slog.String("erro", err.Error()))
-		writeErr(w, http.StatusBadGateway, err.Error())
-		return
-	}
-
-	srv.Logger.Info("coleta",
-slog.String("categoria", categoria),
-slog.String("keyword", keyword),
-slog.String("estrategia", estrategia),
-slog.Int("coletados", len(snap.Itens)),
-slog.String("store", srv.Eventos.Nome()),
-	)
-
-	// Dispara alertas em background se é coleta de loja com busca_id
-	if buscaID != "" && srv.fonteAtiva(q) == "shopee-shop" {
-		go func() {
-			alertCfg := alerts.ConfigFromEnv()
-			alertCfg.Logger = srv.Logger
-			if alertCfg.Ativo() {
-				alerter := alerts.Novo(alertCfg)
-				alerter.VerificarENotificar(context.Background(), srv.Eventos, buscaID)
-				alerter.VerificarNovos(context.Background(), srv.Eventos, buscaID)
-			}
-		}()
-	}
-
-	writeJSON(w, http.StatusAccepted, map[string]any{
-"categoria":  categoria,
-"estrategia": estrategia,
-"coletados":  len(snap.Itens),
-"em":         snap.Em,
-})
+	writeJSON(w, http.StatusAccepted, resultado)
 }
 
 func (srv *Server) listarBuscas(w http.ResponseWriter, r *http.Request) {
@@ -207,7 +120,7 @@ func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Scheduler sync síncrono (não usar goroutine — Cloud Run pode matar a instância)
+	// Scheduler sync síncrono
 	params := scheduler.ColetaParams{
 		BuscaID: b.ID, Categoria: b.Categoria, Estrategia: b.Estrategia,
 		Top: b.Top, VendasMin: b.VendasMin, NotaMin: b.NotaMin, ShopIDs: b.ShopIDs,
