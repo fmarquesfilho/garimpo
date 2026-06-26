@@ -161,6 +161,18 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - [x] Estratégia "diversificada" descontinuada do service layer
 - [x] ESLint + knip + Stylelint: 0 erros em tudo
 - [x] 6 novos testes de regressão (conversões, buscas, service)
+- [x] Scoring neutro (remove bonus por categoria — cosméticos não tem mais vantagem)
+- [x] Categoria real da API Shopee (productCatIds → nomes via mapeamento)
+- [x] Card mostra nome da loja + imagem clicável (abre produto na Shopee)
+- [x] Botão Publicar com cor suave (não compete visualmente)
+- [x] Removidos: checkbox "descobrir novos", select "resultados"
+- [x] Feed com 20 resultados (era 9)
+- [x] Endpoint conversionReport corrigido (campos reais da API)
+- [x] Dashboard de Estatísticas compacto (single page, sem scroll)
+- [x] 4 novos componentes: MetricCard, MiniChart, DashPanel, RankList
+- [x] Quadro removido + Lojas movida para Configurações
+- [x] Enter funciona na busca
+- [x] Categorias não são mais carimbadas manualmente nos produtos
 
 
 ---
