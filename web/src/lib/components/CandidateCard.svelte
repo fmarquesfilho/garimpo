@@ -20,222 +20,193 @@
 </script>
 
 <article class="cartao" class:destaque>
-	{#if posicao != null}
-		<div class="posicao dado">{posicao}</div>
+	{#if candidato.imagem}
+		<img src={candidato.imagem} alt={candidato.nome} class="thumb" loading="lazy" />
 	{/if}
 
-	<div class="cartao-corpo">
-		{#if candidato.imagem}
-			<img src={candidato.imagem} alt={candidato.nome} class="thumb" loading="lazy" />
+	<div class="corpo">
+		{#if posicao != null}
+			<span class="posicao dado">#{posicao}</span>
 		{/if}
-		<div class="cartao-info">
-			<header>
+
+		<header>
+			<h3>{candidato.nome}</h3>
+			<div class="meta">
 				<span class="cat">{candidato.categoria}</span>
-				<h3>{candidato.nome}</h3>
-				{#if candidato.suspeito || candidato.exploracao}
-					<div class="selos">
-						{#if candidato.suspeito}
-							<span class="selo alerta" title="Comissão alta, mas sem vendas/nota — pode ser produto-fantasma">
-								⚠ suspeito
-							</span>
-						{/if}
-						{#if candidato.exploracao}
-							<span class="selo explor" title="Sorteado fora do topo para testar o que converte (exploração)">
-								✦ exploração
-							</span>
-						{/if}
-					</div>
+				{#if candidato.suspeito}
+					<span class="selo alerta">⚠ suspeito</span>
 				{/if}
-			</header>
+				{#if candidato.exploracao}
+					<span class="selo explor">✦ exploração</span>
+				{/if}
+			</div>
+		</header>
 
-			<dl class="laudo">
-				<div>
-					<dt class="rotulo">preço</dt>
-					<dd class="dado">{brl(candidato.preco)}</dd>
-				</div>
-				<div>
-					<dt class="rotulo">comissão</dt>
-					<dd class="dado ouro">{pct(candidato.comissao)}</dd>
-				</div>
-				<div>
-					<dt class="rotulo">vendas</dt>
-					<dd class="dado">{candidato.vendas.toLocaleString('pt-BR')}</dd>
-				</div>
-				<div>
-					<dt class="rotulo">nota</dt>
-					<dd class="dado">{candidato.avaliacao.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</dd>
-				</div>
-			</dl>
+		<div class="dados">
+			<div class="dado-principal">
+				<span class="preco">{brl(candidato.preco)}</span>
+				<span class="comissao">{pct(candidato.comissao)}</span>
+			</div>
+			<div class="dado-secundario">
+				<span>{candidato.vendas.toLocaleString('pt-BR')} vendas</span>
+				<span>★ {candidato.avaliacao.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</span>
+			</div>
 		</div>
+
+		<ScoreMeter score={candidato.score} componentes={candidato.componentes} animar={destaque} />
+
+		<footer>
+			{#if onpublicar}
+				<button class="primario" onclick={() => onpublicar(candidato)}>📤 Publicar</button>
+			{/if}
+			{#if onselecionar}
+				<button class="secundario" onclick={() => onselecionar(candidato)}>Garimpar</button>
+			{/if}
+			<button class="ghost" onclick={copiarLink} disabled={!candidato.link}>
+				{copiado ? '✓' : '🔗'}
+			</button>
+		</footer>
 	</div>
-
-	<ScoreMeter score={candidato.score} componentes={candidato.componentes} animar={destaque} />
-
-	<footer>
-		{#if onselecionar}
-			<button class="primario" onclick={() => onselecionar(candidato)}>Garimpar</button>
-		{/if}
-		{#if onpublicar}
-			<button class="publicar" onclick={() => onpublicar(candidato)}>Publicar</button>
-		{/if}
-		<button class="secundario" onclick={copiarLink} disabled={!candidato.link}>
-			{copiado ? 'Copiado' : 'Copiar link'}
-		</button>
-	</footer>
 </article>
 
 <style>
 	.cartao {
-		position: relative;
 		background: var(--nevoa);
 		border: 1px solid var(--linha);
 		border-radius: var(--raio);
-		padding: var(--r6);
-		display: flex;
-		flex-direction: column;
-		gap: var(--r4);
+		overflow: hidden;
 		box-shadow: var(--sombra);
-		transition:
-			transform 0.18s ease,
-			box-shadow 0.18s ease;
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
 	}
 	.cartao:hover {
-		transform: translateY(-3px);
-		box-shadow: 0 1px 2px rgba(43, 29, 46, 0.05), 0 18px 40px -18px rgba(43, 29, 46, 0.3);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 20px -8px rgba(46, 34, 38, 0.2);
 	}
 	.destaque {
 		border-color: var(--ouro-claro);
-		background: linear-gradient(180deg, #fffaf1, var(--nevoa));
 	}
-	.cartao-corpo {
-		display: flex;
-		gap: var(--r4);
-	}
+
 	.thumb {
-		width: 80px;
-		height: 80px;
-		border-radius: var(--raio-sm);
+		width: 100%;
+		height: 180px;
 		object-fit: cover;
-		flex-shrink: 0;
+		display: block;
 		background: var(--porcelana);
 	}
-	.cartao-info {
-		flex: 1;
-		min-width: 0;
+
+	.corpo {
+		padding: var(--r4);
 		display: flex;
 		flex-direction: column;
 		gap: var(--r3);
 	}
+
 	.posicao {
-		position: absolute;
-		top: var(--r4);
-		right: var(--r4);
-		font-size: 0.85rem;
+		font-size: var(--text-xs);
 		font-weight: 700;
 		color: var(--tinta-suave);
-		opacity: 0.5;
+		opacity: 0.6;
 	}
-	.selos {
+
+	header h3 {
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.3;
+		margin: 0;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.meta {
 		display: flex;
-		flex-wrap: wrap;
+		align-items: center;
 		gap: 6px;
-		margin-top: 6px;
-	}
-	.selo {
-		font-size: 0.68rem;
-		font-weight: 700;
-		padding: 2px 8px;
-		border-radius: 999px;
-	}
-	.selo.alerta {
-		background: color-mix(in srgb, var(--erro-texto) 14%, var(--porcelana));
-		color: var(--erro-texto);
-	}
-	.selo.explor {
-		background: color-mix(in srgb, var(--tinta-suave) 14%, var(--porcelana));
-		color: var(--tinta-suave);
+		margin-top: 4px;
+		flex-wrap: wrap;
 	}
 	.cat {
-		font-size: 0.72rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
-		letter-spacing: 0.04em;
 		color: var(--rosa);
 		text-transform: lowercase;
 	}
-	h3 {
-		font-size: 1.35rem;
-		margin-top: 4px;
-		max-width: 22ch;
-	}
-	.destaque h3 {
-		font-size: 1.7rem;
-	}
-	.laudo {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: var(--r3);
-		margin: 0;
-		padding: var(--r3) 0;
-		border-top: 1px solid var(--linha);
-		border-bottom: 1px solid var(--linha);
-	}
-	.laudo div {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-	}
-	.laudo dd {
-		margin: 0;
-		font-size: 0.95rem;
+	.selo {
+		font-size: 0.65rem;
 		font-weight: 700;
+		padding: 1px 6px;
+		border-radius: var(--raio-full);
 	}
-	.laudo dd.ouro {
+	.selo.alerta {
+		background: var(--erro-fundo);
+		color: var(--erro-texto);
+	}
+	.selo.explor {
+		background: var(--porcelana);
+		color: var(--tinta-suave);
+	}
+
+	.dados {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+	.dado-principal {
+		display: flex;
+		align-items: baseline;
+		gap: var(--r2);
+	}
+	.preco {
+		font-size: 1.1rem;
+		font-weight: 700;
+		font-family: var(--mono);
+	}
+	.comissao {
+		font-size: var(--text-sm);
+		font-weight: 700;
 		color: var(--ouro);
 	}
+	.dado-secundario {
+		display: flex;
+		gap: var(--r3);
+		font-size: var(--text-xs);
+		color: var(--tinta-suave);
+	}
+
 	footer {
 		display: flex;
-		flex-wrap: wrap;
 		gap: var(--r2);
-		margin-top: auto;
+		margin-top: var(--r2);
 	}
-	button {
-		border-radius: 10px;
-		padding: 10px 16px;
-		font-size: 0.9rem;
+	footer button {
+		border-radius: var(--raio-sm);
+		padding: 8px 14px;
+		font-size: var(--text-sm);
 		font-weight: 600;
 		border: 1px solid transparent;
-		transition: background 0.15s ease, border-color 0.15s ease;
 	}
 	.primario {
 		background: var(--ouro);
-		color: #fff;
+		color: var(--branco);
 		flex: 1;
 	}
-	.primario:hover {
-		background: #a3782f;
-	}
-	.publicar {
-		background: var(--rosa);
-		color: #fff;
-	}
-	.publicar:hover {
-		background: #8f4c62;
-	}
+	.primario:hover { background: var(--ouro-hover); }
 	.secundario {
 		background: transparent;
 		border-color: var(--linha);
 		color: var(--tinta);
 	}
-	.secundario:hover:not(:disabled) {
-		border-color: var(--tinta-suave);
+	.secundario:hover { border-color: var(--ouro); color: var(--ouro); }
+	.ghost {
+		background: transparent;
+		color: var(--tinta-suave);
+		padding: 8px 10px;
 	}
-	.secundario:disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-	}
+	.ghost:hover:not(:disabled) { color: var(--ouro); }
+	.ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
 	@media (max-width: 420px) {
-		.laudo {
-			grid-template-columns: repeat(2, 1fr);
-		}
+		.thumb { height: 140px; }
+		.dados { flex-direction: column; gap: 4px; }
 	}
 </style>

@@ -15,7 +15,11 @@
 
 	// ── Estado dos filtros ────────────────────────────────────────────────────
 	let f = $state(get(filtrosStore));
-	$effect(() => { filtrosStore.set({ ...f }); });
+	// Sincroniza filtros para localStorage (unidirecional, sem loop)
+	$effect(() => {
+		const snapshot = JSON.stringify(f);
+		filtrosStore.set(JSON.parse(snapshot));
+	});
 
 	let carregando = $state(true);
 	let erro = $state(null);
