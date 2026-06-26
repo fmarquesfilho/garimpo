@@ -142,3 +142,13 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - [x] Dependências atualizadas (Vite 8, Go 1.26, Node 24)
 - [x] Migração BigQuery (colunas novas)
 - [x] Coletas manuais disparadas para popular dados iniciais
+- [x] Quadro removido (não era usado)
+- [x] Lojas movida para Configurações no menu
+- [x] Enter funciona na busca
+- [x] "Mercado por categoria" removido (conceito obsoleto)
+- [x] Categoria opcional (não obriga "cosméticos")
+- [x] Buscas salvas filtram apenas keywords (lojas ficam em /lojas)
+- [x] Tag "1 loja" removida dos cards
+- [x] Endpoint POST /api/conversoes/sync (conversionReport Shopee)
+- [x] ESLint + knip adicionados ao CI
+- [x] 3 specs documentadas (entidades, conversões, estatísticas)
