@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { buscarLogs, alterarNivelLog } from '$lib/api.js';
-	import { usuario } from '$lib/firebase.js';
+	import { usuario, getIdToken } from '$lib/firebase.js';
 
 	let logs = $state([]);
 	let stats = $state({});
@@ -12,6 +12,11 @@
 	let autoRefresh = $state(true);
 	let logLevel = $state('info');
 	let intervalo;
+
+	// Introspecção Shopee
+	let introResultado = $state(null);
+	let introCarregando = $state(false);
+	let introErro = $state(null);
 
 	onMount(() => {
 		carregar();
@@ -48,6 +53,27 @@
 
 	const nivelCor = { error: 'var(--erro-texto)', warn: 'var(--aviso-texto)', info: 'var(--sucesso-texto)', debug: '#6b7280' };
 	const nivelBg = { error: 'var(--erro-fundo)', warn: 'var(--aviso-fundo)', info: 'var(--sucesso-fundo)', debug: '#f9fafb' };
+
+	async function executarIntrospeccao() {
+		introCarregando = true;
+		introErro = null;
+		introResultado = null;
+		try {
+			const token = await getIdToken();
+			const resp = await fetch('/api/admin/shopee-introspect', {
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			if (!resp.ok) {
+				const body = await resp.json().catch(() => ({}));
+				throw new Error(body.erro || `Erro ${resp.status}`);
+			}
+			introResultado = await resp.json();
+		} catch (e) {
+			introErro = e.message;
+		} finally {
+			introCarregando = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -104,6 +130,31 @@
 		{#if erro}
 			<div class="msg-erro">{erro}</div>
 		{/if}
+
+		<!-- Introspecção Shopee API -->
+		<div class="introspect-section">
+			<button class="btn-introspect" onclick={executarIntrospeccao} disabled={introCarregando}>
+				{introCarregando ? '⏳ Consultando API…' : '🔍 Introspecção Shopee API'}
+			</button>
+			<span class="intro-hint">Descobre campos disponíveis na API de afiliados (origem, etc.)</span>
+
+			{#if introErro}
+				<div class="msg-erro">{introErro}</div>
+			{/if}
+
+			{#if introResultado}
+				<div class="intro-resultado">
+					<p class="intro-conclusao"><strong>Conclusão:</strong> {introResultado.conclusao}</p>
+					{#if introResultado.campos_origem_global?.length > 0}
+						<p class="intro-campos">Termos encontrados: <code>{introResultado.campos_origem_global.join(', ')}</code></p>
+					{/if}
+					<details>
+						<summary>Ver resposta completa ({introResultado.resultados?.length} queries)</summary>
+						<pre class="intro-json">{JSON.stringify(introResultado, null, 2)}</pre>
+					</details>
+				</div>
+			{/if}
+		</div>
 
 		<!-- Lista de logs -->
 		{#if carregando}
@@ -176,4 +227,15 @@
 	.log-status.erro-status { color: var(--erro-texto); }
 	.log-dur { font-family: var(--mono); font-size: 0.72rem; color: var(--tinta-suave); }
 	.log-hora { font-size: 0.72rem; color: var(--tinta-suave); font-family: var(--mono); }
+
+	/* Introspecção */
+	.introspect-section { margin-bottom: var(--r5); padding: var(--r4); border: 1px solid var(--linha); border-radius: var(--raio); background: var(--nevoa); }
+	.btn-introspect { padding: 8px 16px; background: var(--ouro); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+	.btn-introspect:hover:not(:disabled) { opacity: 0.9; }
+	.btn-introspect:disabled { opacity: 0.5; cursor: not-allowed; }
+	.intro-hint { font-size: 0.78rem; color: var(--tinta-suave); margin-left: 8px; }
+	.intro-resultado { margin-top: var(--r3); }
+	.intro-conclusao { font-size: 0.9rem; margin-bottom: var(--r2); }
+	.intro-campos code { background: var(--porcelana); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+	.intro-json { font-size: 0.72rem; max-height: 400px; overflow: auto; background: var(--porcelana); padding: var(--r3); border-radius: 8px; white-space: pre-wrap; word-break: break-all; }
 </style>
