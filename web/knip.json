@@ -1,0 +1,6 @@
+{
+  "entry": ["src/routes/**/+*.{js,svelte}", "src/lib/**/*.{js,svelte}"],
+  "project": ["src/**/*.{js,svelte}"],
+  "ignore": ["src/lib/components/ui/**"],
+  "ignoreDependencies": ["postcss-html", "@eslint/js", "eslint-plugin-svelte"]
+}
