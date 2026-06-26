@@ -267,7 +267,7 @@
 	.progress-step { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--raio-full); font-size: 0.82rem; font-weight: 600; background: var(--porcelana); color: var(--tinta-suave); }
 	.progress-step.done { background: var(--sucesso-fundo); color: var(--sucesso-texto); }
 	.progress-step.current { background: var(--ouro-fundo); color: var(--ouro-escuro); }
-	.step-num { width: 20px; height: 20px; border-radius: 50%; background: currentColor; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+	.step-num { width: 20px; height: 20px; border-radius: 50%; background: currentcolor; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 	.progress-step.done .step-num { background: var(--sucesso-texto); }
 	.progress-step.current .step-num { background: var(--ouro); }
 
