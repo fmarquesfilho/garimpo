@@ -589,6 +589,31 @@ paths:
         '200':
           description: Conversões agrupadas
 
+  /api/conversoes/sync:
+    post:
+      tags: [Coleta]
+      summary: Sincroniza conversões reais da Shopee (conversionReport)
+      description: |
+        Consulta o conversionReport da API de afiliados da Shopee e retorna
+        conversões dos últimos N dias. Chamado pelo Cloud Scheduler 1x/dia.
+      security:
+        - ColetaToken: []
+      parameters:
+        - name: dias
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        '200':
+          description: Conversões sincronizadas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  conversoes: { type: integer }
+                  dias: { type: integer }
+
   /api/resolver-link:
     post:
       tags: [Curadoria]

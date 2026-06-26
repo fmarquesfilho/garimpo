@@ -165,7 +165,7 @@
 		<button class="buscas-titulo-btn" onclick={() => (buscasColapsadas = !buscasColapsadas)} type="button">
 			<span class="seta" class:girada={!buscasColapsadas}>▸</span>
 			Buscas salvas
-			{#if $buscasSalvas.length > 0}<span class="badge-contagem">{$buscasSalvas.length}</span>{/if}
+			{#if $buscasSalvas.filter(b => !b.shop_ids?.length).length > 0}<span class="badge-contagem">{$buscasSalvas.filter(b => !b.shop_ids?.length).length}</span>{/if}
 		</button>
 		{#if !buscasColapsadas}
 			<button class="btn-nova" onclick={() => (mostrarFormBusca = !mostrarFormBusca)} type="button">
@@ -206,9 +206,9 @@
 		</div>
 	{/if}
 
-	{#if $buscasSalvas.length > 0 && !buscasColapsadas}
+	{#if $buscasSalvas.filter(b => !b.shop_ids?.length).length > 0 && !buscasColapsadas}
 		<div class="buscas-lista">
-			{#each $buscasSalvas as b (b.id)}
+			{#each $buscasSalvas.filter(b => !b.shop_ids?.length) as b (b.id)}
 				<BuscaCard busca={b} buscaAtiva={f.busca} onaplicar={aplicarBusca} onproximakw={proximaKeyword} onremover={(id) => buscasSalvas.remover(id)} />
 			{/each}
 		</div>

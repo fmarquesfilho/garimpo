@@ -270,12 +270,9 @@
 							onclick={() => selecionarBusca(b)}
 						>
 							<strong>{b.nome || b.id}</strong>
-							<span class="loja-meta">
-								🏪 {b.shop_ids.length} {b.shop_ids.length === 1 ? 'loja' : 'lojas'}
-								{#if b.keywords?.length > 0}
-									· 🔑 {b.keywords.join(', ')}
-								{/if}
-							</span>
+							{#if b.cron}
+								<span class="loja-meta">⏱ coleta automática</span>
+							{/if}
 						</button>
 						<button
 							class="btn-remover"
