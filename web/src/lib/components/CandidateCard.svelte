@@ -1,10 +1,54 @@
 <script>
 	import ScoreMeter from './ScoreMeter.svelte';
+	import { buscarOrigemProduto } from '$lib/api.js';
+	import { onMount } from 'svelte';
 
 	let { candidato, posicao = null, destaque = false, onselecionar = null, onpublicar = null } = $props();
 
 	const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 	const pct = (v) => `${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
+
+	// Origem do produto — busca automática via API pública se não veio preenchido
+	let origemResolvida = $state(candidato.origem || '');
+	let marcaResolvida = $state('');
+	let buscandoOrigem = $state(false);
+
+	onMount(() => {
+		if (!origemResolvida && candidato.id) {
+			resolverOrigem();
+		}
+	});
+
+	async function resolverOrigem() {
+		// Extrai shopId do link do produto (formato: -i.SHOPID.ITEMID)
+		const shopId = extrairShopId(candidato);
+		if (!shopId) return;
+
+		buscandoOrigem = true;
+		try {
+			const r = await buscarOrigemProduto({ itemId: candidato.id, shopId });
+			if (r.origem) origemResolvida = r.origem;
+			if (r.marca) marcaResolvida = r.marca;
+		} catch {
+			// Falha silenciosa — badge simplesmente não aparece
+		} finally {
+			buscandoOrigem = false;
+		}
+	}
+
+	function extrairShopId(c) {
+		// Tenta extrair do link (shopee.com.br/...-i.SHOPID.ITEMID)
+		if (c.link) {
+			const m = c.link.match(/-i\.(\d+)\.\d+/);
+			if (m) return m[1];
+			// Formato alternativo: shopid no query param
+			const u = new URL(c.link, 'https://shopee.com.br');
+			if (u.searchParams.has('shop_id')) return u.searchParams.get('shop_id');
+		}
+		// Se veio como campo separado
+		if (c.shop_id) return String(c.shop_id);
+		return null;
+	}
 
 	let copiado = $state(false);
 	async function copiarLink() {
@@ -37,8 +81,13 @@
 				{#if candidato.loja}
 					<span class="loja">🏪 {candidato.loja}</span>
 				{/if}
-				{#if candidato.origem}
-					<span class="selo origem">{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{/if} {candidato.origem}</span>
+				{#if origemResolvida}
+					<span class="selo origem">{#if origemResolvida === 'Coreia'}🇰🇷{:else if origemResolvida === 'Japão'}🇯🇵{:else if origemResolvida === 'China'}🇨🇳{/if} {origemResolvida}</span>
+				{:else if buscandoOrigem}
+					<span class="selo origem-loading">⏳</span>
+				{/if}
+				{#if marcaResolvida}
+					<span class="selo marca">🏷️ {marcaResolvida}</span>
 				{/if}
 				{#if candidato.categoria}
 					<span class="cat">{candidato.categoria}</span>
@@ -160,6 +209,19 @@
 	.selo.origem {
 		background: var(--sucesso-fundo);
 		color: var(--sucesso-texto);
+	}
+	.selo.origem-loading {
+		background: var(--porcelana);
+		color: var(--tinta-suave);
+		animation: pulse 1.2s ease-in-out infinite;
+	}
+	.selo.marca {
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
+	}
+	@keyframes pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.4; }
 	}
 
 	.dados {

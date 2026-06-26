@@ -67,6 +67,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/buscas", srv.listarBuscas)
 	mux.HandleFunc("POST /api/buscas", srv.salvarBusca)
 	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
+	mux.HandleFunc("GET /api/produto/origem", srv.produtoOrigem)
+	mux.HandleFunc("POST /api/produto/origem/batch", srv.produtoOrigemBatch)
 
 	// ── Lojas (monitoramento) ─────────────────────────────────────────────
 	mux.HandleFunc("GET /api/lojas", srv.listarLojas)

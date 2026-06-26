@@ -304,6 +304,16 @@ export function excluirConta() {
 	return postar('/api/onboarding/excluir-conta', { confirmar: true });
 }
 
+/** Busca origem (país de fabricação) e marca de um produto via API pública Shopee. */
+export function buscarOrigemProduto({ itemId, shopId }) {
+	return pegar(`/api/produto/origem?item_id=${encodeURIComponent(itemId)}&shop_id=${encodeURIComponent(shopId)}`);
+}
+
+/** Busca origem de múltiplos produtos de uma vez (máx 20). */
+export function buscarOrigemBatch(itens) {
+	return postar('/api/produto/origem/batch', { itens });
+}
+
 /** Lista os perfis de busca sincronizados no servidor (BigQuery). */
 export function listarBuscasServidor() {
 	return pegar('/api/buscas');

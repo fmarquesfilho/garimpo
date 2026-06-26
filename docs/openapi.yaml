@@ -637,6 +637,78 @@ paths:
         '200':
           description: Dados do produto extraídos
 
+  /api/produto/origem:
+    get:
+      tags: [Curadoria]
+      summary: Buscar origem e marca de um produto via API pública Shopee
+      description: |
+        Consulta a API pública v4 da Shopee (pdp/get_pc) para extrair os atributos
+        "País de Origem" e "Marca" do produto. Resultado cacheado por 24h.
+        Não requer autenticação. Usado pelo CandidateCard para enriquecer o badge.
+      security: []
+      parameters:
+        - name: item_id
+          in: query
+          required: true
+          schema: { type: string }
+          example: "23720954312"
+        - name: shop_id
+          in: query
+          required: true
+          schema: { type: string }
+          example: "785541033"
+      responses:
+        '200':
+          description: Origem e marca do produto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  item_id: { type: string }
+                  shop_id: { type: string }
+                  origem: { type: string, description: "País normalizado (ex: Coreia, Japão, China)" }
+                  marca: { type: string }
+                  fonte: { type: string, enum: [api_publica, cache, erro] }
+
+  /api/produto/origem/batch:
+    post:
+      tags: [Curadoria]
+      summary: Buscar origem de múltiplos produtos (máx 20)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                itens:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      item_id: { type: string }
+                      shop_id: { type: string }
+      responses:
+        '200':
+          description: Resultados por produto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resultados:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        item_id: { type: string }
+                        shop_id: { type: string }
+                        origem: { type: string }
+                        marca: { type: string }
+                        fonte: { type: string }
+
   /api/whatsapp/grupos:
     get:
       tags: [Destinos]
