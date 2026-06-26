@@ -118,7 +118,7 @@
 				fonteAtiva = r.fonte ?? '';
 			}
 		} catch (e) {
-			erro = e.message;
+			erro = e;
 		} finally {
 			carregando = false;
 		}
@@ -222,8 +222,16 @@
 	<p class="aviso">Buscando os melhores produtos…</p>
 {:else if erro}
 	<div class="msg-erro">
-		<p><strong>Não consegui buscar produtos.</strong></p>
-		<p>{erro}</p>
+		<p><strong>😕 Não consegui buscar produtos.</strong></p>
+		<p>{erro.message ?? erro}</p>
+		{#if erro.retry}
+			<button class="btn-retry" onclick={buscar}>🔄 Tentar novamente</button>
+		{:else if erro.status === 502}
+			<p class="dica">A API da Shopee pode estar temporariamente fora. Tente novamente em alguns segundos.</p>
+			<button class="btn-retry" onclick={buscar}>🔄 Tentar novamente</button>
+		{:else if erro.status === 401}
+			<p class="dica">Sua sessão pode ter expirado. Tente fazer logout e login novamente.</p>
+		{/if}
 	</div>
 {:else if lista.length === 0 && (!pares || f.modo !== 'comparar')}
 	<div class="vazio">
@@ -263,6 +271,8 @@
 	}
 	.msg-erro { border-color: color-mix(in srgb, var(--erro-texto) 30%, var(--linha)); }
 	.msg-erro p { margin: var(--r2) 0; }
+	.btn-retry { margin-top: var(--r3); padding: 8px 16px; background: var(--ouro); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+	.btn-retry:hover { opacity: 0.9; }
 	.dica { color: var(--tinta-suave); font-size: 0.85rem; }
 	code { background: var(--ouro-fundo); padding: 2px 6px; border-radius: 6px; }
 

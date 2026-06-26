@@ -17,14 +17,7 @@ async function pegar(caminho) {
 	const headers = await authHeaders();
 	const resp = await fetch(`${BASE}${caminho}`, { headers });
 	if (!resp.ok) {
-		let detalhe = '';
-		try {
-			const corpo = await resp.json();
-			detalhe = corpo?.erro ?? '';
-		} catch {
-			/* corpo não-JSON */
-		}
-		throw new Error(detalhe || `Falha ${resp.status}`);
+		throw await parseProblem(resp, caminho);
 	}
 	return resp.json();
 }
@@ -78,15 +71,33 @@ async function postar(caminho, corpo) {
 		body: JSON.stringify(corpo)
 	});
 	if (!resp.ok) {
-		let detalhe = '';
-		try {
-			detalhe = (await resp.json())?.erro ?? '';
-		} catch {
-			/* corpo não-JSON */
-		}
-		throw new Error(detalhe || `Falha ${resp.status}`);
+		throw await parseProblem(resp, caminho);
 	}
 	return resp.json();
+}
+
+/**
+ * Parseia uma resposta de erro no formato RFC 9457 (Problem Details).
+ * Retorna um Error enriquecido com campos úteis para o frontend.
+ */
+async function parseProblem(resp, caminho) {
+	let problem = {};
+	try {
+		problem = await resp.json();
+	} catch {
+		/* corpo não-JSON */
+	}
+
+	// Mensagem amigável: prefere detail > erro > title > status text
+	const mensagem = problem.detail || problem.erro || problem.title || `Erro ${resp.status}`;
+
+	const err = new Error(mensagem);
+	err.status = resp.status;
+	err.problem = problem; // RFC 9457 completo
+	err.retry = problem.retry ?? false;
+	err.code = problem.code ?? '';
+	err.endpoint = caminho;
+	return err;
 }
 
 /** Publica a oferta no canal (Telegram/WhatsApp/Mock) e devolve o Resultado. */
