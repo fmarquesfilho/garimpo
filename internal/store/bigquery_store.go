@@ -162,11 +162,13 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 }
 
 // criarSeNaoExistir cria a tabela particionada por dia se ainda não existir.
+// Se já existir, tenta evoluir o schema adicionando colunas novas (sem remover existentes).
 func criarSeNaoExistir(ctx context.Context, ds *bigquery.Dataset, nome string, schema bigquery.Schema, campoPartition string) error {
 	t := ds.Table(nome)
-	_, err := t.Metadata(ctx)
+	md, err := t.Metadata(ctx)
 	if err == nil {
-		return nil // já existe
+		// Tabela já existe — verifica se precisa adicionar colunas novas
+		return evoluirSchema(ctx, t, md, schema)
 	}
 	// se o erro não for "não encontrado", propaga
 	meta := &bigquery.TableMetadata{
@@ -177,6 +179,31 @@ func criarSeNaoExistir(ctx context.Context, ds *bigquery.Dataset, nome string, s
 		},
 	}
 	return t.Create(ctx, meta)
+}
+
+// evoluirSchema adiciona colunas que existem no schema desejado mas não na tabela.
+// BigQuery permite adicionar colunas (append-only, sempre NULLABLE), nunca remover.
+func evoluirSchema(ctx context.Context, t *bigquery.Table, md *bigquery.TableMetadata, desejado bigquery.Schema) error {
+	existentes := make(map[string]bool)
+	for _, f := range md.Schema {
+		existentes[f.Name] = true
+	}
+
+	var novas bigquery.Schema
+	for _, f := range desejado {
+		if !existentes[f.Name] {
+			novas = append(novas, f)
+		}
+	}
+
+	if len(novas) == 0 {
+		return nil // nada a fazer
+	}
+
+	// Monta schema atualizado (existente + novas)
+	atualizado := append(md.Schema, novas...)
+	_, err := t.Update(ctx, bigquery.TableMetadataToUpdate{Schema: atualizado}, md.ETag)
+	return err
 }
 
 // linhaBQ mapeia o Evento para as colunas da tabela (ver deploy/bigquery_schema.sql).

@@ -56,6 +56,8 @@ Campos retornados (mapeamento no adaptador):
 | `offerLink` | `Link` | já vem com seu tracking |
 | `productName`, `shopName` | `Name`, `ShopName` | ShopName identifica a loja vendedora |
 | `productCatIds` | `CatIDs` | Array hierárquico de IDs de categoria (nível 1→2→3). Mapeado para nomes em `categories.go` |
+| `shopType` | (usado em `inferirOrigem`) | Tipo de loja: "mall", "preferred", etc. Pode indicar cross-border |
+| `sellerLocation` | `Origin` (via `inferirOrigem`) | Localização do seller — mapeado para país de origem (ex: "KR" → "Coreia") |
 
 Isso é o ponto central: **demanda (`sales`) e avaliação (`ratingStar`) vêm de
 graça**, então o scoring não depende de proxy inventado.

@@ -49,22 +49,31 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 
 ### Arquitetura Multi-tenant
 - **Visão:** transformar o Garimpei em SaaS — cada usuário pagante tem suas lojas, alertas, destinos e dados isolados.
-- **Requisitos identificados:**
-  - Isolamento de dados por tenant (BigQuery: partition por owner_uid ou dataset separado)
-  - Cada tenant configura seus bots Telegram/WhatsApp
-  - Billing por tenant (quantidade de lojas monitoradas, volume de coletas)
-  - Onboarding self-service (cadastro → configura loja → recebe alertas)
-- **Preocupações:** LGPD, custos por tenant, fair scheduling.
+- **Status:** ✅ MVP implementado (27/06)
+- **O que foi feito:**
+  - Package `internal/tenant` com Config, Store interface, MemoryStore
+  - Criptografia AES-256-GCM para secrets (env var `ENCRYPTION_KEY`)
+  - 6 endpoints de onboarding: `/api/onboarding/{status,termos,shopee,telegram,validar,excluir-conta}`
+  - Validação real de credenciais Shopee (chamada de teste à API)
+  - Página `/configurar` no frontend: wizard de 4 steps com instruções passo-a-passo
+  - Exclusão de conta (LGPD) com confirmação dupla
+- **Pendente para beta testers entrarem:**
+  - Implementar `BigQueryTenantStore` (persistir configs — hoje é MemoryStore)
+  - `ScopedStore`: filtrar dados por `owner_uid` em todas as queries
+  - Resolver credenciais do tenant no middleware (usar tokens do tenant nas coletas)
+  - Billing por tenant (futuro, não MVP)
 
 ### LGPD
-- **Contexto:** se abrir empresa no Brasil, precisa compliance com a Lei Geral de Proteção de Dados.
-- **Itens a endereçar:**
-  - Política de privacidade e termos de uso
-  - Consentimento explícito para coleta de dados de uso
-  - Direito de exclusão (apagar dados do usuário)
-  - Encarregado de dados (DPO) — pode ser o próprio Fernando inicialmente
+- **Status:** ✅ Parcialmente implementado (27/06)
+- **Itens implementados:**
+  - Termos de uso com aceite explícito e timestamp (step 1 do onboarding)
+  - Direito de exclusão: endpoint `POST /api/onboarding/excluir-conta`
+  - Secrets criptografados (nunca em plaintext no banco)
+  - Dados pessoais mínimos: email, UID Firebase
+- **Pendente:**
+  - Política de privacidade (página estática com texto legal)
   - Logs de acesso a dados pessoais
-  - Dados pessoais armazenados: email, nome, UID Firebase (mínimo)
+  - DPO: Fernando como encarregado inicial
 
 ### WhatsApp — Alternativa ao Maytapi
 - **Problema:** Maytapi está tornando a conexão da Mileny lenta + sem notificações (abre sessão paralela que escuta tudo).
@@ -177,13 +186,36 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 
 ---
 
+## ✅ Resolvido nesta sessão (27/06 — sessão 2)
+
+- [x] Origem do produto: campo `Origin` no domínio, adaptadores, badge no card
+- [x] Origem do produto: fallback `origem_padrao` por loja monitorada
+- [x] Origem do produto: CLI de introspecção GraphQL (`cmd/shopee-introspect`)
+- [x] Multi-tenant: package `internal/tenant` com Config, Store, criptografia AES-256-GCM
+- [x] Multi-tenant: 6 endpoints de onboarding (termos, shopee, telegram, validar, excluir)
+- [x] Multi-tenant: página `/configurar` no frontend (wizard 4 steps)
+- [x] Multi-tenant: validação real de credenciais Shopee via chamada de teste
+- [x] LGPD: aceite de termos com timestamp + exclusão de conta
+- [x] Schema evolution automática: `EnsureSchema` adiciona colunas novas sem migração manual
+- [x] Spec documentada: `.kiro/specs/product-origin/` (requisitos detalhados)
+- [x] Spec documentada: `.kiro/specs/multi-tenant-beta/` (design de alto nível)
+- [x] Documentação atualizada: BACKLOG, ENTIDADES, APIS
+
+---
+
 ## 📝 Itens para próxima sessão (documentados 27/06)
 
 ### Feature: Origem do produto (Coréia/Japão)
 - **Regra de domínio da Mileny:** precisa saber se produto é de origem Coréia/Japão (muitos são falsificados). A Shopee mostra um campo "Origem" no produto e na loja.
-- **Limitação descoberta:** a API de afiliados (GraphQL) **não expõe** o campo de origem do produto. Campos disponíveis: productName, shopName, shopId, productCatIds, shopType, preço, vendas, comissão, imagem, link. A API pública v4 (`/api/v4/item/get`) que mostra o campo "Origem" exige cookie de sessão autenticada — não pode ser chamada server-side.
-- **Ação:** pesquisar se existe endpoint alternativo ou se a Shopee expõe isso em algum outro lugar. Alternativas: (1) scraping com sessão, (2) Mileny marca manualmente quais lojas são verificadas, (3) nova versão da API de afiliados pode expor no futuro.
-- **Status:** documentado como limitação técnica. Feature bloqueada até encontrar fonte de dados.
+- **Status:** ✅ Implementado (27/06)
+- **Solução implementada:**
+  1. Adaptadores Shopee pedem `shopType` e `sellerLocation` na query GraphQL (campos que podem conter origem)
+  2. `inferirOrigem()` normaliza códigos ISO e nomes para PT-BR (ex: "KR" → "Coreia")
+  3. Fallback: campo `origem_padrao` na Busca — ao adicionar loja, o usuário marca "Coreia" e todos os produtos herdam
+  4. Badge visual no CandidateCard: 🇰🇷 Coreia / 🇯🇵 Japão
+  5. CLI `cmd/shopee-introspect` para descobrir campos adicionais via introspecção GraphQL
+- **Próximo:** rodar introspecção com tokens reais para confirmar quais campos a API retorna. Expandir mapeamento se necessário.
+- **Migração:** automática via `EnsureSchema` (adiciona colunas em tabelas existentes no startup)
 
 ### Feature: Categorias dinâmicas da API Shopee
 - **Status:** ✅ Implementado (27/06)

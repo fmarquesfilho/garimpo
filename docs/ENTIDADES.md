@@ -13,6 +13,7 @@ erDiagram
         int[] shop_ids "IDs de lojas Shopee (vazio para buscas por keyword)"
         string categoria "rótulo opcional"
         string estrategia "sempre 'nicho' (diversificada descontinuada)"
+        string origem_padrao "país de origem padrão (ex: Coreia, Japão)"
         float comissao_min
         int vendas_min
         float nota_min
@@ -38,6 +39,7 @@ erDiagram
         int vendas
         float nota
         float score
+        string origin "país de origem do produto (quando disponível)"
     }
 
     PUBLICACAO {
@@ -109,6 +111,21 @@ erDiagram
     PUBLICACAO }o--|| TEMPLATE : "formatada com"
     PUBLICACAO ||--o| CONVERSAO_REAL : "rastreada via sub_id"
     EVENTO }o--|| PUBLICACAO : "registra ação"
+    TENANT_CONFIG ||--o{ BUSCA : "possui (owner_uid)"
+
+    TENANT_CONFIG {
+        string uid PK "Firebase Auth UID"
+        string email
+        string shopee_app_id "plaintext"
+        string shopee_secret_enc "criptografado AES-256-GCM"
+        string telegram_token_enc "criptografado"
+        string telegram_chat_id
+        int onboarding_step "0=início, 4=completo"
+        bool aceitou_termos
+        timestamp aceitou_termos_em
+        timestamp criado_em
+        timestamp atualizado_em
+    }
 ```
 
 ## Regras de negócio
@@ -128,4 +145,6 @@ erDiagram
 - **Estratégia sempre "nicho"** — diversificada foi descontinuada da UI e do service.
 - **Categorias vêm da API Shopee** — `productCatIds` mapeados para nomes via `categories.go`.
 - **CONVERSAO_REAL** — tabela futura, endpoint `/api/conversoes/sync` já implementado.
-- **Origem do produto (Coréia/Japão)** — API de afiliados não expõe. Limitação documentada.
+- **Origem do produto** — campo `Origin` no Product e ItemSnapshot. API pede `shopType` e `sellerLocation`; fallback: `origem_padrao` na Busca.
+- **Multi-tenant** — cada usuário configura suas credenciais Shopee + Telegram via onboarding. Secrets criptografados com AES-256-GCM.
+- **Schema evolution automática** — `EnsureSchema` no startup adiciona colunas novas a tabelas existentes (sem migração manual).
