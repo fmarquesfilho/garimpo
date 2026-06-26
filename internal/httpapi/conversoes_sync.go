@@ -14,9 +14,19 @@ import (
 	"time"
 )
 
-// syncConversoes consulta o conversionReport da Shopee e grava conversões reais.
-// Chamado periodicamente pelo Cloud Scheduler (1x/dia).
-// POST /api/conversoes/sync
+// shopeeConversao representa uma conversão retornada pelo conversionReport.
+type shopeeConversao struct {
+	ConversionID    string  `json:"conversion_id"`
+	UtmContent      string  `json:"utm_content"`
+	TotalCommission float64 `json:"total_commission"`
+	Status          string  `json:"status"`
+	PurchaseTime    string  `json:"purchase_time"`
+	ProductName     string  `json:"product_name"`
+	ProductID       string  `json:"product_id"`
+	ShopName        string  `json:"shop_name"`
+}
+
+// syncConversoes consulta o conversionReport da Shopee e retorna conversões reais.
 func (srv *Server) syncConversoes(w http.ResponseWriter, r *http.Request) {
 	if !srv.autorizadoColeta(r) {
 		writeErr(w, http.StatusUnauthorized, "token inválido")
@@ -37,18 +47,14 @@ func (srv *Server) syncConversoes(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Consulta conversionReport da Shopee
-	conversoes, err := buscarConversoeShopee(appID, secret, dias)
+	conversoes, err := buscarConversoesShopee(appID, secret, dias)
 	if err != nil {
 		srv.Logger.Error("sync conversoes falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, "falha ao consultar Shopee: "+err.Error())
 		return
 	}
 
-	srv.Logger.Info("sync conversoes",
-		slog.Int("encontradas", len(conversoes)),
-		slog.Int("dias", dias),
-	)
+	srv.Logger.Info("sync conversoes", slog.Int("encontradas", len(conversoes)), slog.Int("dias", dias))
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"status":     "ok",
@@ -58,55 +64,12 @@ func (srv *Server) syncConversoes(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// shopeeConversao representa uma conversão retornada pelo conversionReport.
-type shopeeConversao struct {
-	ConversionID    string  `json:"conversion_id"`
-	UtmContent      string  `json:"utm_content"` // é o sub_id
-	TotalCommission float64 `json:"total_commission"`
-	Status          string  `json:"status"` // UNPAID, PENDING, COMPLETED, CANCELLED
-	ClickTime       string  `json:"click_time"`
-	PurchaseTime    string  `json:"purchase_time"`
-	Orders          []struct {
-		Items []struct {
-			ItemID              string  `json:"item_id"`
-			ItemName            string  `json:"item_name"`
-			ItemTotalCommission float64 `json:"item_total_commission"`
-		} `json:"items"`
-	} `json:"orders"`
-}
-
-// buscarConversoeShopee consulta o conversionReport da API de afiliados.
-func buscarConversoeShopee(appID, secret string, dias int) ([]shopeeConversao, error) {
-	// A query do conversionReport usa purchaseTime como filtro
+func buscarConversoesShopee(appID, secret string, dias int) ([]shopeeConversao, error) {
 	agora := time.Now().UTC()
 	inicio := agora.AddDate(0, 0, -dias)
 
-	query := fmt.Sprintf(`{
-		conversionReport(
-			purchaseTimeFrom: "%s",
-			purchaseTimeTo: "%s"
-		) {
-			nodes {
-				conversionId
-				utmContent
-				totalCommission
-				status
-				clickTime
-				purchaseTime
-				orders {
-					items {
-						itemId
-						itemName
-						itemTotalCommission
-					}
-				}
-			}
-			pageInfo {
-				scrollId
-				hasNextPage
-			}
-		}
-	}`, inicio.Format("2006-01-02"), agora.Format("2006-01-02"))
+	query := fmt.Sprintf(`{ conversionReport(purchaseTimeStart: "%s", purchaseTimeEnd: "%s", limit: 50) { nodes { conversionId utmContent totalCommission conversionStatus purchaseTime orders { items { itemId itemName shopName itemTotalCommission imageUrl categoryLv1Name } } } pageInfo { scrollId hasNextPage } } }`,
+		inicio.Format("2006-01-02 15:04:05"), agora.Format("2006-01-02 15:04:05"))
 
 	body, _ := json.Marshal(map[string]string{"query": query})
 	ts := strconv.FormatInt(time.Now().Unix(), 10)
@@ -138,14 +101,16 @@ func buscarConversoeShopee(appID, secret string, dias int) ([]shopeeConversao, e
 					ConversionID    string  `json:"conversionId"`
 					UtmContent      string  `json:"utmContent"`
 					TotalCommission float64 `json:"totalCommission"`
-					Status          string  `json:"status"`
-					ClickTime       string  `json:"clickTime"`
-					PurchaseTime    string  `json:"purchaseTime"`
+					Status          string  `json:"conversionStatus"`
+					PurchaseTime    int64   `json:"purchaseTime"`
 					Orders          []struct {
 						Items []struct {
-							ItemID              string  `json:"itemId"`
-							ItemName            string  `json:"itemName"`
-							ItemTotalCommission float64 `json:"itemTotalCommission"`
+							ItemID          string  `json:"itemId"`
+							ItemName        string  `json:"itemName"`
+							ShopName        string  `json:"shopName"`
+							ItemCommission  float64 `json:"itemTotalCommission"`
+							ImageURL        string  `json:"imageUrl"`
+							Category        string  `json:"categoryLv1Name"`
 						} `json:"items"`
 					} `json:"orders"`
 				} `json:"nodes"`
@@ -170,8 +135,17 @@ func buscarConversoeShopee(appID, secret string, dias int) ([]shopeeConversao, e
 			UtmContent:      n.UtmContent,
 			TotalCommission: n.TotalCommission,
 			Status:          n.Status,
-			ClickTime:       n.ClickTime,
-			PurchaseTime:    n.PurchaseTime,
+			PurchaseTime:    time.Unix(n.PurchaseTime, 0).UTC().Format(time.RFC3339),
+		}
+		// Pega dados do primeiro item do primeiro order
+		for _, o := range n.Orders {
+			for _, item := range o.Items {
+				c.ProductName = item.ItemName
+				c.ProductID = item.ItemID
+				c.ShopName = item.ShopName
+				break
+			}
+			break
 		}
 		result = append(result, c)
 	}

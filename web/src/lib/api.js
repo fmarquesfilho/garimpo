@@ -206,6 +206,11 @@ export function buscarNovidades({ buscaId = '', dias = 7 } = {}) {
 	return pegar(`/api/lojas/novidades?${p}`);
 }
 
+/** Sincroniza e retorna conversões reais da Shopee (conversionReport). */
+export function sincronizarConversoes({ dias = 30 } = {}) {
+	return postar('/api/conversoes/sync', { dias });
+}
+
 /** Evolução de preço das lojas monitoradas ao longo do tempo. */
 export function buscarEvolucaoLojas({ dias = 30 } = {}) {
 	return pegar(`/api/lojas/evolucao?dias=${dias}`);
