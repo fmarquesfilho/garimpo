@@ -7,7 +7,6 @@
 	import { buscasSalvas, slugificar } from '$lib/buscas.js';
 	import { get } from 'svelte/store';
 	import CandidateCard from '$lib/components/CandidateCard.svelte';
-	import StrategyToggle from '$lib/components/StrategyToggle.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
 	import BuscaCard from '$lib/components/BuscaCard.svelte';
@@ -147,18 +146,13 @@
 
 <!-- ── Intro ───────────────────────────────────────────────────────────────── -->
 <section class="intro">
-	<p class="rotulo">a peneira do dia</p>
-	<h1>O que vale a pena garimpar hoje</h1>
+	<h1>O que publicar hoje?</h1>
 	<p class="sub">
-		Produtos elegíveis ordenados pelo <strong>teor</strong> — o quanto cada um rende pelo esforço.
+		Os melhores produtos para divulgar agora — ordenados por potencial de retorno.
 	</p>
 </section>
 
-<!-- ── Controles ───────────────────────────────────────────────────────────── -->
-<div class="controles">
-	<StrategyToggle bind:valor={f.modo} />
-</div>
-
+<!-- ── Busca ───────────────────────────────────────────────────────────────── -->
 <FilterBar
 	bind:busca={f.busca}
 	bind:categoria={f.categoria}
@@ -230,56 +224,35 @@
 
 <!-- ── Resultados ──────────────────────────────────────────────────────────── -->
 {#if carregando}
-	<p class="aviso">Garimpando os melhores produtos…</p>
+	<p class="aviso">Buscando os melhores produtos…</p>
 {:else if erro}
 	<div class="msg-erro">
-		<p><strong>Não consegui falar com a API.</strong></p>
+		<p><strong>Não consegui buscar produtos.</strong></p>
 		<p>{erro}</p>
-		<p class="dica">Confira se o servidor está rodando: <code>go run ./cmd/garimpei-api</code></p>
 	</div>
-{:else if f.modo === 'comparar' && pares}
-	<div class="comparacao">
-		<div class="coluna">
-			<h2 class="tit-col rosa">Nicho</h2>
-			<div class="empilhado">
-				{#each pares.nicho as c, i (c.id)}
-					<CandidateCard candidato={{ ...c, estrategia: 'nicho' }} posicao={i + 1} onselecionar={selecionar} onpublicar={publicarOferta} />
-				{/each}
-			</div>
-		</div>
-		<div class="coluna">
-			<h2 class="tit-col ardosia">Diversificada</h2>
-			<div class="empilhado">
-				{#each pares.diversificada as c, i (c.id)}
-					<CandidateCard candidato={{ ...c, estrategia: 'diversificada' }} posicao={i + 1} onselecionar={selecionar} onpublicar={publicarOferta} />
-				{/each}
-			</div>
-		</div>
-	</div>
-{:else if lista.length === 0}
+{:else if lista.length === 0 && (!pares || f.modo !== 'comparar')}
 	<div class="vazio">
 		{#if f.busca.trim() === ''}
-			<p>🔍 Digite um termo de busca para encontrar produtos.</p>
-			<p class="dica">Ex: "skincare", "perfume", "maquiagem" — ou use uma busca salva abaixo.</p>
+			<p>🔍 Digite um termo para encontrar produtos.</p>
+			<p class="dica">Ex: "skincare", "perfume", "maquiagem"</p>
 		{:else}
-			<p>Nada na peneira para "{f.busca}".</p>
-			<p class="dica">Tente outro termo, ou afrouxe os pisos de comissão, vendas e nota.</p>
+			<p>Nenhum resultado para "{f.busca}".</p>
+			<p class="dica">Tente outro termo ou reduza os filtros mínimos.</p>
 		{/if}
 	</div>
 {:else}
 	<div class="grade">
-		{#each lista as c, i (c.id)}
-			<CandidateCard candidato={c} posicao={i + 1} destaque={i === 0} onselecionar={selecionar} onpublicar={publicarOferta} />
+		{#each (f.modo === 'comparar' && pares ? [...(pares.nicho ?? []), ...(pares.diversificada ?? [])] : lista) as c, i (c.id)}
+			<CandidateCard candidato={c} posicao={i + 1} onselecionar={selecionar} onpublicar={publicarOferta} />
 		{/each}
 	</div>
 {/if}
 
 <style>
 	/* ── Layout ─────────────────────────────────────────────────────────── */
-	.intro { max-width: 40rem; margin-bottom: var(--r8); }
-	h1 { font-size: clamp(2rem, 6vw, 3.2rem); margin: var(--r2) 0 var(--r4); }
-	.sub { color: var(--tinta-suave); font-size: 1.05rem; margin: 0; }
-	.controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--r4); margin-bottom: var(--r4); }
+	.intro { max-width: 40rem; margin-bottom: var(--r6); }
+	h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin: 0 0 var(--r3); }
+	.sub { color: var(--tinta-suave); font-size: 1rem; margin: 0; }
 
 	/* ── Resultados ─────────────────────────────────────────────────────── */
 	.grade {
@@ -287,15 +260,6 @@
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 		gap: var(--r6);
 	}
-	.grade :global(.destaque) { grid-column: 1 / -1; }
-	@media (min-width: 720px) { .grade :global(.destaque) { grid-column: span 2; } }
-
-	.comparacao { display: grid; grid-template-columns: 1fr; gap: var(--r8); }
-	@media (min-width: 800px) { .comparacao { grid-template-columns: 1fr 1fr; } }
-	.empilhado { display: flex; flex-direction: column; gap: var(--r4); }
-	.tit-col { font-size: 1.3rem; margin-bottom: var(--r4); padding-bottom: var(--r2); border-bottom: 2px solid; }
-	.tit-col.rosa { color: var(--rosa); }
-	.tit-col.ardosia { color: var(--tinta-suave); }
 
 	.aviso { color: var(--tinta-suave); font-style: italic; }
 	.vazio, .msg-erro {
