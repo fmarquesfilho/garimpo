@@ -27,13 +27,30 @@
 		buscandoOrigem = true;
 		try {
 			const r = await buscarOrigemProduto({ itemId: candidato.id, shopId });
-			if (r.origem) origemResolvida = r.origem;
+			if (r.origem) origemResolvida = normalizarOrigem(r.origem);
 			if (r.marca) marcaResolvida = r.marca;
 		} catch {
 			// Falha silenciosa — badge simplesmente não aparece
 		} finally {
 			buscandoOrigem = false;
 		}
+	}
+
+	/** Normaliza variações de nome de país para formato badge. */
+	function normalizarOrigem(raw) {
+		if (!raw) return '';
+		const lower = raw.trim().toLowerCase();
+		const mapa = {
+			'coreia': 'Coreia', 'coréia': 'Coreia', 'korea': 'Coreia',
+			'south korea': 'Coreia', 'coreia do sul': 'Coreia', 'coréia do sul': 'Coreia',
+			'kr': 'Coreia',
+			'japão': 'Japão', 'japao': 'Japão', 'japan': 'Japão', 'jp': 'Japão',
+			'china': 'China', 'mainland china': 'China', 'cn': 'China',
+			'brasil': 'Brasil', 'brazil': 'Brasil', 'br': 'Brasil',
+			'eua': 'EUA', 'usa': 'EUA', 'united states': 'EUA',
+			'taiwan': 'Taiwan', 'tailândia': 'Tailândia', 'thailand': 'Tailândia',
+		};
+		return mapa[lower] || (raw.charAt(0).toUpperCase() + raw.slice(1));
 	}
 
 	function extrairShopId(c) {
