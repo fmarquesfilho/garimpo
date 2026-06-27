@@ -1,99 +1,131 @@
 # Cenários de teste — Página Descobrir
 
-Checklist para validação manual da página principal unificada.
+Checklist completo para validação manual. Organizado por fluxo.
 
 ---
 
-## Filtros de fonte (toggles)
+## 1. Fontes de dados (toggles)
 
-| # | Fontes ativas | Keyword | Resultado esperado |
-|---|---|---|---|
-| 1 | 🔍 Busca | "sérum" | Produtos da API de afiliados com imagem, preço, loja |
-| 2 | 🔍 Busca | vazio | Nenhum resultado (hint: "Digite um termo") |
-| 3 | 📉 Quedas | vazio | Todas as quedas de preço das lojas monitoradas |
-| 4 | 📉 Quedas | "Skin1004" | Só quedas cujo nome ou loja contém "Skin1004" |
-| 5 | 🆕 Novos | vazio | Todos os produtos novos detectados nas lojas |
-| 6 | 🆕 Novos | "retinol" | Só novos cujo nome ou loja contém "retinol" |
-| 7 | ⭐ Favoritos | vazio | Lista todos os produtos favoritados |
-| 8 | ⭐ Favoritos | "perfume" | Só favoritos cujo nome ou loja contém "perfume" |
-| 9 | Nenhum ativo | qualquer | Nenhum resultado (hint: "Ative ao menos uma fonte") |
-| 10 | 🔍 + 📉 + 🆕 | vazio | Quedas + Novos (Busca não roda sem keyword) |
-| 11 | 🔍 + 📉 + 🆕 | "sérum" | Busca + quedas + novos filtrados por "sérum" |
-| 12 | Todos | "SKIN1004" | Resultados de todas as fontes filtrados pelo nome da loja |
+| # | Fontes ativas | Keyword | Categorias | Resultado esperado |
+|---|---|---|---|---|
+| 1 | 🔍 Busca | "sérum" | — | Produtos da API com imagem, preço, loja, comissão |
+| 2 | 🔍 Busca | vazio | — | Hint: "Digite um termo" |
+| 3 | 🔍 Busca | vazio | ["Perfumaria"] | Produtos da categoria Perfumaria (sem precisar keyword) |
+| 4 | 📉 Quedas | vazio | — | Todas as quedas de preço das lojas monitoradas |
+| 5 | 📉 Quedas | "Skin1004" | — | Só quedas cujo nome ou loja contém "Skin1004" |
+| 6 | 🆕 Novos | vazio | — | Todos os produtos novos das lojas monitoradas |
+| 7 | 🆕 Novos | "retinol" | — | Só novos cujo nome ou loja contém "retinol" |
+| 8 | ⭐ Favoritos | vazio | — | Todos os produtos favoritados |
+| 9 | ⭐ Favoritos | "perfume" | — | Só favoritos cujo nome ou loja contém "perfume" |
+| 10 | Nenhum ativo | qualquer | — | Hint: "Ative ao menos uma fonte" |
+| 11 | 🔍 + 📉 + 🆕 | vazio | — | Quedas + Novos (curadoria não roda sem keyword nem categoria) |
+| 12 | 🔍 + 📉 + 🆕 | "sérum" | — | Todos os resultados filtrados por "sérum" |
+| 13 | Todos | "SKIN1004" | — | Resultados de todas as fontes filtrados pelo nome da loja |
 
 ---
 
-## Busca por nome de loja
+## 2. Busca por nome de loja
 
-| # | Keyword digitada | O que filtra |
+| # | Keyword digitada | Resultado esperado |
 |---|---|---|
-| 13 | Nome exato da loja (ex: "SKIN1004 Official") | Mostra só produtos dessa loja em qualquer fonte ativa |
-| 14 | Parte do nome da loja (ex: "SKIN") | Filtra qualquer produto cuja loja contenha "SKIN" |
+| 14 | Nome exato (ex: "SKIN1004 Official") | Mostra só produtos dessa loja em qualquer fonte ativa |
+| 15 | Parte do nome (ex: "SKIN") | Filtra qualquer produto cuja loja contenha "SKIN" |
 
 ---
 
-## Filtragem por categoria
+## 3. Filtragem por categoria
 
 | # | Categorias ativas | Keyword | Resultado esperado |
 |---|---|---|---|
-| 35 | ["Perfumaria"] | vazio | Só produtos da categoria Perfumaria (+ produtos sem categoria) |
-| 36 | ["Perfumaria", "Maquiagem"] | vazio | Produtos de Perfumaria OU Maquiagem (OR) |
-| 37 | ["Cuidados com a Pele"] | "sérum" | Keyword AND categoria — interseção |
-| 38 | ["Perfumaria"] | "SKIN1004" | Loja + categoria — mostra só perfumaria da SKIN1004 |
-| 39 | Nenhuma | qualquer | Sem filtro de categoria — mostra tudo |
-| 40 | Busca salva com categorias | (clicar pill) | Ativa categorias da busca + fontes correspondentes |
+| 16 | ["Perfumaria"] | vazio | Só produtos da categoria Perfumaria |
+| 17 | ["Perfumaria", "Maquiagem"] | vazio | Produtos de Perfumaria OU Maquiagem |
+| 18 | ["Cuidados com a Pele"] | "sérum" | Keyword AND categoria (interseção) |
+| 19 | ["Perfumaria"] | "SKIN1004" | Loja AND categoria |
+| 20 | Nenhuma | qualquer | Sem filtro de categoria — mostra tudo |
+| 21 | Busca salva com categorias | (clicar pill) | Ativa categorias + fontes da busca |
 
 ---
 
-## Favoritos (⭐)
+## 4. Favoritos (⭐)
 
 | # | Ação | Resultado esperado |
 |---|---|---|
-| 15 | Clicar ☆ num produto | Estrela vira ★ (dourada), produto salvo |
-| 16 | Clicar ★ num produto já favoritado | Estrela volta a ☆, produto removido dos favoritos |
-| 17 | Ativar fonte ⭐ Favoritos | Mostra todos os produtos salvos |
-| 18 | Sair e entrar de outro dispositivo | Favoritos sincronizados (mesma lista) |
+| 22 | Clicar ☆ num produto | Estrela vira ★ (dourada), produto salvo |
+| 23 | Clicar ★ num produto já favoritado | Volta a ☆, produto removido |
+| 24 | Ativar fonte ⭐ Favoritos | Mostra todos os produtos salvos |
+| 25 | Favoritar produto de "Quedas" | Aparece tanto em Quedas quanto em Favoritos |
+| 26 | Sair e entrar de outro dispositivo | Mesmos favoritos aparecem (sync servidor) |
 
 ---
 
-## Buscas salvas (atalhos)
+## 5. Buscas salvas (atalhos)
 
 | # | Ação | Resultado esperado |
 |---|---|---|
-| 19 | Clicar numa pill de keyword | Seta keyword no input, ativa fonte "Busca" |
-| 20 | Busca salva com fontes [quedas, novos] | Clicar ativa Quedas + Novos (desativa Busca se não tem keyword) |
-| 21 | Busca agendada (⏱ visível) | Mostra ícone de relógio ao lado das pills |
-| 22 | Busca com múltiplas keywords | Mostra todas as keywords como pills clicáveis |
+| 27 | Clicar pill de keyword | Seta keyword no input + ativa fontes da busca |
+| 28 | Busca salva com fontes [quedas, novos] | Clicar ativa Quedas + Novos |
+| 29 | Busca salva com categorias | Clicar ativa categorias + fontes |
+| 30 | Busca agendada | Mostra ícone ⏱ ao lado das pills |
+| 31 | Busca com múltiplas keywords | Mostra todas as keywords como pills clicáveis |
+| 32 | Busca com 📉 e 🆕 mostra ícones | Ícones de fonte visíveis ao lado das pills |
 
 ---
 
-## Dados e cache
+## 6. Gerenciar buscas (em /lojas)
+
+| # | Ação | Resultado esperado |
+|---|---|---|
+| 33 | Clicar "+ nova busca" | Abre formulário com keywords, categorias, fontes, agendamento |
+| 34 | Criar busca só com categorias (sem keyword) | Salva e aparece como atalho na Descobrir |
+| 35 | Criar busca com fontes [novos] + dias_janela=3 | Salva corretamente, badge mostra "janela: 3d" |
+| 36 | Criar busca agendada (cron) | Mostra ⏱ no card e aparece na Descobrir |
+| 37 | Remover busca | Desaparece da lista e dos atalhos |
+
+---
+
+## 7. Dados, cache e timeout
 
 | # | Cenário | Resultado esperado |
 |---|---|---|
-| 23 | Sem lojas monitoradas + Quedas/Novos ativo | Empty state: "Você ainda não monitora nenhuma loja" com link para /lojas |
-| 24 | Toggle rápido Quedas on/off/on | Não re-busca (cache 2 min), resultados aparecem instantaneamente |
-| 25 | API demora > 25s | Timeout com mensagem de erro + botão "Tentar novamente" |
-| 26 | Produtos de coletas antigas (sem imagem) | Card aparece sem foto (graceful), nome e preço visíveis |
-| 27 | Produtos de coletas novas (com imagem) | Card aparece com foto, link clicável, nome da loja |
+| 38 | Sem lojas monitoradas + Quedas/Novos ativo | Empty state com link para /lojas |
+| 39 | Toggle rápido on/off/on | Não re-busca (cache 2 min) |
+| 40 | API demora > 25s | Timeout com erro + botão "Tentar novamente" |
+| 41 | Coletas antigas (sem imagem no snapshot) | Card sem foto, nome e preço visíveis |
+| 42 | Coletas novas (com imagem no snapshot) | Card com foto, link clicável, nome da loja |
 
 ---
 
-## Botão X no input
+## 8. Input de busca
 
 | # | Ação | Resultado esperado |
 |---|---|---|
-| 28 | Clicar ✕ com texto no campo | Campo limpa, foco volta pro input |
-| 29 | Pressionar ESC com texto no campo | Campo limpa |
-| 30 | Campo vazio | Botão ✕ não aparece |
+| 43 | Clicar ✕ com texto | Campo limpa |
+| 44 | Pressionar ESC | Campo limpa |
+| 45 | Campo vazio | Botão ✕ não aparece |
+| 46 | Digitar e esperar 400ms | Busca dispara automaticamente (debounce) |
 
 ---
 
-## ProductCard (visual consistente)
+## 9. ProductCard (visual)
 
-| # | Fonte do produto | O que deve aparecer no card |
+| # | Fonte do produto | O que aparece |
 |---|---|---|
-| 31 | Curadoria (🔍) | Imagem, nome, preço, comissão, vendas, nota, loja, score, posição (#1, #2...) |
-| 32 | Queda (📉) | Imagem (se disponível), nome, preço anterior → atual, % variação, loja |
-| 33 | Novo (🆕) | Imagem (se disponível), nome, preço, comissão, loja, badge "Novo" |
-| 34 | Favorito (⭐) | Mesmo layout dos demais, com ★ dourada indicando que é favoritado |
+| 47 | Curadoria (🔍) | Imagem, nome, preço, comissão %, vendas, nota ★, loja, score, posição #N |
+| 48 | Queda (📉) | Imagem, nome, preço anterior → atual, variação %, loja, badge verde |
+| 49 | Novo (🆕) | Imagem, nome, preço, comissão, loja, badge "Novo" |
+| 50 | Favorito (⭐) | Mesmo visual + ★ dourada |
+| 51 | Qualquer produto | Botão ☆/★ funciona (toggle) |
+| 52 | Qualquer produto | Botão "📤 Publicar" navega para /publicar com dados |
+| 53 | Qualquer produto | Botão "🔗 Link" copia para clipboard |
+
+---
+
+## 10. Badges nos toggles
+
+| # | Cenário | Resultado esperado |
+|---|---|---|
+| 54 | Dados carregados | 📉 Quedas mostra badge verde com número |
+| 55 | Dados carregados | 🆕 Novos mostra badge rosa com número |
+| 56 | Dados carregados | 🔍 Busca mostra badge dourado com número |
+| 57 | Favoritos não-vazio | ⭐ Favoritos mostra badge com contagem |
+| 58 | Hover nos toggles | Tooltip explica o que cada fonte faz |
