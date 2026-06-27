@@ -81,7 +81,7 @@ func (s *ShopeeShopSource) endpoint() string {
 	return shopeeEndpoint
 }
 
-func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) {
+func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) { //nolint:funlen // paginação + throttling requer código sequencial
 	if s.AppID == "" || s.Secret == "" {
 		return nil, fmt.Errorf("shopee shop api: AppID/Secret não configurados")
 	}

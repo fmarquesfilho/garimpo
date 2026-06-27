@@ -22,6 +22,8 @@ linters:
     - gosec          # Problemas de segurança (hardcoded creds, weak crypto)
     - gofmt          # Formatação padrão
     - goimports      # Imports organizados
+    - funlen         # Funções com mais de N linhas (previne crescimento descontrolado)
+    - cyclop         # Complexidade ciclomática alta
 
 linters-settings:
   errcheck:
@@ -39,6 +41,13 @@ linters-settings:
       - name: var-naming
         disabled: false
 
+  funlen:
+    lines: 100
+    statements: 60
+
+  cyclop:
+    max-complexity: 20
+
   gosec:
     excludes:
       - G104  # Ignora "unhandled error" (já coberto por errcheck)
@@ -51,8 +60,14 @@ issues:
   max-same-issues: 0
 
   exclude-rules:
-    # Testes podem ter erros não tratados
+    # Testes podem ter erros não tratados e funções longas
     - path: _test\.go
       linters:
         - errcheck
         - gosec
+        - funlen
+        - cyclop
+    # main.go é naturalmente longo
+    - path: cmd/
+      linters:
+        - funlen

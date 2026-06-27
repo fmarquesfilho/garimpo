@@ -159,49 +159,37 @@ func (srv *Server) inicializar() {
 	srv.cache = map[string]*cacheEntry{}
 }
 
-// spaHandler serve os arquivos estáticos do frontend (web/build) com fallback
-// para 200.html (SPA). Em produção, os arquivos são embeddados ou montados em
-// /web. Em dev, usa o diretório local web/build.
+// spaHandler serve os arquivos estáticos do frontend (web/build) com fallback SPA.
 func (srv *Server) spaHandler() http.Handler {
-	// Determina o diretório do frontend
 	dir := os.Getenv("WEB_DIR")
 	if dir == "" {
 		dir = "web/build"
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Rotas /api/* que chegaram aqui não correspondem a nenhum handler
-		// registrado — devolve 404 JSON (não o SPA).
 		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
 			writeErr(w, http.StatusNotFound, "rota não encontrada")
 			return
 		}
 
-		// Tenta servir o arquivo pedido
 		path := r.URL.Path
 		if path == "/" {
 			path = "/200.html"
 		}
 
-		// Verifica se o arquivo existe
 		fullPath := dir + path
 		if _, err := os.Stat(fullPath); err == nil {
-			// Cache headers por tipo de asset
 			if len(path) > 17 && path[:17] == "/_app/immutable/" {
-				// Assets com hash no nome — nunca mudam, cache forever
 				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 			} else if len(path) > 5 && path[:5] == "/_app" {
-				// Assets do SvelteKit sem hash — revalidar sempre
 				w.Header().Set("Cache-Control", "no-cache")
 			} else {
-				// HTML, favicon, etc — nunca cachear (Safari iPad cacheia agressivamente)
 				w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			}
 			http.ServeFile(w, r, fullPath)
 			return
 		}
 
-		// Fallback: SPA (200.html)
 		fallback := dir + "/200.html"
 		if _, err := os.Stat(fallback); err != nil {
 			http.NotFound(w, r)
@@ -210,149 +198,6 @@ func (srv *Server) spaHandler() http.Handler {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		http.ServeFile(w, r, fallback)
 	})
-}
-
-// ── Middleware ─────────────────────────────────────────────────────────────
-
-type respCapturado struct {
-	http.ResponseWriter
-	status int
-}
-
-func (r *respCapturado) WriteHeader(c int) {
-	r.status = c
-	r.ResponseWriter.WriteHeader(c)
-}
-
-func (srv *Server) logRequests(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		inicio := time.Now()
-		rc := &respCapturado{ResponseWriter: w, status: 200}
-		next.ServeHTTP(rc, r)
-
-		dur := time.Since(inicio)
-		attrs := []any{
-			slog.String("metodo", r.Method),
-			slog.String("rota", r.URL.Path),
-			slog.Int("status", rc.status),
-			slog.Duration("dur", dur),
-		}
-
-		nivel := "info"
-		switch {
-		case rc.status >= 500:
-			srv.Logger.Error("requisição", attrs...)
-			nivel = "error"
-		case r.URL.Path == "/api/health":
-			srv.Logger.Debug("requisição", attrs...)
-			nivel = "debug"
-		default:
-			srv.Logger.Info("requisição", attrs...)
-		}
-
-		if srv.LogBuffer != nil {
-			srv.LogBuffer.Push(logs.Entry{
-				Nivel: nivel, Msg: "requisição", Metodo: r.Method,
-				Rota: r.URL.Path, Status: rc.status,
-				DurMs: float64(dur.Microseconds()) / 1000.0, Em: inicio,
-			})
-		}
-	})
-}
-
-func cors(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-func (srv *Server) usuarioDoRequest(r *http.Request) *auth.User {
-	token := r.Header.Get("Authorization")
-	if token == "" {
-		return nil
-	}
-	return srv.Auth.Verify(r.Context(), token)
-}
-
-func (srv *Server) autorizadoColeta(r *http.Request) bool {
-	tok := os.Getenv("COLETA_TOKEN")
-	if tok == "" {
-		return true
-	}
-	return r.Header.Get("X-Garimpo-Token") == tok
-}
-
-func writeJSON(w http.ResponseWriter, status int, body any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
-}
-
-// writeErr retorna um erro no formato RFC 9457 (Problem Details).
-// Mantém compatibilidade com o campo "erro" que o frontend já consome.
-func writeErr(w http.ResponseWriter, status int, msg string) {
-	w.Header().Set("Content-Type", "application/problem+json; charset=utf-8")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type":   problemTypeFromStatus(status),
-		"title":  problemTitleFromStatus(status),
-		"status": status,
-		"detail": msg,
-		"erro":   msg, // compatibilidade com frontend existente
-	})
-}
-
-func problemTypeFromStatus(status int) string {
-	switch {
-	case status == 400:
-		return "https://garimpei.app.br/problemas/entrada-invalida"
-	case status == 401:
-		return "https://garimpei.app.br/problemas/nao-autenticado"
-	case status == 403:
-		return "https://garimpei.app.br/problemas/sem-permissao"
-	case status == 404:
-		return "https://garimpei.app.br/problemas/nao-encontrado"
-	case status == 409:
-		return "https://garimpei.app.br/problemas/conflito"
-	case status == 502:
-		return "https://garimpei.app.br/problemas/servico-externo"
-	case status == 503:
-		return "https://garimpei.app.br/problemas/indisponivel"
-	default:
-		return "about:blank"
-	}
-}
-
-func problemTitleFromStatus(status int) string {
-	switch status {
-	case 400:
-		return "Dados inválidos"
-	case 401:
-		return "Não autenticado"
-	case 403:
-		return "Acesso negado"
-	case 404:
-		return "Não encontrado"
-	case 409:
-		return "Conflito"
-	case 502:
-		return "Serviço externo indisponível"
-	case 503:
-		return "Serviço temporariamente indisponível"
-	case 500:
-		return "Erro interno"
-	default:
-		return http.StatusText(status)
-	}
 }
 
 // ── Handlers simples ──────────────────────────────────────────────────────
