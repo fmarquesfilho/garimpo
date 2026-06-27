@@ -12,6 +12,9 @@
 	import TagInput from '$lib/components/TagInput.svelte';
 	import BuscaCard from '$lib/components/BuscaCard.svelte';
 	import AgendadorBusca from '$lib/components/AgendadorBusca.svelte';
+	import TabOportunidades from '$lib/components/TabOportunidades.svelte';
+	import TabFavoritos from '$lib/components/TabFavoritos.svelte';
+	import { TabBar } from '$lib/components/ui/index.js';
 
 	// ── Estado dos filtros ────────────────────────────────────────────────────
 	let f = $state(get(filtrosStore));
@@ -25,6 +28,7 @@
 	let erro = $state(null);
 	let lista = $state([]);
 	let pares = $state(null);
+	let aba = $state('busca');
 
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
@@ -158,6 +162,17 @@
 	</p>
 </section>
 
+<!-- ── Abas principais ─────────────────────────────────────────────────────── -->
+<TabBar
+	tabs={[
+		{ id: 'busca', label: '🔍 Buscar' },
+		{ id: 'oportunidades', label: '🎯 Oportunidades' },
+		{ id: 'favoritos', label: '⭐ Favoritos', badge: $favoritos.length > 0 ? String($favoritos.length) : '' }
+	]}
+	bind:active={aba}
+/>
+
+{#if aba === 'busca'}
 <!-- ── Busca ───────────────────────────────────────────────────────────────── -->
 <FilterBar
 	bind:busca={f.busca}
@@ -263,6 +278,13 @@
 			<ProductCard produto={c} posicao={i + 1} onpublicar={publicarOferta} onfavoritar={(p) => favoritos.toggle(p)} />
 		{/each}
 	</div>
+{/if}
+
+{:else if aba === 'oportunidades'}
+	<TabOportunidades />
+
+{:else if aba === 'favoritos'}
+	<TabFavoritos />
 {/if}
 
 <style>

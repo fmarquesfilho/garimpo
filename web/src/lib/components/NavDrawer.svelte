@@ -20,8 +20,7 @@
 		<div class="drawer-conteudo">
 			<div class="menu-secao">
 				<span class="menu-titulo">Principal</span>
-				<a href="/" class:atual={$page.url.pathname === '/'}>🔍 Buscar</a>
-				<a href="/oportunidades" class:atual={$page.url.pathname === '/oportunidades'}>🎯 Oportunidades</a>
+				<a href="/" class:atual={$page.url.pathname === '/'}>🔍 Descobrir</a>
 			</div>
 			<div class="menu-secao">
 				<span class="menu-titulo">Publicar</span>
