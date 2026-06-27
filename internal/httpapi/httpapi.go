@@ -47,8 +47,8 @@ type Server struct {
 	mu    sync.Mutex
 	cache map[string]*cacheEntry
 
-	muNov       sync.Mutex
-	cacheNov    map[string]*cacheEntryNov
+	muNov    sync.Mutex
+	cacheNov map[string]*cacheEntryNov
 
 	// Override de alertas em runtime (evita os.Setenv race condition)
 	alertasChatIDOverride       string
