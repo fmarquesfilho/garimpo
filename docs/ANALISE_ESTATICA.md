@@ -1,69 +1,97 @@
-# Análise Estática — Garimpei
+# Qualidade de Código — Garimpei
 
-Configurada em 2026-06-27. Todas as ferramentas rodam localmente e no CI a cada push.
+Ferramentas, regras e práticas configuradas para manter o código seguro, legível e sustentável à medida que o projeto cresce.
+
+Atualizado em: 2026-06-27
 
 ---
 
-## Ferramentas
+## Pipeline de Qualidade (CI)
 
-| Ferramenta | Propósito | Bloq. CI | Como rodar local |
-|-----------|-----------|:---:|-----------|
-| **golangci-lint** | Linting Go (errcheck, gosec, staticcheck, etc.) | ✅ | `golangci-lint run ./...` |
-| **govulncheck** | Vulnerabilidades alcançáveis em deps Go | ✅ | `govulncheck ./...` |
-| **arch-go** | Regras de dependência entre packages | ✅ | `arch-go` |
-| **go test** | Testes unitários e integração | ✅ | `go test ./...` |
-| **ESLint** | Linting JS/Svelte | ✅ | `cd web && npm run lint:js` |
-| **Stylelint** | CSS/design tokens | ✅ | `cd web && npm run lint:css` |
-| **Vitest** | Testes unitários frontend | ✅ | `cd web && npx vitest run` |
-| **knip** | Código/deps mortas frontend | — | `cd web && npx knip` |
+Todo push na main roda automaticamente:
 
-### Linters adicionais (rodar manualmente, não bloqueiam CI)
+```
+go test → golangci-lint → govulncheck → arch-go → ESLint → Stylelint → Vitest → Playwright
+```
 
-Para sugestões de performance — útil antes de otimizar hot paths:
+Se qualquer step falhar, o deploy é bloqueado.
+
+### Resumo dos gates
+
+| Gate | O que bloqueia | Tempo |
+|------|---------------|-------|
+| `go test ./...` | Testes quebrados | ~6s |
+| `golangci-lint` | Bugs, segurança, funções longas, complexidade alta | ~10s |
+| `govulncheck` | CVEs alcançáveis nas dependências | ~5s |
+| `arch-go` | Violação de regras de dependência entre packages | ~3s |
+| `npm run lint:js` | Erros ESLint no frontend | ~3s |
+| `npm run lint:css` | Violações de design tokens | ~2s |
+| `npx vitest run` | Testes unitários de componentes | ~2s |
+| Playwright E2E | Fluxos de ponta a ponta | ~30s |
+
+---
+
+## Linters Go (`.golangci.yml`)
+
+### Linters habilitados (bloqueiam CI)
+
+| Linter | Categoria | O que detecta |
+|--------|-----------|--------------|
+| errcheck | Bug | Erros de retorno ignorados |
+| staticcheck | Bug | Padrões incorretos, código morto |
+| govet | Bug | Erros do `go vet` oficial |
+| ineffassign | Bug | Atribuições a variáveis nunca lidas |
+| typecheck | Bug | Erros de tipo |
+| unused | Bug | Código morto (funções/tipos não usados) |
+| gosimple | Qualidade | Simplificações possíveis |
+| revive | Qualidade | Regras de estilo configuráveis |
+| bodyclose | Bug | `http.Response.Body` não fechado (leak de conexão) |
+| gosec | Segurança | Secrets hardcoded, crypto fraco, timeouts ausentes |
+| gofmt | Estilo | Formatação padrão Go |
+| goimports | Estilo | Imports organizados |
+| funlen | Manutenção | Funções > 100 linhas ou > 60 statements |
+| cyclop | Manutenção | Complexidade ciclomática > 20 |
+
+### Exclusões intencionais
+
+| Item | Motivo |
+|------|--------|
+| `gocritic` | Sugestões de performance (hugeParam). Útil localmente, não bloqueia CI. |
+| `prealloc` | Slices sem pre-alocação. Otimização incremental. |
+| `misspell` | Falsos positivos com termos em português. |
+| G404 (gosec) | `math/rand` usado para exploração (shuffle, não cripto). |
+| `_test.go` | Excluídos de errcheck, gosec, funlen, cyclop. |
+| `cmd/` | Excluído de funlen (main é naturalmente longo). |
+
+### Como rodar localmente
+
 ```bash
+# Exatamente o que o CI roda:
+golangci-lint run --timeout=3m --issues-exit-code=1 ./...
+
+# Para ver também sugestões de performance (não bloqueia CI):
 golangci-lint run --enable=gocritic,prealloc ./...
 ```
 
 ---
 
-## Configuração
+## Segurança de Dependências (`govulncheck`)
 
-### `.golangci.yml` — Linters habilitados no CI
+Analisa vulnerabilidades **alcançáveis** (não só presentes) nas dependências Go.
 
-| Linter | O que detecta |
-|--------|--------------|
-| errcheck | Erros de retorno ignorados (causa de bugs silenciosos) |
-| staticcheck | Padrões incorretos, código morto, simplificações |
-| govet | Erros detectados pelo `go vet` oficial |
-| ineffassign | Atribuições a variáveis nunca lidas |
-| typecheck | Erros de tipo |
-| unused | Funções/variáveis/tipos não usados |
-| gosimple | Simplificações possíveis |
-| revive | Regras de estilo configuráveis |
-| bodyclose | `http.Response.Body` não fechado (leak) |
-| gosec | Problemas de segurança (secrets, crypto fraco) |
-| gofmt | Formatação padrão |
-| goimports | Imports organizados |
+```bash
+govulncheck ./...
+```
 
-**Exclusões intencionais:**
-- `gocritic` — sugestões de performance (hugeParam, rangeValCopy). Não é bug, é otimização incremental.
-- `prealloc` — slices sem pre-alocação. Idem.
-- `misspell` — falsos positivos com termos em português (ex: "rela" flagged como "real").
-- Arquivos `_test.go` — excluídos de errcheck e gosec (testes podem ignorar erros intencionalmente).
-- `G404` (gosec) — math/rand usado intencionalmente para exploração (shuffle, não cripto).
+**Estado atual:** 0 vulnerabilidades (Go atualizado para 1.26.4).
 
-### `arch-go.yml` — Regras de Arquitetura
+**Ação se encontrar CVE:** atualizar a dependência ou Go. O CI bloqueia até resolver.
+
+---
+
+## Regras de Arquitetura (`arch-go.yml`)
 
 Protege a separação de camadas. Se alguém importar `httpapi` dentro de `domain`, o CI falha.
-
-| Package | Não pode importar |
-|---------|------------------|
-| `domain` | Nada externo (zero deps internas) |
-| `source` | httpapi, store, publish |
-| `engine` | httpapi, store |
-| `strategy` | httpapi, store, source |
-| `store` | httpapi, source, engine |
-| `tenant` | httpapi, source, store |
 
 ```
 domain ← engine ← httpapi → store
@@ -71,84 +99,123 @@ domain ← engine ← httpapi → store
 strategy  source              tenant
 ```
 
----
+### Regras configuradas
 
-## Resultado Atual (após correções)
+| Package | Não pode importar | Status |
+|---------|------------------|:---:|
+| `domain` | Nada externo (zero deps internas) | ✅ |
+| `source` | httpapi, store, publish | ✅ |
+| `engine` | httpapi, store | ✅ |
+| `strategy` | httpapi, store, source | ✅ |
+| `store` | httpapi, source, engine | ✅ |
+| `tenant` | httpapi, source, store | ✅ |
 
-### Backend
-
-```
-golangci-lint:  0 issues (CI passa) ✅
-govulncheck:    0 vulnerabilidades ✅
-arch-go:        100% compliance (6/6 regras) ✅
-go test:        todos os packages passam ✅
-```
-
-### Frontend
-
-```
-ESLint:    0 errors ✅ (16 warnings — no-unused-vars em código existente)
-Stylelint: 0 errors ✅
-knip:      0 issues ✅
-Vitest:    10/10 testes passam ✅
-```
+**Compliance:** 100%
 
 ---
 
-## O que foi corrigido na sessão de 27/06
+## Cobertura de Testes
 
-### Segurança (P0) ✅
-- [x] Go 1.26.0 → 1.26.4 (12 CVEs na stdlib resolvidas)
-- [x] `http.Server` com ReadTimeout/WriteTimeout/IdleTimeout (antes: sem timeout)
+### Backend (Go)
 
-### Bugs (P1) ✅
-- [x] 4 `errcheck` — `json.Decode` e `w.Write` com erros ignorados
-- [x] 2 funções mortas removidas (`parseShopInput`, `resolveShopSlug`)
+| Package | Cobertura | Responsabilidade |
+|---------|:---------:|-----------------|
+| logs | 90.9% | Logging estruturado |
+| scoring | 89.7% | Cálculo de score |
+| source | 86.7% | Adaptadores Shopee API |
+| engine | 85.4% | Motor de ranking |
+| strategy | 85.2% | Estratégias de curadoria |
+| tenant | 81.3% | Multi-tenancy + crypto |
+| coleta | 65.8% | Service de coleta periódica |
+| publish | 63.7% | Publicação Telegram/WhatsApp |
+| store | 57.1% | BigQuery persistence |
+| httpapi | 49.2% | HTTP handlers |
 
-### Estilo (P3) ✅
-- [x] `gofmt` aplicado em todo o projeto (27 issues de formatação)
+**Packages sem testes (infraestrutura pura):** alerts, auth, scheduler, problem — dependem de serviços externos.
 
-### Pendente (melhorias incrementais)
-- [ ] `gocritic/hugeParam` (84) — converter structs grandes para ponteiros nos hot paths
-- [ ] `prealloc` (3) — pre-alocar slices quando o tamanho é conhecido
+### Frontend (Svelte/Vitest)
+
+| Componente | Testes |
+|-----------|:------:|
+| SeletorGrupo | 10 |
+| CandidateCard | 16 |
+| **Total** | **26** |
+
+Cobertura: renderização, badges (origem, desconto, expiração, suspeito), interações.
 
 ---
 
-## Integração com CI
+## Tratamento de Erros (RFC 9457)
 
-Adicionado ao job `test-go` em `.github/workflows/deploy-gcp.yml`:
+Todos os endpoints retornam erros no formato **Problem Details** ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)):
 
-```yaml
-- name: golangci-lint
-  run: |
-    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-    golangci-lint run --timeout=3m --issues-exit-code=1 ./...
-
-- name: govulncheck
-  run: |
-    go install golang.org/x/vuln/cmd/govulncheck@latest
-    govulncheck ./...
-
-- name: arch-go
-  run: |
-    go install github.com/arch-go/arch-go@latest
-    arch-go
+```json
+{
+  "type": "https://garimpei.app.br/problemas/servico-externo",
+  "title": "Serviço externo indisponível",
+  "status": 502,
+  "detail": "shopee api: timeout após 20s",
+  "erro": "shopee api: timeout após 20s"
+}
 ```
 
-**Comportamento:** se qualquer linter de bug/segurança falhar, ou se uma vulnerabilidade alcançável for encontrada, ou se uma regra de arquitetura for violada — o deploy é bloqueado.
+O frontend parseia o `detail` e mostra mensagem amigável + botão "Tentar novamente" quando `retry: true`.
 
 ---
 
-## Como testar localmente antes do push
+## Organização do Código (httpapi)
+
+O package `httpapi` está dividido em arquivos por domínio:
+
+| Arquivo | Responsabilidade | Linhas |
+|---------|-----------------|:------:|
+| httpapi.go | Server struct, Handler, rotas, SPA | 279 |
+| curadoria.go | /candidatos, /comparar, enriquecerOrigem | ~170 |
+| lojas.go | /lojas (CRUD, resolução de shopId) | ~340 |
+| publicacoes.go | /publicacoes, agendamento | ~200 |
+| alertas.go | /alertas (config, teste, update) | ~120 |
+| onboarding.go | /onboarding (multi-tenant) | ~320 |
+| produto_origem.go | /produto/origem (cache, normalização) | ~170 |
+| introspect.go | /admin/shopee-introspect | ~130 |
+| helpers.go | writeJSON, writeErr, auth helpers | 92 |
+| middleware.go | logRequests, CORS | 70 |
+
+---
+
+## Correções realizadas (sessão 27/06)
+
+### Segurança
+- [x] Go 1.26.0 → 1.26.4 (12 CVEs resolvidas)
+- [x] `http.Server` com timeouts (era sem timeout)
+- [x] Race condition em `os.Setenv` → protegido por mutex
+
+### Bugs
+- [x] 4 errcheck corrigidos (json.Decode, w.Write sem tratar)
+- [x] 2 funções mortas removidas
+- [x] shopType na query causava 502 (removido)
+- [x] shopId fallback usava campo errado (offerLink vs productLink)
+- [x] carregarBusca só rodava para ShopeeShopSource (origem_padrao não aplicava)
+
+### Manutenibilidade
+- [x] Split httpapi.go (429→279 + helpers + middleware)
+- [x] funlen + cyclop habilitados (previne crescimento futuro)
+- [x] arch-go com 6 regras de dependência
+- [x] 16 testes novos no CandidateCard
+- [x] 4 testes novos no coleta service (origem)
+- [x] 7 testes novos no tenant (config, store, crypto)
+
+---
+
+## Como testar tudo localmente antes do push
 
 ```bash
-# Checagem completa (exatamente o que o CI roda):
+# Backend
 go test ./...
 golangci-lint run --timeout=3m --issues-exit-code=1 ./...
 govulncheck ./...
 arch-go
 
-# Frontend:
+# Frontend
 cd web
 npm run lint:js
 npm run lint:css
@@ -156,4 +223,4 @@ npx vitest run
 npm run build
 ```
 
-Se tudo passar localmente, o CI também vai passar.
+Se tudo passar localmente, o CI também passa.
