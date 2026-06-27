@@ -23,6 +23,7 @@
 	 */
 	import ScoreMeter from './ScoreMeter.svelte';
 	import { brl, pct, tempoAtras } from '$lib/formatters.js';
+	import { favoritos } from '$lib/favoritos.js';
 
 	let {
 		produto,
@@ -42,6 +43,8 @@
 	let exibirLink = $derived(mostrarLink ?? (layout === 'full'));
 
 	let loja = $derived(nomeLoja || produto.loja || '');
+	let produtoId = $derived(produto.produto_id || produto.id || '');
+	let isFav = $derived($favoritos.some(f => f.produto_id === produtoId || f.id === produtoId));
 
 	function tempoRestante(iso) {
 		if (!iso) return '';
@@ -113,7 +116,7 @@
 					<button class="publicar-btn" onclick={() => onpublicar(produto)}>📤 Publicar</button>
 				{/if}
 				{#if onfavoritar}
-					<button class="ghost" onclick={() => onfavoritar(produto)}>⭐</button>
+					<button class="ghost" class:favoritado={isFav} onclick={() => onfavoritar(produto)} title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button>
 				{/if}
 				{#if exibirLink}
 					<button class="ghost" onclick={copiarLink} disabled={!produto.link}>
@@ -142,7 +145,7 @@
 		</div>
 		<div class="compact-acoes">
 			{#if onfavoritar}
-				<button class="btn-mini" onclick={() => onfavoritar(produto)} title="Favoritar">⭐</button>
+				<button class="btn-mini" class:favoritado={isFav} onclick={() => onfavoritar(produto)} title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button>
 			{/if}
 			{#if onpublicar}
 				<button class="btn-mini" onclick={() => onpublicar(produto)} title="Publicar">📤</button>
@@ -195,7 +198,7 @@
 				<button class="btn-publicar" onclick={() => onpublicar(produto)}>📤 Publicar</button>
 			{/if}
 			{#if onfavoritar}
-				<button class="btn-fav" onclick={() => onfavoritar(produto)}>⭐</button>
+				<button class="btn-fav" class:favoritado={isFav} onclick={() => onfavoritar(produto)} title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button>
 			{/if}
 		</div>
 	</div>
@@ -232,6 +235,7 @@
 	.ghost { background: transparent; color: var(--tinta-suave); padding: 8px 10px; }
 	.ghost:hover:not(:disabled) { color: var(--ouro); }
 	.ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+	.ghost.favoritado { color: var(--ouro); }
 
 	/* ═══ COMPACT LAYOUT ═══ */
 	.compact-card { display: flex; gap: var(--r3); padding: var(--r3) var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); background: var(--branco); align-items: center; }
@@ -245,6 +249,7 @@
 	.compact-acoes { display: flex; gap: 4px; flex-shrink: 0; }
 	.btn-mini { border: 1px solid var(--linha); background: var(--porcelana); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; }
 	.btn-mini:hover { border-color: var(--ouro); }
+	.btn-mini.favoritado { color: var(--ouro); border-color: var(--ouro); }
 
 	/* ═══ FEED LAYOUT ═══ */
 	.feed-card { border: 1px solid var(--linha); border-radius: var(--raio); padding: var(--r4); background: var(--branco); transition: border-color 0.15s; }
@@ -277,6 +282,7 @@
 	.btn-publicar:hover { background: var(--ouro-claro); }
 	.btn-fav { padding: 6px 10px; border: 1px solid var(--linha); background: transparent; border-radius: var(--raio-sm); cursor: pointer; }
 	.btn-fav:hover { border-color: var(--ouro); }
+	.btn-fav.favoritado { color: var(--ouro); border-color: var(--ouro); }
 
 	@media (max-width: 420px) {
 		.thumb { height: 140px; }
