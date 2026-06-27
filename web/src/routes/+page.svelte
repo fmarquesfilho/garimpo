@@ -6,7 +6,6 @@
 	import { buscasSalvas, slugificar } from '$lib/buscas.js';
 	import { favoritos } from '$lib/favoritos.js';
 	import { get } from 'svelte/store';
-	import CandidateCard from '$lib/components/CandidateCard.svelte';
 	import ProductCard from '$lib/components/ProductCard.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
