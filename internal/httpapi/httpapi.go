@@ -46,6 +46,11 @@ type Server struct {
 
 	mu    sync.Mutex
 	cache map[string]*cacheEntry
+
+	// Override de alertas em runtime (evita os.Setenv race condition)
+	alertasChatIDOverride       string
+	alertasThresholdOverride    float64
+	alertasApenasQuedasOverride *bool
 }
 
 type cacheEntry struct {

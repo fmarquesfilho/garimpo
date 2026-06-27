@@ -104,14 +104,23 @@ func (srv *Server) alertasAtualizar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.ChatID != "" {
+		srv.mu.Lock()
+		srv.alertasChatIDOverride = req.ChatID
+		srv.mu.Unlock()
 		os.Setenv("ALERTAS_TELEGRAM_CHAT_ID", req.ChatID)
 		srv.Logger.Info("alertas: chat_id atualizado", slog.String("chat_id", req.ChatID))
 	}
 	if req.Threshold > 0 && req.Threshold < 1 {
+		srv.mu.Lock()
+		srv.alertasThresholdOverride = req.Threshold
+		srv.mu.Unlock()
 		os.Setenv("ALERTAS_THRESHOLD", strconv.FormatFloat(req.Threshold, 'f', 2, 64))
 		srv.Logger.Info("alertas: threshold atualizado", slog.Float64("threshold", req.Threshold))
 	}
 	if req.ApenasQuedas != nil {
+		srv.mu.Lock()
+		srv.alertasApenasQuedasOverride = req.ApenasQuedas
+		srv.mu.Unlock()
 		val := "false"
 		if *req.ApenasQuedas {
 			val = "true"
