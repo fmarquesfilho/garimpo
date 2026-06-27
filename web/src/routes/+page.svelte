@@ -164,6 +164,20 @@
 		busca = kw;
 		fontes.curadoria = true;
 	}
+
+	/** Aplica uma busca salva completa — seta keyword + ativa fontes correspondentes. */
+	function aplicarBuscaSalva(b) {
+		const kw = (b.keywords ?? [])[0] ?? '';
+		busca = kw;
+		if (b.fontes?.length) {
+			fontes.curadoria = b.fontes.includes('curadoria');
+			fontes.quedas = b.fontes.includes('quedas');
+			fontes.novos = b.fontes.includes('novos');
+			fontes.favoritos = b.fontes.includes('favoritos');
+		} else {
+			fontes.curadoria = kw.length > 0;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -199,9 +213,16 @@
 			{#each buscasSalvasKw as b (b.id)}
 				<div class="atalho-busca">
 					{#if b.cron}<span class="atalho-icone" title="Busca agendada">⏱</span>{/if}
+					{#if b.fontes?.includes('quedas')}<span class="atalho-icone" title="Monitora quedas">📉</span>{/if}
+					{#if b.fontes?.includes('novos')}<span class="atalho-icone" title="Monitora novos">🆕</span>{/if}
 					{#each b.keywords ?? [] as kw}
-						<button class="kw-pill" class:ativa={busca === kw} onclick={() => aplicarBusca(kw)} type="button">{kw}</button>
+						<button class="kw-pill" class:ativa={busca === kw} onclick={() => aplicarBuscaSalva(b)} type="button">{kw}</button>
 					{/each}
+					{#if (b.keywords ?? []).length === 0 && b.categorias?.length}
+						{#each b.categorias as cat}
+							<button class="kw-pill cat-pill" onclick={() => aplicarBuscaSalva(b)} type="button">{cat}</button>
+						{/each}
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -266,6 +287,7 @@
 	}
 	.kw-pill:hover { border-color: var(--ouro); color: var(--ouro-escuro); }
 	.kw-pill.ativa { background: var(--ouro-fundo); border-color: var(--ouro-claro); color: var(--ouro-escuro); }
+	.cat-pill { color: var(--rosa); border-color: color-mix(in srgb, var(--rosa) 30%, var(--linha)); }
 
 	/* Resultados */
 	.contagem { font-size: 0.82rem; color: var(--tinta-suave); margin-bottom: var(--r4); }
