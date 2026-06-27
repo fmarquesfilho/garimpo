@@ -41,9 +41,9 @@ type ShopeeShopSource struct {
 
 // PageResult guarda o resultado de paginação para uma loja após Fetch.
 type PageResult struct {
-	NextPage    int  // próxima página a buscar na próxima coleta
-	HasMore     bool // true se ainda há mais páginas no catálogo
-	PagesFetched int // quantas páginas foram buscadas neste ciclo
+	NextPage     int  // próxima página a buscar na próxima coleta
+	HasMore      bool // true se ainda há mais páginas no catálogo
+	PagesFetched int  // quantas páginas foram buscadas neste ciclo
 }
 
 func NewShopeeShopSource(appID, secret string, shopIDs []int64) *ShopeeShopSource {

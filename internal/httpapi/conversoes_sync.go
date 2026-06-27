@@ -105,12 +105,12 @@ func buscarConversoesShopee(appID, secret string, dias int) ([]shopeeConversao, 
 					PurchaseTime    int64   `json:"purchaseTime"`
 					Orders          []struct {
 						Items []struct {
-							ItemID          string  `json:"itemId"`
-							ItemName        string  `json:"itemName"`
-							ShopName        string  `json:"shopName"`
-							ItemCommission  float64 `json:"itemTotalCommission"`
-							ImageURL        string  `json:"imageUrl"`
-							Category        string  `json:"categoryLv1Name"`
+							ItemID         string  `json:"itemId"`
+							ItemName       string  `json:"itemName"`
+							ShopName       string  `json:"shopName"`
+							ItemCommission float64 `json:"itemTotalCommission"`
+							ImageURL       string  `json:"imageUrl"`
+							Category       string  `json:"categoryLv1Name"`
 						} `json:"items"`
 					} `json:"orders"`
 				} `json:"nodes"`

@@ -397,5 +397,5 @@ type mockSourceMinimal struct {
 	produtos []domain.Product
 }
 
-func (m *mockSourceMinimal) Name() string                           { return "mock" }
-func (m *mockSourceMinimal) Fetch() ([]domain.Product, error)       { return m.produtos, nil }
+func (m *mockSourceMinimal) Name() string                     { return "mock" }
+func (m *mockSourceMinimal) Fetch() ([]domain.Product, error) { return m.produtos, nil }

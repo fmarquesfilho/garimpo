@@ -8,7 +8,7 @@ import (
 // apiDocs serve uma página HTML com Swagger UI apontando para o openapi.yaml.
 func (srv *Server) apiDocs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(swaggerHTML))
+	_, _ = w.Write([]byte(swaggerHTML))
 }
 
 // openapiSpec serve o arquivo openapi.yaml.
@@ -20,7 +20,7 @@ func (srv *Server) openapiSpec(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			w.Header().Set("Content-Type", "application/yaml; charset=utf-8")
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Write(data)
+			_, _ = w.Write(data)
 			return
 		}
 	}

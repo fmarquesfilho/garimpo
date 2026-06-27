@@ -27,7 +27,7 @@ type mockStore struct {
 	buscas    []store.Busca
 }
 
-func (m *mockStore) Registrar(context.Context, store.Evento) error             { return nil }
+func (m *mockStore) Registrar(context.Context, store.Evento) error { return nil }
 func (m *mockStore) RegistrarSnapshot(_ context.Context, s store.Snapshot) error {
 	m.snapshots = append(m.snapshots, s)
 	return nil
@@ -46,7 +46,7 @@ func (m *mockStore) HistoricoColetas(context.Context, int) ([]store.ColetaResumo
 func (m *mockStore) Conversoes(context.Context, int) ([]store.ConversaoResumo, error) {
 	return nil, nil
 }
-func (m *mockStore) SalvarPublicacao(context.Context, store.Publicacao) error    { return nil }
+func (m *mockStore) SalvarPublicacao(context.Context, store.Publicacao) error { return nil }
 func (m *mockStore) ListarPublicacoes(context.Context, string) ([]store.Publicacao, error) {
 	return nil, nil
 }

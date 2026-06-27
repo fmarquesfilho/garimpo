@@ -193,12 +193,6 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// parseShopInput extrai o shop ID a partir de URL ou valor numérico.
-func (srv *Server) parseShopInput(input string) (int64, error) {
-	id, _, err := srv.parseShopInputWithName(input)
-	return id, err
-}
-
 // parseShopInputWithName extrai o shop ID e tenta obter o nome da loja.
 func (srv *Server) parseShopInputWithName(input string) (int64, string, error) {
 	// Limpa query params e fragments
@@ -312,12 +306,6 @@ func (srv *Server) resolveShortLink(shortURL string) (string, error) {
 	}
 
 	return resp.Request.URL.String(), nil
-}
-
-// resolveShopSlug resolve um username/slug de loja para o shopId numérico.
-func (srv *Server) resolveShopSlug(shopURL string) (int64, error) {
-	id, _, err := srv.resolveShopSlugWithName(shopURL)
-	return id, err
 }
 
 // resolveShopSlugWithName resolve slug → (shopId, nome) via API pública v4 da Shopee.
@@ -451,4 +439,3 @@ func (srv *Server) removerLoja(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "removida", "id": id})
 }
-

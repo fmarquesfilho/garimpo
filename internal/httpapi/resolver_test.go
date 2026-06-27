@@ -4,10 +4,10 @@ import "testing"
 
 func TestExtrairDadosURL(t *testing.T) {
 	casos := []struct {
-		url     string
-		nome    string
-		shopID  string
-		itemID  string
+		url    string
+		nome   string
+		shopID string
+		itemID string
 	}{
 		{
 			url:    "https://shopee.com.br/Sérum-Vitamina-C-30ml-Hidratante-i.123456.789012?sp_atk=abc",

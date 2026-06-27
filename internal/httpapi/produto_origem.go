@@ -20,8 +20,8 @@ type origemCacheEntry struct {
 }
 
 var (
-	origemCache   = make(map[string]origemCacheEntry)
-	origemCacheMu sync.RWMutex
+	origemCache    = make(map[string]origemCacheEntry)
+	origemCacheMu  sync.RWMutex
 	origemCacheTTL = 24 * time.Hour // cache por 24h (origem não muda)
 )
 
@@ -55,7 +55,7 @@ type origemResponse struct {
 	ShopID string `json:"shop_id"`
 	Origem string `json:"origem"`
 	Marca  string `json:"marca,omitempty"`
-	Fonte  string `json:"fonte"` // "api_publica" | "cache" | "fallback" | "erro"
+	Fonte  string `json:"fonte"`          // "api_publica" | "cache" | "fallback" | "erro"
 	Erro   string `json:"erro,omitempty"` // detalhe do erro (debug)
 }
 
@@ -216,8 +216,8 @@ func buscarOrigemProdutoShopee(itemID, shopID string) (origem string, marca stri
 				// Atributos ficam em tier_variations ou em item_basic.attributes
 			} `json:"product"`
 			ItemBasic struct {
-				Brand     string `json:"brand"`
-				BrandID   int64  `json:"brand_id"`
+				Brand      string `json:"brand"`
+				BrandID    int64  `json:"brand_id"`
 				Attributes []struct {
 					Name  string `json:"name"`
 					Value string `json:"value"`
@@ -225,7 +225,7 @@ func buscarOrigemProdutoShopee(itemID, shopID string) (origem string, marca stri
 			} `json:"item_basic"`
 			// Formato alternativo: item.attributes
 			Item struct {
-				Brand     string `json:"brand"`
+				Brand      string `json:"brand"`
 				Attributes []struct {
 					Name  string `json:"name"`
 					Value string `json:"value"`
@@ -235,9 +235,9 @@ func buscarOrigemProdutoShopee(itemID, shopID string) (origem string, marca stri
 		} `json:"data"`
 		// Formato alternativo (v4/item/get)
 		Item struct {
-			Brand     string `json:"brand"`
-			Location  string `json:"location"`
-			Props     []struct {
+			Brand    string `json:"brand"`
+			Location string `json:"location"`
+			Props    []struct {
 				Name  string `json:"name"`
 				Value string `json:"value"`
 			} `json:"props"`
@@ -320,28 +320,28 @@ func NormalizarOrigemProduto(origem string) string {
 
 	mapa := map[string]string{
 		// Coreano
-		"coreia":            "Coreia",
-		"coréia":            "Coreia",
-		"korea":             "Coreia",
-		"south korea":       "Coreia",
-		"coreia do sul":     "Coreia",
-		"coréia do sul":     "Coreia",
-		"kr":                "Coreia",
+		"coreia":              "Coreia",
+		"coréia":              "Coreia",
+		"korea":               "Coreia",
+		"south korea":         "Coreia",
+		"coreia do sul":       "Coreia",
+		"coréia do sul":       "Coreia",
+		"kr":                  "Coreia",
 		"república da coreia": "Coreia",
 		// Japonês
-		"japão":    "Japão",
-		"japao":    "Japão",
-		"japan":    "Japão",
-		"jp":       "Japão",
+		"japão": "Japão",
+		"japao": "Japão",
+		"japan": "Japão",
+		"jp":    "Japão",
 		// Chinês
-		"china":           "China",
-		"mainland china":  "China",
-		"cn":              "China",
+		"china":                      "China",
+		"mainland china":             "China",
+		"cn":                         "China",
 		"república popular da china": "China",
 		// Brasileiro
-		"brasil":  "Brasil",
-		"brazil":  "Brasil",
-		"br":      "Brasil",
+		"brasil": "Brasil",
+		"brazil": "Brasil",
+		"br":     "Brasil",
 		// Outros
 		"eua":            "EUA",
 		"usa":            "EUA",

@@ -114,7 +114,15 @@ func main() {
 		"addr", *addr, "fonte", *fonte, "categoria", *categoria, "keyword", *keyword,
 		"vendas_min", *vendasMin, "nota_min", *notaMin, "exploracao", *exploracao,
 		"cache_s", *cacheSeg, "store", eventos.Nome(), "publicador", pub.Nome())
-	if err := http.ListenAndServe(*addr, srv.Handler()); err != nil {
+
+	httpSrv := &http.Server{
+		Addr:         *addr,
+		Handler:      srv.Handler(),
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 60 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+	if err := httpSrv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }

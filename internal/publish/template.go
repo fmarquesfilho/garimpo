@@ -13,9 +13,9 @@ import (
 // Templates são independentes de destino — podem ser usados em qualquer provedor.
 type Template struct {
 	ID       string `json:"id"`
-	Nome     string `json:"nome"`      // nome amigável (ex.: "Oferta com foto")
-	Corpo    string `json:"corpo"`     // corpo com placeholders (HTML permitido)
-	ComFoto  bool   `json:"com_foto"`  // se true, envia foto + caption em vez de texto
+	Nome     string `json:"nome"`     // nome amigável (ex.: "Oferta com foto")
+	Corpo    string `json:"corpo"`    // corpo com placeholders (HTML permitido)
+	ComFoto  bool   `json:"com_foto"` // se true, envia foto + caption em vez de texto
 	Ativo    bool   `json:"ativo"`
 	CriadoEm string `json:"criado_em"` // ISO 8601
 }

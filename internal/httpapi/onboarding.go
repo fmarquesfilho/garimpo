@@ -40,12 +40,12 @@ func (srv *Server) onboardingStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"step":            cfg.OnboardingStep,
-		"configurado":     cfg.Configurado(),
-		"aceitou_termos":  cfg.AceitouTermos,
-		"shopee_app_id":   cfg.ShopeeAppID,
-		"shopee_secret":   mascarar(cfg.ShopeeSecretEnc),
-		"telegram_token":  mascarar(cfg.TelegramTokenEnc),
+		"step":             cfg.OnboardingStep,
+		"configurado":      cfg.Configurado(),
+		"aceitou_termos":   cfg.AceitouTermos,
+		"shopee_app_id":    cfg.ShopeeAppID,
+		"shopee_secret":    mascarar(cfg.ShopeeSecretEnc),
+		"telegram_token":   mascarar(cfg.TelegramTokenEnc),
 		"telegram_chat_id": cfg.TelegramChatID,
 	})
 }

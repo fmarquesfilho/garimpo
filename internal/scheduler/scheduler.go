@@ -11,21 +11,21 @@ import (
 
 // Job representa um agendamento de coleta para uma keyword.
 type Job struct {
-	ID       string // ex.: "coleta-shiseido-shiseido"
-	Cron     string // ex.: "0 8 * * *"
-	Keyword  string
-	Params   ColetaParams
+	ID      string // ex.: "coleta-shiseido-shiseido"
+	Cron    string // ex.: "0 8 * * *"
+	Keyword string
+	Params  ColetaParams
 }
 
 // ColetaParams são os parâmetros de uma coleta agendada.
 type ColetaParams struct {
-	BuscaID     string  // ID da busca (para rotação de catálogo)
-	Categoria   string
-	Estrategia  string
-	Top         int
-	VendasMin   int
-	NotaMin     float64
-	ShopIDs     []int64 // IDs de lojas (usa shopee-shop quando preenchido)
+	BuscaID    string // ID da busca (para rotação de catálogo)
+	Categoria  string
+	Estrategia string
+	Top        int
+	VendasMin  int
+	NotaMin    float64
+	ShopIDs    []int64 // IDs de lojas (usa shopee-shop quando preenchido)
 }
 
 // Scheduler cria/atualiza/deleta jobs de coleta periódica.

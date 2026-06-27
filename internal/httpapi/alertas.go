@@ -59,7 +59,7 @@ func (srv *Server) alertasTestar(w http.ResponseWriter, r *http.Request) {
 		BuscaID string `json:"busca_id"`
 	}
 	if r.Body != nil {
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 	}
 
 	alerter := alerts.Novo(cfg)

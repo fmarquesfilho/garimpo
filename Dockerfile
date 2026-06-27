@@ -9,7 +9,7 @@ COPY web/ .
 RUN npm run build
 
 # ── 2. Build do backend Go ──────────────────────────────────────────────────
-FROM golang:1.26 AS build
+FROM golang:1.26.4 AS build
 WORKDIR /src
 
 COPY go.mod go.sum ./

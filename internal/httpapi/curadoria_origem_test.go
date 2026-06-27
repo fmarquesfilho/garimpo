@@ -254,9 +254,9 @@ func TestNormalizarOrigemProduto_VariacoesReais(t *testing.T) {
 		{"Coreia", "Coreia"},
 		{"Coréia", "Coreia"},
 		{"Coreia do Sul", "Coreia"},
-		{"Coréia do Sul", "Coreia"},       // acento variante
-		{"  Coreia do Sul  ", "Coreia"},    // espaços
-		{"COREIA DO SUL", "Coreia"},        // uppercase
+		{"Coréia do Sul", "Coreia"},     // acento variante
+		{"  Coreia do Sul  ", "Coreia"}, // espaços
+		{"COREIA DO SUL", "Coreia"},     // uppercase
 		{"Korea", "Coreia"},
 		{"South Korea", "Coreia"},
 		{"Japão", "Japão"},
@@ -286,7 +286,7 @@ func TestCandidatosShopID_FallbackParaProductLink(t *testing.T) {
 		{
 			ID: "ITEM1", Name: "Produto Teste", Category: "beleza",
 			Price: 50, Commission: 0.10, Sales30d: 100, Rating: 4.5,
-			ShopID:      "0",    // API retornou 0 para busca por keyword
+			ShopID:      "0", // API retornou 0 para busca por keyword
 			ShopName:    "Loja ABC",
 			Link:        "https://shope.ee/shortened123", // offerLink sem -i.
 			ProductLink: "https://shopee.com.br/Produto-Teste-i.456789.111222",

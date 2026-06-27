@@ -8,10 +8,10 @@ import (
 
 var produtosTeste = []domain.Product{
 	{ID: "A", Commission: 0.15, Sales30d: 100, Rating: 4.5, Price: 50},
-	{ID: "B", Commission: 0.05, Sales30d: 200, Rating: 4.8, Price: 30},  // comissão baixa
-	{ID: "C", Commission: 0.10, Sales30d: 2, Rating: 4.0, Price: 100},   // poucas vendas
-	{ID: "D", Commission: 0.12, Sales30d: 50, Rating: 3.0, Price: 200},  // nota baixa
-	{ID: "E", Commission: 0.03, Sales30d: 0, Rating: 0, Price: 10},      // tudo baixo
+	{ID: "B", Commission: 0.05, Sales30d: 200, Rating: 4.8, Price: 30}, // comissão baixa
+	{ID: "C", Commission: 0.10, Sales30d: 2, Rating: 4.0, Price: 100},  // poucas vendas
+	{ID: "D", Commission: 0.12, Sales30d: 50, Rating: 3.0, Price: 200}, // nota baixa
+	{ID: "E", Commission: 0.03, Sales30d: 0, Rating: 0, Price: 10},     // tudo baixo
 }
 
 func TestPipelineVazioPassaTudo(t *testing.T) {

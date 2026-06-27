@@ -11,10 +11,10 @@ import (
 // Padrão: Registry + Strategy. Os Senders se registram por tipo; o Dispatcher
 // resolve qual usar em runtime baseado no Destino selecionado.
 type Dispatcher struct {
-	senders  map[string]Sender  // tipo → sender (ex.: "telegram" → TelegramSender)
-	destinos DestinoStore       // onde os destinos estão persistidos
-	padrao   string             // config padrão (chat_id/telefone) se DestinoID estiver vazio
-	tipoPad  string             // tipo padrão (ex.: "telegram")
+	senders  map[string]Sender // tipo → sender (ex.: "telegram" → TelegramSender)
+	destinos DestinoStore      // onde os destinos estão persistidos
+	padrao   string            // config padrão (chat_id/telefone) se DestinoID estiver vazio
+	tipoPad  string            // tipo padrão (ex.: "telegram")
 }
 
 // DispatcherConfig configura o Dispatcher.

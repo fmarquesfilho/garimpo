@@ -21,7 +21,7 @@ linters:
     - gosimple       # Simplificações de código
     - gocritic       # Sugestões de estilo e performance
     - revive         # Substituto moderno do golint (regras configuráveis)
-    - misspell       # Erros de ortografia em comentários/strings
+    # misspell desabilitado: muitos falsos positivos com termos em português
 
     # ── Performance ─────────────────────────────────────────────────────
     - prealloc       # Slices que poderiam ser pre-alocados
@@ -60,6 +60,7 @@ linters-settings:
     excludes:
       - G104  # Ignora "unhandled error" (já coberto por errcheck)
       - G304  # File path from variable (necessário no projeto)
+      - G404  # math/rand usado intencionalmente para exploração (não cripto)
 
 issues:
   # Não limitar número de issues reportadas

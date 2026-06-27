@@ -18,7 +18,7 @@ func TestParseShopInputNumericID(t *testing.T) {
 		{"99999", 99999},
 	}
 	for _, c := range casos {
-		id, err := srv.parseShopInput(c.input)
+		id, _, err := srv.parseShopInputWithName(c.input)
 		if err != nil {
 			t.Errorf("input=%q: erro inesperado: %v", c.input, err)
 			continue
@@ -42,7 +42,7 @@ func TestParseShopInputShopURL(t *testing.T) {
 		{"https://shopee.com.br/shop/12345678901234/alguma-coisa", 12345678901234},
 	}
 	for _, c := range casos {
-		id, err := srv.parseShopInput(c.input)
+		id, _, err := srv.parseShopInputWithName(c.input)
 		if err != nil {
 			t.Errorf("input=%q: erro inesperado: %v", c.input, err)
 			continue
@@ -65,7 +65,7 @@ func TestParseShopInputProductURL(t *testing.T) {
 		{"https://shopee.com.br/Kit-Skincare-Coreano-i.555555.666666", 555555},
 	}
 	for _, c := range casos {
-		id, err := srv.parseShopInput(c.input)
+		id, _, err := srv.parseShopInputWithName(c.input)
 		if err != nil {
 			t.Errorf("input=%q: erro inesperado: %v", c.input, err)
 			continue
@@ -85,7 +85,7 @@ func TestParseShopInputSlugURLRetornsError(t *testing.T) {
 		"https://shopee.com.br/daily_discover",
 	}
 	for _, input := range casos {
-		_, err := srv.parseShopInput(input)
+		_, _, err := srv.parseShopInputWithName(input)
 		if err == nil {
 			t.Errorf("input=%q: deveria retornar erro para path reservado", input)
 		}
@@ -98,7 +98,7 @@ func TestParseShopInputSlugURLResolvesIfShopeeReturnsShopID(t *testing.T) {
 		t.Skip("depende de rede — skip em -short")
 	}
 	srv := &Server{}
-	id, err := srv.parseShopInput("https://shopee.com.br/koksara.br")
+	id, _, err := srv.parseShopInputWithName("https://shopee.com.br/koksara.br")
 	if err != nil {
 		t.Skipf("não conseguiu resolver (rede indisponível ou Shopee bloqueou): %v", err)
 	}
@@ -119,7 +119,7 @@ func TestParseShopInputReservedPathsReturnError(t *testing.T) {
 		"https://shopee.com.br/daily_discover",
 	}
 	for _, input := range casos {
-		_, err := srv.parseShopInput(input)
+		_, _, err := srv.parseShopInputWithName(input)
 		if err == nil {
 			t.Errorf("input=%q: deveria retornar erro para path reservado", input)
 		}
@@ -131,13 +131,13 @@ func TestParseShopInputInvalidFormats(t *testing.T) {
 	casos := []string{
 		"",
 		"abc",
-		"1234",          // menos de 5 dígitos
+		"1234", // menos de 5 dígitos
 		"texto aleatório",
 		"http://google.com/123456",
 		"1234567890123456", // mais de 15 dígitos
 	}
 	for _, input := range casos {
-		_, err := srv.parseShopInput(input)
+		_, _, err := srv.parseShopInputWithName(input)
 		if err == nil {
 			t.Errorf("input=%q: deveria retornar erro para formato inválido", input)
 		}
@@ -408,7 +408,6 @@ type shopSourceConfig struct {
 	StartPage int
 	MaxPages  int
 }
-
 
 // --- Testes de GET /api/lojas/evolucao ────────────────────────────────────
 

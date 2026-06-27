@@ -19,9 +19,9 @@ func TestEntidadesDiagramaSincronizado(t *testing.T) {
 
 	// Campos que devem existir no diagrama se existem na struct
 	camposBusca := []struct {
-		campo   string
-		noCode  bool // true se existe na struct
-		noDiag  string // como aparece no diagrama
+		campo  string
+		noCode bool   // true se existe na struct
+		noDiag string // como aparece no diagrama
 	}{
 		{"ID", true, "id PK"},
 		{"Nome", true, "nome"},

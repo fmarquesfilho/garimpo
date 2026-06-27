@@ -17,10 +17,10 @@ func TestColetarComBuscaIDAplicaRotacao(t *testing.T) {
 	sp := &spyStore{
 		buscas: []store.Busca{
 			{
-				ID:       "loja-99999",
-				ShopIDs:  []int64{99999},
-				Ativo:    true,
-				OwnerUID: "test-user",
+				ID:             "loja-99999",
+				ShopIDs:        []int64{99999},
+				Ativo:          true,
+				OwnerUID:       "test-user",
 				RotationCursor: map[int64]int{99999: 3}, // deve começar na página 3
 			},
 		},

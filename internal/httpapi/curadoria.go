@@ -1,14 +1,14 @@
 package httpapi
 
 import (
-"math/rand"
-"net/http"
-"strings"
-"time"
+	"math/rand"
+	"net/http"
+	"strings"
+	"time"
 
-"github.com/fmarquesfilho/garimpo/internal/domain"
-"github.com/fmarquesfilho/garimpo/internal/engine"
-"github.com/fmarquesfilho/garimpo/internal/strategy"
+	"github.com/fmarquesfilho/garimpo/internal/domain"
+	"github.com/fmarquesfilho/garimpo/internal/engine"
+	"github.com/fmarquesfilho/garimpo/internal/strategy"
 )
 
 type candidatoDTO struct {
@@ -47,7 +47,7 @@ func toDTO(s domain.Scored) candidatoDTO {
 		Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
 		Avaliacao: p.Rating, Link: p.Link, LinkProduto: p.ProductLink,
 		Imagem: p.Image,
-		Score: s.Score, Componentes: s.Reasons,
+		Score:  s.Score, Componentes: s.Reasons,
 		Suspeito: s.Suspeito,
 	}
 }
@@ -107,9 +107,9 @@ func (srv *Server) candidatos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out := rankearDTO(produtos, strategyDe(estrategia), pipeline, topN(q),
-srv.fracaoExploracao(q), rand.New(rand.NewSource(time.Now().UnixNano())))
+		srv.fracaoExploracao(q), rand.New(rand.NewSource(time.Now().UnixNano())))
 	writeJSON(w, http.StatusOK, map[string]any{
-"fonte":       src.Name(),
+		"fonte":       src.Name(),
 		"estrategia":  estrategia,
 		"candidatos":  out,
 		"total_bruto": len(produtos),
@@ -127,7 +127,7 @@ func (srv *Server) comparar(w http.ResponseWriter, r *http.Request) {
 	n := topN(q)
 	pipeline := strategy.PipelineCuradoria(srv.elegibilidade(q))
 	writeJSON(w, http.StatusOK, map[string]any{
-"fonte":         src.Name(),
+		"fonte":         src.Name(),
 		"nicho":         rankearDTO(produtos, strategy.NewNiche(), pipeline, n, 0, nil),
 		"diversificada": rankearDTO(produtos, strategy.Diversified{}, pipeline, n, 0, nil),
 	})

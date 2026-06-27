@@ -323,7 +323,7 @@ func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
 		Categoria: b.Categoria, Estrategia: b.Estrategia,
 		ComissaoMin: b.ComissaoMin, VendasMin: b.VendasMin, NotaMin: b.NotaMin, Top: b.Top,
 		Cron: b.Cron, Ativo: b.Ativo, OwnerUID: b.OwnerUID,
-		OrigemPadrao: b.OrigemPadrao,
+		OrigemPadrao:   b.OrigemPadrao,
 		RotationCursor: string(rotCursor), FullScanAt: string(fullScan),
 		SalvoEm: b.SalvoEm,
 	}
@@ -938,15 +938,15 @@ func (s *BigQueryStore) Novidades(ctx context.Context, buscaID string, dias int)
 
 	for {
 		var row struct {
-			ProdutoID    string  `bigquery:"produto_id"`
-			Nome         string  `bigquery:"nome"`
-			Preco        float64 `bigquery:"preco"`
-			Comissao     float64 `bigquery:"comissao"`
-			Vendas       int     `bigquery:"vendas"`
-			Nota         float64 `bigquery:"nota"`
-			DetectadoEm  string  `bigquery:"detectado_em"`
-			Aparicoes    int     `bigquery:"aparicoes"`
-			RnDesc       int     `bigquery:"rn_desc"`
+			ProdutoID     string  `bigquery:"produto_id"`
+			Nome          string  `bigquery:"nome"`
+			Preco         float64 `bigquery:"preco"`
+			Comissao      float64 `bigquery:"comissao"`
+			Vendas        int     `bigquery:"vendas"`
+			Nota          float64 `bigquery:"nota"`
+			DetectadoEm   string  `bigquery:"detectado_em"`
+			Aparicoes     int     `bigquery:"aparicoes"`
+			RnDesc        int     `bigquery:"rn_desc"`
 			PrecoPrimeiro float64 `bigquery:"preco_primeiro"`
 		}
 		err := it.Next(&row)

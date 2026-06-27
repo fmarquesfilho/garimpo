@@ -57,17 +57,17 @@ type Estatisticas struct {
 // normaliza para `Keywords` com um único elemento.
 type Busca struct {
 	ID          string    `json:"id"`
-	Nome        string    `json:"nome,omitempty"`       // nome amigável (da loja ou perfil)
-	Keywords    []string  `json:"keywords"`             // um ou mais termos de busca
-	ShopIDs     []int64   `json:"shop_ids,omitempty"`   // IDs de lojas a monitorar (shopOfferV2)
+	Nome        string    `json:"nome,omitempty"`     // nome amigável (da loja ou perfil)
+	Keywords    []string  `json:"keywords"`           // um ou mais termos de busca
+	ShopIDs     []int64   `json:"shop_ids,omitempty"` // IDs de lojas a monitorar (shopOfferV2)
 	Categoria   string    `json:"categoria"`
-	Estrategia  string    `json:"estrategia"`           // "nicho" | "diversificada" | "ambas"
+	Estrategia  string    `json:"estrategia"` // "nicho" | "diversificada" | "ambas"
 	ComissaoMin float64   `json:"comissao_min"`
 	VendasMin   int       `json:"vendas_min"`
 	NotaMin     float64   `json:"nota_min"`
 	Top         int       `json:"top"`
-	Cron        string    `json:"cron"`  // ex.: "0 8 * * *" (vazio = só manual)
-	Ativo       bool      `json:"ativo"` // false = removida (tombstone)
+	Cron        string    `json:"cron"`                // ex.: "0 8 * * *" (vazio = só manual)
+	Ativo       bool      `json:"ativo"`               // false = removida (tombstone)
 	OwnerUID    string    `json:"owner_uid,omitempty"` // uid do Firebase Auth
 	SalvoEm     time.Time `json:"salvo_em"`
 
@@ -173,69 +173,69 @@ type EventoStore interface {
 
 // NovidadesLojas é o resultado da comparação de snapshots para lojas monitoradas.
 type NovidadesLojas struct {
-	BuscaID       string           `json:"busca_id"`
-	DiasJanela    int              `json:"dias_janela"`
-	ProdutosNovos []ProdutoNovo    `json:"produtos_novos"`
-	Variacoes     []VariacaoPreco  `json:"variacoes"`
-	TotalAtual    int              `json:"total_atual"`
+	BuscaID       string          `json:"busca_id"`
+	DiasJanela    int             `json:"dias_janela"`
+	ProdutosNovos []ProdutoNovo   `json:"produtos_novos"`
+	Variacoes     []VariacaoPreco `json:"variacoes"`
+	TotalAtual    int             `json:"total_atual"`
 }
 
 // ProdutoNovo é um produto que apareceu pela primeira vez no último snapshot.
 type ProdutoNovo struct {
-	ProdutoID string  `json:"produto_id"`
-	Nome      string  `json:"nome"`
-	Preco     float64 `json:"preco"`
-	Comissao  float64 `json:"comissao"`
-	Vendas    int     `json:"vendas"`
-	Nota      float64 `json:"nota"`
-	DetectadoEm string `json:"detectado_em"`
+	ProdutoID   string  `json:"produto_id"`
+	Nome        string  `json:"nome"`
+	Preco       float64 `json:"preco"`
+	Comissao    float64 `json:"comissao"`
+	Vendas      int     `json:"vendas"`
+	Nota        float64 `json:"nota"`
+	DetectadoEm string  `json:"detectado_em"`
 }
 
 // VariacaoPreco sinaliza um produto cujo preço mudou entre snapshots.
 type VariacaoPreco struct {
-	ProdutoID    string  `json:"produto_id"`
-	Nome         string  `json:"nome"`
+	ProdutoID     string  `json:"produto_id"`
+	Nome          string  `json:"nome"`
 	PrecoAnterior float64 `json:"preco_anterior"`
-	PrecoAtual   float64 `json:"preco_atual"`
-	Variacao     float64 `json:"variacao_pct"` // ex.: -0.20 = baixou 20%
-	DetectadoEm  string  `json:"detectado_em"`
+	PrecoAtual    float64 `json:"preco_atual"`
+	Variacao      float64 `json:"variacao_pct"` // ex.: -0.20 = baixou 20%
+	DetectadoEm   string  `json:"detectado_em"`
 }
 
 // EvolucaoLojasResult contém os dados de evolução de preço das lojas monitoradas.
 type EvolucaoLojasResult struct {
-	DiasJanela int                   `json:"dias_janela"`
-	Lojas      []EvolucaoLoja        `json:"lojas"`
-	Resumo     EvolucaoResumo        `json:"resumo"`
+	DiasJanela int            `json:"dias_janela"`
+	Lojas      []EvolucaoLoja `json:"lojas"`
+	Resumo     EvolucaoResumo `json:"resumo"`
 }
 
 // EvolucaoLoja agrupa a evolução de uma loja específica.
 type EvolucaoLoja struct {
-	BuscaID        string                `json:"busca_id"`
-	TotalProdutos  int                   `json:"total_produtos"`
-	PrecoMedioAtual float64              `json:"preco_medio_atual"`
-	PrecoMedioInicio float64             `json:"preco_medio_inicio"`
-	VariacaoMedia  float64              `json:"variacao_media_pct"` // ex.: -0.05 = queda de 5%
-	Coletas        int                   `json:"coletas"`           // número de snapshots na janela
-	Pontos         []PontoEvolucao       `json:"pontos"`            // série temporal
-	TopQuedas      []VariacaoPreco       `json:"top_quedas"`        // maiores quedas
-	TopAltas       []VariacaoPreco       `json:"top_altas"`         // maiores altas
+	BuscaID          string          `json:"busca_id"`
+	TotalProdutos    int             `json:"total_produtos"`
+	PrecoMedioAtual  float64         `json:"preco_medio_atual"`
+	PrecoMedioInicio float64         `json:"preco_medio_inicio"`
+	VariacaoMedia    float64         `json:"variacao_media_pct"` // ex.: -0.05 = queda de 5%
+	Coletas          int             `json:"coletas"`            // número de snapshots na janela
+	Pontos           []PontoEvolucao `json:"pontos"`             // série temporal
+	TopQuedas        []VariacaoPreco `json:"top_quedas"`         // maiores quedas
+	TopAltas         []VariacaoPreco `json:"top_altas"`          // maiores altas
 }
 
 // PontoEvolucao é um ponto na série temporal (preço médio por dia/coleta).
 type PontoEvolucao struct {
-	Data       string  `json:"data"`        // YYYY-MM-DD
+	Data       string  `json:"data"` // YYYY-MM-DD
 	PrecoMedio float64 `json:"preco_medio"`
-	Produtos   int     `json:"produtos"`    // quantos produtos naquele dia
+	Produtos   int     `json:"produtos"` // quantos produtos naquele dia
 }
 
 // EvolucaoResumo agrega métricas de todas as lojas monitoradas.
 type EvolucaoResumo struct {
-	TotalLojas        int     `json:"total_lojas"`
-	TotalProdutos     int     `json:"total_produtos"`
-	PrecoMedioGlobal  float64 `json:"preco_medio_global"`
+	TotalLojas          int     `json:"total_lojas"`
+	TotalProdutos       int     `json:"total_produtos"`
+	PrecoMedioGlobal    float64 `json:"preco_medio_global"`
 	VariacaoMediaGlobal float64 `json:"variacao_media_global_pct"`
-	TotalQuedas       int     `json:"total_quedas"`
-	TotalAltas        int     `json:"total_altas"`
+	TotalQuedas         int     `json:"total_quedas"`
+	TotalAltas          int     `json:"total_altas"`
 }
 
 // Publicacao representa uma publicação agendada ou executada (espelhado do publish).
@@ -263,15 +263,15 @@ type Publicacao struct {
 // potencial de conversão. Quando o webhook de conversão estiver ativo,
 // o campo Conversoes será preenchido com dados reais.
 type ConversaoResumo struct {
-	Canal        string  `json:"canal"`
-	SubID        string  `json:"sub_id"`
-	Publicacoes  int     `json:"publicacoes"`
-	ProdutoID    string  `json:"produto_id"`
-	Nome         string  `json:"nome"`
-	Estrategia   string  `json:"estrategia"`
-	Preco        float64 `json:"preco"`
-	ComissaoEst  float64 `json:"comissao_estimada"` // comissao * preco * publicacoes
-	PublicadoEm  string  `json:"publicado_em"`      // data mais recente
+	Canal       string  `json:"canal"`
+	SubID       string  `json:"sub_id"`
+	Publicacoes int     `json:"publicacoes"`
+	ProdutoID   string  `json:"produto_id"`
+	Nome        string  `json:"nome"`
+	Estrategia  string  `json:"estrategia"`
+	Preco       float64 `json:"preco"`
+	ComissaoEst float64 `json:"comissao_estimada"` // comissao * preco * publicacoes
+	PublicadoEm string  `json:"publicado_em"`      // data mais recente
 }
 
 // ColetaResumo é um registro resumido de uma coleta executada.
@@ -319,16 +319,16 @@ func (NopStore) Estatisticas(_ context.Context, dias int) (Estatisticas, error) 
 
 // SalvarBusca/ListarBuscas no Nop são no-op: localmente, as buscas vivem no
 // navegador (localStorage). O sync server-side só acontece com o BigQuery ligado.
-func (NopStore) SalvarBusca(context.Context, Busca) error            { return nil }
-func (NopStore) ListarBuscas(context.Context) ([]Busca, error)       { return nil, nil }
+func (NopStore) SalvarBusca(context.Context, Busca) error      { return nil }
+func (NopStore) ListarBuscas(context.Context) ([]Busca, error) { return nil, nil }
 func (NopStore) HistoricoColetas(context.Context, int) ([]ColetaResumo, error) {
 	return nil, nil
 }
 func (NopStore) Conversoes(context.Context, int) ([]ConversaoResumo, error) {
 	return nil, nil
 }
-func (NopStore) SalvarPublicacao(context.Context, Publicacao) error              { return nil }
-func (NopStore) ListarPublicacoes(context.Context, string) ([]Publicacao, error) { return nil, nil }
+func (NopStore) SalvarPublicacao(context.Context, Publicacao) error                { return nil }
+func (NopStore) ListarPublicacoes(context.Context, string) ([]Publicacao, error)   { return nil, nil }
 func (NopStore) AtualizarPublicacao(context.Context, string, string, string) error { return nil }
 func (NopStore) Novidades(_ context.Context, buscaID string, dias int) (NovidadesLojas, error) {
 	return NovidadesLojas{BuscaID: buscaID, DiasJanela: dias}, nil

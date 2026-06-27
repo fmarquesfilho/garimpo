@@ -815,7 +815,7 @@ func TestCandidatosComSemFiltro(t *testing.T) {
 	rec := req(t, h, "GET", "/api/candidatos?estrategia=nicho", nil, nil)
 	var resp struct {
 		Candidatos []struct{ ID string } `json:"candidatos"`
-		TotalBruto int                    `json:"total_bruto"`
+		TotalBruto int                   `json:"total_bruto"`
 	}
 	json.Unmarshal(rec.Body.Bytes(), &resp)
 	semFiltroCount := len(resp.Candidatos)

@@ -18,13 +18,13 @@ import (
 
 // Params define os parâmetros de uma coleta.
 type Params struct {
-	Estrategia string
-	Categoria  string
-	Keyword    string
-	Top        int
-	BuscaID    string // se preenchido, habilita rotação e alertas
-	VendasMin  int
-	NotaMin    float64
+	Estrategia  string
+	Categoria   string
+	Keyword     string
+	Top         int
+	BuscaID     string // se preenchido, habilita rotação e alertas
+	VendasMin   int
+	NotaMin     float64
 	ComissaoMin float64
 }
 

@@ -45,32 +45,32 @@ func (pl Pipeline) aceita(p domain.Product) bool {
 // FiltroComissao descarta produtos abaixo de um piso de comissão.
 type FiltroComissao struct{ Min float64 }
 
-func (f FiltroComissao) Nome() string                    { return "comissao" }
-func (f FiltroComissao) Aceita(p domain.Product) bool    { return p.Commission >= f.Min }
+func (f FiltroComissao) Nome() string                 { return "comissao" }
+func (f FiltroComissao) Aceita(p domain.Product) bool { return p.Commission >= f.Min }
 
 // FiltroVendas descarta produtos com vendas abaixo de um piso.
 type FiltroVendas struct{ Min int }
 
-func (f FiltroVendas) Nome() string                      { return "vendas" }
-func (f FiltroVendas) Aceita(p domain.Product) bool      { return f.Min <= 0 || p.Sales30d >= f.Min }
+func (f FiltroVendas) Nome() string                 { return "vendas" }
+func (f FiltroVendas) Aceita(p domain.Product) bool { return f.Min <= 0 || p.Sales30d >= f.Min }
 
 // FiltroNota descarta produtos com nota abaixo de um piso.
 type FiltroNota struct{ Min float64 }
 
-func (f FiltroNota) Nome() string                        { return "nota" }
-func (f FiltroNota) Aceita(p domain.Product) bool        { return f.Min <= 0 || p.Rating >= f.Min }
+func (f FiltroNota) Nome() string                 { return "nota" }
+func (f FiltroNota) Aceita(p domain.Product) bool { return f.Min <= 0 || p.Rating >= f.Min }
 
 // FiltroPrecoMax descarta produtos acima de um teto de preço.
 type FiltroPrecoMax struct{ Max float64 }
 
-func (f FiltroPrecoMax) Nome() string                    { return "preco_max" }
-func (f FiltroPrecoMax) Aceita(p domain.Product) bool    { return f.Max <= 0 || p.Price <= f.Max }
+func (f FiltroPrecoMax) Nome() string                 { return "preco_max" }
+func (f FiltroPrecoMax) Aceita(p domain.Product) bool { return f.Max <= 0 || p.Price <= f.Max }
 
 // FiltroPrecoMin descarta produtos abaixo de um piso de preço.
 type FiltroPrecoMin struct{ Min float64 }
 
-func (f FiltroPrecoMin) Nome() string                    { return "preco_min" }
-func (f FiltroPrecoMin) Aceita(p domain.Product) bool    { return f.Min <= 0 || p.Price >= f.Min }
+func (f FiltroPrecoMin) Nome() string                 { return "preco_min" }
+func (f FiltroPrecoMin) Aceita(p domain.Product) bool { return f.Min <= 0 || p.Price >= f.Min }
 
 // ─── Builders ─────────────────────────────────────────────────────────────────
 

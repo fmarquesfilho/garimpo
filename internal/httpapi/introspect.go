@@ -62,11 +62,11 @@ func (srv *Server) adminShopeeIntrospect(w http.ResponseWriter, r *http.Request)
 	}
 
 	type resultado struct {
-		Nome             string   `json:"nome"`
-		Sucesso          bool     `json:"sucesso"`
-		Erro             string   `json:"erro,omitempty"`
-		Resposta         any      `json:"resposta,omitempty"`
-		CamposOrigem     []string `json:"campos_origem,omitempty"`
+		Nome         string   `json:"nome"`
+		Sucesso      bool     `json:"sucesso"`
+		Erro         string   `json:"erro,omitempty"`
+		Resposta     any      `json:"resposta,omitempty"`
+		CamposOrigem []string `json:"campos_origem,omitempty"`
 	}
 
 	var resultados []resultado
@@ -82,7 +82,7 @@ func (srv *Server) adminShopeeIntrospect(w http.ResponseWriter, r *http.Request)
 		}
 
 		var parsed any
-		json.Unmarshal(raw, &parsed)
+		_ = json.Unmarshal(raw, &parsed)
 		r.Resposta = parsed
 		r.Sucesso = true
 
@@ -104,7 +104,7 @@ func (srv *Server) adminShopeeIntrospect(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"app_id":                appID,
+		"app_id":               appID,
 		"endpoint":             "https://open-api.affiliate.shopee.com.br/graphql",
 		"resultados":           resultados,
 		"campos_origem_global": todosOrigem,

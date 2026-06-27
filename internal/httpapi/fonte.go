@@ -1,16 +1,16 @@
 package httpapi
 
 import (
-"fmt"
-"net/url"
-"os"
-"strconv"
-"strings"
-"time"
+	"fmt"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
-"github.com/fmarquesfilho/garimpo/internal/domain"
-"github.com/fmarquesfilho/garimpo/internal/source"
-"github.com/fmarquesfilho/garimpo/internal/strategy"
+	"github.com/fmarquesfilho/garimpo/internal/domain"
+	"github.com/fmarquesfilho/garimpo/internal/source"
+	"github.com/fmarquesfilho/garimpo/internal/strategy"
 )
 
 func (srv *Server) fonteAtiva(q url.Values) string {

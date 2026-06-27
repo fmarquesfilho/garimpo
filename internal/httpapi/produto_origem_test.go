@@ -32,7 +32,7 @@ func TestNormalizarOrigemProduto(t *testing.T) {
 		{"EUA", "EUA"},
 		{"United States", "EUA"},
 		{"Taiwan", "Taiwan"},
-		{"  coreia  ", "Coreia"},  // trim
+		{"  coreia  ", "Coreia"}, // trim
 		{"França", "França"},
 		{"desconhecido", "Desconhecido"}, // capitaliza
 	}
