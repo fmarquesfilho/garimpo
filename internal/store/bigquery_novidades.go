@@ -129,7 +129,7 @@ func (s *BigQueryStore) EvolucaoLojas(ctx context.Context, dias int) (EvolucaoLo
 	`)
 	q.Parameters = []bigquery.QueryParameter{{Name: "dias", Value: dias}}
 
-	it, err = q.Read(ctx)
+	it, err := q.Read(ctx)
 	if err != nil {
 		return result, err
 	}
