@@ -57,7 +57,7 @@ func (m *mockStore) Novidades(_ context.Context, id string, dias int) (store.Nov
 func (m *mockStore) EvolucaoLojas(context.Context, int) (store.EvolucaoLojasResult, error) {
 	return store.EvolucaoLojasResult{}, nil
 }
-func (m *mockStore) SalvarFavorito(context.Context, store.Favorito) error          { return nil }
+func (m *mockStore) SalvarFavorito(context.Context, store.Favorito) error { return nil }
 func (m *mockStore) ListarFavoritos(context.Context, string) ([]store.Favorito, error) {
 	return nil, nil
 }

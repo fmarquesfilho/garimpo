@@ -356,8 +356,8 @@ func (NopStore) Novidades(_ context.Context, buscaID string, dias int) (Novidade
 func (NopStore) EvolucaoLojas(_ context.Context, dias int) (EvolucaoLojasResult, error) {
 	return EvolucaoLojasResult{DiasJanela: dias}, nil
 }
-func (NopStore) SalvarFavorito(context.Context, Favorito) error                   { return nil }
-func (NopStore) ListarFavoritos(context.Context, string) ([]Favorito, error)      { return nil, nil }
-func (NopStore) RemoverFavorito(context.Context, string, string) error            { return nil }
-func (NopStore) EnsureSchema(context.Context) error { return nil }
-func (NopStore) Nome() string                       { return "nop" }
+func (NopStore) SalvarFavorito(context.Context, Favorito) error              { return nil }
+func (NopStore) ListarFavoritos(context.Context, string) ([]Favorito, error) { return nil, nil }
+func (NopStore) RemoverFavorito(context.Context, string, string) error       { return nil }
+func (NopStore) EnsureSchema(context.Context) error                          { return nil }
+func (NopStore) Nome() string                                                { return "nop" }

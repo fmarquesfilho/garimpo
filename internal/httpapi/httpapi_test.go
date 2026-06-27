@@ -106,7 +106,7 @@ func (s *spyStore) Novidades(_ context.Context, buscaID string, dias int) (store
 func (s *spyStore) EvolucaoLojas(_ context.Context, dias int) (store.EvolucaoLojasResult, error) {
 	return store.EvolucaoLojasResult{DiasJanela: dias}, nil
 }
-func (s *spyStore) SalvarFavorito(_ context.Context, _ store.Favorito) error          { return nil }
+func (s *spyStore) SalvarFavorito(_ context.Context, _ store.Favorito) error { return nil }
 func (s *spyStore) ListarFavoritos(_ context.Context, _ string) ([]store.Favorito, error) {
 	return nil, nil
 }
