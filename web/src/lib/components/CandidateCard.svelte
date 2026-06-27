@@ -50,8 +50,10 @@
 				{#if candidato.origem}
 					<span class="selo origem">{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{:else if candidato.origem === 'China'}🇨🇳{/if} {candidato.origem}</span>
 				{/if}
-				{#if candidato.desconto > 0}
+				{#if candidato.desconto > 0 && candidato.desconto <= 1}
 					<span class="selo desconto">🔥 {Math.round(candidato.desconto * 100)}% OFF</span>
+				{:else if candidato.desconto > 1 && candidato.desconto <= 100}
+					<span class="selo desconto">🔥 {Math.round(candidato.desconto)}% OFF</span>
 				{/if}
 				{#if candidato.oferta_expira}
 					<span class="selo expira" title="Oferta de afiliado expira em {new Date(candidato.oferta_expira).toLocaleDateString('pt-BR')}">⏳ {tempoRestante(candidato.oferta_expira)}</span>
@@ -148,7 +150,7 @@
 	.meta {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 4px 6px;
 		margin-top: 4px;
 		flex-wrap: wrap;
 	}
@@ -162,6 +164,10 @@
 		font-size: var(--text-xs);
 		font-weight: 600;
 		color: var(--tinta-suave);
+		max-width: 140px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.selo {
 		font-size: 0.65rem;
