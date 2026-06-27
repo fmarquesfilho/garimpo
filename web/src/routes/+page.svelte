@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { filtros as filtrosStore } from '$lib/filtros.js';
 	import { buscasSalvas, slugificar } from '$lib/buscas.js';
+	import { favoritos } from '$lib/favoritos.js';
 	import { get } from 'svelte/store';
 	import CandidateCard from '$lib/components/CandidateCard.svelte';
 	import ProductCard from '$lib/components/ProductCard.svelte';
@@ -27,6 +28,7 @@
 
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
+		favoritos.sincronizar();
 	});
 
 	// ── Nova busca ────────────────────────────────────────────────────────────
@@ -258,7 +260,7 @@
 {:else}
 	<div class="grade">
 		{#each (f.modo === 'comparar' && pares ? [...(pares.nicho ?? []), ...(pares.diversificada ?? [])] : lista) as c, i (c.id)}
-			<ProductCard produto={c} posicao={i + 1} onpublicar={publicarOferta} />
+			<ProductCard produto={c} posicao={i + 1} onpublicar={publicarOferta} onfavoritar={(p) => favoritos.toggle(p)} />
 		{/each}
 	</div>
 {/if}

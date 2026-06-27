@@ -122,7 +122,26 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "enviada_em", Type: bigquery.StringFieldType},
 		{Name: "owner_uid", Type: bigquery.StringFieldType},
 	}
-	return criarSeNaoExistir(ctx, ds, "publicacoes", pSchema, "criada_em")
+	if err := criarSeNaoExistir(ctx, ds, "publicacoes", pSchema, "criada_em"); err != nil {
+		return err
+	}
+
+	// --- tabela favoritos (append-only) ---
+	fSchema := bigquery.Schema{
+		{Name: "produto_id", Type: bigquery.StringFieldType},
+		{Name: "nome", Type: bigquery.StringFieldType},
+		{Name: "preco", Type: bigquery.FloatFieldType},
+		{Name: "comissao", Type: bigquery.FloatFieldType},
+		{Name: "link", Type: bigquery.StringFieldType},
+		{Name: "imagem", Type: bigquery.StringFieldType},
+		{Name: "loja", Type: bigquery.StringFieldType},
+		{Name: "categoria", Type: bigquery.StringFieldType},
+		{Name: "origem", Type: bigquery.StringFieldType},
+		{Name: "ativo", Type: bigquery.BooleanFieldType},
+		{Name: "owner_uid", Type: bigquery.StringFieldType},
+		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
+	}
+	return criarSeNaoExistir(ctx, ds, "favoritos", fSchema, "salvo_em")
 }
 
 // criarSeNaoExistir cria a tabela particionada por dia se ainda não existir.

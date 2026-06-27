@@ -374,3 +374,27 @@ export function compararEstrategias({
 	if (notaMin != null) p.set('nota_min', String(notaMin));
 	return pegar(`/api/comparar?${p}`);
 }
+
+// ── Favoritos ─────────────────────────────────────────────────────────────
+/** Lista os favoritos do usuário logado. */
+export function listarFavoritos() {
+	return pegar('/api/favoritos');
+}
+
+/** Salva um produto como favorito. */
+export function salvarFavorito(produto) {
+	return postar('/api/favoritos', produto);
+}
+
+/** Remove um produto dos favoritos. */
+export async function removerFavorito(produtoId) {
+	const headers = { ...(await authHeaders()) };
+	const resp = await fetch(`${BASE}/api/favoritos?produto_id=${encodeURIComponent(produtoId)}`, {
+		method: 'DELETE',
+		headers
+	});
+	if (!resp.ok) {
+		throw await parseProblem(resp, '/api/favoritos');
+	}
+	return resp.json();
+}

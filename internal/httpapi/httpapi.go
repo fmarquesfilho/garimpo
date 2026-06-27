@@ -87,6 +87,11 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/alertas/testar", srv.alertasTestar)
 	mux.HandleFunc("POST /api/alertas/configurar", srv.alertasAtualizar)
 
+	// ── Favoritos ─────────────────────────────────────────────────────────
+	mux.HandleFunc("GET /api/favoritos", srv.listarFavoritos)
+	mux.HandleFunc("POST /api/favoritos", srv.salvarFavorito)
+	mux.HandleFunc("DELETE /api/favoritos", srv.removerFavorito)
+
 	// ── Publicação ────────────────────────────────────────────────────────
 	mux.HandleFunc("POST /api/publicar", srv.publicar)
 	mux.HandleFunc("GET /api/publicacoes", srv.listarPublicacoes)

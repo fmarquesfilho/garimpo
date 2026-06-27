@@ -57,8 +57,13 @@ func (m *mockStore) Novidades(_ context.Context, id string, dias int) (store.Nov
 func (m *mockStore) EvolucaoLojas(context.Context, int) (store.EvolucaoLojasResult, error) {
 	return store.EvolucaoLojasResult{}, nil
 }
-func (m *mockStore) EnsureSchema(context.Context) error { return nil }
-func (m *mockStore) Nome() string                       { return "mock" }
+func (m *mockStore) SalvarFavorito(context.Context, store.Favorito) error          { return nil }
+func (m *mockStore) ListarFavoritos(context.Context, string) ([]store.Favorito, error) {
+	return nil, nil
+}
+func (m *mockStore) RemoverFavorito(context.Context, string, string) error { return nil }
+func (m *mockStore) EnsureSchema(context.Context) error                    { return nil }
+func (m *mockStore) Nome() string                                          { return "mock" }
 
 // ── Dados de teste ───────────────────────────────────────────────────────────
 

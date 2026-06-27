@@ -167,6 +167,10 @@ type EventoStore interface {
 	Novidades(ctx context.Context, buscaID string, dias int) (NovidadesLojas, error)
 	// Evolução de preços das lojas monitoradas ao longo do tempo
 	EvolucaoLojas(ctx context.Context, dias int) (EvolucaoLojasResult, error)
+	// Favoritos (produtos salvos pelo usuário)
+	SalvarFavorito(ctx context.Context, f Favorito) error
+	ListarFavoritos(ctx context.Context, ownerUID string) ([]Favorito, error)
+	RemoverFavorito(ctx context.Context, ownerUID, produtoID string) error
 	EnsureSchema(ctx context.Context) error
 	Nome() string
 }
@@ -283,6 +287,22 @@ type ColetaResumo struct {
 	Produtos   int       `json:"produtos"`
 }
 
+// Favorito é um produto salvo pelo usuário para análise posterior.
+type Favorito struct {
+	ProdutoID string    `json:"produto_id"`
+	Nome      string    `json:"nome"`
+	Preco     float64   `json:"preco"`
+	Comissao  float64   `json:"comissao"`
+	Link      string    `json:"link"`
+	Imagem    string    `json:"imagem"`
+	Loja      string    `json:"loja"`
+	Categoria string    `json:"categoria"`
+	Origem    string    `json:"origem,omitempty"`
+	SalvoEm   time.Time `json:"salvo_em"`
+	OwnerUID  string    `json:"owner_uid,omitempty"`
+	Ativo     bool      `json:"ativo"`
+}
+
 // ItemSnapshot é um produto na foto de mercado de uma categoria, num instante.
 type ItemSnapshot struct {
 	Posicao   int
@@ -336,5 +356,8 @@ func (NopStore) Novidades(_ context.Context, buscaID string, dias int) (Novidade
 func (NopStore) EvolucaoLojas(_ context.Context, dias int) (EvolucaoLojasResult, error) {
 	return EvolucaoLojasResult{DiasJanela: dias}, nil
 }
+func (NopStore) SalvarFavorito(context.Context, Favorito) error                   { return nil }
+func (NopStore) ListarFavoritos(context.Context, string) ([]Favorito, error)      { return nil, nil }
+func (NopStore) RemoverFavorito(context.Context, string, string) error            { return nil }
 func (NopStore) EnsureSchema(context.Context) error { return nil }
 func (NopStore) Nome() string                       { return "nop" }
