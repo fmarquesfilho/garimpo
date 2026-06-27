@@ -33,112 +33,120 @@ async function handleShopeeProxy(url) {
     });
   }
 
-  // Tenta múltiplos endpoints da Shopee (fallback chain)
-  const endpoints = [
-    `https://shopee.com.br/api/v4/item/get?itemid=${itemId}&shopid=${shopId}`,
-    `https://shopee.com.br/api/v4/pdp/get_pc?item_id=${itemId}&shop_id=${shopId}`,
-  ];
-
   const headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/json',
-    'Referer': 'https://shopee.com.br/',
-    'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
+    'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    'Accept': 'text/html,application/xhtml+xml',
+    'Accept-Language': 'pt-BR,pt;q=0.9',
   };
 
-  let lastError = '';
-  let lastStatus = 0;
+  try {
+    // Abordagem: buscar a página HTML do produto (renderizada server-side para SEO/Googlebot)
+    // A Shopee serve HTML com dados embutidos para crawlers (User-Agent Googlebot)
+    const productUrl = `https://shopee.com.br/product-i.${shopId}.${itemId}`;
+    const resp = await fetch(productUrl, { headers, redirect: 'follow' });
 
-  for (const shopeeUrl of endpoints) {
-    try {
-      const resp = await fetch(shopeeUrl, { headers });
-      lastStatus = resp.status;
-
-      if (resp.status !== 200) {
-        lastError = `status ${resp.status} from ${shopeeUrl.split('?')[0]}`;
-        continue;
-      }
-
-      const data = await resp.json();
-
-      // Extrai origem e marca dos atributos
-      let origem = '';
-      let marca = '';
-
-      // Formato /api/v4/item/get: data.item_basic.attributes ou data.item.attributes
-      const attrs = data?.data?.product?.attributes
-        || data?.data?.item_basic?.attributes
-        || data?.data?.item?.attributes
-        || data?.item?.attributes
-        || data?.item_basic?.attributes
-        || [];
-
-      for (const attr of attrs) {
-        const name = (attr.name || '').toLowerCase();
-        const value = attr.value || '';
-        if (!value) continue;
-
-        if ((name.includes('origem') || name.includes('origin') || name.includes('país')
-          || name.includes('envio de') || name.includes('fabricado')) && !origem) {
-          origem = value;
-        }
-        if ((name.includes('marca') || name.includes('brand')) && !marca) {
-          marca = value;
-        }
-      }
-
-      // Fallback: campo brand direto
-      if (!marca) {
-        marca = data?.data?.product?.brand
-          || data?.data?.item_basic?.brand
-          || data?.data?.item?.brand
-          || data?.item?.brand
-          || data?.item_basic?.brand
-          || '';
-      }
-
-      // Fallback: campo location
-      if (!origem) {
-        origem = data?.data?.item?.location
-          || data?.item?.location
-          || data?.item_basic?.shop_location
-          || '';
-      }
-
-      return new Response(JSON.stringify({
-        item_id: itemId,
-        shop_id: shopId,
-        origem: origem,
-        marca: marca,
-        fonte: 'cloudflare_proxy',
-        raw_status: resp.status,
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=86400',
-        }
-      });
-    } catch (err) {
-      lastError = err.message;
+    if (resp.status !== 200) {
+      return jsonResponse({ item_id: itemId, shop_id: shopId, origem: '', marca: '', fonte: 'erro', erro: `html status ${resp.status}` });
     }
-  }
 
-  // Todos os endpoints falharam
-  return new Response(JSON.stringify({
-    item_id: itemId,
-    shop_id: shopId,
-    origem: '',
-    marca: '',
-    fonte: 'erro',
-    erro: lastError,
-    raw_status: lastStatus,
-  }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    const html = await resp.text();
+
+    // Extrair dados de JSON-LD (structured data para SEO)
+    let origem = '';
+    let marca = '';
+
+    // 1. Tentar JSON-LD <script type="application/ld+json">
+    const ldMatches = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+    if (ldMatches) {
+      for (const match of ldMatches) {
+        const jsonStr = match.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+        try {
+          const ld = JSON.parse(jsonStr);
+          if (ld.brand?.name && !marca) marca = ld.brand.name;
+          if (ld.brand && typeof ld.brand === 'string' && !marca) marca = ld.brand;
+          if (ld.countryOfOrigin && !origem) origem = ld.countryOfOrigin;
+        } catch {}
+      }
+    }
+
+    // 2. Tentar meta tags (og:brand, product:brand)
+    if (!marca) {
+      const brandMeta = html.match(/<meta[^>]*property="product:brand"[^>]*content="([^"]+)"/i)
+        || html.match(/<meta[^>]*name="brand"[^>]*content="([^"]+)"/i);
+      if (brandMeta) marca = brandMeta[1];
+    }
+
+    // 3. Tentar extrair do __NEXT_DATA__ ou window.__INITIAL_STATE__ (dados SSR injetados)
+    if (!origem || !marca) {
+      const stateMatch = html.match(/window\.__INITIAL_STATE__\s*=\s*(\{[\s\S]*?\});?\s*<\/script>/);
+      const nextMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+      const dataStr = stateMatch?.[1] || nextMatch?.[1];
+      if (dataStr) {
+        try {
+          const data = JSON.parse(dataStr);
+          // Navega na estrutura para encontrar atributos
+          const attrs = data?.item?.attributes || data?.props?.pageProps?.item?.attributes || [];
+          for (const attr of attrs) {
+            const name = (attr.name || '').toLowerCase();
+            const value = attr.value || '';
+            if (!value) continue;
+            if ((name.includes('origem') || name.includes('origin') || name.includes('país')) && !origem) {
+              origem = value;
+            }
+            if ((name.includes('marca') || name.includes('brand')) && !marca) {
+              marca = value;
+            }
+          }
+          if (!marca) {
+            marca = data?.item?.brand || data?.props?.pageProps?.item?.brand || '';
+          }
+        } catch {}
+      }
+    }
+
+    // 4. Tentar extrair "País de Origem" do HTML renderizado (tabela de especificações)
+    if (!origem) {
+      const origemMatch = html.match(/Pa[ií]s\s+de\s+Origem[^<]*<[^>]*>([^<]+)/i)
+        || html.match(/Country\s+of\s+Origin[^<]*<[^>]*>([^<]+)/i)
+        || html.match(/Origem[:\s]*<[^>]*>([^<]+)/i);
+      if (origemMatch) origem = origemMatch[1].trim();
+    }
+
+    // 5. Marca como fallback do HTML
+    if (!marca) {
+      const marcaMatch = html.match(/Marca[:\s]*<[^>]*>([^<]+)/i)
+        || html.match(/Brand[:\s]*<[^>]*>([^<]+)/i);
+      if (marcaMatch) marca = marcaMatch[1].trim();
+    }
+
+    return jsonResponse({
+      item_id: itemId,
+      shop_id: shopId,
+      origem: origem,
+      marca: marca,
+      fonte: 'cloudflare_html',
+      raw_status: resp.status,
+    });
+
+  } catch (err) {
+    return jsonResponse({
+      item_id: itemId,
+      shop_id: shopId,
+      origem: '',
+      marca: '',
+      fonte: 'erro',
+      erro: err.message,
+    });
+  }
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': status === 200 && body.origem ? 'public, max-age=86400' : 'no-cache',
+    }
   });
 }
