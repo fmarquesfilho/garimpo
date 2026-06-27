@@ -143,8 +143,8 @@ func TestElegibilidadeComPisos(t *testing.T) {
 	pipeline := PipelineCuradoria(eleg)
 
 	cases := []struct {
-		nome     string
-		produto  domain.Product
+		nome        string
+		produto     domain.Product
 		passaFiltro bool
 	}{
 		{"abaixo comissao", domain.Product{Commission: 0.05, Sales30d: 100, Rating: 4.0}, false},
