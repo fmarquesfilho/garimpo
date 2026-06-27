@@ -4,6 +4,8 @@
 	import { goto } from '$app/navigation';
 	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate, resolverLinkShopee } from '$lib/api.js';
 	import RichEditor from '$lib/components/RichEditor.svelte';
+	import ResolverLink from '$lib/components/ResolverLink.svelte';
+	import PreviewPublicacao from '$lib/components/PreviewPublicacao.svelte';
 
 	// Produto vem via query params
 	let produto = $state(null);
@@ -20,12 +22,7 @@
 	let legenda = $state('');
 	let legendaEditada = $state(false);
 	let previewFoto = $state(false);
-	let atualizandoLegenda = $state(false); // flag para ignorar onEditorChange programático
-
-	// Colar link do produto
-	let linkColado = $state('');
-	let resolvendoLink = $state(false);
-	let linkAplicado = $state(false); // feedback visual
+	let atualizandoLegenda = $state(false);
 
 	// Status
 	let publicando = $state(false);
@@ -38,7 +35,6 @@
 		if (dados) {
 			try { produto = JSON.parse(decodeURIComponent(dados)); } catch { /* */ }
 		}
-		// Se não veio produto via query, permite preencher manualmente
 		if (!produto) {
 			produto = { id: '', nome: '', preco: 0, categoria: '', estrategia: 'nicho', link: '', imagem: '' };
 		}
@@ -51,7 +47,7 @@
 				if (r.nome && !produto.nome) produto = { ...produto, nome: r.nome };
 				if (r.preco && !produto.preco) produto = { ...produto, preco: r.preco };
 				if (r.comissao && !produto.comissao) produto = { ...produto, comissao: r.comissao };
-			} catch { /* falha silenciosa — continua sem imagem */ }
+			} catch { /* falha silenciosa */ }
 		}
 
 		try {
@@ -75,7 +71,6 @@
 
 	async function gerarLegenda() {
 		if (!produto) return;
-		// Não sobrescreve se o user editou manualmente
 		if (legendaEditada) return;
 
 		function legendaLocal() {
@@ -104,14 +99,12 @@
 			previewFoto = false;
 		}
 
-		// Atualiza a legenda marcando que é programático (não do user)
 		atualizandoLegenda = true;
 		legenda = novaLegenda;
-		// O $effect do RichEditor vai sincronizar, resetamos o flag após um tick
 		setTimeout(() => { atualizandoLegenda = false; }, 100);
 	}
 
-	// Regenera legenda quando template muda (se user não editou)
+	// Regenera legenda quando template muda
 	let lastTemplateId = $state(templateId);
 	$effect(() => {
 		if (templateId !== lastTemplateId) {
@@ -127,73 +120,23 @@
 	}
 
 	function onEditorChange(html) {
-		// Ignora se a mudança veio de gerarLegenda (programática)
 		if (atualizandoLegenda) return;
 		legendaEditada = true;
 		legenda = html;
 	}
 
-	async function aplicarLink() {
-		const url = linkColado.trim();
-		if (!url) return;
-
-		linkAplicado = false;
-
-		// Detecta link curto
-		const isShortLink = /s\.shopee|shope\.ee/i.test(url) && !url.includes('-i.');
-
-		if (isShortLink) {
-			resolvendoLink = true;
-			try {
-				const r = await resolverLinkShopee(url);
-				produto = {
-					...produto,
-					link: url, // mantém o link curto original (mais limpo no Telegram)
-					nome: r.nome || produto.nome || '',
-					id: r.item_id || '',
-					preco: r.preco ?? produto.preco ?? 0,
-					comissao: r.comissao ?? produto.comissao ?? 0,
-					imagem: r.imagem || produto.imagem || '',
-					categoria: produto.categoria || ''
-				};
-				// Se a API retornou link de afiliado, usa esse (tem tracking)
-				if (r.link_afiliado) {
-					produto = { ...produto, link: r.link_afiliado };
-				}
-			} catch {
-				produto = { ...produto, link: url };
-			} finally {
-				resolvendoLink = false;
-			}
-		} else {
-			produto = { ...produto, link: url };
-			if (!produto.nome) {
-				const match = url.match(/\/([^/]+?)(?:-i\.\d+\.\d+)?(?:\?|$)/);
-				if (match && match[1].length > 3) {
-					produto = { ...produto, nome: decodeURIComponent(match[1]).replace(/-/g, ' ') };
-				}
-			}
-		}
-
-		linkColado = '';
-		linkAplicado = true;
-		setTimeout(() => { linkAplicado = false; }, 4000);
+	function handleLinkResolvido(dados) {
+		produto = {
+			...produto,
+			link: dados.link || produto.link,
+			nome: dados.nome || produto.nome || '',
+			id: dados.id || produto.id || '',
+			preco: dados.preco ?? produto.preco ?? 0,
+			comissao: dados.comissao ?? produto.comissao ?? 0,
+			imagem: dados.imagem || produto.imagem || '',
+			categoria: produto.categoria || ''
+		};
 		gerarLegenda();
-	}
-
-	async function colarDoClipboard() {
-		try {
-			const texto = await navigator.clipboard.readText();
-			if (texto?.trim()) {
-				linkColado = texto.trim();
-			}
-		} catch {
-			// Permissão negada — usa o que já está no campo
-		}
-		// Aplica o que estiver no campo (colado do clipboard ou digitado)
-		if (linkColado.trim()) {
-			aplicarLink();
-		}
 	}
 
 	async function enviarAgora() {
@@ -216,7 +159,6 @@
 			publicando = false;
 		}
 	}
-
 </script>
 
 <svelte:head>
@@ -237,26 +179,7 @@
 		<div class="layout">
 			<!-- Coluna esquerda: Configuração -->
 			<div class="config">
-				<!-- Colar link do produto -->
-				<div class="campo-pub">
-					<label>🔗 Link do produto</label>
-					<div class="link-input">
-						<input
-							type="url"
-							bind:value={linkColado}
-							placeholder="Cole o link da Shopee aqui…"
-							onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
-						/>
-						<button type="button" class="btn-colar" onclick={colarDoClipboard} disabled={resolvendoLink}>
-							{resolvendoLink ? '⏳ Resolvendo…' : '📋 Colar e aplicar'}
-						</button>
-					</div>
-					{#if resolvendoLink}
-						<p class="dica loading-msg">Buscando dados do produto…</p>
-					{:else if linkAplicado}
-						<p class="dica sucesso-msg">✓ Link aplicado — edite os campos abaixo se necessário.</p>
-					{/if}
-				</div>
+				<ResolverLink onresolvido={handleLinkResolvido} />
 
 				<!-- Resumo do produto -->
 				<div class="card-produto">
@@ -362,21 +285,12 @@
 			</div>
 
 			<!-- Coluna direita: Preview -->
-			<div class="preview-col">
-				<h2>Preview</h2>
-				<div class="preview-card">
-					{#if previewFoto && produto.imagem}
-						<img src={produto.imagem} alt="preview" class="preview-img" />
-					{/if}
-					<div class="preview-corpo">{@html legenda.replace(/\n/g, '<br>')}</div>
-					{#if produto.link}
-						<div class="preview-botao">
-							<span class="btn-fake">🛒 Comprar</span>
-						</div>
-					{/if}
-				</div>
-				<p class="preview-nota">Como ficará no Telegram</p>
-			</div>
+			<PreviewPublicacao
+				{legenda}
+				imagem={produto.imagem}
+				link={produto.link}
+				{previewFoto}
+			/>
 		</div>
 	{/if}
 </section>
@@ -413,29 +327,11 @@
 	}
 	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
 	.dica a { color: var(--ouro); text-decoration: underline; }
-	.sucesso-msg { color: var(--sucesso-texto); }
-	.loading-msg { color: var(--ouro); }
-
-	/* Link input */
-	.link-input { display: flex; gap: var(--r2); flex-wrap: wrap; }
-	.link-input input {
-		flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid var(--linha);
-		border-radius: var(--raio-sm); font-size: 0.9rem; background: var(--porcelana);
-	}
-	.btn-colar {
-		padding: 10px 18px; background: var(--ouro); border: 1px solid var(--ouro);
-		color: white; font-weight: 600; font-size: 0.85rem;
-		border-radius: var(--raio-sm); cursor: pointer; white-space: nowrap;
-	}
-	.btn-colar:hover:not(:disabled) { background: var(--ouro-escuro); }
-	.btn-colar:disabled { opacity: 0.5; cursor: not-allowed; }
 
 	/* Produto editável */
 	.nome-edit {
-		font-size: 1rem; font-weight: 700;
-		border: 1px solid var(--linha); background: var(--branco);
-		border-radius: 8px;
-		width: 100%; padding: 8px 12px;
+		font-size: 1rem; font-weight: 700; border: 1px solid var(--linha);
+		background: var(--branco); border-radius: 8px; width: 100%; padding: 8px 12px;
 	}
 	.nome-edit::placeholder { color: var(--tinta-suave); opacity: 0.6; font-weight: 400; }
 	.nome-edit:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
@@ -478,20 +374,6 @@
 	.subid { font-size: 0.78rem; margin-top: 4px !important; }
 	.subid code { font-size: 0.75rem; background: var(--sucesso-fundo); padding: 2px 6px; border-radius: 4px; }
 
-	/* Preview */
-	.preview-col h2 { font-size: 1rem; margin: 0 0 var(--r3); color: var(--tinta-suave); }
-	.preview-card {
-		border: 1px solid var(--linha); border-radius: var(--raio); overflow: hidden;
-		background: var(--branco); box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-	}
-	.preview-img { width: 100%; max-height: 240px; object-fit: cover; }
-	.preview-corpo { padding: var(--r4); font-size: 0.92rem; line-height: 1.5; }
-	.preview-botao { padding: 0 var(--r4) var(--r4); }
-	.btn-fake {
-		display: inline-block; padding: 8px 18px; background: var(--ouro);
-		color: white; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
-	}
-	.preview-nota { font-size: 0.75rem; color: var(--tinta-suave); margin-top: var(--r2); font-style: italic; }
 	.loading { color: var(--tinta-suave); }
 	.aviso { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
 </style>

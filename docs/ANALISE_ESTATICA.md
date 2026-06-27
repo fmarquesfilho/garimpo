@@ -11,7 +11,7 @@ Atualizado em: 2026-06-27
 Todo push na main roda automaticamente:
 
 ```
-go test → golangci-lint → govulncheck → arch-go → ESLint → Stylelint → Vitest → Playwright
+go test → golangci-lint → govulncheck → arch-go → check-file-size → ESLint → Stylelint → Vitest → check-file-size → Playwright
 ```
 
 Se qualquer step falhar, o deploy é bloqueado.
@@ -24,9 +24,11 @@ Se qualquer step falhar, o deploy é bloqueado.
 | `golangci-lint` | Bugs, segurança, funções longas, complexidade alta | ~10s |
 | `govulncheck` | CVEs alcançáveis nas dependências | ~5s |
 | `arch-go` | Violação de regras de dependência entre packages | ~3s |
+| `check-file-size.sh` | Arquivo de produção > 400 linhas | ~1s |
 | `npm run lint:js` | Erros ESLint no frontend | ~3s |
 | `npm run lint:css` | Violações de design tokens | ~2s |
 | `npx vitest run` | Testes unitários de componentes | ~2s |
+| `check-file-size.sh` | Arquivo frontend > 400 linhas | ~1s |
 | Playwright E2E | Fluxos de ponta a ponta | ~30s |
 
 ---
@@ -192,9 +194,10 @@ O package `httpapi` está dividido em arquivos por domínio:
 
 | Arquivo | Responsabilidade | Linhas |
 |---------|-----------------|:------:|
-| httpapi.go | Server struct, Handler, rotas, SPA | 279 |
+| httpapi.go | Server struct, Handler, rotas, SPA | ~280 |
 | curadoria.go | /candidatos, /comparar, enriquecerOrigem | ~170 |
-| lojas.go | /lojas (CRUD, resolução de shopId) | ~340 |
+| lojas.go | /lojas (CRUD — add, listar, remover) | ~240 |
+| shopee_resolver.go | Parsing URL Shopee, resolução slug/shortlink | ~210 |
 | publicacoes.go | /publicacoes, agendamento | ~200 |
 | alertas.go | /alertas (config, teste, update) | ~120 |
 | onboarding.go | /onboarding (multi-tenant) | ~320 |
@@ -202,6 +205,19 @@ O package `httpapi` está dividido em arquivos por domínio:
 | introspect.go | /admin/shopee-introspect | ~130 |
 | helpers.go | writeJSON, writeErr, auth helpers | 92 |
 | middleware.go | logRequests, CORS | 70 |
+
+## Organização do Código (store — BigQuery)
+
+| Arquivo | Responsabilidade | Linhas |
+|---------|-----------------|:------:|
+| store.go | Interface, tipos, NopStore | ~340 |
+| bigquery_store.go | Struct, constructor, Registrar, Snapshot, Buscas | ~300 |
+| bigquery_schema.go | EnsureSchema + evolução de schema | ~160 |
+| bigquery_queries.go | HistoricoColetas, Estatisticas, Conversoes | ~160 |
+| bigquery_publicacoes.go | CRUD de publicações | ~100 |
+| bigquery_novidades.go | Novidades + EvolucaoLojas | ~200 |
+| bigquery_destinos.go | BQDestinoStore | ~96 |
+| bigquery_templates.go | BQTemplateStore | ~95 |
 
 ---
 
@@ -227,6 +243,14 @@ O package `httpapi` está dividido em arquivos por domínio:
 - [x] 4 testes novos no coleta service (origem)
 - [x] 7 testes novos no tenant (config, store, crypto)
 
+### Refatoração completa (sessão 27/06 — parte 2)
+- [x] Frontend: 5 páginas refatoradas (712→309, 497→379, 415→231, 359→317, 409→119)
+- [x] Frontend: 8 componentes extraídos (FormAdicionarLoja, PainelAlertas, ListaProdutosLoja, CardOportunidade, ResolverLink, PreviewPublicacao, NavDrawer, LandingHero)
+- [x] Backend: bigquery_store.go dividido em 7 arquivos coesos (1121→max 300 cada)
+- [x] Backend: lojas.go dividido em 2 (441→241 + 209 shopee_resolver)
+- [x] CI: `check-file-size.sh` adicionado — bloqueia deploy se arquivo > 400 linhas
+- [x] Documentação: docs/REFATORACAO.md com detalhes completos
+
 ---
 
 ## Como testar tudo localmente antes do push
@@ -237,6 +261,7 @@ go test ./...
 golangci-lint run --timeout=3m --issues-exit-code=1 ./...
 govulncheck ./...
 arch-go
+./scripts/check-file-size.sh 400
 
 # Frontend
 cd web
