@@ -6,6 +6,7 @@
 	import { buscasSalvas, slugificar } from '$lib/buscas.js';
 	import { get } from 'svelte/store';
 	import CandidateCard from '$lib/components/CandidateCard.svelte';
+	import ProductCard from '$lib/components/ProductCard.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import TagInput from '$lib/components/TagInput.svelte';
 	import BuscaCard from '$lib/components/BuscaCard.svelte';
@@ -257,7 +258,7 @@
 {:else}
 	<div class="grade">
 		{#each (f.modo === 'comparar' && pares ? [...(pares.nicho ?? []), ...(pares.diversificada ?? [])] : lista) as c, i (c.id)}
-			<CandidateCard candidato={c} posicao={i + 1} onpublicar={publicarOferta} />
+			<ProductCard produto={c} posicao={i + 1} onpublicar={publicarOferta} />
 		{/each}
 	</div>
 {/if}

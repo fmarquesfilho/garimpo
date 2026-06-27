@@ -5,7 +5,7 @@
 	import { buscasSalvas } from '$lib/buscas.js';
 	import { usuario } from '$lib/firebase.js';
 	import PeriodSelector from '$lib/components/PeriodSelector.svelte';
-	import CardOportunidade from '$lib/components/CardOportunidade.svelte';
+	import ProductCard from '$lib/components/ProductCard.svelte';
 	import ErrorMessage from '$lib/components/ErrorMessage.svelte';
 	import { PageHeader, Loading, EmptyState } from '$lib/components/ui/index.js';
 
@@ -170,7 +170,13 @@
 					<h2>📉 Quedas de preço</h2>
 					<div class="feed">
 						{#each quedas as item (item.produto_id + item.loja)}
-							<CardOportunidade {item} tipo="queda" nomeLoja={nomesLojas[item.loja] ?? item.loja} onpublicar={irParaPublicar} />
+							<ProductCard
+								produto={{ nome: item.nome, preco: item.preco_atual, imagem: item.imagem, link: item.link, comissao: item.comissao ?? 0, vendas: item.vendas ?? 0, produto_id: item.produto_id, loja: item.loja }}
+								layout="feed"
+								nomeLoja={nomesLojas[item.loja] ?? item.loja}
+								variacao={{ tipo: 'queda', pct: item.variacao_pct, preco_anterior: item.preco_anterior, preco_atual: item.preco_atual, detectado_em: item.detectado_em }}
+								onpublicar={() => irParaPublicar(item)}
+							/>
 						{/each}
 					</div>
 				</section>
@@ -182,7 +188,13 @@
 					<p class="sub-secao">Apareceram pela primeira vez no catálogo das lojas monitoradas.</p>
 					<div class="feed">
 						{#each novos.slice(0, 20) as item (item.produto_id + item.loja)}
-							<CardOportunidade {item} tipo="novo" nomeLoja={nomesLojas[item.loja] ?? item.loja} onpublicar={irParaPublicar} />
+							<ProductCard
+								produto={{ nome: item.nome, preco: item.preco, imagem: item.imagem, link: item.link, comissao: item.comissao ?? 0, vendas: item.vendas ?? 0, produto_id: item.produto_id, loja: item.loja }}
+								layout="feed"
+								nomeLoja={nomesLojas[item.loja] ?? item.loja}
+								variacao={{ tipo: 'novo', detectado_em: item.detectado_em }}
+								onpublicar={() => irParaPublicar(item)}
+							/>
 						{/each}
 					</div>
 				</section>
@@ -194,7 +206,12 @@
 					<p class="sub-secao">Produtos que subiram — pode indicar fim de promoção ou escassez.</p>
 					<div class="feed">
 						{#each altas.slice(0, 10) as item (item.produto_id + item.loja)}
-							<CardOportunidade {item} tipo="alta" nomeLoja={nomesLojas[item.loja] ?? item.loja} />
+							<ProductCard
+								produto={{ nome: item.nome, preco: item.preco_atual, imagem: item.imagem, link: item.link, comissao: item.comissao ?? 0, vendas: item.vendas ?? 0, produto_id: item.produto_id, loja: item.loja }}
+								layout="feed"
+								nomeLoja={nomesLojas[item.loja] ?? item.loja}
+								variacao={{ tipo: 'alta', pct: item.variacao_pct, preco_anterior: item.preco_anterior, preco_atual: item.preco_atual, detectado_em: item.detectado_em }}
+							/>
 						{/each}
 					</div>
 				</section>
