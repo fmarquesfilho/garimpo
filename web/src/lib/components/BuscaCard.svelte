@@ -24,15 +24,28 @@
 		</div>
 	</div>
 	<div class="cartao-meta">
-		<span class="badge">{busca.estrategia ?? 'nicho'}</span>
-		{#if busca.cron}
-			<span class="badge cron" title="coleta periódica">⏱ {busca.cron}</span>
+		{#if busca.fontes?.length}
+			{#each busca.fontes as f}
+				<span class="badge fonte">{f === 'curadoria' ? '🔍' : f === 'quedas' ? '📉' : f === 'novos' ? '🆕' : '⭐'} {f}</span>
+			{/each}
+		{:else}
+			<span class="badge">{busca.estrategia ?? 'nicho'}</span>
 		{/if}
-		{#if busca.categoria}
-			<span class="badge">{busca.categoria}</span>
+		{#if busca.cron}
+			<span class="badge cron" title="coleta periódica: {busca.cron}">⏱ agendada</span>
+		{/if}
+		{#if busca.categorias?.length}
+			{#each busca.categorias as cat}
+				<span class="badge cat">{cat}</span>
+			{/each}
+		{:else if busca.categoria}
+			<span class="badge cat">{busca.categoria}</span>
 		{/if}
 		{#if busca.shop_ids?.length}
 			<span class="badge shop" title="monitorando lojas">🏪 {busca.shop_ids.length} {busca.shop_ids.length === 1 ? 'loja' : 'lojas'}</span>
+		{/if}
+		{#if busca.dias_janela && busca.dias_janela !== 7}
+			<span class="badge">janela: {busca.dias_janela}d</span>
 		{/if}
 	</div>
 </div>
@@ -65,6 +78,8 @@
 		color: var(--tinta-suave);
 	}
 	.badge.cron { color: color-mix(in srgb, var(--ouro) 70%, var(--tinta-suave)); }
+	.badge.fonte { background: var(--ouro-fundo); color: var(--ouro-escuro); border-color: var(--ouro-claro); }
+	.badge.cat { color: var(--rosa); border-color: color-mix(in srgb, var(--rosa) 30%, var(--linha)); }
 	.badge.shop {
 		color: var(--rosa);
 		border-color: color-mix(in srgb, var(--rosa) 30%, var(--linha));
