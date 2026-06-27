@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import { buscarEstatisticas, buscarEvolucaoLojas, listarPublicacoes, listarBuscasServidor } from '$lib/api.js';
-	import { usuario } from '$lib/firebase.js';
 	import { brl, num, pctSinal } from '$lib/formatters.js';
 	import { Loading, Alert, MetricCard, DashPanel, MiniChart, RankList } from '$lib/components/ui/index.js';
 

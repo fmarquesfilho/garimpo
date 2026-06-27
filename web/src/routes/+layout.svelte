@@ -3,7 +3,6 @@
 	import { page } from '$app/stores';
 	import { usuario, login, logout } from '$lib/firebase.js';
 	import { verificarAdmin } from '$lib/api.js';
-	import { onMount } from 'svelte';
 	let { children } = $props();
 
 	let menuAberto = $state(false);

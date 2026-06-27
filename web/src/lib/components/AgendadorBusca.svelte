@@ -18,11 +18,6 @@
 	// Modo: 'atalho' (padrão) ou 'avancado' (campo livre)
 	let modo = $state('atalho');
 
-	// Qual atalho está selecionado agora
-	let atalhoSelecionado = $derived(
-		atalhos.find((a) => a.cron === value) ?? null
-	);
-
 	function selecionarAtalho(cron) {
 		value = cron;
 		modo = 'atalho';

@@ -23,7 +23,6 @@
 	let erro = $state(null);
 	let lista = $state([]);
 	let pares = $state(null);
-	let fonteAtiva = $state('');
 
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
@@ -111,11 +110,11 @@
 			if (f.modo === 'comparar') {
 				const r = await compararEstrategias({ top: 6, ...filtrosReq });
 				pares = r;
-				fonteAtiva = r.fonte ?? '';
+				
 			} else {
 				const r = await buscarCandidatos({ estrategia: f.modo, top: f.quantos, ...filtrosReq });
 				lista = (r.candidatos ?? []).map((c) => ({ ...c, estrategia: f.modo }));
-				fonteAtiva = r.fonte ?? '';
+				
 			}
 		} catch (e) {
 			erro = e;

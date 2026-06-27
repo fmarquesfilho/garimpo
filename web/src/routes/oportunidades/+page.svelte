@@ -4,7 +4,7 @@
 	import { buscarNovidades } from '$lib/api.js';
 	import { buscasSalvas } from '$lib/buscas.js';
 	import { usuario } from '$lib/firebase.js';
-	import { brl, pct, apenasData, tempoAtras } from '$lib/formatters.js';
+	import { brl, pct, tempoAtras } from '$lib/formatters.js';
 	import { PageHeader, Loading, EmptyState } from '$lib/components/ui/index.js';
 
 	let dias = $state(7);

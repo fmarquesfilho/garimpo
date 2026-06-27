@@ -113,8 +113,6 @@ describe('SeletorGrupo — seleção múltipla', () => {
 		];
 		render(SeletorGrupo, { props: { grupos: muitos, onselect } });
 
-		const input = screen.getByPlaceholderText('Digite para buscar um grupo…');
-
 		// Seleciona 5 grupos
 		for (let i = 0; i < 5; i++) {
 			const inp = screen.queryByPlaceholderText('Digite para buscar um grupo…')

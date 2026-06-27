@@ -318,7 +318,7 @@
 						<p class="vazio-tab">Nenhum produto encontrado. A coleta periódica pode ainda não ter rodado.</p>
 					{:else}
 						<div class="grade-produtos">
-							{#each produtos as p, i (p.id)}
+							{#each produtos as p (p.id)}
 								<div class="card-produto-loja">
 									{#if p.imagem}
 										<img src={p.imagem} alt={p.nome} class="prod-thumb" />

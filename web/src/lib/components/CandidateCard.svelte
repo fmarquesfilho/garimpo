@@ -1,7 +1,7 @@
 <script>
 	import ScoreMeter from './ScoreMeter.svelte';
 
-	let { candidato, posicao = null, destaque = false, onselecionar = null, onpublicar = null } = $props();
+	let { candidato, posicao = null, destaque = false, onpublicar = null } = $props();
 
 	const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 	const pct = (v) => `${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;

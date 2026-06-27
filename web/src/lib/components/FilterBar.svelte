@@ -11,9 +11,6 @@
 		notaMin = $bindable(0),
 		quantos = $bindable(9),
 		explorar = $bindable(false),
-		modo = 'nicho',
-		mostrarQuantos = true,
-		mostrarExplorar = true,
 		mostrarBusca = true
 	} = $props();
 

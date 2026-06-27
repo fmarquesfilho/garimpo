@@ -3,7 +3,6 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate, resolverLinkShopee } from '$lib/api.js';
-	import { usuario } from '$lib/firebase.js';
 	import RichEditor from '$lib/components/RichEditor.svelte';
 
 	// Produto vem via query params
@@ -122,10 +121,6 @@
 		}
 	});
 
-	function onLegendaInput() {
-		legendaEditada = true;
-	}
-
 	function resetarLegenda() {
 		legendaEditada = false;
 		gerarLegenda();
@@ -173,7 +168,7 @@
 		} else {
 			produto = { ...produto, link: url };
 			if (!produto.nome) {
-				const match = url.match(/\/([^\/\?]+?)(?:-i\.\d+\.\d+)?(?:\?|$)/);
+				const match = url.match(/\/([^/]+?)(?:-i\.\d+\.\d+)?(?:\?|$)/);
 				if (match && match[1].length > 3) {
 					produto = { ...produto, nome: decodeURIComponent(match[1]).replace(/-/g, ' ') };
 				}
@@ -222,7 +217,6 @@
 		}
 	}
 
-	const brl = (v) => v?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) ?? '';
 </script>
 
 <svelte:head>
