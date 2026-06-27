@@ -10,11 +10,19 @@
 
 	// ── Filtros ───────────────────────────────────────────────────────────────
 	let busca = $state('');
+	let categoria = $state(''); // categoria da FilterBar (string)
 	let comissaoMin = $state(0.07);
 	let vendasMin = $state(0);
 	let notaMin = $state(0);
-	let categorias = $state([]); // categorias ativas (filtro)
+	let categorias = $state([]); // categorias ativas (de buscas salvas)
 	let fontes = $state({ curadoria: true, quedas: true, novos: true, favoritos: false });
+
+	// Categorias efetivas: combina FilterBar (string) com buscas salvas (array)
+	let categoriasEfetivas = $derived(
+		categoria.trim()
+			? [categoria.trim(), ...categorias]
+			: categorias
+	);
 
 	// ── Estado dos dados ──────────────────────────────────────────────────────
 	let carregando = $state(false);
@@ -46,7 +54,7 @@
 		const promises = [];
 
 		// Curadoria: busca por keyword ou categoria (se tem termo/categoria E fonte ativa)
-		if (fontes.curadoria && (busca.trim() || categorias.length > 0)) {
+		if (fontes.curadoria && (busca.trim() || categoriasEfetivas.length > 0)) {
 			promises.push(carregarCuradoria());
 		} else {
 			dadosCuradoria = [];
@@ -85,7 +93,7 @@
 				vendasMin: vendasMin > 0 ? vendasMin : undefined,
 				notaMin: notaMin > 0 ? notaMin : undefined
 			};
-			if (categorias.length > 0) params.categoria = categorias[0];
+			if (categoriasEfetivas.length > 0) params.categoria = categoriasEfetivas[0];
 			const r = await buscarCandidatos(params);
 			dadosCuradoria = (r.candidatos ?? []).map(c => ({ ...c, _fonte: 'curadoria' }));
 		} catch { dadosCuradoria = []; }
@@ -163,8 +171,8 @@
 		}
 
 		// Filtra por categorias (se alguma está selecionada)
-		if (categorias.length > 0) {
-			const cats = categorias.map(c => c.toLowerCase());
+		if (categoriasEfetivas.length > 0) {
+			const cats = categoriasEfetivas.map(c => c.toLowerCase());
 			todos = todos.filter(r =>
 				!r.categoria || cats.some(c => (r.categoria ?? '').toLowerCase().includes(c))
 			);
@@ -187,7 +195,7 @@
 	// Debounce: recarrega quando busca ou fontes mudam
 	let timer;
 	$effect(() => {
-		busca; categorias; comissaoMin; vendasMin; notaMin;
+		busca; categoria; categorias; comissaoMin; vendasMin; notaMin;
 		fontes.curadoria; fontes.quedas; fontes.novos; fontes.favoritos;
 		clearTimeout(timer);
 		timer = setTimeout(carregar, 400);
@@ -232,6 +240,7 @@
 	<!-- Busca universal -->
 	<FilterBar
 		bind:busca={busca}
+		bind:categoria={categoria}
 		bind:comissaoMin={comissaoMin}
 		bind:vendasMin={vendasMin}
 		bind:notaMin={notaMin}
