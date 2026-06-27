@@ -1,51 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { montarResultados, encontrarLojaPorNome } from '$lib/descobrir-logic.js';
 
 /**
  * Testes da lógica da página Descobrir.
  * Testa as funções de filtragem e montagem de resultados — executa em <1s.
  */
-
-// ── Replica da lógica de montarResultados da +page.svelte ─────────────────
-
-function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias, comissaoMin, vendasMin, notaMin }) {
-	let todos = [];
-	if (fontes.curadoria) todos.push(...dadosCuradoria);
-	if (fontes.quedas) todos.push(...dadosQuedas);
-	if (fontes.novos) todos.push(...dadosNovos);
-	if (fontes.favoritos) {
-		const favs = (favoritos ?? []).map(f => ({ ...f, id: f.produto_id, _fonte: 'favorito' }));
-		todos.push(...favs);
-	}
-
-	const termo = (busca ?? '').trim().toLowerCase();
-	if (termo) {
-		todos = todos.filter(r =>
-			(r.nome ?? '').toLowerCase().includes(termo) ||
-			(r.loja ?? '').toLowerCase().includes(termo)
-		);
-	}
-
-	// Filtra por categorias (se alguma está selecionada)
-	const cats = (categorias ?? []).map(c => c.toLowerCase());
-	if (cats.length > 0) {
-		todos = todos.filter(r =>
-			!r.categoria || cats.some(c => (r.categoria ?? '').toLowerCase().includes(c))
-		);
-	}
-
-	// Filtros numéricos
-	if (comissaoMin > 0) {
-		todos = todos.filter(r => !r.comissao || r.comissao >= comissaoMin);
-	}
-	if (vendasMin > 0) {
-		todos = todos.filter(r => !r.vendas || r.vendas >= vendasMin);
-	}
-	if (notaMin > 0) {
-		todos = todos.filter(r => !r.avaliacao || r.avaliacao >= notaMin);
-	}
-
-	return todos;
-}
 
 // ── Dados de teste ────────────────────────────────────────────────────────
 
@@ -454,5 +413,42 @@ describe('Descobrir — Todos os filtros combinados', () => {
 	it('nenhuma fonte ativa retorna vazio independente dos filtros', () => {
 		const r = filtrar({ fontes: { curadoria: false, quedas: false, novos: false, favoritos: false }, busca: 'SKIN1004' });
 		expect(r).toHaveLength(0);
+	});
+});
+
+
+// ── Detecção de loja por nome ─────────────────────────────────────────────
+
+describe('Descobrir — Detecção de loja por nome', () => {
+	const lojas = [
+		{ id: 'loja-123', nome: 'SKIN1004 Official', shop_ids: [123] },
+		{ id: 'loja-456', nome: 'Belezura Distribuidora', shop_ids: [456] },
+		{ id: 'loja-789', nome: 'COSRX Store', shop_ids: [789] }
+	];
+
+	it('encontra loja por nome exato', () => {
+		const r = encontrarLojaPorNome('Belezura Distribuidora', lojas);
+		expect(r).not.toBeNull();
+		expect(r.shop_ids).toEqual([456]);
+	});
+
+	it('encontra loja por parte do nome (case-insensitive)', () => {
+		const r = encontrarLojaPorNome('belezura', lojas);
+		expect(r).not.toBeNull();
+		expect(r.id).toBe('loja-456');
+	});
+
+	it('encontra loja por match parcial bidirecional', () => {
+		const r = encontrarLojaPorNome('SKIN1004', lojas);
+		expect(r).not.toBeNull();
+		expect(r.id).toBe('loja-123');
+	});
+
+	it('retorna null se não encontrar', () => {
+		expect(encontrarLojaPorNome('inexistente', lojas)).toBeNull();
+	});
+
+	it('retorna null se termo vazio', () => {
+		expect(encontrarLojaPorNome('', lojas)).toBeNull();
 	});
 });
