@@ -6,6 +6,9 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -22,7 +25,7 @@ type origemCacheEntry struct {
 var (
 	origemCache    = make(map[string]origemCacheEntry)
 	origemCacheMu  sync.RWMutex
-	origemCacheTTL = 24 * time.Hour // cache por 24h (origem não muda)
+	origemCacheTTL = 24 * time.Hour
 )
 
 func origemDoCache(key string) (origemCacheEntry, bool) {
@@ -40,9 +43,7 @@ func salvarOrigemNoCache(key string, e origemCacheEntry) {
 	defer origemCacheMu.Unlock()
 	e.Em = time.Now()
 	origemCache[key] = e
-	// Limita o cache a 5000 entradas (evitar memory leak)
 	if len(origemCache) > 5000 {
-		// Remove entradas mais antigas (simples: limpa tudo e recomeça)
 		origemCache = make(map[string]origemCacheEntry)
 		origemCache[key] = e
 	}
@@ -55,12 +56,11 @@ type origemResponse struct {
 	ShopID string `json:"shop_id"`
 	Origem string `json:"origem"`
 	Marca  string `json:"marca,omitempty"`
-	Fonte  string `json:"fonte"`          // "api_publica" | "cache" | "fallback" | "erro"
-	Erro   string `json:"erro,omitempty"` // detalhe do erro (debug)
+	Fonte  string `json:"fonte"`
+	Erro   string `json:"erro,omitempty"`
 }
 
-// produtoOrigem consulta a API pública v4 da Shopee para obter os atributos
-// do produto (incluindo País de Origem e Marca).
+// produtoOrigem busca origem e marca de um produto.
 // GET /api/produto/origem?item_id=123&shop_id=456
 func (srv *Server) produtoOrigem(w http.ResponseWriter, r *http.Request) {
 	itemID := r.URL.Query().Get("item_id")
@@ -72,7 +72,6 @@ func (srv *Server) produtoOrigem(w http.ResponseWriter, r *http.Request) {
 
 	cacheKey := shopID + ":" + itemID
 
-	// 1. Verificar cache
 	if cached, ok := origemDoCache(cacheKey); ok {
 		writeJSON(w, http.StatusOK, origemResponse{
 			ItemID: itemID, ShopID: shopID,
@@ -81,7 +80,6 @@ func (srv *Server) produtoOrigem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Chamar API pública v4 da Shopee
 	origem, marca, err := buscarOrigemProdutoShopee(itemID, shopID)
 	if err != nil {
 		srv.Logger.Warn("buscar origem falhou",
@@ -89,27 +87,24 @@ func (srv *Server) produtoOrigem(w http.ResponseWriter, r *http.Request) {
 			slog.String("shop_id", shopID),
 			slog.String("erro", err.Error()),
 		)
-		// Retorna vazio mas não falha (graceful degradation)
 		writeJSON(w, http.StatusOK, origemResponse{
 			ItemID: itemID, ShopID: shopID,
-			Origem: "", Marca: "", Fonte: "erro",
-			Erro: err.Error(),
+			Origem: "", Marca: "", Fonte: "erro", Erro: err.Error(),
 		})
 		return
 	}
 
-	// 3. Normalizar e cachear
 	origemNorm := NormalizarOrigemProduto(origem)
 	salvarOrigemNoCache(cacheKey, origemCacheEntry{Origem: origemNorm, Marca: marca})
 
 	writeJSON(w, http.StatusOK, origemResponse{
 		ItemID: itemID, ShopID: shopID,
-		Origem: origemNorm, Marca: marca, Fonte: "api_publica",
+		Origem: origemNorm, Marca: marca, Fonte: "proxy_residencial",
 	})
 }
 
-// produtoOrigemBatch resolve origem de múltiplos produtos de uma vez.
-// POST /api/produto/origem/batch  body: {"itens": [{"item_id": "123", "shop_id": "456"}, ...]}
+// produtoOrigemBatch resolve origem de múltiplos produtos.
+// POST /api/produto/origem/batch
 func (srv *Server) produtoOrigemBatch(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Itens []struct {
@@ -126,18 +121,15 @@ func (srv *Server) produtoOrigemBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(req.Itens) > 20 {
-		req.Itens = req.Itens[:20] // Limita a 20 por request
+		req.Itens = req.Itens[:20]
 	}
 
 	resultados := make([]origemResponse, 0, len(req.Itens))
-
 	for _, item := range req.Itens {
 		if item.ItemID == "" || item.ShopID == "" {
 			continue
 		}
 		cacheKey := item.ShopID + ":" + item.ItemID
-
-		// Cache hit?
 		if cached, ok := origemDoCache(cacheKey); ok {
 			resultados = append(resultados, origemResponse{
 				ItemID: item.ItemID, ShopID: item.ShopID,
@@ -146,13 +138,8 @@ func (srv *Server) produtoOrigemBatch(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Buscar na API (com throttle leve entre chamadas)
 		origem, marca, err := buscarOrigemProdutoShopee(item.ItemID, item.ShopID)
 		if err != nil {
-			srv.Logger.Warn("batch origem falhou",
-				slog.String("item_id", item.ItemID),
-				slog.String("erro", err.Error()),
-			)
 			resultados = append(resultados, origemResponse{
 				ItemID: item.ItemID, ShopID: item.ShopID,
 				Origem: "", Marca: "", Fonte: "erro",
@@ -162,36 +149,50 @@ func (srv *Server) produtoOrigemBatch(w http.ResponseWriter, r *http.Request) {
 
 		origemNorm := NormalizarOrigemProduto(origem)
 		salvarOrigemNoCache(cacheKey, origemCacheEntry{Origem: origemNorm, Marca: marca})
-
 		resultados = append(resultados, origemResponse{
 			ItemID: item.ItemID, ShopID: item.ShopID,
-			Origem: origemNorm, Marca: marca, Fonte: "api_publica",
+			Origem: origemNorm, Marca: marca, Fonte: "proxy_residencial",
 		})
-
-		// Throttle: 150ms entre chamadas à API pública
-		time.Sleep(150 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"resultados": resultados})
 }
 
-// ── Chamada à API pública v4 ─────────────────────────────────────────────────
+// ── Busca via proxy residencial ──────────────────────────────────────────────
 
-// buscarOrigemProdutoShopee consulta a API pública v4 da Shopee Brasil para
-// obter "País de Origem" e "Marca" dos atributos do produto.
-// Endpoint: https://shopee.com.br/api/v4/pdp/get_pc?item_id=X&shop_id=Y
+// buscarOrigemProdutoShopee busca a página HTML do produto na Shopee via proxy
+// residencial e extrai País de Origem e Marca dos dados embutidos.
+//
+// Requer: RESIDENTIAL_PROXY_URL no ambiente.
+// Formato: http://usuario:senha_country-br@geo.iproyal.com:12321
 func buscarOrigemProdutoShopee(itemID, shopID string) (origem string, marca string, err error) {
-	url := fmt.Sprintf("https://shopee.com.br/api/v4/pdp/get_pc?item_id=%s&shop_id=%s", itemID, shopID)
+	proxyURL := os.Getenv("RESIDENTIAL_PROXY_URL")
+	if proxyURL == "" {
+		return "", "", fmt.Errorf("RESIDENTIAL_PROXY_URL não configurado")
+	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	transport := &http.Transport{}
+	parsed, err := url.Parse(proxyURL)
+	if err != nil {
+		return "", "", fmt.Errorf("proxy URL inválida: %w", err)
+	}
+	transport.Proxy = http.ProxyURL(parsed)
+
+	client := &http.Client{
+		Timeout:   15 * time.Second,
+		Transport: transport,
+	}
+
+	// Tenta a página HTML do produto (contém dados SSR)
+	productURL := fmt.Sprintf("https://shopee.com.br/product-i.%s.%s", shopID, itemID)
+	req, err := http.NewRequest(http.MethodGet, productURL, nil)
 	if err != nil {
 		return "", "", err
 	}
-	// Headers necessários para a API pública aceitar a requisição
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Referer", "https://shopee.com.br/")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml")
+	req.Header.Set("Accept-Language", "pt-BR,pt;q=0.9")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -208,107 +209,118 @@ func buscarOrigemProdutoShopee(itemID, shopID string) (origem string, marca stri
 		return "", "", err
 	}
 
-	// Parse da resposta — a estrutura é aninhada
+	origem, marca = extrairOrigemDeHTML(string(body))
+
+	// Fallback: tenta API JSON com o mesmo proxy
+	if origem == "" && marca == "" {
+		origem, marca = tentarAPIJSON(client, itemID, shopID)
+	}
+
+	return origem, marca, nil
+}
+
+// extrairOrigemDeHTML extrai País de Origem e Marca do HTML da página de produto.
+func extrairOrigemDeHTML(html string) (origem, marca string) {
+	// 1. Busca em atributos JSON embutidos no HTML (formato {"name":"...","value":"..."})
+	attrPattern := regexp.MustCompile(`"name"\s*:\s*"([^"]+)"\s*,\s*"value"\s*:\s*"([^"]+)"`)
+	allAttrs := attrPattern.FindAllStringSubmatch(html, -1)
+	for _, m := range allAttrs {
+		if len(m) < 3 {
+			continue
+		}
+		name := strings.ToLower(m[1])
+		value := m[2]
+		if origem == "" && (strings.Contains(name, "origem") || strings.Contains(name, "origin") ||
+			strings.Contains(name, "país") || strings.Contains(name, "envio de")) {
+			origem = value
+		}
+		if marca == "" && (strings.Contains(name, "marca") || strings.Contains(name, "brand")) {
+			marca = value
+		}
+	}
+
+	// 2. JSON-LD (schema.org brand)
+	if marca == "" {
+		brandPattern := regexp.MustCompile(`"brand"\s*:\s*\{\s*"name"\s*:\s*"([^"]+)"`)
+		if m := brandPattern.FindStringSubmatch(html); len(m) >= 2 {
+			marca = m[1]
+		}
+	}
+	if marca == "" {
+		brandSimple := regexp.MustCompile(`"brand"\s*:\s*"([^"]+)"`)
+		if m := brandSimple.FindStringSubmatch(html); len(m) >= 2 {
+			marca = m[1]
+		}
+	}
+
+	// 3. Regex na tabela de especificações renderizada
+	if origem == "" {
+		origemHTML := regexp.MustCompile(`(?i)Pa[ií]s\s+de\s+Origem[^<]*</[^>]*>\s*<[^>]*>([^<]+)`)
+		if m := origemHTML.FindStringSubmatch(html); len(m) >= 2 {
+			origem = strings.TrimSpace(m[1])
+		}
+	}
+
+	return origem, marca
+}
+
+// tentarAPIJSON tenta o endpoint API v4 com o mesmo client (proxy residencial).
+func tentarAPIJSON(client *http.Client, itemID, shopID string) (origem, marca string) {
+	apiURL := fmt.Sprintf("https://shopee.com.br/api/v4/item/get?itemid=%s&shopid=%s", itemID, shopID)
+	req, _ := http.NewRequest(http.MethodGet, apiURL, nil)
+	if req == nil {
+		return "", ""
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Referer", "https://shopee.com.br/")
+
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != 200 {
+		return "", ""
+	}
+	defer resp.Body.Close()
+
+	raw, _ := io.ReadAll(resp.Body)
 	var result struct {
 		Data struct {
-			Product struct {
-				Brand string `json:"brand"`
-				// Atributos ficam em tier_variations ou em item_basic.attributes
-			} `json:"product"`
 			ItemBasic struct {
 				Brand      string `json:"brand"`
-				BrandID    int64  `json:"brand_id"`
 				Attributes []struct {
 					Name  string `json:"name"`
 					Value string `json:"value"`
 				} `json:"attributes"`
 			} `json:"item_basic"`
-			// Formato alternativo: item.attributes
-			Item struct {
-				Brand      string `json:"brand"`
-				Attributes []struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"attributes"`
-				Location string `json:"location"`
-			} `json:"item"`
 		} `json:"data"`
-		// Formato alternativo (v4/item/get)
 		Item struct {
 			Brand    string `json:"brand"`
 			Location string `json:"location"`
-			Props    []struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			} `json:"props"`
-			SellerInfo struct {
-				City string `json:"city"`
-			} `json:"seller_info"`
 		} `json:"item"`
 	}
-
-	if err := json.Unmarshal(body, &result); err != nil {
-		return "", "", fmt.Errorf("parse falhou: %w", err)
+	if json.Unmarshal(raw, &result) != nil {
+		return "", ""
 	}
 
-	// Extrair origem de múltiplas fontes possíveis (a estrutura varia)
-	// 1. Atributos do produto (item_basic.attributes ou item.attributes)
-	attrs := result.Data.ItemBasic.Attributes
-	if len(attrs) == 0 {
-		attrs = result.Data.Item.Attributes
-	}
-	if len(attrs) == 0 && result.Item.Props != nil {
-		for _, p := range result.Item.Props {
-			attrs = append(attrs, struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			}{Name: p.Name, Value: p.Value})
-		}
-	}
-
-	for _, attr := range attrs {
+	for _, attr := range result.Data.ItemBasic.Attributes {
 		name := strings.ToLower(attr.Name)
-		// Campos que indicam origem
-		if strings.Contains(name, "origem") || strings.Contains(name, "origin") ||
-			strings.Contains(name, "país") || strings.Contains(name, "country") ||
-			strings.Contains(name, "envio de") || strings.Contains(name, "fabricado") {
-			if attr.Value != "" && origem == "" {
-				origem = attr.Value
-			}
+		if origem == "" && (strings.Contains(name, "origem") || strings.Contains(name, "origin") || strings.Contains(name, "país")) {
+			origem = attr.Value
 		}
-		// Campos que indicam marca
-		if strings.Contains(name, "marca") || strings.Contains(name, "brand") {
-			if attr.Value != "" && marca == "" {
-				marca = attr.Value
-			}
+		if marca == "" && (strings.Contains(name, "marca") || strings.Contains(name, "brand")) {
+			marca = attr.Value
 		}
 	}
-
-	// 2. Campo "brand" direto
-	if marca == "" {
-		if result.Data.ItemBasic.Brand != "" {
-			marca = result.Data.ItemBasic.Brand
-		} else if result.Data.Product.Brand != "" {
-			marca = result.Data.Product.Brand
-		} else if result.Data.Item.Brand != "" {
-			marca = result.Data.Item.Brand
-		} else if result.Item.Brand != "" {
-			marca = result.Item.Brand
-		}
+	if marca == "" && result.Data.ItemBasic.Brand != "" {
+		marca = result.Data.ItemBasic.Brand
+	}
+	if marca == "" && result.Item.Brand != "" {
+		marca = result.Item.Brand
+	}
+	if origem == "" && result.Item.Location != "" {
+		origem = result.Item.Location
 	}
 
-	// 3. Campo "location" (localidade do vendedor/produto)
-	if origem == "" {
-		if result.Data.Item.Location != "" {
-			origem = result.Data.Item.Location
-		} else if result.Item.Location != "" {
-			origem = result.Item.Location
-		} else if result.Item.SellerInfo.City != "" {
-			origem = result.Item.SellerInfo.City
-		}
-	}
-
-	return origem, marca, nil
+	return origem, marca
 }
 
 // NormalizarOrigemProduto normaliza o valor de origem para formato padrão PT-BR.
@@ -319,51 +331,24 @@ func NormalizarOrigemProduto(origem string) string {
 	loc := strings.TrimSpace(strings.ToLower(origem))
 
 	mapa := map[string]string{
-		// Coreano
-		"coreia":              "Coreia",
-		"coréia":              "Coreia",
-		"korea":               "Coreia",
-		"south korea":         "Coreia",
-		"coreia do sul":       "Coreia",
-		"coréia do sul":       "Coreia",
-		"kr":                  "Coreia",
+		"coreia": "Coreia", "coréia": "Coreia", "korea": "Coreia",
+		"south korea": "Coreia", "coreia do sul": "Coreia", "coréia do sul": "Coreia", "kr": "Coreia",
 		"república da coreia": "Coreia",
-		// Japonês
-		"japão": "Japão",
-		"japao": "Japão",
-		"japan": "Japão",
-		"jp":    "Japão",
-		// Chinês
-		"china":                      "China",
-		"mainland china":             "China",
-		"cn":                         "China",
+		"japão": "Japão", "japao": "Japão", "japan": "Japão", "jp": "Japão",
+		"china": "China", "mainland china": "China", "cn": "China",
 		"república popular da china": "China",
-		// Brasileiro
-		"brasil": "Brasil",
-		"brazil": "Brasil",
-		"br":     "Brasil",
-		// Outros
-		"eua":            "EUA",
-		"usa":            "EUA",
-		"united states":  "EUA",
-		"estados unidos": "EUA",
-		"taiwan":         "Taiwan",
-		"tw":             "Taiwan",
-		"tailândia":      "Tailândia",
-		"thailand":       "Tailândia",
-		"indonésia":      "Indonésia",
-		"indonesia":      "Indonésia",
-		"frança":         "França",
-		"france":         "França",
-		"itália":         "Itália",
-		"italy":          "Itália",
+		"brasil": "Brasil", "brazil": "Brasil", "br": "Brasil",
+		"eua": "EUA", "usa": "EUA", "united states": "EUA", "estados unidos": "EUA",
+		"taiwan": "Taiwan", "tw": "Taiwan",
+		"tailândia": "Tailândia", "thailand": "Tailândia",
+		"indonésia": "Indonésia", "indonesia": "Indonésia",
+		"frança": "França", "france": "França",
+		"itália": "Itália", "italy": "Itália",
 	}
 
 	if nome, ok := mapa[loc]; ok {
 		return nome
 	}
-
-	// Capitaliza a primeira letra se não encontrou no mapa
 	if len(loc) > 0 {
 		return strings.ToUpper(loc[:1]) + loc[1:]
 	}

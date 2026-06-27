@@ -315,14 +315,9 @@ export function excluirConta() {
 	return postar('/api/onboarding/excluir-conta', { confirmar: true });
 }
 
-/** Busca origem (país de fabricação) e marca de um produto via proxy Cloudflare → API pública Shopee. */
-export async function buscarOrigemProduto({ itemId, shopId }) {
-	// Usa o proxy do Cloudflare Worker (não é bloqueado pela Shopee como o Cloud Run)
-	const resp = await fetch(`/shopee-proxy/pdp?item_id=${encodeURIComponent(itemId)}&shop_id=${encodeURIComponent(shopId)}`);
-	if (!resp.ok) {
-		throw new Error(`Falha ${resp.status}`);
-	}
-	return resp.json();
+/** Busca origem (país de fabricação) e marca de um produto via proxy residencial → Shopee. */
+export function buscarOrigemProduto({ itemId, shopId }) {
+	return pegar(`/api/produto/origem?item_id=${encodeURIComponent(itemId)}&shop_id=${encodeURIComponent(shopId)}`);
 }
 
 /** Busca origem de múltiplos produtos de uma vez (máx 20). */
