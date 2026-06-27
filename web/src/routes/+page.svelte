@@ -1,367 +1,250 @@
 <script>
 	import { onMount } from 'svelte';
-	import { buscarCandidatos, compararEstrategias, registrarSelecao } from '$lib/api.js';
+	import { buscarCandidatos, buscarNovidades, registrarSelecao } from '$lib/api.js';
 	import { goto } from '$app/navigation';
-	import { filtros as filtrosStore } from '$lib/filtros.js';
-	import { buscasSalvas, slugificar } from '$lib/buscas.js';
+	import { buscasSalvas } from '$lib/buscas.js';
 	import { favoritos } from '$lib/favoritos.js';
-	import { get } from 'svelte/store';
 	import ProductCard from '$lib/components/ProductCard.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
-	import TagInput from '$lib/components/TagInput.svelte';
-	import BuscaCard from '$lib/components/BuscaCard.svelte';
-	import AgendadorBusca from '$lib/components/AgendadorBusca.svelte';
-	import TabOportunidades from '$lib/components/TabOportunidades.svelte';
-	import TabFavoritos from '$lib/components/TabFavoritos.svelte';
-	import { TabBar } from '$lib/components/ui/index.js';
+	import { Loading, EmptyState } from '$lib/components/ui/index.js';
 
-	// ── Estado dos filtros ────────────────────────────────────────────────────
-	let f = $state(get(filtrosStore));
-	// Sincroniza filtros para localStorage (unidirecional, sem loop)
-	$effect(() => {
-		const snapshot = JSON.stringify(f);
-		filtrosStore.set(JSON.parse(snapshot));
-	});
+	// ── Filtros ───────────────────────────────────────────────────────────────
+	let busca = $state('');
+	let fontes = $state({ curadoria: true, quedas: false, novos: false, favoritos: false });
 
-	let carregando = $state(true);
+	// ── Estado dos dados ──────────────────────────────────────────────────────
+	let carregando = $state(false);
 	let erro = $state(null);
-	let lista = $state([]);
-	let pares = $state(null);
-	let aba = $state('busca');
+	let resultados = $state([]);
 
+	// Dados brutos de cada fonte (cache)
+	let dadosCuradoria = $state([]);
+	let dadosQuedas = $state([]);
+	let dadosNovos = $state([]);
+
+	let buscasComLojas = $derived(($buscasSalvas ?? []).filter(b => b.shop_ids?.length > 0));
+	let nomesLojas = $derived(Object.fromEntries(buscasComLojas.map(b => [b.id, b.nome || b.id])));
+
+	// ── Carregamento ──────────────────────────────────────────────────────────
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
 		favoritos.sincronizar();
+		carregar();
 	});
 
-	// ── Nova busca ────────────────────────────────────────────────────────────
-	let mostrarFormBusca = $state(false);
-	let buscasColapsadas = $state(true);
-	let keywordsNovas = $state([]);
-	let shopIdsNovas = $state([]);
-	let cronNova = $state('');
-	let estrategiaNova = $state('nicho');
-
-	function parseShopId(raw) {
-		const match = raw.match(/(\d{5,})/);
-		const id = match ? match[1] : raw;
-		return /^\d+$/.test(id) ? id : null;
-	}
-
-	function salvarBuscaNova() {
-		const kws = keywordsNovas.length > 0 ? keywordsNovas : (f.busca.trim() ? [f.busca.trim()] : []);
-		const shops = shopIdsNovas.map(Number).filter(Boolean);
-		if (kws.length === 0 && shops.length === 0) return;
-
-		buscasSalvas.salvar({
-			id: slugificar(kws[0] ?? `loja-${shops[0]}`),
-			keywords: kws,
-			shop_ids: shops.length > 0 ? shops : undefined,
-			categoria: f.categoria,
-			estrategia: estrategiaNova === 'comparar' ? 'ambas' : estrategiaNova,
-			comissao_min: f.comissaoMin,
-			vendas_min: f.vendasMin,
-			nota_min: f.notaMin,
-			top: f.quantos,
-			cron: cronNova
-		});
-		keywordsNovas = [];
-		shopIdsNovas = [];
-		cronNova = '';
-		mostrarFormBusca = false;
-	}
-
-	// ── Aplicar busca salva ───────────────────────────────────────────────────
-	function aplicarBusca(b) {
-		const keyword = (b.keywords ?? [])[0] ?? '';
-		let modo = b.estrategia ?? 'nicho';
-		if (modo === 'ambas') modo = 'comparar';
-		if (!['nicho', 'diversificada', 'comparar'].includes(modo)) modo = 'nicho';
-		f = {
-			...f, busca: keyword, categoria: b.categoria ?? f.categoria, modo,
-			comissaoMin: b.comissao_min ?? f.comissaoMin,
-			vendasMin: b.vendas_min ?? f.vendasMin,
-			notaMin: b.nota_min ?? f.notaMin,
-			quantos: b.top ?? f.quantos
-		};
-	}
-
-	function proximaKeyword(b) {
-		if (!b.keywords || b.keywords.length <= 1) return;
-		const idx = (b.keywords.indexOf(f.busca) + 1) % b.keywords.length;
-		f = { ...f, busca: b.keywords[idx] };
-	}
-
-	// ── Carregar candidatos ───────────────────────────────────────────────────
-	const TIMEOUT_MS = 20000; // 20s — se não responder, mostra erro
-
 	async function carregar() {
-		// Não busca sem keyword (mostra estado vazio)
-		if (!f.busca.trim()) {
-			lista = [];
-			pares = null;
-			carregando = false;
-			return;
-		}
 		carregando = true;
 		erro = null;
-		pares = null;
-		const filtrosReq = {
-			keyword: f.busca.trim(),
-			categoria: f.categoria,
-			comissaoMin: f.comissaoMin,
-			vendasMin: f.vendasMin,
-			notaMin: f.notaMin,
-			exploracao: f.explorar ? 0.2 : 0
-		};
+
+		const promises = [];
+
+		// Curadoria: busca por keyword (se tem termo E fonte ativa)
+		if (fontes.curadoria && busca.trim()) {
+			promises.push(carregarCuradoria());
+		} else {
+			dadosCuradoria = [];
+		}
+
+		// Oportunidades: quedas e novos das lojas monitoradas
+		if ((fontes.quedas || fontes.novos) && buscasComLojas.length > 0) {
+			promises.push(carregarOportunidades());
+		} else {
+			dadosQuedas = [];
+			dadosNovos = [];
+		}
 
 		let timeoutId;
 		const timeout = new Promise((_, reject) => {
-			timeoutId = setTimeout(() => reject(new Error('A busca demorou demais. Verifique a conexão ou tente outro termo.')), TIMEOUT_MS);
+			timeoutId = setTimeout(() => reject(new Error('A busca demorou demais. Tente novamente.')), 25000);
 		});
 
 		try {
-			if (f.modo === 'comparar') {
-				const r = await Promise.race([compararEstrategias({ top: 6, ...filtrosReq }), timeout]);
-				pares = r;
-				
-			} else {
-				const r = await Promise.race([buscarCandidatos({ estrategia: f.modo, top: f.quantos, ...filtrosReq }), timeout]);
-				lista = (r.candidatos ?? []).map((c) => ({ ...c, estrategia: f.modo }));
-				
-			}
+			await Promise.race([Promise.all(promises), timeout]);
 		} catch (e) {
 			erro = e;
 		} finally {
 			clearTimeout(timeoutId);
 			carregando = false;
+			montarResultados();
 		}
 	}
 
+	async function carregarCuradoria() {
+		try {
+			const r = await buscarCandidatos({
+				estrategia: 'nicho', top: 20,
+				keyword: busca.trim()
+			});
+			dadosCuradoria = (r.candidatos ?? []).map(c => ({ ...c, _fonte: 'curadoria' }));
+		} catch { dadosCuradoria = []; }
+	}
+
+	async function carregarOportunidades() {
+		try {
+			const promises = buscasComLojas.map(b =>
+				buscarNovidades({ buscaId: b.id, dias: 7 }).then(r => ({ ...r, loja: b.id })).catch(() => null)
+			);
+			const resultados = await Promise.all(promises);
+			const quedas = [], novos = [];
+
+			for (const r of resultados) {
+				if (!r) continue;
+				for (const v of (r.variacoes ?? [])) {
+					if (v.variacao_pct < 0) {
+						quedas.push({
+							id: v.produto_id, produto_id: v.produto_id, nome: v.nome,
+							preco: v.preco_atual, preco_anterior: v.preco_anterior,
+							variacao_pct: v.variacao_pct, detectado_em: v.detectado_em,
+							loja: nomesLojas[r.loja] ?? r.loja, _loja_id: r.loja,
+							imagem: v.imagem, link: v.link, comissao: v.comissao ?? 0,
+							vendas: v.vendas ?? 0, _fonte: 'queda'
+						});
+					}
+				}
+				for (const p of (r.produtos_novos ?? [])) {
+					novos.push({
+						id: p.produto_id, produto_id: p.produto_id, nome: p.nome,
+						preco: p.preco, comissao: p.comissao ?? 0, vendas: p.vendas ?? 0,
+						detectado_em: p.detectado_em, loja: nomesLojas[r.loja] ?? r.loja,
+						_loja_id: r.loja, imagem: p.imagem, link: p.link, _fonte: 'novo'
+					});
+				}
+			}
+			quedas.sort((a, b) => a.variacao_pct - b.variacao_pct);
+			novos.sort((a, b) => (b.detectado_em ?? '').localeCompare(a.detectado_em ?? ''));
+			dadosQuedas = quedas;
+			dadosNovos = novos;
+		} catch {
+			dadosQuedas = [];
+			dadosNovos = [];
+		}
+	}
+
+	function montarResultados() {
+		let todos = [];
+		if (fontes.curadoria) todos.push(...dadosCuradoria);
+		if (fontes.quedas) todos.push(...dadosQuedas);
+		if (fontes.novos) todos.push(...dadosNovos);
+		if (fontes.favoritos) {
+			const favs = ($favoritos ?? []).map(f => ({ ...f, id: f.produto_id, _fonte: 'favorito' }));
+			todos.push(...favs);
+		}
+
+		// Filtra por busca (keyword/loja)
+		const termo = busca.trim().toLowerCase();
+		if (termo) {
+			todos = todos.filter(r =>
+				(r.nome ?? '').toLowerCase().includes(termo) ||
+				(r.loja ?? '').toLowerCase().includes(termo)
+			);
+		}
+
+		resultados = todos;
+	}
+
+	// Debounce: recarrega quando busca ou fontes mudam
 	let timer;
 	$effect(() => {
-		f.modo; f.busca; f.categoria; f.comissaoMin; f.quantos; f.vendasMin; f.notaMin; f.explorar;
+		busca; fontes.curadoria; fontes.quedas; fontes.novos; fontes.favoritos;
 		clearTimeout(timer);
-		timer = setTimeout(carregar, 350);
+		timer = setTimeout(carregar, 400);
 		return () => clearTimeout(timer);
 	});
 
 	// ── Ações ─────────────────────────────────────────────────────────────────
-	function publicarOferta(c) {
+	function publicar(c) {
 		registrarSelecao(c);
 		goto(`/publicar?dados=${encodeURIComponent(JSON.stringify(c))}`);
 	}
 </script>
 
-<!-- ── Intro ───────────────────────────────────────────────────────────────── -->
-<section class="intro">
+<svelte:head>
+	<title>Descobrir — Garimpei</title>
+</svelte:head>
+
+<section class="page">
 	<h1>O que publicar hoje?</h1>
-	<p class="sub">
-		Os melhores produtos para divulgar agora — ordenados por potencial de retorno.
-	</p>
-</section>
+	<p class="sub">Encontre produtos para divulgar — por busca, oportunidades ou favoritos.</p>
 
-<!-- ── Abas principais ─────────────────────────────────────────────────────── -->
-<TabBar
-	tabs={[
-		{ id: 'busca', label: '🔍 Buscar' },
-		{ id: 'oportunidades', label: '🎯 Oportunidades' },
-		{ id: 'favoritos', label: '⭐ Favoritos', badge: $favoritos.length > 0 ? String($favoritos.length) : '' }
-	]}
-	bind:active={aba}
-/>
+	<!-- Busca universal -->
+	<FilterBar bind:busca={busca} mostrarBusca={true} />
 
-{#if aba === 'busca'}
-<!-- ── Busca ───────────────────────────────────────────────────────────────── -->
-<FilterBar
-	bind:busca={f.busca}
-	bind:categoria={f.categoria}
-	bind:comissaoMin={f.comissaoMin}
-	bind:vendasMin={f.vendasMin}
-	bind:notaMin={f.notaMin}
-	bind:quantos={f.quantos}
-	bind:explorar={f.explorar}
-	modo={f.modo}
-/>
-
-<!-- ── Buscas Salvas ───────────────────────────────────────────────────────── -->
-<section class="buscas">
-	<div class="buscas-cabecalho">
-		<button class="buscas-titulo-btn" onclick={() => (buscasColapsadas = !buscasColapsadas)} type="button">
-			<span class="seta" class:girada={!buscasColapsadas}>▸</span>
-			Buscas salvas
-			{#if $buscasSalvas.filter(b => !b.shop_ids?.length).length > 0}<span class="badge-contagem">{$buscasSalvas.filter(b => !b.shop_ids?.length).length}</span>{/if}
+	<!-- Filtros de fonte -->
+	<div class="fontes">
+		<button class="fonte-btn" class:ativa={fontes.curadoria} onclick={() => { fontes.curadoria = !fontes.curadoria; }} type="button">
+			🔍 Busca
 		</button>
-		{#if !buscasColapsadas}
-			<button class="btn-nova" onclick={() => (mostrarFormBusca = !mostrarFormBusca)} type="button">
-				{mostrarFormBusca ? '✕ cancelar' : '+ nova busca'}
-			</button>
-		{/if}
+		<button class="fonte-btn" class:ativa={fontes.quedas} onclick={() => { fontes.quedas = !fontes.quedas; }} type="button">
+			📉 Quedas
+		</button>
+		<button class="fonte-btn" class:ativa={fontes.novos} onclick={() => { fontes.novos = !fontes.novos; }} type="button">
+			🆕 Novos
+		</button>
+		<button class="fonte-btn" class:ativa={fontes.favoritos} onclick={() => { fontes.favoritos = !fontes.favoritos; }} type="button">
+			⭐ Favoritos {#if $favoritos.length > 0}<span class="fonte-badge">{$favoritos.length}</span>{/if}
+		</button>
 	</div>
 
-	{#if mostrarFormBusca && !buscasColapsadas}
-		<div class="form-nova-busca">
-			<div class="form-linha">
-				<div class="flex1">
-					<TagInput bind:tags={keywordsNovas} label="palavras-chave" placeholder="ex.: kenzo, shiseido…" />
-				</div>
-				<label class="campo-estrategia">
-					<span class="rotulo">estratégia</span>
-					<select bind:value={estrategiaNova} class="dado">
-						<option value="nicho">Nicho</option>
-						<option value="diversificada">Diversificada</option>
-						<option value="ambas">Comparar ambas</option>
-					</select>
-				</label>
-			</div>
-
-			{#if keywordsNovas.length === 0 && f.busca.trim() && shopIdsNovas.length === 0}
-				<p class="dica-kw">A busca atual "<strong>{f.busca.trim()}</strong>" será usada se não adicionar keywords.</p>
-			{/if}
-
-			<TagInput bind:tags={shopIdsNovas} label="🏪 lojas shopee (ID ou URL)" placeholder="ex.: 12345678 ou shopee.com.br/shop/12345678" variant="shop" parse={parseShopId} />
-
-			<AgendadorBusca bind:value={cronNova} />
-
-			<div class="form-acoes">
-				<button class="salvar" onclick={salvarBuscaNova} disabled={keywordsNovas.length === 0 && !f.busca.trim() && shopIdsNovas.length === 0} type="button">
-					Salvar busca
-				</button>
-			</div>
+	<!-- Resultados -->
+	{#if carregando}
+		<Loading mensagem="Buscando produtos…" />
+	{:else if erro}
+		<div class="msg-erro">
+			<p><strong>😕 {erro.message ?? erro}</strong></p>
+			<button class="btn-retry" onclick={carregar}>🔄 Tentar novamente</button>
 		</div>
-	{/if}
-
-	{#if $buscasSalvas.filter(b => !b.shop_ids?.length).length > 0 && !buscasColapsadas}
-		<div class="buscas-lista">
-			{#each $buscasSalvas.filter(b => !b.shop_ids?.length) as b (b.id)}
-				<BuscaCard busca={b} buscaAtiva={f.busca} onaplicar={aplicarBusca} onproximakw={proximaKeyword} onremover={(id) => buscasSalvas.remover(id)} />
+	{:else if resultados.length === 0}
+		<EmptyState
+			icone="🔍"
+			mensagem={busca.trim() ? `Nenhum resultado para "${busca}".` : 'Selecione ao menos uma fonte ou digite um termo.'}
+			dica={busca.trim() ? 'Tente outro termo, ative mais fontes ou reduza filtros.' : 'Ative "Busca" e digite um termo, ou ative "Quedas"/"Novos" para ver oportunidades.'}
+		/>
+	{:else}
+		<p class="contagem">{resultados.length} {resultados.length === 1 ? 'produto' : 'produtos'}</p>
+		<div class="grade">
+			{#each resultados as produto, i (produto.id || produto.produto_id || i)}
+				<ProductCard
+					{produto}
+					posicao={fontes.curadoria && produto._fonte === 'curadoria' ? i + 1 : null}
+					variacao={produto._fonte === 'queda' ? { tipo: 'queda', pct: produto.variacao_pct, preco_anterior: produto.preco_anterior, preco_atual: produto.preco, detectado_em: produto.detectado_em } : produto._fonte === 'novo' ? { tipo: 'novo', detectado_em: produto.detectado_em } : null}
+					onpublicar={publicar}
+					onfavoritar={(p) => favoritos.toggle(p)}
+				/>
 			{/each}
 		</div>
-	{:else if !mostrarFormBusca && !buscasColapsadas}
-		<p class="buscas-vazia">Nenhuma busca salva. Clique em "+ nova busca" para criar.</p>
 	{/if}
 </section>
 
-<!-- ── Resultados ──────────────────────────────────────────────────────────── -->
-{#if carregando}
-	<div class="aviso-loading">
-		<p class="aviso">Buscando os melhores produtos…</p>
-		<p class="aviso-sub">Consultando a API da Shopee. Isso leva até 20 segundos na primeira vez.</p>
-	</div>
-{:else if erro}
-	<div class="msg-erro">
-		<p><strong>😕 Não consegui buscar produtos.</strong></p>
-		<p>{erro.message ?? erro}</p>
-		{#if erro.status === 502}
-			<p class="dica">A API da Shopee pode estar temporariamente fora. Tente novamente em alguns segundos.</p>
-		{:else if erro.status === 401}
-			<p class="dica">Sua sessão pode ter expirado. Tente fazer logout e login novamente.</p>
-		{:else if !erro.status}
-			<p class="dica">Pode ser timeout ou falha de rede. Tente outro termo ou tente novamente.</p>
-		{/if}
-		<button class="btn-retry" onclick={carregar}>🔄 Tentar novamente</button>
-	</div>
-{:else if lista.length === 0 && (!pares || f.modo !== 'comparar')}
-	<div class="vazio">
-		{#if f.busca.trim() === ''}
-			<p>🔍 Digite um termo para encontrar produtos.</p>
-			<p class="dica">Ex: "skincare", "perfume", "maquiagem"</p>
-		{:else}
-			<p>Nenhum resultado para "{f.busca}".</p>
-			<p class="dica">Tente outro termo ou reduza os filtros mínimos.</p>
-		{/if}
-	</div>
-{:else}
-	<div class="grade">
-		{#each (f.modo === 'comparar' && pares ? [...(pares.nicho ?? []), ...(pares.diversificada ?? [])] : lista) as c, i (c.id)}
-			<ProductCard produto={c} posicao={i + 1} onpublicar={publicarOferta} onfavoritar={(p) => favoritos.toggle(p)} />
-		{/each}
-	</div>
-{/if}
-
-{:else if aba === 'oportunidades'}
-	<TabOportunidades />
-
-{:else if aba === 'favoritos'}
-	<TabFavoritos />
-{/if}
-
 <style>
-	/* ── Layout ─────────────────────────────────────────────────────────── */
-	.intro { max-width: 40rem; margin-bottom: var(--r6); }
-	h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin: 0 0 var(--r3); }
-	.sub { color: var(--tinta-suave); font-size: 1rem; margin: 0; }
+	.page { max-width: 900px; }
+	h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); margin: 0 0 var(--r2); }
+	.sub { color: var(--tinta-suave); font-size: 0.95rem; margin: 0 0 var(--r5); }
 
-	/* ── Resultados ─────────────────────────────────────────────────────── */
+	/* Fontes (toggle buttons) */
+	.fontes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--r6); }
+	.fonte-btn {
+		padding: 7px 14px; border: 1px solid var(--linha); border-radius: var(--raio-full);
+		background: var(--porcelana); color: var(--tinta-suave);
+		font-size: 0.82rem; font-weight: 600; cursor: pointer;
+		display: flex; align-items: center; gap: 4px;
+		transition: border-color 0.15s, background 0.15s;
+	}
+	.fonte-btn:hover { border-color: var(--ouro); color: var(--tinta); }
+	.fonte-btn.ativa { background: var(--ouro-fundo); border-color: var(--ouro-claro); color: var(--ouro-escuro); }
+	.fonte-badge { font-size: 0.65rem; background: var(--ouro); color: white; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+	/* Resultados */
+	.contagem { font-size: 0.82rem; color: var(--tinta-suave); margin-bottom: var(--r4); }
 	.grade {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: var(--r6);
+		gap: var(--r5);
 	}
-
-	.aviso { color: var(--tinta-suave); font-style: italic; }
-	.aviso-loading { margin: var(--r4) 0; }
-	.aviso-sub { color: var(--tinta-suave); font-size: 0.82rem; margin-top: 4px; }
-	.vazio, .msg-erro {
-		background: var(--nevoa); border: 1px solid var(--linha);
-		border-radius: var(--raio); padding: var(--r8); text-align: center;
+	.msg-erro {
+		background: var(--nevoa); border: 1px solid color-mix(in srgb, var(--erro-texto) 30%, var(--linha));
+		border-radius: var(--raio); padding: var(--r5); text-align: center;
 	}
-	.msg-erro { border-color: color-mix(in srgb, var(--erro-texto) 30%, var(--linha)); }
 	.msg-erro p { margin: var(--r2) 0; }
 	.btn-retry { margin-top: var(--r3); padding: 8px 16px; background: var(--ouro); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
 	.btn-retry:hover { opacity: 0.9; }
-	.dica { color: var(--tinta-suave); font-size: 0.85rem; }
-	code { background: var(--ouro-fundo); padding: 2px 6px; border-radius: 6px; }
-
-	/* ── Buscas Salvas ──────────────────────────────────────────────────── */
-	.buscas { margin: 0 0 var(--r6); }
-	.buscas-cabecalho {
-		display: flex; align-items: center; justify-content: space-between;
-		margin-bottom: var(--r3);
-	}
-	.buscas-titulo-btn {
-		border: none; background: transparent; cursor: pointer;
-		font-weight: 700; font-size: 0.9rem; color: var(--tinta-suave);
-		display: flex; align-items: center; gap: 6px; padding: 0;
-	}
-	.buscas-titulo-btn:hover { color: var(--tinta); }
-	.seta { display: inline-block; transition: transform 0.15s ease; font-size: 0.8rem; }
-	.seta.girada { transform: rotate(90deg); }
-	.badge-contagem {
-		font-size: 0.7rem; background: var(--ouro-fundo); color: var(--ouro-escuro);
-		padding: 1px 6px; border-radius: var(--raio-full); font-weight: 700;
-	}
-	.btn-nova {
-		border: 1px solid var(--linha); background: var(--porcelana);
-		color: var(--tinta); font-size: 0.82rem; font-weight: 600;
-		padding: 6px 14px; border-radius: var(--raio-full); cursor: pointer;
-	}
-	.btn-nova:hover { border-color: var(--ouro); color: var(--ouro); }
-
-	/* ── Form nova busca ────────────────────────────────────────────────── */
-	.form-nova-busca {
-		background: var(--nevoa); border: 1px solid var(--linha);
-		border-radius: var(--raio); padding: var(--r4);
-		display: flex; flex-direction: column; gap: var(--r4);
-		margin-bottom: var(--r4);
-	}
-	.form-linha { display: flex; flex-wrap: wrap; gap: var(--r4); align-items: flex-end; }
-	.flex1 { flex: 1 1 240px; }
-	.campo-estrategia { display: flex; flex-direction: column; gap: 5px; }
-	.campo-estrategia select {
-		font-family: var(--mono); font-size: 0.9rem; padding: 9px 12px;
-		border-radius: var(--raio-sm); border: 1px solid var(--linha);
-		background: var(--porcelana); color: var(--tinta);
-	}
-	.dica-kw { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
-	.form-acoes { display: flex; justify-content: flex-end; }
-	.salvar {
-		border: 1px solid var(--linha); background: var(--ouro-fundo);
-		color: var(--ouro-escuro); font-weight: 600; font-size: 0.85rem;
-		padding: 9px 18px; border-radius: var(--raio-sm); cursor: pointer;
-	}
-	.salvar:disabled { opacity: 0.5; cursor: not-allowed; }
-
-	.buscas-lista { display: flex; flex-direction: column; gap: var(--r3); }
-	.buscas-vazia { font-size: 0.85rem; color: var(--tinta-suave); font-style: italic; margin: var(--r3) 0; }
 </style>
