@@ -240,29 +240,29 @@ func (s *BigQueryStore) ListarBuscas(ctx context.Context) ([]Busca, error) {
 	return out, nil
 }
 
-// enriquecerBuscasComCamposNovos tenta ler shop_ids, rotation_cursor, full_scan_at, nome e origem_padrao.
+// enriquecerBuscasComCamposNovos tenta ler campos adicionais (shop_ids, fontes, categorias, etc.).
 // Se as colunas não existirem na tabela, simplesmente não faz nada (graceful degradation).
 func (s *BigQueryStore) enriquecerBuscasComCamposNovos(ctx context.Context, buscas []Busca) {
 	q := s.client.Query(`
 		WITH ranked AS (
 		  SELECT id, shop_ids, rotation_cursor, full_scan_at,
 		         IFNULL(nome, '') as nome, IFNULL(origem_padrao, '') as origem_padrao,
+		         IFNULL(categorias, '') as categorias, IFNULL(fontes, '') as fontes,
+		         IFNULL(dias_janela, 0) as dias_janela,
 		         ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
 		  FROM ` + "`" + s.dataset + ".buscas`" + `
 		)
 		SELECT id, IFNULL(shop_ids, '') as shop_ids,
 		       IFNULL(rotation_cursor, '') as rotation_cursor,
 		       IFNULL(full_scan_at, '') as full_scan_at,
-		       nome, origem_padrao
+		       nome, origem_padrao, categorias, fontes, dias_janela
 		FROM ranked WHERE rn = 1
 	`)
 	it, err := q.Read(ctx)
 	if err != nil {
-		// Colunas não existem — ignora silenciosamente
 		return
 	}
 
-	// Mapa para lookup rápido
 	byID := make(map[string]int, len(buscas))
 	for i := range buscas {
 		byID[buscas[i].ID] = i
@@ -276,13 +276,16 @@ func (s *BigQueryStore) enriquecerBuscasComCamposNovos(ctx context.Context, busc
 			FullScanAt     string `bigquery:"full_scan_at"`
 			Nome           string `bigquery:"nome"`
 			OrigemPadrao   string `bigquery:"origem_padrao"`
+			Categorias     string `bigquery:"categorias"`
+			Fontes         string `bigquery:"fontes"`
+			DiasJanela     int    `bigquery:"dias_janela"`
 		}
 		err := it.Next(&r)
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			return // erro inesperado — para sem poluir
+			return
 		}
 		idx, ok := byID[r.ID]
 		if !ok {
@@ -302,6 +305,15 @@ func (s *BigQueryStore) enriquecerBuscasComCamposNovos(ctx context.Context, busc
 		}
 		if r.OrigemPadrao != "" {
 			buscas[idx].OrigemPadrao = r.OrigemPadrao
+		}
+		if r.Categorias != "" {
+			_ = json.Unmarshal([]byte(r.Categorias), &buscas[idx].Categorias)
+		}
+		if r.Fontes != "" {
+			_ = json.Unmarshal([]byte(r.Fontes), &buscas[idx].Fontes)
+		}
+		if r.DiasJanela > 0 {
+			buscas[idx].DiasJanela = r.DiasJanela
 		}
 	}
 }
