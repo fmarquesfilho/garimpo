@@ -41,6 +41,26 @@ jobs:
       - name: Testes (build tag padrão, sem BigQuery)
         run: go test ./...
 
+      - name: golangci-lint (erros reais — bloqueia deploy)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          # No CI: apenas linters que detectam bugs e segurança (sem gocritic/prealloc que são sugestões)
+          args: >-
+            --timeout=3m
+            --disable=gocritic,prealloc
+            --issues-exit-code=1
+
+      - name: govulncheck (vulnerabilidades — bloqueia deploy)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: arch-go (regras de arquitetura — bloqueia deploy)
+        run: |
+          go install github.com/arch-go/arch-go@latest
+          arch-go
+
   # ── 2. Testes do frontend ────────────────────────────────────────────────
   # Roda em paralelo com os testes Go. Deploy não depende deste job —
   # se os testes frontend falharem, o workflow falha mas o deploy já rolou.
