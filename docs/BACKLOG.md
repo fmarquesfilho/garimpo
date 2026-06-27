@@ -30,8 +30,8 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - **Ação:** criar spec em `.kiro/specs/statistics-redesign/`
 
 ### UX — Fluxo de curadoria incompleto
-- **Status:** ✅ Parcialmente resolvido (imagem full-width no card, filtros colapsáveis, título simplificado).
-- **Pendente:** modal de detalhes do produto (imagem ampliada + dados completos) sem sair da página. Cenário BDD já definido em BDD_STRATEGY.md.
+- **Status:** ✅ Resolvido (28/06). Página Descobrir unificada com ProductCard consistente, feed de fontes múltiplas, favoritos.
+- **Pendente:** modal de detalhes do produto (imagem ampliada + dados completos) sem sair da página.
 
 ### UX — Página de Coletas precisa de redesign
 - **Problema:** mostra "buscas agendadas" como cards e "resumo por keyword" como tabela — ambos confusos (mostra loja-920... como keyword, categoria com traço).
@@ -114,8 +114,8 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 - **Decisão:** não decidido ainda.
 
 ### Frontend — Refator completo com componentes UI
-- **Status:** componentes existem (11) mas só 2 páginas usam.
-- **Quando fazer:** quando surgir uma reescrita de página por outro motivo.
+- **Status:** ✅ Concluído (28/06). ProductCard unificado, 34 componentes totais, todos os arquivos ≤400 linhas.
+- **Resultado:** 4 cards distintos → 1 ProductCard com 3 layouts. 6 componentes mortos removidos.
 
 ### Quadro Kanban
 - **Status:** ❌ Removido (26/06). Não estava sendo usado pela Mileny.
@@ -191,7 +191,34 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 
 ---
 
-## ✅ Resolvido nesta sessão (27/06 — sessão 2)
+## ✅ Resolvido nesta sessão (28/06)
+
+- [x] Refatoração: bigquery_store.go (1121→7 arquivos ≤400 linhas cada)
+- [x] Refatoração: lojas.go split em lojas.go + shopee_resolver.go
+- [x] Refatoração: +layout.svelte → NavDrawer + LandingHero
+- [x] CI: check-file-size.sh (max 400 linhas, bloqueia deploy)
+- [x] Timeout em todas as chamadas à API Shopee (20-30s client-side)
+- [x] Fix: aba Desempenho em loop infinito de loading
+- [x] UX: botão ✕ no input de busca + ESC para limpar
+- [x] UX: Publicações movida para seção Monitoramento no menu
+- [x] Alertas de produtos novos desabilitados (preparado para config futura)
+- [x] ProductCard unificado com 3 layouts (full/compact/feed)
+- [x] Favoritos: backend (BigQuery) + frontend (store reativo com sync servidor)
+- [x] Favoritos: indicação visual ★/☆ reativa no ProductCard
+- [x] Página Descobrir unificada: feed com filtros de fonte (Busca/Quedas/Novos/Favoritos)
+- [x] Busca universal filtra por nome de produto OU nome de loja
+- [x] Buscas salvas: atalhos na Descobrir + gestão completa em /lojas
+- [x] Modelo Busca expandido: fontes[], categorias[], dias_janela
+- [x] GerenciarBuscas: UI com fontes, categorias, dias_janela, agendamento
+- [x] Validação flexível: busca aceita keyword OU loja OU categoria OU fonte
+- [x] Cache: backend 5 min (novidades), frontend 2 min (oportunidades)
+- [x] Snapshot enriquecido: imagem, link, loja gravados na coleta
+- [x] Rota /oportunidades → redirect 301 para / (unificada)
+- [x] Dead code: 6 componentes removidos, ~1400 linhas eliminadas
+- [x] 20 testes Vitest para lógica da Descobrir (62 total, <2s)
+- [x] 17 cenários de busca agendada documentados e testados (NormalizarBusca)
+- [x] golangci-lint limpo, 0 issues
+- [x] Documentação: BUSCAS_AGENDADAS.md, TESTES_DESCOBRIR.md, MELHORIAS_28_06.md, REFATORACAO.md
 
 - [x] Origem do produto: campo `Origin` no domínio, adaptadores, badge no card
 - [x] Origem do produto: fallback `origem_padrao` por loja monitorada
@@ -208,7 +235,28 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 
 ---
 
-## 📝 Itens para próxima sessão (documentados 27/06)
+## 📝 Itens para próxima sessão (documentados 28/06)
+
+### Feature: Alertas configuráveis
+- **Problema:** Alertas hoje são hardcoded (chat_id fixo, só variação de preço). Mileny quer separar alertas de preço e novidades em destinos diferentes.
+- **Proposta:** Página `/alertas` (ou seção em `/configurar`) com tipos: variação preço, produto novo, conversão. Cada tipo com destino, threshold e frequência.
+- **Documentado em:** docs/MELHORIAS_28_06.md item 7
+- **Complexidade:** Alta (~4-6h)
+
+### Feature: Scroll infinito na busca
+- **Problema:** Busca retorna max 20 resultados. Mileny pode querer ver mais sem recarregar.
+- **Solução:** Lazy-load ao scroll, paginação server-side (offset/cursor).
+- **Complexidade:** Média (~2h)
+
+### Feature: Modal de detalhes do produto
+- **Problema:** Para ver imagem ampliada ou dados completos, Mileny precisa abrir link externo.
+- **Solução:** Click no card abre modal overlay com imagem grande + todos os dados + ações.
+- **Complexidade:** Média (~1.5h)
+
+### UX: Filtro de busca accent-insensitive
+- **Problema:** "sérum" não encontra "Serum" (sem acento). Dados da Shopee são inconsistentes.
+- **Solução:** Normalizar acentos no filtro client-side (`.normalize('NFD').replace(...)`)
+- **Complexidade:** Baixa (~15 min)
 
 ### Feature: Origem do produto (Coréia/Japão)
 - **Regra de domínio da Mileny:** precisa saber se produto é de origem Coréia/Japão (muitos são falsificados). A Shopee mostra um campo "Origem" no produto e na loja.

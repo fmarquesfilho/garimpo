@@ -18,7 +18,7 @@ security:
 
 tags:
   - name: Curadoria
-    description: Busca, ranking e seleção de produtos
+    description: Busca, ranking, seleção de produtos e favoritos
   - name: Lojas
     description: Monitoramento de lojas Shopee
   - name: Alertas
@@ -303,6 +303,44 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/EvolucaoLojas' }
+
+  /api/favoritos:
+    get:
+      tags: [Curadoria]
+      summary: Lista produtos favoritados pelo usuário
+      responses:
+        '200':
+          description: Lista de favoritos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  favoritos:
+                    type: array
+                    items: { $ref: '#/components/schemas/Favorito' }
+    post:
+      tags: [Curadoria]
+      summary: Salvar produto como favorito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Favorito' }
+      responses:
+        '201':
+          description: Favorito salvo
+    delete:
+      tags: [Curadoria]
+      summary: Remover produto dos favoritos
+      parameters:
+        - name: produto_id
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Favorito removido
 
   /api/alertas:
     get:
@@ -984,13 +1022,16 @@ components:
         nome: { type: string, description: "Nome amigável da loja ou perfil" }
         keywords: { type: array, items: { type: string } }
         shop_ids: { type: array, items: { type: integer } }
-        categoria: { type: string }
-        estrategia: { type: string, enum: [nicho, diversificada, ambas] }
+        categorias: { type: array, items: { type: string }, description: "Categorias Shopee (filtro OR)" }
+        fontes: { type: array, items: { type: string, enum: [curadoria, quedas, novos, favoritos] }, description: "Fontes de dados que esta busca monitora" }
+        categoria: { type: string, description: "Legado — use categorias[]" }
+        estrategia: { type: string, default: nicho }
         comissao_min: { type: number }
         vendas_min: { type: integer }
         nota_min: { type: number }
         top: { type: integer }
-        cron: { type: string, example: "0 8 * * *" }
+        dias_janela: { type: integer, default: 7, description: "Janela para considerar produto 'novo' (dias)" }
+        cron: { type: string, example: "0 8 * * *", description: "Vazio = sem agendamento (atalho manual)" }
         ativo: { type: boolean }
         origem_padrao: { type: string, description: "País de origem padrão (ex: Coreia). Herdado pelos produtos." }
         rotation_cursor: { type: object, description: "JSON map shopID→próxima página" }
@@ -1025,6 +1066,9 @@ components:
               comissao: { type: number }
               vendas: { type: integer }
               nota: { type: number }
+              imagem: { type: string, format: uri }
+              link: { type: string, format: uri }
+              loja: { type: string }
               detectado_em: { type: string }
         variacoes:
           type: array
@@ -1039,6 +1083,9 @@ components:
         preco_anterior: { type: number }
         preco_atual: { type: number }
         variacao_pct: { type: number, description: "Ex: -0.20 = baixou 20%" }
+        imagem: { type: string, format: uri }
+        link: { type: string, format: uri }
+        loja: { type: string }
         detectado_em: { type: string }
 
     EvolucaoLojas:
@@ -1136,3 +1183,17 @@ components:
         nome: { type: string }
         corpo: { type: string, description: "HTML com placeholders {{nome}}, {{preco}}, etc." }
         com_foto: { type: boolean }
+
+    Favorito:
+      type: object
+      properties:
+        produto_id: { type: string }
+        nome: { type: string }
+        preco: { type: number }
+        comissao: { type: number }
+        link: { type: string, format: uri }
+        imagem: { type: string, format: uri }
+        loja: { type: string }
+        categoria: { type: string }
+        origem: { type: string }
+        salvo_em: { type: string, format: date-time }
