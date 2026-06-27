@@ -330,7 +330,7 @@ export async function buscarConversoesReais({ dias = 30 } = {}) {
 		return resp.json();
 	} catch (err) {
 		clearTimeout(timeout);
-		if (err.name === 'AbortError') throw new Error('A Shopee não respondeu a tempo. Tente novamente.');
+		if (err.name === 'AbortError') throw new Error('A Shopee não respondeu a tempo. Tente novamente.', { cause: err });
 		throw err;
 	}
 }
