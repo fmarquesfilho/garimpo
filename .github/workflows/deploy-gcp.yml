@@ -42,14 +42,9 @@ jobs:
         run: go test ./...
 
       - name: golangci-lint (erros reais — bloqueia deploy)
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          # No CI: apenas linters que detectam bugs e segurança (sem gocritic/prealloc que são sugestões)
-          args: >-
-            --timeout=3m
-            --disable=gocritic,prealloc
-            --issues-exit-code=1
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run --timeout=3m --disable=gocritic,prealloc --issues-exit-code=1 ./...
 
       - name: govulncheck (vulnerabilidades — bloqueia deploy)
         run: |
