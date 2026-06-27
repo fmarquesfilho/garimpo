@@ -15,9 +15,14 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 
 ### SPEC NECESSÁRIA: Rastreamento de conversões (fechar o ciclo)
 - **Problema:** aba "Desempenho" nas publicações não mostra conversões reais. A API da Shopee tem `conversionReport` que retorna vendas reais por `subId`.
-- **Impacto:** fundamental para estatística e estratégia — saber o que realmente converteu.
-- **Questão técnica:** precisa de poll periódico (webhook não existe na API de afiliados). O subId já é gerado em cada publicação.
-- **Ação:** criar spec em `.kiro/specs/conversions-tracking/`
+- **Status:** ✅ Implementado (27/06)
+- **O que foi feito:**
+  - Endpoint `GET /api/conversoes/reais` consulta conversionReport da Shopee em tempo real
+  - Aba Desempenho mostra: produto, loja, comissão, status, canal, data
+  - Resumo visual: comissão total, conversões, confirmadas, pendentes
+  - Seletor de período (7/30/90 dias) + botão sincronizar
+  - Endpoint protegido por auth (Bearer token, não COLETA_TOKEN)
+- **Pendente:** persistir conversões no BigQuery para histórico (hoje é consulta on-demand)
 
 ### SPEC NECESSÁRIA: Redefinir página de Estatísticas
 - **Problema:** seção "Mercado por categoria" não reflete os fluxos reais. Categorias são rótulos manuais, não dados reais da Shopee.
