@@ -9,6 +9,7 @@
 	import FormAdicionarLoja from '$lib/components/FormAdicionarLoja.svelte';
 	import PainelAlertas from '$lib/components/PainelAlertas.svelte';
 	import ListaProdutosLoja from '$lib/components/ListaProdutosLoja.svelte';
+	import GerenciarBuscas from '$lib/components/GerenciarBuscas.svelte';
 
 	let buscasComLojas = $derived(($buscasSalvas ?? []).filter(b => b.shop_ids?.length > 0));
 	let buscaSelecionada = $state(null);
@@ -128,6 +129,7 @@
 		<div class="aviso">Faça login para ver as lojas monitoradas.</div>
 	{:else}
 		<FormAdicionarLoja onadicionada={handleLojaAdicionada} />
+		<GerenciarBuscas />
 		<PainelAlertas {buscaSelecionada} />
 
 		{#if buscasComLojas.length === 0}

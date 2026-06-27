@@ -25,6 +25,9 @@
 	let buscasComLojas = $derived(($buscasSalvas ?? []).filter(b => b.shop_ids?.length > 0));
 	let nomesLojas = $derived(Object.fromEntries(buscasComLojas.map(b => [b.id, b.nome || b.id])));
 
+	// Buscas salvas por keyword (sem lojas — atalhos na UI)
+	let buscasSalvasKw = $derived(($buscasSalvas ?? []).filter(b => !b.shop_ids?.length));
+
 	// ── Carregamento ──────────────────────────────────────────────────────────
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
@@ -156,6 +159,11 @@
 		registrarSelecao(c);
 		goto(`/publicar?dados=${encodeURIComponent(JSON.stringify(c))}`);
 	}
+
+	function aplicarBusca(kw) {
+		busca = kw;
+		fontes.curadoria = true;
+	}
 </script>
 
 <svelte:head>
@@ -184,6 +192,20 @@
 			⭐ Favoritos {#if $favoritos.length > 0}<span class="fonte-badge">{$favoritos.length}</span>{/if}
 		</button>
 	</div>
+
+	<!-- Buscas salvas (atalhos) -->
+	{#if buscasSalvasKw.length > 0}
+		<div class="buscas-atalhos">
+			{#each buscasSalvasKw as b (b.id)}
+				<div class="atalho-busca">
+					{#if b.cron}<span class="atalho-icone" title="Busca agendada">⏱</span>{/if}
+					{#each b.keywords ?? [] as kw}
+						<button class="kw-pill" class:ativa={busca === kw} onclick={() => aplicarBusca(kw)} type="button">{kw}</button>
+					{/each}
+				</div>
+			{/each}
+		</div>
+	{/if}
 
 	<!-- Resultados -->
 	{#if carregando}
@@ -232,6 +254,18 @@
 	.fonte-btn:hover { border-color: var(--ouro); color: var(--tinta); }
 	.fonte-btn.ativa { background: var(--ouro-fundo); border-color: var(--ouro-claro); color: var(--ouro-escuro); }
 	.fonte-badge { font-size: 0.65rem; background: var(--ouro); color: white; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+	/* Buscas salvas (atalhos) */
+	.buscas-atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--r5); }
+	.atalho-busca { display: flex; align-items: center; gap: 4px; }
+	.atalho-icone { font-size: 0.75rem; color: var(--ouro); }
+	.kw-pill {
+		padding: 5px 12px; border: 1px solid var(--linha); border-radius: var(--raio-full);
+		background: var(--porcelana); color: var(--tinta); font-size: 0.82rem;
+		font-weight: 600; cursor: pointer;
+	}
+	.kw-pill:hover { border-color: var(--ouro); color: var(--ouro-escuro); }
+	.kw-pill.ativa { background: var(--ouro-fundo); border-color: var(--ouro-claro); color: var(--ouro-escuro); }
 
 	/* Resultados */
 	.contagem { font-size: 0.82rem; color: var(--tinta-suave); margin-bottom: var(--r4); }
