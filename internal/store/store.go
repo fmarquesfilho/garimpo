@@ -330,22 +330,6 @@ type ColetaResumo struct {
 	Produtos   int       `json:"produtos"`
 }
 
-// Favorito é um produto salvo pelo usuário para análise posterior.
-type Favorito struct {
-	ProdutoID string    `json:"produto_id"`
-	Nome      string    `json:"nome"`
-	Preco     float64   `json:"preco"`
-	Comissao  float64   `json:"comissao"`
-	Link      string    `json:"link"`
-	Imagem    string    `json:"imagem"`
-	Loja      string    `json:"loja"`
-	Categoria string    `json:"categoria"`
-	Origem    string    `json:"origem,omitempty"`
-	SalvoEm   time.Time `json:"salvo_em"`
-	OwnerUID  string    `json:"owner_uid,omitempty"`
-	Ativo     bool      `json:"ativo"`
-}
-
 // ItemSnapshot é um produto na foto de mercado de uma categoria, num instante.
 type ItemSnapshot struct {
 	Posicao   int

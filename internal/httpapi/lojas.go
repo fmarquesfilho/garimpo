@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/store"
@@ -29,12 +30,29 @@ func (srv *Server) novidades(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Cache: novidades mudam a cada coleta (~4h), então 5 min de TTL é seguro
+	cacheKey := buscaID + ":" + strconv.Itoa(dias)
+	srv.muNov.Lock()
+	if srv.cacheNov == nil {
+		srv.cacheNov = make(map[string]*cacheEntryNov)
+	}
+	if e, ok := srv.cacheNov[cacheKey]; ok && time.Since(e.em) < 5*time.Minute {
+		srv.muNov.Unlock()
+		writeJSON(w, http.StatusOK, e.dados)
+		return
+	}
+	srv.muNov.Unlock()
+
 	novidades, err := srv.Eventos.Novidades(r.Context(), buscaID, dias)
 	if err != nil {
 		srv.Logger.Error("novidades falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
+
+	srv.muNov.Lock()
+	srv.cacheNov[cacheKey] = &cacheEntryNov{dados: novidades, em: time.Now()}
+	srv.muNov.Unlock()
 
 	writeJSON(w, http.StatusOK, novidades)
 }

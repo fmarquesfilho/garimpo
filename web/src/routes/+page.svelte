@@ -82,7 +82,17 @@
 		} catch { dadosCuradoria = []; }
 	}
 
+	// Cache de oportunidades (não re-busca se < 2 min)
+	let cacheOportunidades = { em: 0, quedas: [], novos: [] };
+
 	async function carregarOportunidades() {
+		// Usa cache se dados foram buscados há menos de 2 minutos
+		if (Date.now() - cacheOportunidades.em < 120000 && (cacheOportunidades.quedas.length > 0 || cacheOportunidades.novos.length > 0)) {
+			dadosQuedas = cacheOportunidades.quedas;
+			dadosNovos = cacheOportunidades.novos;
+			return;
+		}
+
 		try {
 			const promises = buscasComLojas.map(b =>
 				buscarNovidades({ buscaId: b.id, dias: 7 }).then(r => ({ ...r, loja: b.id })).catch(() => null)
@@ -98,7 +108,7 @@
 							id: v.produto_id, produto_id: v.produto_id, nome: v.nome,
 							preco: v.preco_atual, preco_anterior: v.preco_anterior,
 							variacao_pct: v.variacao_pct, detectado_em: v.detectado_em,
-							loja: nomesLojas[r.loja] ?? r.loja, _loja_id: r.loja,
+							loja: v.loja || (nomesLojas[r.loja] ?? r.loja), _loja_id: r.loja,
 							imagem: v.imagem, link: v.link, comissao: v.comissao ?? 0,
 							vendas: v.vendas ?? 0, _fonte: 'queda'
 						});
@@ -108,7 +118,7 @@
 					novos.push({
 						id: p.produto_id, produto_id: p.produto_id, nome: p.nome,
 						preco: p.preco, comissao: p.comissao ?? 0, vendas: p.vendas ?? 0,
-						detectado_em: p.detectado_em, loja: nomesLojas[r.loja] ?? r.loja,
+						detectado_em: p.detectado_em, loja: p.loja || (nomesLojas[r.loja] ?? r.loja),
 						_loja_id: r.loja, imagem: p.imagem, link: p.link, _fonte: 'novo'
 					});
 				}
@@ -117,6 +127,7 @@
 			novos.sort((a, b) => (b.detectado_em ?? '').localeCompare(a.detectado_em ?? ''));
 			dadosQuedas = quedas;
 			dadosNovos = novos;
+			cacheOportunidades = { em: Date.now(), quedas, novos };
 		} catch {
 			dadosQuedas = [];
 			dadosNovos = [];

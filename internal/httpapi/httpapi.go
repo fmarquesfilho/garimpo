@@ -47,6 +47,9 @@ type Server struct {
 	mu    sync.Mutex
 	cache map[string]*cacheEntry
 
+	muNov       sync.Mutex
+	cacheNov    map[string]*cacheEntryNov
+
 	// Override de alertas em runtime (evita os.Setenv race condition)
 	alertasChatIDOverride       string
 	alertasThresholdOverride    float64
@@ -57,6 +60,11 @@ type cacheEntry struct {
 	produtos []domain.Product
 	err      error
 	em       time.Time
+}
+
+type cacheEntryNov struct {
+	dados store.NovidadesLojas
+	em    time.Time
 }
 
 // Handler monta o mux com todas as rotas, organizadas por domínio.
