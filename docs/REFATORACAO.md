@@ -126,3 +126,39 @@ check-file-size.sh    ✔ todos dentro do limite
 3. **Páginas como coordenadoras** — delegam UI para componentes, mantêm apenas estado e fetch
 4. **Reutilização sobre duplicação** — PeriodSelector, TabBar, Loading usados em vez de copiar CSS inline
 5. **Prevenção > correção** — CI bloqueia regressões futuras
+
+---
+
+## Timeouts de carregamento (UX)
+
+Todas as páginas com chamadas à API da Shopee (externas, potencialmente lentas) têm timeout client-side com `Promise.race`. Se a API não responder no prazo, o loading para e o usuário vê uma mensagem acionável com botão de retry.
+
+| Página | Timeout | O que protege |
+|--------|:-------:|---------------|
+| `/` (busca) | 20s | buscarCandidatos / compararEstrategias |
+| `/oportunidades` | 30s | buscarNovidades de todas as lojas em paralelo |
+| `/lojas` (produtos) | 25s | buscarCandidatos com shopIds |
+| `/lojas` (novidades) | 25s | buscarNovidades por loja |
+| `/publicar` (mount) | 10s | resolverLinkShopee (best-effort, falha silenciosa) |
+| `/publicacoes` (desempenho) | 20s | buscarConversoesReais da Shopee |
+
+Páginas que chamam apenas a API interna do Garimpo (`/estatisticas`, `/coletas`, `/canais`, `/admin`) não precisam de timeout client-side — o server já responde em <2s com timeouts próprios.
+
+### Padrão implementado
+
+```javascript
+let timeoutId;
+const timeout = new Promise((_, reject) => {
+  timeoutId = setTimeout(() => reject(new Error('Mensagem amigável')), MS);
+});
+try {
+  const result = await Promise.race([chamadaAPI(), timeout]);
+} catch (e) {
+  erro = e.message;
+} finally {
+  clearTimeout(timeoutId);
+  carregando = false;
+}
+```
+
+**Testes:** 8 testes unitários em `web/src/tests/loading-timeout.test.js` cobrem timeout, resposta normal, erro de API, e cleanup de timer.
