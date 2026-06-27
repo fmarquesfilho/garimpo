@@ -58,12 +58,15 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "nome", Type: bigquery.StringFieldType},
 		{Name: "keywords", Type: bigquery.StringFieldType},
 		{Name: "shop_ids", Type: bigquery.StringFieldType},
+		{Name: "categorias", Type: bigquery.StringFieldType},  // JSON array
+		{Name: "fontes", Type: bigquery.StringFieldType},      // JSON array
 		{Name: "categoria", Type: bigquery.StringFieldType},
 		{Name: "estrategia", Type: bigquery.StringFieldType},
 		{Name: "comissao_min", Type: bigquery.FloatFieldType},
 		{Name: "vendas_min", Type: bigquery.IntegerFieldType},
 		{Name: "nota_min", Type: bigquery.FloatFieldType},
 		{Name: "top", Type: bigquery.IntegerFieldType},
+		{Name: "dias_janela", Type: bigquery.IntegerFieldType},
 		{Name: "cron", Type: bigquery.StringFieldType},
 		{Name: "ativo", Type: bigquery.BooleanFieldType},
 		{Name: "owner_uid", Type: bigquery.StringFieldType},

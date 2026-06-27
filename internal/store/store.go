@@ -60,12 +60,15 @@ type Busca struct {
 	Nome        string    `json:"nome,omitempty"`     // nome amigável (da loja ou perfil)
 	Keywords    []string  `json:"keywords"`           // um ou mais termos de busca
 	ShopIDs     []int64   `json:"shop_ids,omitempty"` // IDs de lojas a monitorar (shopOfferV2)
-	Categoria   string    `json:"categoria"`
-	Estrategia  string    `json:"estrategia"` // "nicho" | "diversificada" | "ambas"
+	Categorias  []string  `json:"categorias,omitempty"` // categorias Shopee (filtro, OR entre elas)
+	Fontes      []string  `json:"fontes,omitempty"`   // ["curadoria","quedas","novos","favoritos"]
+	Categoria   string    `json:"categoria"`          // legado: categoria única (migrada para Categorias)
+	Estrategia  string    `json:"estrategia"`         // "nicho" (default)
 	ComissaoMin float64   `json:"comissao_min"`
 	VendasMin   int       `json:"vendas_min"`
 	NotaMin     float64   `json:"nota_min"`
 	Top         int       `json:"top"`
+	DiasJanela  int       `json:"dias_janela,omitempty"` // para "novos": quantos dias é considerado novo (default 7)
 	Cron        string    `json:"cron"`                // ex.: "0 8 * * *" (vazio = só manual)
 	Ativo       bool      `json:"ativo"`               // false = removida (tombstone)
 	OwnerUID    string    `json:"owner_uid,omitempty"` // uid do Firebase Auth
@@ -91,6 +94,10 @@ func NormalizarBusca(b Busca) Busca {
 	if len(b.Keywords) == 0 && b.KeywordLegado != "" {
 		b.Keywords = []string{b.KeywordLegado}
 	}
+	// Migra campo legado Categoria (string) → Categorias (array)
+	if b.Categoria != "" && len(b.Categorias) == 0 {
+		b.Categorias = []string{b.Categoria}
+	}
 	if b.ID == "" && b.NomeLegado != "" {
 		b.ID = slugificar(b.NomeLegado)
 	}
@@ -104,8 +111,28 @@ func NormalizarBusca(b Busca) Busca {
 	if b.ID == "" && len(b.ShopIDs) > 0 {
 		b.ID = fmt.Sprintf("loja-%d", b.ShopIDs[0])
 	}
+	// Se só tem categorias, gera ID a partir da primeira
+	if b.ID == "" && len(b.Categorias) > 0 {
+		b.ID = slugificar(b.Categorias[0])
+	}
+	// Se só tem fontes explícitas sem nada mais, gera ID a partir das fontes
+	if b.ID == "" && len(b.Fontes) > 0 {
+		b.ID = slugificar(b.Fontes[0])
+	}
 	if b.Estrategia == "" {
 		b.Estrategia = "nicho"
+	}
+	// Default fontes: inferir do que está preenchido (retrocompatibilidade)
+	if len(b.Fontes) == 0 {
+		if len(b.Keywords) > 0 || len(b.Categorias) > 0 {
+			b.Fontes = append(b.Fontes, "curadoria")
+		}
+		if len(b.ShopIDs) > 0 {
+			b.Fontes = append(b.Fontes, "quedas", "novos")
+		}
+	}
+	if b.DiasJanela <= 0 {
+		b.DiasJanela = 7
 	}
 	b.KeywordLegado = ""
 	b.NomeLegado = ""

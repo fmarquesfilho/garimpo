@@ -129,14 +129,17 @@ func (s *BigQueryStore) RegistrarSnapshot(ctx context.Context, snap Snapshot) er
 type linhaBuscaBQ struct {
 	ID             string    `bigquery:"id"`
 	Nome           string    `bigquery:"nome"`
-	Keywords       string    `bigquery:"keywords"` // JSON array
-	ShopIDs        string    `bigquery:"shop_ids"` // JSON array de int64
-	Categoria      string    `bigquery:"categoria"`
+	Keywords       string    `bigquery:"keywords"`       // JSON array
+	ShopIDs        string    `bigquery:"shop_ids"`       // JSON array de int64
+	Categorias     string    `bigquery:"categorias"`     // JSON array
+	Fontes         string    `bigquery:"fontes"`         // JSON array
+	Categoria      string    `bigquery:"categoria"`      // legado
 	Estrategia     string    `bigquery:"estrategia"`
 	ComissaoMin    float64   `bigquery:"comissao_min"`
 	VendasMin      int       `bigquery:"vendas_min"`
 	NotaMin        float64   `bigquery:"nota_min"`
 	Top            int       `bigquery:"top"`
+	DiasJanela     int       `bigquery:"dias_janela"`
 	Cron           string    `bigquery:"cron"`
 	Ativo          bool      `bigquery:"ativo"`
 	OwnerUID       string    `bigquery:"owner_uid"`
@@ -153,13 +156,16 @@ func (s *BigQueryStore) SalvarBusca(ctx context.Context, b Busca) error {
 	}
 	kw, _ := json.Marshal(b.Keywords)
 	shopIDs, _ := json.Marshal(b.ShopIDs)
+	categorias, _ := json.Marshal(b.Categorias)
+	fontes, _ := json.Marshal(b.Fontes)
 	rotCursor, _ := json.Marshal(b.RotationCursor)
 	fullScan, _ := json.Marshal(b.FullScanAt)
 	row := linhaBuscaBQ{
 		ID: b.ID, Nome: b.Nome, Keywords: string(kw), ShopIDs: string(shopIDs),
+		Categorias: string(categorias), Fontes: string(fontes),
 		Categoria: b.Categoria, Estrategia: b.Estrategia,
 		ComissaoMin: b.ComissaoMin, VendasMin: b.VendasMin, NotaMin: b.NotaMin, Top: b.Top,
-		Cron: b.Cron, Ativo: b.Ativo, OwnerUID: b.OwnerUID,
+		DiasJanela: b.DiasJanela, Cron: b.Cron, Ativo: b.Ativo, OwnerUID: b.OwnerUID,
 		OrigemPadrao:   b.OrigemPadrao,
 		RotationCursor: string(rotCursor), FullScanAt: string(fullScan),
 		SalvoEm: b.SalvoEm,
