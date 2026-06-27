@@ -116,7 +116,30 @@ strategy  source              tenant
 
 ## Cobertura de Testes
 
-### Backend (Go)
+### Métricas
+
+| Métrica | O que mede | Ferramenta |
+|---------|-----------|-----------|
+| **Coverage** | % de linhas executadas pelos testes | `go test -cover` |
+| **Mutation Score** | % de mutações detectadas (qualidade real) | `gremlins` |
+
+Coverage alta com mutation score baixo = testes passam pelo código mas não verificam os resultados.
+
+### Mutation Testing (gremlins)
+
+| Package | Efficacy | Status |
+|---------|:--------:|:------:|
+| strategy | **100%** | ✅ Todos os mutantes mortos |
+| source | **80%** | ✅ Forte |
+| coleta | 50% | ⚠️ Rotação não testada |
+
+```bash
+# Rodar mutation testing localmente:
+gremlins unleash --tags="" ./internal/strategy/
+gremlins unleash --tags="" ./internal/source/
+```
+
+### Backend (Go) — Coverage
 
 | Package | Cobertura | Responsabilidade |
 |---------|:---------:|-----------------|
