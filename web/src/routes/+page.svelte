@@ -36,8 +36,6 @@
 
 	let buscasComLojas = $derived(($buscasSalvas ?? []).filter(b => b.shop_ids?.length > 0));
 	let nomesLojas = $derived(Object.fromEntries(buscasComLojas.map(b => [b.id, b.nome || b.id])));
-
-	// Buscas salvas por keyword (sem lojas — atalhos na UI)
 	let buscasSalvasKw = $derived(($buscasSalvas ?? []).filter(b => !b.shop_ids?.length));
 
 	// ── Carregamento ──────────────────────────────────────────────────────────
@@ -84,15 +82,37 @@
 		}
 	}
 
+	// Detecta se o termo de busca é nome de uma loja monitorada
+	function encontrarLojaPorNome(termo) {
+		if (!termo) return null;
+		const t = termo.toLowerCase();
+		return buscasComLojas.find(b => (b.nome || b.id || '').toLowerCase().includes(t) || t.includes((b.nome || b.id || '').toLowerCase()));
+	}
+
 	async function carregarCuradoria() {
 		try {
-			const params = {
-				estrategia: 'nicho', top: 20,
-				keyword: busca.trim(),
-				comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
-				vendasMin: vendasMin > 0 ? vendasMin : undefined,
-				notaMin: notaMin > 0 ? notaMin : undefined
-			};
+			const termo = busca.trim();
+			const lojaMatch = encontrarLojaPorNome(termo);
+
+			let params;
+			if (lojaMatch) {
+				// Termo é nome de loja — busca produtos dessa loja via shop_ids
+				params = {
+					estrategia: 'nicho', top: 50,
+					fonte: 'shopee-shop',
+					shopIds: lojaMatch.shop_ids.join(','),
+					semFiltro: true
+				};
+			} else {
+				// Busca normal por keyword
+				params = {
+					estrategia: 'nicho', top: 20,
+					keyword: termo,
+					comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
+					vendasMin: vendasMin > 0 ? vendasMin : undefined,
+					notaMin: notaMin > 0 ? notaMin : undefined
+				};
+			}
 			if (categoriasEfetivas.length > 0) params.categoria = categoriasEfetivas[0];
 			const r = await buscarCandidatos(params);
 			dadosCuradoria = (r.candidatos ?? []).map(c => ({ ...c, _fonte: 'curadoria' }));
