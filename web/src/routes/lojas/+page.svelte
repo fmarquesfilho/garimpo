@@ -61,8 +61,14 @@
 		if (!buscaSelecionada) return;
 		carregandoProdutos = true;
 		erroProdutos = null;
+
+		let timeoutId;
+		const timeout = new Promise((_, reject) => {
+			timeoutId = setTimeout(() => reject(new Error('A busca de produtos demorou demais. Tente novamente.')), 25000);
+		});
+
 		try {
-			const r = await buscarCandidatos({
+			const r = await Promise.race([buscarCandidatos({
 				fonte: 'shopee-shop',
 				shopIds: buscaSelecionada.shop_ids,
 				keyword: buscaSelecionada.keywords?.[0] ?? '',
@@ -70,11 +76,12 @@
 				estrategia: buscaSelecionada.estrategia ?? 'nicho',
 				top: 50,
 				semFiltro: true
-			});
+			}), timeout]);
 			produtos = r?.candidatos ?? [];
 		} catch (e) {
 			erroProdutos = e.message;
 		} finally {
+			clearTimeout(timeoutId);
 			carregandoProdutos = false;
 		}
 	}
@@ -83,12 +90,19 @@
 		if (!buscaSelecionada) return;
 		carregandoNovidades = true;
 		erroNovidades = null;
+
+		let timeoutId;
+		const timeout = new Promise((_, reject) => {
+			timeoutId = setTimeout(() => reject(new Error('A análise de novidades demorou demais.')), 25000);
+		});
+
 		try {
-			novidades = await buscarNovidades({ buscaId: buscaSelecionada.id, dias: 7 });
+			novidades = await Promise.race([buscarNovidades({ buscaId: buscaSelecionada.id, dias: 7 }), timeout]);
 		} catch (e) {
 			erroNovidades = e.message;
 			novidades = null;
 		} finally {
+			clearTimeout(timeoutId);
 			carregandoNovidades = false;
 		}
 	}

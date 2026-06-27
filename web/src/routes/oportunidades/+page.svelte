@@ -6,6 +6,7 @@
 	import { usuario } from '$lib/firebase.js';
 	import PeriodSelector from '$lib/components/PeriodSelector.svelte';
 	import CardOportunidade from '$lib/components/CardOportunidade.svelte';
+	import ErrorMessage from '$lib/components/ErrorMessage.svelte';
 	import { PageHeader, Loading, EmptyState } from '$lib/components/ui/index.js';
 
 	let dias = $state(7);
@@ -35,13 +36,18 @@
 		carregando = true;
 		erro = null;
 
+		let timeoutId;
+		const timeout = new Promise((_, reject) => {
+			timeoutId = setTimeout(() => reject(new Error('A análise demorou demais. Tente novamente ou reduza o período.')), 30000);
+		});
+
 		try {
 			const promises = buscasComLojas.map(b =>
 				buscarNovidades({ buscaId: b.id, dias })
 					.then(r => ({ ...r, loja: b.id }))
 					.catch(() => null)
 			);
-			const resultados = await Promise.all(promises);
+			const resultados = await Promise.race([Promise.all(promises), timeout]);
 
 			const novasQuedas = [];
 			const novasAltas = [];
@@ -67,8 +73,9 @@
 			altas = novasAltas;
 			novos = novosItens;
 		} catch (e) {
-			erro = e.message;
+			erro = e.message ?? e;
 		} finally {
+			clearTimeout(timeoutId);
 			carregando = false;
 		}
 	}
@@ -126,9 +133,9 @@
 		</div>
 
 		{#if carregando}
-			<Loading mensagem="Analisando variações de todas as lojas…" />
+			<Loading mensagem="Analisando variações de todas as lojas… (pode levar até 30s)" />
 		{:else if erro}
-			<div class="msg-erro">{erro}</div>
+			<ErrorMessage erro={{ message: erro, retry: true }} onretry={carregar} />
 		{:else if quedas.length === 0 && altas.length === 0 && novos.length === 0}
 			<EmptyState
 				icone="📭"

@@ -39,15 +39,17 @@
 			produto = { id: '', nome: '', preco: 0, categoria: '', estrategia: 'nicho', link: '', imagem: '' };
 		}
 
-		// Se veio sem imagem mas com link, tenta resolver dados completos
+		// Se veio sem imagem mas com link, tenta resolver dados completos (best-effort, 10s max)
 		if (produto && !produto.imagem && produto.link) {
 			try {
-				const r = await resolverLinkShopee(produto.link);
+				const resolver = resolverLinkShopee(produto.link);
+				const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
+				const r = await Promise.race([resolver, timeout]);
 				if (r.imagem) produto = { ...produto, imagem: r.imagem };
 				if (r.nome && !produto.nome) produto = { ...produto, nome: r.nome };
 				if (r.preco && !produto.preco) produto = { ...produto, preco: r.preco };
 				if (r.comissao && !produto.comissao) produto = { ...produto, comissao: r.comissao };
-			} catch { /* falha silenciosa */ }
+			} catch { /* falha silenciosa — continua sem imagem */ }
 		}
 
 		try {
