@@ -95,7 +95,7 @@
 						<span class="selo expira" title="Expira em {new Date(produto.oferta_expira).toLocaleDateString('pt-BR')}">⏳ {tempoRestante(produto.oferta_expira)}</span>
 					{/if}
 					{#if produto.categoria}<span class="cat">{produto.categoria}</span>{/if}
-					{#if produto.suspeito}<span class="selo alerta">⚠ suspeito</span>{/if}
+					{#if produto.suspeito}<span class="selo alerta" title="Comissão alta com poucas vendas — pode ser produto sem tração real. Avalie antes de publicar.">⚠ suspeito</span>{/if}
 				</div>
 			</header>
 			<div class="dados">

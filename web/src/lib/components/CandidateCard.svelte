@@ -62,7 +62,7 @@
 					<span class="cat">{candidato.categoria}</span>
 				{/if}
 				{#if candidato.suspeito}
-					<span class="selo alerta">⚠ suspeito</span>
+					<span class="selo alerta" title="Comissão alta com poucas vendas — pode ser produto sem tração real. Avalie antes de publicar.">⚠ suspeito</span>
 				{/if}
 			</div>
 		</header>
