@@ -4,20 +4,23 @@ package domain
 
 // Product é um candidato a ser anunciado. É a unidade que flui pelo sistema.
 type Product struct {
-	ID          string
-	Name        string
-	Category    string
-	Price       float64 // em BRL
-	Commission  float64 // taxa de comissão, 0..1 (ex.: 0.12 = 12%)
-	Sales30d    int     // proxy de demanda (vendas; ver nota no adaptador Shopee)
-	Rating      float64 // avaliação média, 0..5
-	Link        string  // link de afiliado (offerLink), quando a fonte fornece
-	ProductLink string  // link direto do produto (com -i.SHOPID.ITEMID)
-	Image       string  // URL da imagem principal do produto (quando disponível)
-	ShopName    string  // nome da loja do produto (quando disponível)
-	ShopID      string  // ID da loja na Shopee (para enriquecimento de origem)
-	CatIDs      []int   // IDs de categorias Shopee (hierárquicos: nível 1, 2, 3)
-	Origin      string  // país de origem do produto (ex.: "Coreia", "Japão") — preenchido via API ou fallback por loja
+	ID           string
+	Name         string
+	Category     string
+	Price        float64 // em BRL (priceMin)
+	PriceMax     float64 // preço máximo (quando há variações)
+	DiscountRate float64 // taxa de desconto (0..1, ex: 0.30 = 30% OFF)
+	Commission   float64 // taxa de comissão, 0..1 (ex.: 0.12 = 12%)
+	Sales30d     int     // proxy de demanda (vendas; ver nota no adaptador Shopee)
+	Rating       float64 // avaliação média, 0..5
+	Link         string  // link de afiliado (offerLink), quando a fonte fornece
+	ProductLink  string  // link direto do produto (com -i.SHOPID.ITEMID)
+	Image        string  // URL da imagem principal do produto (quando disponível)
+	ShopName     string  // nome da loja do produto (quando disponível)
+	ShopID       string  // ID da loja na Shopee (para enriquecimento de origem)
+	CatIDs       []int   // IDs de categorias Shopee (hierárquicos: nível 1, 2, 3)
+	Origin       string  // país de origem do produto (ex.: "Coreia", "Japão") — preenchido via fallback por loja
+	OfferEndsAt  int64   // timestamp Unix de quando a oferta de afiliado expira (0 = sem expiração conhecida)
 }
 
 // Scored é um produto já pontuado por uma estratégia.

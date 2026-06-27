@@ -6,6 +6,16 @@
 	const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 	const pct = (v) => `${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
 
+	function tempoRestante(iso) {
+		if (!iso) return '';
+		const diff = new Date(iso) - new Date();
+		if (diff <= 0) return 'expirado';
+		const horas = Math.floor(diff / 3600000);
+		if (horas < 24) return `${horas}h`;
+		const dias = Math.floor(horas / 24);
+		return `${dias}d`;
+	}
+
 	let copiado = $state(false);
 	async function copiarLink() {
 		if (!candidato.link) return;
@@ -39,6 +49,12 @@
 				{/if}
 				{#if candidato.origem}
 					<span class="selo origem">{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{:else if candidato.origem === 'China'}🇨🇳{/if} {candidato.origem}</span>
+				{/if}
+				{#if candidato.desconto > 0}
+					<span class="selo desconto">🔥 {Math.round(candidato.desconto * 100)}% OFF</span>
+				{/if}
+				{#if candidato.oferta_expira}
+					<span class="selo expira" title="Oferta de afiliado expira em {new Date(candidato.oferta_expira).toLocaleDateString('pt-BR')}">⏳ {tempoRestante(candidato.oferta_expira)}</span>
 				{/if}
 				{#if candidato.categoria}
 					<span class="cat">{candidato.categoria}</span>
@@ -160,6 +176,14 @@
 	.selo.origem {
 		background: var(--sucesso-fundo);
 		color: var(--sucesso-texto);
+	}
+	.selo.desconto {
+		background: var(--erro-fundo);
+		color: var(--erro-texto);
+	}
+	.selo.expira {
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
 	}
 
 	.dados {

@@ -13,43 +13,53 @@ import (
 )
 
 type candidatoDTO struct {
-	ID          string             `json:"id"`
-	Nome        string             `json:"nome"`
-	Categoria   string             `json:"categoria"`
-	Loja        string             `json:"loja,omitempty"`
-	LojaID      string             `json:"loja_id,omitempty"`
-	Origem      string             `json:"origem,omitempty"`
-	Preco       float64            `json:"preco"`
-	Comissao    float64            `json:"comissao"`
-	Vendas      int                `json:"vendas"`
-	Avaliacao   float64            `json:"avaliacao"`
-	Link        string             `json:"link"`
-	LinkProduto string             `json:"link_produto,omitempty"`
-	Imagem      string             `json:"imagem,omitempty"`
-	Score       float64            `json:"score"`
-	Componentes map[string]float64 `json:"componentes"`
-	Suspeito    bool               `json:"suspeito"`
+	ID           string             `json:"id"`
+	Nome         string             `json:"nome"`
+	Categoria    string             `json:"categoria"`
+	Loja         string             `json:"loja,omitempty"`
+	LojaID       string             `json:"loja_id,omitempty"`
+	Origem       string             `json:"origem,omitempty"`
+	Preco        float64            `json:"preco"`
+	PrecoMax     float64            `json:"preco_max,omitempty"`
+	Desconto     float64            `json:"desconto,omitempty"`
+	Comissao     float64            `json:"comissao"`
+	Vendas       int                `json:"vendas"`
+	Avaliacao    float64            `json:"avaliacao"`
+	Link         string             `json:"link"`
+	LinkProduto  string             `json:"link_produto,omitempty"`
+	Imagem       string             `json:"imagem,omitempty"`
+	Score        float64            `json:"score"`
+	Componentes  map[string]float64 `json:"componentes"`
+	Suspeito     bool               `json:"suspeito"`
+	OfertaExpira string             `json:"oferta_expira,omitempty"`
 }
 
 func toDTO(s domain.Scored) candidatoDTO {
 	p := s.Product
 	lojaID := p.ShopID
 	if lojaID == "0" || lojaID == "" {
-		// Tenta extrair do ProductLink (formato: -i.SHOPID.ITEMID)
 		lojaID = extrairShopIDDoLink(p.ProductLink)
 		if lojaID == "" {
-			// Fallback: tenta no offerLink (raro, mas possível em links antigos)
 			lojaID = extrairShopIDDoLink(p.Link)
+		}
+	}
+	var ofertaExpira string
+	if p.OfferEndsAt > 0 {
+		t := time.Unix(p.OfferEndsAt, 0).UTC()
+		if t.After(time.Now()) {
+			ofertaExpira = t.Format(time.RFC3339)
 		}
 	}
 	return candidatoDTO{
 		ID: p.ID, Nome: p.Name, Categoria: p.Category, Loja: p.ShopName,
 		LojaID: lojaID, Origem: p.Origin,
-		Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
+		Preco: p.Price, PrecoMax: p.PriceMax, Desconto: p.DiscountRate,
+		Comissao: p.Commission, Vendas: p.Sales30d,
 		Avaliacao: p.Rating, Link: p.Link, LinkProduto: p.ProductLink,
 		Imagem: p.Image,
 		Score:  s.Score, Componentes: s.Reasons,
-		Suspeito: s.Suspeito,
+		Suspeito:     s.Suspeito,
+		OfertaExpira: ofertaExpira,
 	}
 }
 

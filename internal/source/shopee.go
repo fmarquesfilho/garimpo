@@ -92,24 +92,27 @@ func (s *ShopeeAPISource) buildQuery(page int) string {
 	}
 	inner := strings.Join(args, ", ")
 	return fmt.Sprintf(
-		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin sales ratingStar commissionRate shopName imageUrl productCatIds shopId } pageInfo { page hasNextPage } } }`,
+		`{ productOfferV2(%s) { nodes { itemId productName productLink offerLink priceMin priceMax priceDiscountRate sales ratingStar commissionRate shopName imageUrl productCatIds shopId periodEndTime } pageInfo { page hasNextPage } } }`,
 		inner,
 	)
 }
 
 type productNode struct {
-	ItemID         flexString `json:"itemId"`
-	ProductName    string     `json:"productName"`
-	ProductLink    string     `json:"productLink"`
-	OfferLink      string     `json:"offerLink"`
-	PriceMin       flexFloat  `json:"priceMin"`
-	Sales          flexInt    `json:"sales"`
-	RatingStar     flexFloat  `json:"ratingStar"`
-	CommissionRate flexFloat  `json:"commissionRate"`
-	ShopName       string     `json:"shopName"`
-	ImageURL       string     `json:"imageUrl"`
-	ProductCatIDs  []int      `json:"productCatIds"`
-	ShopID         flexString `json:"shopId"`
+	ItemID            flexString `json:"itemId"`
+	ProductName       string     `json:"productName"`
+	ProductLink       string     `json:"productLink"`
+	OfferLink         string     `json:"offerLink"`
+	PriceMin          flexFloat  `json:"priceMin"`
+	PriceMax          flexFloat  `json:"priceMax"`
+	PriceDiscountRate flexFloat  `json:"priceDiscountRate"`
+	Sales             flexInt    `json:"sales"`
+	RatingStar        flexFloat  `json:"ratingStar"`
+	CommissionRate    flexFloat  `json:"commissionRate"`
+	ShopName          string     `json:"shopName"`
+	ImageURL          string     `json:"imageUrl"`
+	ProductCatIDs     []int      `json:"productCatIds"`
+	ShopID            flexString `json:"shopId"`
+	PeriodEndTime     flexInt    `json:"periodEndTime"`
 }
 
 type gqlResponse struct {
@@ -187,19 +190,22 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 
 		for _, n := range gql.Data.ProductOfferV2.Nodes {
 			produtos = append(produtos, domain.Product{
-				ID:          string(n.ItemID),
-				Name:        n.ProductName,
-				Category:    NomeCategoriaPrincipal(n.ProductCatIDs),
-				Price:       float64(n.PriceMin),
-				Commission:  float64(n.CommissionRate),
-				Sales30d:    int(n.Sales),
-				Rating:      float64(n.RatingStar),
-				Link:        n.OfferLink,
-				ProductLink: n.ProductLink,
-				Image:       n.ImageURL,
-				ShopName:    n.ShopName,
-				ShopID:      string(n.ShopID),
-				CatIDs:      n.ProductCatIDs,
+				ID:           string(n.ItemID),
+				Name:         n.ProductName,
+				Category:     NomeCategoriaPrincipal(n.ProductCatIDs),
+				Price:        float64(n.PriceMin),
+				PriceMax:     float64(n.PriceMax),
+				DiscountRate: float64(n.PriceDiscountRate),
+				Commission:   float64(n.CommissionRate),
+				Sales30d:     int(n.Sales),
+				Rating:       float64(n.RatingStar),
+				Link:         n.OfferLink,
+				ProductLink:  n.ProductLink,
+				Image:        n.ImageURL,
+				ShopName:     n.ShopName,
+				ShopID:       string(n.ShopID),
+				CatIDs:       n.ProductCatIDs,
+				OfferEndsAt:  int64(n.PeriodEndTime),
 			})
 		}
 
