@@ -5,6 +5,8 @@
 	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate, resolverLinkShopee } from '$lib/api.js';
 	import RichEditor from '$lib/components/RichEditor.svelte';
 	import ResolverLink from '$lib/components/ResolverLink.svelte';
+	import HeroProduto from '$lib/components/HeroProduto.svelte';
+	import PublicarPreview from '$lib/components/PublicarPreview.svelte';
 
 	let produto = $state(null);
 	let destinos = $state([]);
@@ -103,21 +105,7 @@
 		<div class="aviso">{erro ?? 'Cole um link ou volte à curadoria para selecionar um produto.'}</div>
 	{:else}
 		<!-- Produto (hero) -->
-		<div class="hero-produto">
-			{#if produto.imagem}
-				<img src={produto.imagem} alt={produto.nome} class="hero-img" />
-			{/if}
-			<div class="hero-info">
-				<input class="nome-edit" bind:value={produto.nome} placeholder="Nome do produto" />
-				<div class="hero-meta">
-					<input class="campo-mini" bind:value={produto.categoria} placeholder="Categoria" />
-					<input class="campo-mini preco" type="number" step="0.01" bind:value={produto.preco} placeholder="Preço" />
-				</div>
-				{#if produto.link}
-					<a class="link-prod" href={produto.link} target="_blank" rel="noopener">{produto.link.substring(0, 60)}…</a>
-				{/if}
-			</div>
-		</div>
+		<HeroProduto bind:produto={produto} />
 
 		<!-- Link (colar novo) -->
 		<ResolverLink onresolvido={handleLinkResolvido} />
@@ -162,19 +150,8 @@
 			<RichEditor bind:content={legenda} placeholder="Legenda da publicação…" onchange={onEditorChange} />
 		</div>
 
-		<!-- Preview (sempre visível, mostra como vai ficar) -->
-		<div class="preview">
-			<span class="preview-label">Preview</span>
-			<div class="preview-card">
-				{#if produto.imagem}
-					<img src={produto.imagem} alt="preview" class="preview-img" />
-				{/if}
-				<div class="preview-body">{@html legenda.replace(/\n/g, '<br>')}</div>
-				{#if produto.link}
-					<div class="preview-btn"><span>🛒 Comprar</span></div>
-				{/if}
-			</div>
-		</div>
+		<!-- Preview -->
+		<PublicarPreview imagem={produto.imagem} {legenda} link={produto.link} />
 
 		<!-- Ação -->
 		<div class="acao">
@@ -205,18 +182,6 @@
 	.voltar { border: 1px solid var(--linha); background: var(--porcelana); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--tinta-suave); margin-bottom: var(--r5); }
 	.voltar:hover { color: var(--tinta); border-color: var(--tinta-suave); }
 
-	/* Hero produto */
-	.hero-produto { display: flex; gap: var(--r4); padding: var(--r4); border: 1px solid var(--linha); border-radius: var(--raio); background: var(--nevoa); margin-bottom: var(--r5); }
-	.hero-img { width: 100px; height: 100px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
-	.hero-info { flex: 1; display: flex; flex-direction: column; gap: var(--r2); min-width: 0; }
-	.nome-edit { font-size: 1rem; font-weight: 700; border: 1px solid var(--linha); background: var(--branco); border-radius: 8px; width: 100%; padding: 8px 12px; }
-	.nome-edit:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
-	.hero-meta { display: flex; gap: var(--r3); flex-wrap: wrap; }
-	.campo-mini { font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--linha); border-radius: 8px; background: var(--porcelana); width: 120px; }
-	.campo-mini.preco { width: 90px; font-weight: 600; }
-	.link-prod { font-size: 0.72rem; color: var(--tinta-suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
-	.link-prod:hover { color: var(--ouro); }
-
 	/* Config grid */
 	.config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--r4); margin: var(--r5) 0; }
 	@media (max-width: 500px) { .config-grid { grid-template-columns: 1fr; } }
@@ -233,15 +198,6 @@
 	.btn-reset { border: none; background: transparent; color: var(--tinta-suave); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 	.btn-reset:hover { color: var(--ouro); }
 
-	/* Preview */
-	.preview { margin-bottom: var(--r5); }
-	.preview-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--tinta-suave); letter-spacing: 0.05em; }
-	.preview-card { border: 1px solid var(--linha); border-radius: var(--raio); overflow: hidden; background: var(--branco); margin-top: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-	.preview-img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
-	.preview-body { padding: var(--r4); font-size: 0.92rem; line-height: 1.5; }
-	.preview-btn { padding: 0 var(--r4) var(--r4); }
-	.preview-btn span { display: inline-block; padding: 8px 18px; background: var(--ouro); color: white; border-radius: 8px; font-size: 0.85rem; font-weight: 600; }
-
 	/* Ação */
 	.acao { margin-bottom: var(--r5); }
 	.btn-enviar { padding: 14px 32px; background: var(--rosa); color: white; font-weight: 700; font-size: 1rem; border: none; border-radius: var(--raio-sm); cursor: pointer; width: 100%; }
@@ -257,9 +213,4 @@
 	.subid code { font-size: 0.72rem; background: var(--sucesso-fundo); padding: 2px 6px; border-radius: 4px; }
 	.loading { color: var(--tinta-suave); }
 	.aviso { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
-
-	@media (max-width: 420px) {
-		.hero-produto { flex-direction: column; align-items: center; text-align: center; }
-		.hero-img { width: 100%; height: 180px; border-radius: var(--raio); }
-	}
 </style>
