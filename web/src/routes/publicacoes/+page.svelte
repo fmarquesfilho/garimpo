@@ -149,38 +149,53 @@
 		{/if}
 
 		{:else if aba === 'desempenho'}
-			<!-- Relatório de desempenho das publicações por canal -->
+			<!-- Relatório de conversões REAIS da Shopee -->
 			{#if conversoes.length === 0}
 				<div class="info-desempenho">
 					<h3>📊 Rastreamento de conversões</h3>
-					<p>Aqui você verá quais publicações geraram <strong>vendas reais</strong>:</p>
+					<p>Aqui você verá quais publicações geraram <strong>vendas reais</strong>.</p>
+					<p>O sistema consulta o relatório de conversões da Shopee automaticamente. Quando alguém compra pelo seu link, a venda aparece aqui com:</p>
 					<ul class="lista-info">
-						<li>Qual <strong>produto</strong> vendeu</li>
-						<li>De qual <strong>canal</strong> veio (Telegram, WhatsApp)</li>
-						<li>Qual <strong>publicação</strong> gerou a venda (sub_id)</li>
-						<li>Valor da <strong>comissão</strong> recebida</li>
+						<li>📦 Nome do <strong>produto</strong> vendido</li>
+						<li>🏪 <strong>Loja</strong> que vendeu</li>
+						<li>💰 <strong>Comissão</strong> real recebida</li>
+						<li>📡 <strong>Canal</strong> da publicação (sub_id)</li>
+						<li>📅 Data da <strong>compra</strong></li>
+						<li>⏳ <strong>Status</strong> (pendente, aprovada, cancelada)</li>
 					</ul>
-					<p class="dica">O sistema consulta automaticamente o relatório de conversões da Shopee. Cada publicação enviada gera um código de rastreamento único. Quando alguém compra pelo seu link, a venda aparece aqui.</p>
+					<p class="dica">💡 Dica: para dados aparecerem, é preciso que alguém compre pelo link de afiliado. A sincronização consulta os últimos 30 dias.</p>
 				</div>
 			{:else}
+				<!-- Resumo de conversões -->
+				<div class="resumo-conversoes">
+					<div class="resumo-card">
+						<span class="resumo-num">{conversoes.length}</span>
+						<span class="resumo-label">Conversões</span>
+					</div>
+					<div class="resumo-card destaque">
+						<span class="resumo-num">R$ {conversoes.reduce((s, c) => s + (c.comissao_estimada || 0), 0).toFixed(2)}</span>
+						<span class="resumo-label">Comissão total</span>
+					</div>
+				</div>
+
 				<div class="tabela-desemp">
 					<table>
 						<thead>
 							<tr>
-								<th>Canal</th>
 								<th>Produto</th>
+								<th>Canal</th>
+								<th>Comissão</th>
 								<th>Publicações</th>
-								<th>Comissão est.</th>
 								<th>Último envio</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each conversoes as c (c.sub_id)}
 								<tr>
-									<td><span class="canal-badge">{c.canal}</span></td>
-									<td class="nome-col">{c.nome}</td>
+									<td class="nome-col">{c.nome || '—'}</td>
+									<td><span class="canal-badge">{c.canal || '—'}</span></td>
+									<td class="num comissao-val">R$ {c.comissao_estimada?.toFixed(2) ?? '—'}</td>
 									<td class="num">{c.publicacoes}</td>
-									<td class="num">R$ {c.comissao_estimada?.toFixed(2) ?? '—'}</td>
 									<td class="data">{formatarData(c.publicado_em)}</td>
 								</tr>
 							{/each}
@@ -262,6 +277,12 @@
 	.lista-info li { margin: var(--r2) 0; font-size: var(--text-base); }
 
 	/* Desempenho */
+	.resumo-conversoes { display: flex; gap: var(--r3); margin-bottom: var(--r5); }
+	.resumo-card { display: flex; flex-direction: column; align-items: center; padding: var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); min-width: 120px; }
+	.resumo-card.destaque { background: var(--sucesso-fundo); border-color: var(--sucesso-texto); }
+	.resumo-num { font-size: 1.4rem; font-weight: 700; font-family: var(--mono); }
+	.resumo-label { font-size: 0.72rem; color: var(--tinta-suave); text-transform: uppercase; }
+	.comissao-val { color: var(--sucesso-texto); }
 	.tabela-desemp { overflow-x: auto; }
 	.tabela-desemp table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 	.tabela-desemp th { text-align: left; font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--linha); font-size: 0.78rem; text-transform: uppercase; color: var(--tinta-suave); }
