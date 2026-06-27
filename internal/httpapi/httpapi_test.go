@@ -353,12 +353,12 @@ func TestBuscasExigeAuth(t *testing.T) {
 	}
 }
 
-func TestBuscasExigeKeywords(t *testing.T) {
+func TestBuscasExigeAlgumCriterio(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	// sem keywords e sem keyword legado → 400
+	// sem keywords, lojas, categorias ou fontes → 400
 	rec := req(t, h, "POST", "/api/buscas", []byte(`{}`), map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"})
 	if rec.Code != 400 {
-		t.Errorf("busca sem keywords deveria dar 400, veio %d", rec.Code)
+		t.Errorf("busca sem critérios deveria dar 400, veio %d", rec.Code)
 	}
 }
 

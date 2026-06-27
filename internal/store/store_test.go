@@ -45,8 +45,9 @@ func TestNormalizarBusca_LimpaLegados(t *testing.T) {
 
 func TestNormalizarBusca_SemDadosRetornaBusca(t *testing.T) {
 	b := NormalizarBusca(Busca{})
-	if b.ID != "" {
-		t.Errorf("sem dados deveria ter ID vazio, veio %q", b.ID)
+	// Mesmo sem dados, sempre gera um ID fallback
+	if b.ID != "busca" {
+		t.Errorf("sem dados deveria ter ID 'busca', veio %q", b.ID)
 	}
 }
 

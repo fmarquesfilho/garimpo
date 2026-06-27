@@ -107,8 +107,9 @@ func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b = store.NormalizarBusca(b)
-	if b.ID == "" {
-		writeErr(w, http.StatusBadRequest, "busca precisa de ao menos uma keyword")
+	// Uma busca precisa de ao menos um critério útil
+	if len(b.Keywords) == 0 && len(b.ShopIDs) == 0 && len(b.Categorias) == 0 && len(b.Fontes) == 0 {
+		writeErr(w, http.StatusBadRequest, "busca precisa de ao menos uma keyword, loja, categoria ou fonte")
 		return
 	}
 	b.Ativo = !r.URL.Query().Has("remover")
