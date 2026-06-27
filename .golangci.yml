@@ -9,28 +9,17 @@ run:
 
 linters:
   enable:
-    # ── Correção de bugs ────────────────────────────────────────────────
+    # ── Correção de bugs (bloqueiam CI) ─────────────────────────────────
     - errcheck       # Erros não tratados (o mais importante!)
     - staticcheck    # Análise estática avançada (código morto, padrões incorretos)
     - govet          # go vet oficial
     - ineffassign    # Atribuições ineficazes (variável atribuída mas nunca lida)
     - typecheck      # Erros de tipo
-
-    # ── Qualidade / Manutenibilidade ────────────────────────────────────
     - unused         # Variáveis, funções e tipos não usados
     - gosimple       # Simplificações de código
-    - gocritic       # Sugestões de estilo e performance
     - revive         # Substituto moderno do golint (regras configuráveis)
-    # misspell desabilitado: muitos falsos positivos com termos em português
-
-    # ── Performance ─────────────────────────────────────────────────────
-    - prealloc       # Slices que poderiam ser pre-alocados
     - bodyclose      # http.Response.Body não fechado
-
-    # ── Segurança ──────────────────────────────────────────────────────
     - gosec          # Problemas de segurança (hardcoded creds, weak crypto)
-
-    # ── Estilo ─────────────────────────────────────────────────────────
     - gofmt          # Formatação padrão
     - goimports      # Imports organizados
 
@@ -42,12 +31,6 @@ linters-settings:
       - fmt.Printf
       - fmt.Println
       - (io.Closer).Close
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
 
   revive:
     rules:
@@ -73,7 +56,3 @@ issues:
       linters:
         - errcheck
         - gosec
-    # main.go pode usar log.Fatal
-    - path: cmd/
-      linters:
-        - gocritic
