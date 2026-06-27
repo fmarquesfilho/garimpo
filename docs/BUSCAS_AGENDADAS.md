@@ -382,6 +382,8 @@ Hoje a struct `store.Busca` já tem `Keywords`, `ShopIDs`, `Cron`, `Estrategia`.
 
 ## Cenários totais mapeados
 
+Qualquer cenário abaixo pode ser **agendado** (`cron` preenchido = executa automaticamente) ou **manual** (`cron` vazio = atalho salvo, executa quando o usuário clica).
+
 | # | Keywords | Lojas | Categorias | Fontes | Descrição |
 |---|:---:|:---:|:---:|---|---|
 | 1 | ✓ | — | — | curadoria | Busca simples por termo |
