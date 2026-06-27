@@ -32,6 +32,19 @@ Checklist para validação manual da página principal unificada.
 
 ---
 
+## Filtragem por categoria
+
+| # | Categorias ativas | Keyword | Resultado esperado |
+|---|---|---|---|
+| 35 | ["Perfumaria"] | vazio | Só produtos da categoria Perfumaria (+ produtos sem categoria) |
+| 36 | ["Perfumaria", "Maquiagem"] | vazio | Produtos de Perfumaria OU Maquiagem (OR) |
+| 37 | ["Cuidados com a Pele"] | "sérum" | Keyword AND categoria — interseção |
+| 38 | ["Perfumaria"] | "SKIN1004" | Loja + categoria — mostra só perfumaria da SKIN1004 |
+| 39 | Nenhuma | qualquer | Sem filtro de categoria — mostra tudo |
+| 40 | Busca salva com categorias | (clicar pill) | Ativa categorias da busca + fontes correspondentes |
+
+---
+
 ## Favoritos (⭐)
 
 | # | Ação | Resultado esperado |
