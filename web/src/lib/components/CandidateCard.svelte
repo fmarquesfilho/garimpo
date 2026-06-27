@@ -1,73 +1,10 @@
 <script>
 	import ScoreMeter from './ScoreMeter.svelte';
-	import { buscarOrigemProduto } from '$lib/api.js';
-	import { onMount } from 'svelte';
 
 	let { candidato, posicao = null, destaque = false, onselecionar = null, onpublicar = null } = $props();
 
 	const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 	const pct = (v) => `${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
-
-	// Origem do produto — busca automática via API pública se não veio preenchido
-	let origemResolvida = $state(candidato.origem || '');
-	let marcaResolvida = $state('');
-	let buscandoOrigem = $state(false);
-
-	onMount(() => {
-		if (!origemResolvida && candidato.id) {
-			resolverOrigem();
-		}
-	});
-
-	async function resolverOrigem() {
-		// Extrai shopId do link do produto (formato: -i.SHOPID.ITEMID)
-		const shopId = extrairShopId(candidato);
-		if (!shopId) return;
-
-		buscandoOrigem = true;
-		try {
-			const r = await buscarOrigemProduto({ itemId: candidato.id, shopId });
-			if (r.origem) origemResolvida = normalizarOrigem(r.origem);
-			if (r.marca) marcaResolvida = r.marca;
-		} catch {
-			// Falha silenciosa — badge simplesmente não aparece
-		} finally {
-			buscandoOrigem = false;
-		}
-	}
-
-	/** Normaliza variações de nome de país para formato badge. */
-	function normalizarOrigem(raw) {
-		if (!raw) return '';
-		const lower = raw.trim().toLowerCase();
-		const mapa = {
-			'coreia': 'Coreia', 'coréia': 'Coreia', 'korea': 'Coreia',
-			'south korea': 'Coreia', 'coreia do sul': 'Coreia', 'coréia do sul': 'Coreia',
-			'kr': 'Coreia',
-			'japão': 'Japão', 'japao': 'Japão', 'japan': 'Japão', 'jp': 'Japão',
-			'china': 'China', 'mainland china': 'China', 'cn': 'China',
-			'brasil': 'Brasil', 'brazil': 'Brasil', 'br': 'Brasil',
-			'eua': 'EUA', 'usa': 'EUA', 'united states': 'EUA',
-			'taiwan': 'Taiwan', 'tailândia': 'Tailândia', 'thailand': 'Tailândia',
-		};
-		return mapa[lower] || (raw.charAt(0).toUpperCase() + raw.slice(1));
-	}
-
-	function extrairShopId(c) {
-		// Campo direto da API (shopId retornado pelo GraphQL)
-		if (c.loja_id && c.loja_id !== '0') return String(c.loja_id);
-		// Extrair do productLink (formato: -i.SHOPID.ITEMID)
-		const linkProduto = c.link_produto || c.link || '';
-		const m = linkProduto.match(/-i\.(\d+)\.\d+/);
-		if (m) return m[1];
-		// Formato alternativo: link de afiliado pode ter shopid no path
-		if (c.link) {
-			const m2 = c.link.match(/-i\.(\d+)\.\d+/);
-			if (m2) return m2[1];
-		}
-		if (c.shop_id) return String(c.shop_id);
-		return null;
-	}
 
 	let copiado = $state(false);
 	async function copiarLink() {
@@ -100,13 +37,8 @@
 				{#if candidato.loja}
 					<span class="loja">🏪 {candidato.loja}</span>
 				{/if}
-				{#if origemResolvida}
-					<span class="selo origem">{#if origemResolvida === 'Coreia'}🇰🇷{:else if origemResolvida === 'Japão'}🇯🇵{:else if origemResolvida === 'China'}🇨🇳{/if} {origemResolvida}</span>
-				{:else if buscandoOrigem}
-					<span class="selo origem-loading">⏳</span>
-				{/if}
-				{#if marcaResolvida}
-					<span class="selo marca">🏷️ {marcaResolvida}</span>
+				{#if candidato.origem}
+					<span class="selo origem">{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{:else if candidato.origem === 'China'}🇨🇳{/if} {candidato.origem}</span>
 				{/if}
 				{#if candidato.categoria}
 					<span class="cat">{candidato.categoria}</span>
@@ -228,19 +160,6 @@
 	.selo.origem {
 		background: var(--sucesso-fundo);
 		color: var(--sucesso-texto);
-	}
-	.selo.origem-loading {
-		background: var(--porcelana);
-		color: var(--tinta-suave);
-		animation: pulse 1.2s ease-in-out infinite;
-	}
-	.selo.marca {
-		background: var(--ouro-fundo);
-		color: var(--ouro-escuro);
-	}
-	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.4; }
 	}
 
 	.dados {

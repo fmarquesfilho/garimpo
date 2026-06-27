@@ -207,15 +207,14 @@ Priorizado por valor de negócio. Atualizado em 26/06/2026.
 
 ### Feature: Origem do produto (Coréia/Japão)
 - **Regra de domínio da Mileny:** precisa saber se produto é de origem Coréia/Japão (muitos são falsificados). A Shopee mostra um campo "Origem" no produto e na loja.
-- **Status:** ✅ Implementado (27/06)
+- **Status:** ✅ Implementado (27/06) — via `origem_padrao` por loja monitorada
 - **Solução implementada:**
-  1. Adaptadores Shopee pedem `shopType` e `sellerLocation` na query GraphQL (campos que podem conter origem)
-  2. `inferirOrigem()` normaliza códigos ISO e nomes para PT-BR (ex: "KR" → "Coreia")
-  3. Fallback: campo `origem_padrao` na Busca — ao adicionar loja, o usuário marca "Coreia" e todos os produtos herdam
-  4. Badge visual no CandidateCard: 🇰🇷 Coreia / 🇯🇵 Japão
-  5. CLI `cmd/shopee-introspect` para descobrir campos adicionais via introspecção GraphQL
-- **Próximo:** rodar introspecção com tokens reais para confirmar quais campos a API retorna. Expandir mapeamento se necessário.
-- **Migração:** automática via `EnsureSchema` (adiciona colunas em tabelas existentes no startup)
+  1. Campo `origem_padrao` na Busca — ao adicionar loja, o usuário marca "Coreia"/"Japão" e todos os produtos herdam
+  2. Badge visual no CandidateCard: 🇰🇷 Coreia / 🇯🇵 Japão / 🇨🇳 China
+  3. Motor de coleta aplica `origem_padrao` a todos os produtos da loja
+  4. Endpoint `/api/produto/origem` consulta `origem_padrao` da loja monitorada
+- **Limitação confirmada:** a API de afiliados da Shopee NÃO expõe país de origem. A API pública v4 bloqueia IPs de datacenter (403). Documentado em `docs/SHOPEE_INTROSPECT_RESULT.md`.
+- **Alternativa futura:** proxy residencial (Bright Data ~$3/mês) desbloqueia acesso à API pública. Código preparado mas não ativo.
 
 ### Feature: Categorias dinâmicas da API Shopee
 - **Status:** ✅ Implementado (27/06)
