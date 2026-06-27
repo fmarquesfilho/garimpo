@@ -112,6 +112,7 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 			Posicao: i + 1, ProdutoID: p.ID, Nome: p.Name,
 			Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
 			Nota: p.Rating, Score: sc.Score, Origin: p.Origin,
+			Imagem: p.Image, Link: p.Link, Loja: p.ShopName,
 		})
 	}
 

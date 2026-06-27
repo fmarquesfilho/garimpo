@@ -47,6 +47,9 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "vendas", Type: bigquery.IntegerFieldType},
 		{Name: "nota", Type: bigquery.FloatFieldType},
 		{Name: "score", Type: bigquery.FloatFieldType},
+		{Name: "imagem", Type: bigquery.StringFieldType},
+		{Name: "link", Type: bigquery.StringFieldType},
+		{Name: "loja", Type: bigquery.StringFieldType},
 	}
 	if err := criarSeNaoExistir(ctx, ds, s.tabelaSnap, sSchema, "coletado_em"); err != nil {
 		return err

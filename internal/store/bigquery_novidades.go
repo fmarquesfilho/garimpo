@@ -27,6 +27,7 @@ func (s *BigQueryStore) Novidades(ctx context.Context, buscaID string, dias int)
 	q := s.client.Query(`
 		WITH janela AS (
 		  SELECT produto_id, nome, preco, comissao, vendas, nota, coletado_em,
+		         IFNULL(imagem, '') AS imagem, IFNULL(link, '') AS link, IFNULL(loja, '') AS loja,
 		         ROW_NUMBER() OVER (PARTITION BY produto_id ORDER BY coletado_em DESC) AS rn_desc,
 		         ROW_NUMBER() OVER (PARTITION BY produto_id ORDER BY coletado_em ASC) AS rn_asc,
 		         COUNT(*) OVER (PARTITION BY produto_id) AS aparicoes
@@ -34,7 +35,7 @@ func (s *BigQueryStore) Novidades(ctx context.Context, buscaID string, dias int)
 		  WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
 		    ` + filtroKW + `
 		)
-		SELECT produto_id, nome, preco, comissao, vendas, nota,
+		SELECT produto_id, nome, preco, comissao, vendas, nota, imagem, link, loja,
 		       FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%SZ', coletado_em) AS detectado_em,
 		       aparicoes, rn_desc,
 		       FIRST_VALUE(preco) OVER (PARTITION BY produto_id ORDER BY coletado_em ASC) AS preco_primeiro
@@ -58,6 +59,9 @@ func (s *BigQueryStore) Novidades(ctx context.Context, buscaID string, dias int)
 			Comissao      float64 `bigquery:"comissao"`
 			Vendas        int     `bigquery:"vendas"`
 			Nota          float64 `bigquery:"nota"`
+			Imagem        string  `bigquery:"imagem"`
+			Link          string  `bigquery:"link"`
+			Loja          string  `bigquery:"loja"`
 			DetectadoEm   string  `bigquery:"detectado_em"`
 			Aparicoes     int     `bigquery:"aparicoes"`
 			RnDesc        int     `bigquery:"rn_desc"`
@@ -77,6 +81,7 @@ func (s *BigQueryStore) Novidades(ctx context.Context, buscaID string, dias int)
 			result.ProdutosNovos = append(result.ProdutosNovos, ProdutoNovo{
 				ProdutoID: row.ProdutoID, Nome: row.Nome, Preco: row.Preco,
 				Comissao: row.Comissao, Vendas: row.Vendas, Nota: row.Nota,
+				Imagem: row.Imagem, Link: row.Link, Loja: row.Loja,
 				DetectadoEm: row.DetectadoEm,
 			})
 		}
@@ -86,7 +91,8 @@ func (s *BigQueryStore) Novidades(ctx context.Context, buscaID string, dias int)
 			result.Variacoes = append(result.Variacoes, VariacaoPreco{
 				ProdutoID: row.ProdutoID, Nome: row.Nome,
 				PrecoAnterior: row.PrecoPrimeiro, PrecoAtual: row.Preco,
-				Variacao: variacao, DetectadoEm: row.DetectadoEm,
+				Variacao: variacao, Imagem: row.Imagem, Link: row.Link, Loja: row.Loja,
+				DetectadoEm: row.DetectadoEm,
 			})
 		}
 	}

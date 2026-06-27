@@ -94,6 +94,9 @@ type linhaSnapBQ struct {
 	Vendas     int       `bigquery:"vendas"`
 	Nota       float64   `bigquery:"nota"`
 	Score      float64   `bigquery:"score"`
+	Imagem     string    `bigquery:"imagem"`
+	Link       string    `bigquery:"link"`
+	Loja       string    `bigquery:"loja"`
 }
 
 func (s *BigQueryStore) RegistrarSnapshot(ctx context.Context, snap Snapshot) error {
@@ -119,6 +122,9 @@ func (s *BigQueryStore) RegistrarSnapshot(ctx context.Context, snap Snapshot) er
 			Vendas:     it.Vendas,
 			Nota:       it.Nota,
 			Score:      it.Score,
+			Imagem:     it.Imagem,
+			Link:       it.Link,
+			Loja:       it.Loja,
 		})
 	}
 	return s.client.Dataset(s.dataset).Table(s.tabelaSnap).Inserter().Put(ctx, linhas)

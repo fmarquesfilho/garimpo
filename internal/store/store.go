@@ -229,6 +229,9 @@ type ProdutoNovo struct {
 	Comissao    float64 `json:"comissao"`
 	Vendas      int     `json:"vendas"`
 	Nota        float64 `json:"nota"`
+	Imagem      string  `json:"imagem,omitempty"`
+	Link        string  `json:"link,omitempty"`
+	Loja        string  `json:"loja,omitempty"`
 	DetectadoEm string  `json:"detectado_em"`
 }
 
@@ -239,6 +242,9 @@ type VariacaoPreco struct {
 	PrecoAnterior float64 `json:"preco_anterior"`
 	PrecoAtual    float64 `json:"preco_atual"`
 	Variacao      float64 `json:"variacao_pct"` // ex.: -0.20 = baixou 20%
+	Imagem        string  `json:"imagem,omitempty"`
+	Link          string  `json:"link,omitempty"`
+	Loja          string  `json:"loja,omitempty"`
 	DetectadoEm   string  `json:"detectado_em"`
 }
 
@@ -351,6 +357,9 @@ type ItemSnapshot struct {
 	Nota      float64
 	Score     float64
 	Origin    string // país de origem do produto (quando disponível)
+	Imagem    string // URL da imagem do produto
+	Link      string // URL de afiliado ou link do produto
+	Loja      string // nome da loja (quando disponível)
 }
 
 // Snapshot é a foto periódica de uma categoria: os top N do momento. É o que
