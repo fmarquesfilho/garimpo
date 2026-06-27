@@ -55,7 +55,8 @@ type origemResponse struct {
 	ShopID string `json:"shop_id"`
 	Origem string `json:"origem"`
 	Marca  string `json:"marca,omitempty"`
-	Fonte  string `json:"fonte"` // "api_publica" | "cache" | "fallback"
+	Fonte  string `json:"fonte"` // "api_publica" | "cache" | "fallback" | "erro"
+	Erro   string `json:"erro,omitempty"` // detalhe do erro (debug)
 }
 
 // produtoOrigem consulta a API pública v4 da Shopee para obter os atributos
@@ -92,6 +93,7 @@ func (srv *Server) produtoOrigem(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, origemResponse{
 			ItemID: itemID, ShopID: shopID,
 			Origem: "", Marca: "", Fonte: "erro",
+			Erro: err.Error(),
 		})
 		return
 	}
