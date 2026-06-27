@@ -3,6 +3,7 @@ package httpapi
 import (
 "math/rand"
 "net/http"
+"strings"
 "time"
 
 "github.com/fmarquesfilho/garimpo/internal/domain"
@@ -22,6 +23,7 @@ type candidatoDTO struct {
 	Vendas      int                `json:"vendas"`
 	Avaliacao   float64            `json:"avaliacao"`
 	Link        string             `json:"link"`
+	LinkProduto string             `json:"link_produto,omitempty"`
 	Imagem      string             `json:"imagem,omitempty"`
 	Score       float64            `json:"score"`
 	Componentes map[string]float64 `json:"componentes"`
@@ -30,14 +32,35 @@ type candidatoDTO struct {
 
 func toDTO(s domain.Scored) candidatoDTO {
 	p := s.Product
+	lojaID := p.ShopID
+	if lojaID == "0" || lojaID == "" {
+		// Tenta extrair do ProductLink (formato: -i.SHOPID.ITEMID)
+		lojaID = extrairShopIDDoLink(p.Link)
+	}
 	return candidatoDTO{
 		ID: p.ID, Nome: p.Name, Categoria: p.Category, Loja: p.ShopName,
-		LojaID: p.ShopID, Origem: p.Origin,
+		LojaID: lojaID, Origem: p.Origin,
 		Preco: p.Price, Comissao: p.Commission, Vendas: p.Sales30d,
-		Avaliacao: p.Rating, Link: p.Link, Imagem: p.Image,
+		Avaliacao: p.Rating, Link: p.Link, LinkProduto: p.ProductLink,
+		Imagem: p.Image,
 		Score: s.Score, Componentes: s.Reasons,
 		Suspeito: s.Suspeito,
 	}
+}
+
+// extrairShopIDDoLink extrai o shopId de uma URL no formato -i.SHOPID.ITEMID
+func extrairShopIDDoLink(link string) string {
+	// Formato: https://shopee.com.br/Nome-i.SHOPID.ITEMID ou https://shope.ee/...
+	idx := strings.LastIndex(link, "-i.")
+	if idx < 0 {
+		return ""
+	}
+	rest := link[idx+3:]
+	parts := strings.SplitN(rest, ".", 2)
+	if len(parts) >= 1 && parts[0] != "" {
+		return parts[0]
+	}
+	return ""
 }
 
 func rankearDTO(produtos []domain.Product, st strategy.Strategy, pipeline strategy.Pipeline, n int, fracaoExpl float64, r *rand.Rand) []candidatoDTO {

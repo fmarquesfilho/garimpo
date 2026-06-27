@@ -37,19 +37,17 @@
 	}
 
 	function extrairShopId(c) {
-		// Campo direto da API
-		if (c.loja_id) return String(c.loja_id);
-		// Tenta extrair do link (shopee.com.br/...-i.SHOPID.ITEMID)
+		// Campo direto da API (shopId retornado pelo GraphQL)
+		if (c.loja_id && c.loja_id !== '0') return String(c.loja_id);
+		// Extrair do productLink (formato: -i.SHOPID.ITEMID)
+		const linkProduto = c.link_produto || c.link || '';
+		const m = linkProduto.match(/-i\.(\d+)\.\d+/);
+		if (m) return m[1];
+		// Formato alternativo: link de afiliado pode ter shopid no path
 		if (c.link) {
-			const m = c.link.match(/-i\.(\d+)\.\d+/);
-			if (m) return m[1];
-			// Formato alternativo: shopid no query param
-			try {
-				const u = new URL(c.link, 'https://shopee.com.br');
-				if (u.searchParams.has('shop_id')) return u.searchParams.get('shop_id');
-			} catch { /* URL inválida */ }
+			const m2 = c.link.match(/-i\.(\d+)\.\d+/);
+			if (m2) return m2[1];
 		}
-		// Se veio como campo separado
 		if (c.shop_id) return String(c.shop_id);
 		return null;
 	}
