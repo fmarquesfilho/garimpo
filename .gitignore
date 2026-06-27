@@ -4,3 +4,4 @@
 .firebase/
 *.cache*.out
 cloudflare-worker/.wrangler/
+coverage.out
