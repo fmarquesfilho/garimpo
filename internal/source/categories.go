@@ -1,5 +1,7 @@
 package source
 
+import "strings"
+
 // CategoriaShopee mapeia IDs de categoria nível 1 da Shopee Brasil para nomes legíveis.
 // Fonte: mapeamento empírico via productCatIds retornados pela API de afiliados.
 // Atualizar se novos IDs aparecerem nos dados coletados.
@@ -39,4 +41,16 @@ func NomeCategoriaPrincipal(catIDs []int) string {
 		}
 	}
 	return ""
+}
+
+// CategoriaPorNome retorna o ID da categoria a partir do nome (case-insensitive).
+// Retorna 0 se não encontrar.
+func CategoriaPorNome(nome string) int {
+	lower := strings.ToLower(strings.TrimSpace(nome))
+	for id, n := range CategoriaShopee {
+		if strings.ToLower(n) == lower {
+			return id
+		}
+	}
+	return 0
 }

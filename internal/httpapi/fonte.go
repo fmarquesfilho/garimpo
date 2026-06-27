@@ -55,6 +55,12 @@ func (srv *Server) buildSource(q url.Values) (source.ProductSource, string) {
 				cat = v
 			}
 		}
+		// Resolve categoria textual → cat ID numérico
+		if cat == 0 {
+			if nome := q.Get("categoria"); nome != "" {
+				cat = source.CategoriaPorNome(nome)
+			}
+		}
 		keyword := srv.Keyword
 		if v := q.Get("keyword"); v != "" {
 			keyword = v

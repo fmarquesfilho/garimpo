@@ -10,6 +10,7 @@
 
 	// ── Filtros ───────────────────────────────────────────────────────────────
 	let busca = $state('');
+	let categorias = $state([]); // categorias ativas (filtro)
 	let fontes = $state({ curadoria: true, quedas: true, novos: true, favoritos: false });
 
 	// ── Estado dos dados ──────────────────────────────────────────────────────
@@ -41,8 +42,8 @@
 
 		const promises = [];
 
-		// Curadoria: busca por keyword (se tem termo E fonte ativa)
-		if (fontes.curadoria && busca.trim()) {
+		// Curadoria: busca por keyword ou categoria (se tem termo/categoria E fonte ativa)
+		if (fontes.curadoria && (busca.trim() || categorias.length > 0)) {
 			promises.push(carregarCuradoria());
 		} else {
 			dadosCuradoria = [];
@@ -74,10 +75,9 @@
 
 	async function carregarCuradoria() {
 		try {
-			const r = await buscarCandidatos({
-				estrategia: 'nicho', top: 20,
-				keyword: busca.trim()
-			});
+			const params = { estrategia: 'nicho', top: 20, keyword: busca.trim() };
+			if (categorias.length > 0) params.categoria = categorias[0];
+			const r = await buscarCandidatos(params);
 			dadosCuradoria = (r.candidatos ?? []).map(c => ({ ...c, _fonte: 'curadoria' }));
 		} catch { dadosCuradoria = []; }
 	}
@@ -153,13 +153,21 @@
 			);
 		}
 
+		// Filtra por categorias (se alguma está selecionada)
+		if (categorias.length > 0) {
+			const cats = categorias.map(c => c.toLowerCase());
+			todos = todos.filter(r =>
+				!r.categoria || cats.some(c => (r.categoria ?? '').toLowerCase().includes(c))
+			);
+		}
+
 		resultados = todos;
 	}
 
 	// Debounce: recarrega quando busca ou fontes mudam
 	let timer;
 	$effect(() => {
-		busca; fontes.curadoria; fontes.quedas; fontes.novos; fontes.favoritos;
+		busca; categorias; fontes.curadoria; fontes.quedas; fontes.novos; fontes.favoritos;
 		clearTimeout(timer);
 		timer = setTimeout(carregar, 400);
 		return () => clearTimeout(timer);
@@ -180,6 +188,7 @@
 	function aplicarBuscaSalva(b) {
 		const kw = (b.keywords ?? [])[0] ?? '';
 		busca = kw;
+		categorias = b.categorias ?? [];
 		if (b.fontes?.length) {
 			fontes.curadoria = b.fontes.includes('curadoria');
 			fontes.quedas = b.fontes.includes('quedas');

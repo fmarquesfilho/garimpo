@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 
 // ── Replica da lógica de montarResultados da +page.svelte ─────────────────
 
-function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca }) {
+function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias }) {
 	let todos = [];
 	if (fontes.curadoria) todos.push(...dadosCuradoria);
 	if (fontes.quedas) todos.push(...dadosQuedas);
@@ -22,6 +22,14 @@ function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, fav
 		todos = todos.filter(r =>
 			(r.nome ?? '').toLowerCase().includes(termo) ||
 			(r.loja ?? '').toLowerCase().includes(termo)
+		);
+	}
+
+	// Filtra por categorias (se alguma está selecionada)
+	const cats = (categorias ?? []).map(c => c.toLowerCase());
+	if (cats.length > 0) {
+		todos = todos.filter(r =>
+			!r.categoria || cats.some(c => (r.categoria ?? '').toLowerCase().includes(c))
 		);
 	}
 
@@ -148,6 +156,75 @@ describe('Descobrir — Combinações de fontes', () => {
 		const r = montarResultados({ fontes: { curadoria: true, quedas: false, novos: false, favoritos: false }, dadosCuradoria: curadoria, dadosQuedas: [], dadosNovos: [], busca: 'KENZO' });
 		expect(r).toHaveLength(1);
 		expect(r[0].nome).toContain('Kenzo');
+	});
+});
+
+// ── Filtragem por categoria ────────────────────────────────────────────────
+
+describe('Descobrir — Filtragem por categoria', () => {
+	const comCategoria = [
+		{ id: 'P1', nome: 'Sérum Vitamina C', categoria: 'Cuidados com a Pele', loja: 'SKIN1004', _fonte: 'curadoria' },
+		{ id: 'P2', nome: 'Perfume Kenzo', categoria: 'Perfumaria', loja: 'Loja X', _fonte: 'curadoria' },
+		{ id: 'P3', nome: 'Batom Matte', categoria: 'Maquiagem', loja: 'Loja Y', _fonte: 'curadoria' },
+		{ id: 'P4', nome: 'Tônico sem categoria', categoria: '', loja: 'Loja Z', _fonte: 'queda' }
+	];
+
+	function montarComCategoria(cats) {
+		return montarResultados({
+			fontes: { curadoria: true, quedas: true, novos: false, favoritos: false },
+			dadosCuradoria: comCategoria.filter(c => c._fonte === 'curadoria'),
+			dadosQuedas: comCategoria.filter(c => c._fonte === 'queda'),
+			dadosNovos: [],
+			busca: '',
+			categorias: cats
+		});
+	}
+
+	it('cenário 14: categoria única filtra só produtos daquela categoria', () => {
+		const r = montarComCategoria(['Perfumaria']);
+		expect(r).toHaveLength(2); // Perfume Kenzo + Tônico sem categoria (sem categoria passa)
+		expect(r.some(p => p.nome === 'Perfume Kenzo')).toBe(true);
+	});
+
+	it('cenário 15: múltiplas categorias filtra OR', () => {
+		const r = montarComCategoria(['Perfumaria', 'Maquiagem']);
+		expect(r).toHaveLength(3); // Perfume + Batom + Tônico sem categoria
+	});
+
+	it('sem categorias selecionadas mostra tudo', () => {
+		const r = montarComCategoria([]);
+		expect(r).toHaveLength(4);
+	});
+
+	it('categoria case-insensitive', () => {
+		const r = montarComCategoria(['perfumaria']);
+		expect(r.some(p => p.nome === 'Perfume Kenzo')).toBe(true);
+	});
+
+	it('cenário 16: keyword + categoria combinam (AND)', () => {
+		const r = montarResultados({
+			fontes: { curadoria: true, quedas: false, novos: false, favoritos: false },
+			dadosCuradoria: comCategoria.filter(c => c._fonte === 'curadoria'),
+			dadosQuedas: [],
+			dadosNovos: [],
+			busca: 'Kenzo',
+			categorias: ['Perfumaria']
+		});
+		expect(r).toHaveLength(1);
+		expect(r[0].nome).toBe('Perfume Kenzo');
+	});
+
+	it('cenário 17: keyword + categoria + loja filtra interseção', () => {
+		const r = montarResultados({
+			fontes: { curadoria: true, quedas: false, novos: false, favoritos: false },
+			dadosCuradoria: comCategoria.filter(c => c._fonte === 'curadoria'),
+			dadosQuedas: [],
+			dadosNovos: [],
+			busca: 'SKIN1004',
+			categorias: ['Cuidados com a Pele']
+		});
+		expect(r).toHaveLength(1);
+		expect(r[0].nome).toBe('Sérum Vitamina C');
 	});
 });
 
