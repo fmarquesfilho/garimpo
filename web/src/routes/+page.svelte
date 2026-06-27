@@ -10,6 +10,9 @@
 
 	// ── Filtros ───────────────────────────────────────────────────────────────
 	let busca = $state('');
+	let comissaoMin = $state(0.07);
+	let vendasMin = $state(0);
+	let notaMin = $state(0);
 	let categorias = $state([]); // categorias ativas (filtro)
 	let fontes = $state({ curadoria: true, quedas: true, novos: true, favoritos: false });
 
@@ -75,7 +78,13 @@
 
 	async function carregarCuradoria() {
 		try {
-			const params = { estrategia: 'nicho', top: 20, keyword: busca.trim() };
+			const params = {
+				estrategia: 'nicho', top: 20,
+				keyword: busca.trim(),
+				comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
+				vendasMin: vendasMin > 0 ? vendasMin : undefined,
+				notaMin: notaMin > 0 ? notaMin : undefined
+			};
 			if (categorias.length > 0) params.categoria = categorias[0];
 			const r = await buscarCandidatos(params);
 			dadosCuradoria = (r.candidatos ?? []).map(c => ({ ...c, _fonte: 'curadoria' }));
@@ -161,13 +170,25 @@
 			);
 		}
 
+		// Filtros numéricos (comissão, vendas, nota) — aplica sobre tudo
+		if (comissaoMin > 0) {
+			todos = todos.filter(r => !r.comissao || r.comissao >= comissaoMin);
+		}
+		if (vendasMin > 0) {
+			todos = todos.filter(r => !r.vendas || r.vendas >= vendasMin);
+		}
+		if (notaMin > 0) {
+			todos = todos.filter(r => !r.avaliacao || r.avaliacao >= notaMin);
+		}
+
 		resultados = todos;
 	}
 
 	// Debounce: recarrega quando busca ou fontes mudam
 	let timer;
 	$effect(() => {
-		busca; categorias; fontes.curadoria; fontes.quedas; fontes.novos; fontes.favoritos;
+		busca; categorias; comissaoMin; vendasMin; notaMin;
+		fontes.curadoria; fontes.quedas; fontes.novos; fontes.favoritos;
 		clearTimeout(timer);
 		timer = setTimeout(carregar, 400);
 		return () => clearTimeout(timer);
@@ -209,7 +230,13 @@
 	<p class="sub">Encontre produtos para divulgar — por busca, oportunidades ou favoritos.</p>
 
 	<!-- Busca universal -->
-	<FilterBar bind:busca={busca} mostrarBusca={true} />
+	<FilterBar
+		bind:busca={busca}
+		bind:comissaoMin={comissaoMin}
+		bind:vendasMin={vendasMin}
+		bind:notaMin={notaMin}
+		mostrarBusca={true}
+	/>
 
 	<!-- Filtros de fonte -->
 	<div class="fontes">

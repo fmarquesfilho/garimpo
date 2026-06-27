@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 
 // ── Replica da lógica de montarResultados da +page.svelte ─────────────────
 
-function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias }) {
+function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias, comissaoMin, vendasMin, notaMin }) {
 	let todos = [];
 	if (fontes.curadoria) todos.push(...dadosCuradoria);
 	if (fontes.quedas) todos.push(...dadosQuedas);
@@ -31,6 +31,17 @@ function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, fav
 		todos = todos.filter(r =>
 			!r.categoria || cats.some(c => (r.categoria ?? '').toLowerCase().includes(c))
 		);
+	}
+
+	// Filtros numéricos
+	if (comissaoMin > 0) {
+		todos = todos.filter(r => !r.comissao || r.comissao >= comissaoMin);
+	}
+	if (vendasMin > 0) {
+		todos = todos.filter(r => !r.vendas || r.vendas >= vendasMin);
+	}
+	if (notaMin > 0) {
+		todos = todos.filter(r => !r.avaliacao || r.avaliacao >= notaMin);
 	}
 
 	return todos;
@@ -269,5 +280,64 @@ describe('Descobrir — Aplicar busca salva', () => {
 		const { fontes } = aplicarBuscaSalva({ keywords: [] });
 		expect(fontes.curadoria).toBe(false);
 		expect(fontes.quedas).toBe(false);
+	});
+});
+
+
+// ── Filtros numéricos (comissão, vendas, nota) ────────────────────────────
+
+describe('Descobrir — Filtros numéricos', () => {
+	const produtos = [
+		{ id: 'A', nome: 'Sérum Premium', comissao: 0.15, vendas: 200, avaliacao: 4.9, loja: 'Loja A', _fonte: 'curadoria' },
+		{ id: 'B', nome: 'Creme Básico', comissao: 0.05, vendas: 50, avaliacao: 3.8, loja: 'Loja B', _fonte: 'curadoria' },
+		{ id: 'C', nome: 'Perfume Médio', comissao: 0.10, vendas: 100, avaliacao: 4.5, loja: 'Loja C', _fonte: 'curadoria' },
+		{ id: 'D', nome: 'Queda sem comissao', comissao: 0, vendas: 0, avaliacao: 0, loja: 'Loja D', _fonte: 'queda' }
+	];
+
+	const base = { fontes: { curadoria: true, quedas: true, novos: false, favoritos: false }, dadosCuradoria: produtos.filter(p => p._fonte === 'curadoria'), dadosQuedas: produtos.filter(p => p._fonte === 'queda'), dadosNovos: [], busca: '' };
+
+	it('comissaoMin=0.10 filtra produtos com comissão < 10%', () => {
+		const r = montarResultados({ ...base, comissaoMin: 0.10 });
+		// A (15%), C (10%) passam; B (5%) não; D (0, sem comissão) passa
+		expect(r).toHaveLength(3);
+		expect(r.find(p => p.id === 'B')).toBeUndefined();
+	});
+
+	it('comissaoMin=0.15 filtra tudo exceto 15%+', () => {
+		const r = montarResultados({ ...base, comissaoMin: 0.15 });
+		// A (15%) + D (sem comissão, passa)
+		expect(r).toHaveLength(2);
+		expect(r.find(p => p.id === 'A')).toBeDefined();
+	});
+
+	it('vendasMin=100 filtra produtos com menos vendas', () => {
+		const r = montarResultados({ ...base, vendasMin: 100 });
+		// A (200), C (100) passam; B (50) não; D (0, sem vendas) passa
+		expect(r).toHaveLength(3);
+		expect(r.find(p => p.id === 'B')).toBeUndefined();
+	});
+
+	it('notaMin=4.5 filtra produtos com nota baixa', () => {
+		const r = montarResultados({ ...base, notaMin: 4.5 });
+		// A (4.9), C (4.5) passam; B (3.8) não; D (0, sem nota) passa
+		expect(r).toHaveLength(3);
+		expect(r.find(p => p.id === 'B')).toBeUndefined();
+	});
+
+	it('filtros combinam com keyword (AND)', () => {
+		const r = montarResultados({ ...base, busca: 'Sérum', comissaoMin: 0.10 });
+		expect(r).toHaveLength(1);
+		expect(r[0].nome).toBe('Sérum Premium');
+	});
+
+	it('sem filtros numéricos mostra tudo', () => {
+		const r = montarResultados({ ...base, comissaoMin: 0, vendasMin: 0, notaMin: 0 });
+		expect(r).toHaveLength(4);
+	});
+
+	it('produto sem dados numéricos não é filtrado (graceful)', () => {
+		const r = montarResultados({ ...base, comissaoMin: 0.10, vendasMin: 50, notaMin: 4.0 });
+		// D tem comissao=0, vendas=0, avaliacao=0 — não tem dados, não é filtrado
+		expect(r.find(p => p.id === 'D')).toBeDefined();
 	});
 });
