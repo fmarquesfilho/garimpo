@@ -155,6 +155,126 @@ O sistema monitora os preços dos produtos favoritados e alerta se cairem.
 
 ---
 
+### 10. Produtos novos sem keyword ou loja
+
+> "Quero ver todos os produtos novos que aparecerem em qualquer loja monitorada"
+
+```
+keywords: []
+lojas: []  (todas as lojas do usuário)
+fontes: [novos]
+config_novos: { dias_janela: 2 }
+cron: "0 */6 * * *"
+```
+
+O sistema verifica todas as lojas e retorna produtos que apareceram pela primeira vez nos últimos N dias (configurável).
+
+---
+
+### 11. Produtos novos em loja(s) específica(s), sem keyword
+
+> "Quero ver novidades apenas da loja SKIN1004 Official"
+
+```
+keywords: []
+lojas: [258316442]
+fontes: [novos]
+config_novos: { dias_janela: 3 }
+cron: "0 8 * * *"
+```
+
+---
+
+### 12. Produtos novos com keyword (filtra por nome)
+
+> "Quero saber quando qualquer loja monitorada lançar algo com 'retinol' no nome"
+
+```
+keywords: ["retinol"]
+lojas: []
+fontes: [novos]
+config_novos: { dias_janela: 7 }
+cron: "0 12 * * *"
+```
+
+O sistema detecta produtos novos de todas as lojas e filtra pelo termo "retinol" no nome.
+
+---
+
+### 13. Produtos novos em loja(s) com keyword
+
+> "Quero saber quando a SKIN1004 Official lançar algo com 'sérum' no nome"
+
+```
+keywords: ["sérum"]
+lojas: [258316442]
+fontes: [novos]
+config_novos: { dias_janela: 2 }
+cron: "0 */4 * * *"
+```
+
+---
+
+### 14. Busca por categoria(s) sem keyword ou loja
+
+> "Quero monitorar tudo na categoria 'cosméticos' + 'skincare' de qualquer loja"
+
+```
+keywords: []
+lojas: []
+categorias: ["cosméticos", "skincare"]
+fontes: [curadoria]
+cron: "0 8 * * *"
+```
+
+O sistema busca por categoria na API de afiliados (sem keyword), retornando os top produtos nessas categorias.
+
+---
+
+### 15. Categoria(s) + loja(s), sem keyword
+
+> "Quero ver produtos de perfumaria apenas nas minhas 2 lojas favoritas"
+
+```
+keywords: []
+lojas: [258316442, 123456789]
+categorias: ["perfumaria"]
+fontes: [curadoria, novos]
+cron: "0 12 * * *"
+```
+
+---
+
+### 16. Categoria(s) + keyword, sem loja
+
+> "Quero buscar sérums dentro da categoria skincare no mercado todo"
+
+```
+keywords: ["sérum"]
+lojas: []
+categorias: ["skincare"]
+fontes: [curadoria]
+cron: "0 8 * * *"
+```
+
+---
+
+### 17. Categoria(s) + loja(s) + keyword (combinação máxima)
+
+> "Quero monitorar produtos de 'retinol' na categoria skincare das lojas SKIN1004 e COSRX"
+
+```
+keywords: ["retinol"]
+lojas: [258316442, 123456789]
+categorias: ["skincare"]
+fontes: [curadoria, novos, quedas]
+cron: "0 8,18 * * *"
+```
+
+Combinação completa: busca por keyword, filtra por categoria, restringe a lojas específicas, e monitora novidades/quedas.
+
+---
+
 ## Modelo de dados proposto
 
 ```
@@ -162,11 +282,16 @@ Busca {
   id: string
   nome: string                    // nome amigável (ex: "Skincare coreana")
   keywords: string[]              // 0 ou mais keywords
-  shop_ids: int64[]               // 0 ou mais lojas (vazio = todas)
+  shop_ids: int64[]               // 0 ou mais lojas (vazio = todas do usuário)
+  categorias: string[]            // 0 ou mais categorias Shopee (filtro adicional)
   fontes: string[]                // ["curadoria", "quedas", "novos", "favoritos"]
   
+  // Configuração de "produtos novos"
+  config_novos: {
+    dias_janela: int              // janela para considerar "novo" (default: 7)
+  }
+  
   // Filtros opcionais
-  categoria: string               // filtro de categoria (opcional)
   comissao_min: float             // comissão mínima (opcional)
   vendas_min: int                 // vendas mínimas (opcional)
   nota_min: float                 // nota mínima (opcional)
@@ -180,6 +305,23 @@ Busca {
   salvo_em: timestamp
 }
 ```
+
+### Critérios combinatórios
+
+Os filtros se compõem por **interseção** (AND):
+
+| Campo | Vazio significa | Preenchido significa |
+|-------|-----------------|---------------------|
+| `keywords` | Não filtra por termo | Filtra nome/título por esses termos |
+| `shop_ids` | Todas as lojas do usuário | Apenas essas lojas |
+| `categorias` | Todas as categorias | Apenas essas categorias |
+| `fontes` | Nenhum resultado | Quais tipos de resultado incluir |
+| `config_novos.dias_janela` | 7 (default) | Janela personalizada (1, 2, 3, 7, 14, 30 dias) |
+
+Exemplos de como os filtros se combinam:
+- `keywords=["retinol"] + lojas=[] + categorias=["skincare"]` → Busca "retinol" em todas as lojas, só na categoria skincare
+- `keywords=[] + lojas=[258316442] + categorias=[]` → Todos os produtos da loja, qualquer categoria
+- `keywords=[] + lojas=[] + categorias=["cosméticos", "perfumaria"]` → Top produtos nessas 2 categorias, de qualquer loja
 
 ---
 
@@ -227,9 +369,35 @@ Hoje a struct `store.Busca` já tem `Keywords`, `ShopIDs`, `Cron`, `Estrategia`.
 
 | Pergunta | Resposta |
 |---|---|
-| Busca agendada precisa ter keyword? | Não — pode ser só monitoramento de lojas |
-| Busca agendada precisa ter loja? | Não — pode ser só keyword |
+| Busca agendada precisa ter keyword? | Não — pode ser só monitoramento de lojas ou categorias |
+| Busca agendada precisa ter loja? | Não — pode ser só keyword ou categoria |
 | Pode ter múltiplas keywords? | Sim — cada uma gera resultados separados |
 | Pode ter múltiplas lojas? | Sim — agrega novidades de todas |
+| Pode ter múltiplas categorias? | Sim — filtra por qualquer uma delas (OR entre categorias) |
 | `lojas: []` significa o quê? | Todas as lojas do usuário (quando fontes inclui quedas/novos) |
+| `categorias: []` significa o quê? | Sem filtro de categoria (todas) |
 | Busca sem cron é válida? | Sim — é um atalho salvo, sem execução automática |
+| O que define "produto novo"? | Configurável pelo usuário (dias_janela: 1-30 dias) |
+| Categoria é obrigatória? | Não — é um filtro opcional que se combina com keywords e lojas |
+
+## Cenários totais mapeados
+
+| # | Keywords | Lojas | Categorias | Fontes | Descrição |
+|---|:---:|:---:|:---:|---|---|
+| 1 | ✓ | — | — | curadoria | Busca simples por termo |
+| 2 | ✓✓ | — | — | curadoria | Múltiplas keywords |
+| 3 | — | ✓ | — | quedas, novos | Monitorar loja(s) |
+| 4 | — | ✓✓ | — | quedas, novos | Múltiplas lojas |
+| 5 | ✓ | ✓ | — | curadoria, quedas, novos | Keyword filtrada em loja |
+| 6 | ✓✓ | ✓✓ | — | curadoria, quedas, novos | Combinação completa |
+| 7 | — | — | — | quedas | Todas as lojas, só quedas |
+| 8 | ✓ | — | — | curadoria | Atalho manual (sem cron) |
+| 9 | — | — | — | favoritos | Monitorar preço de favoritos |
+| 10 | — | — | — | novos | Produtos novos em todas as lojas |
+| 11 | — | ✓ | — | novos | Novos em loja(s) específica(s) |
+| 12 | ✓ | — | — | novos | Novos filtrados por keyword |
+| 13 | ✓ | ✓ | — | novos | Novos em loja(s) + keyword |
+| 14 | — | — | ✓ | curadoria | Busca por categoria(s) |
+| 15 | — | ✓ | ✓ | curadoria, novos | Loja(s) + categoria(s) |
+| 16 | ✓ | — | ✓ | curadoria | Keyword + categoria(s) |
+| 17 | ✓ | ✓ | ✓ | curadoria, novos, quedas | Combinação máxima |
