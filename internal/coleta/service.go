@@ -58,11 +58,9 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 	// 1. Resolver busca (para rotação)
 	var busca *store.Busca
 	if params.BuscaID != "" {
-		if shopSrc, ok := src.(*source.ShopeeShopSource); ok {
-			busca = s.carregarBusca(ctx, params.BuscaID)
-			if busca != nil {
-				s.aplicarRotacao(shopSrc, busca)
-			}
+		busca = s.carregarBusca(ctx, params.BuscaID)
+		if shopSrc, ok := src.(*source.ShopeeShopSource); ok && busca != nil {
+			s.aplicarRotacao(shopSrc, busca)
 		}
 	}
 
