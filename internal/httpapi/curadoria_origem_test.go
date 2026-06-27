@@ -9,6 +9,7 @@ import (
 
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/source"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 // ── Testes de extrairShopIDDoLink ────────────────────────────────────────────
@@ -274,6 +275,151 @@ func TestNormalizarOrigemProduto_VariacoesReais(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("NormalizarOrigemProduto(%q) = %q, want %q", tc.input, got, tc.want)
 		}
+	}
+}
+
+// ── Teste de integração: busca por keyword enriquece origem via loja monitorada ──
+
+func TestCandidatosEnriqueceOrigemDaLojaMonitorada(t *testing.T) {
+	// Cenário: loja 785541033 está monitorada com origem_padrao="Coreia"
+	// Produto da busca por keyword pertence a essa loja (shopId=785541033)
+	// → badge deve aparecer mesmo sem coleta service
+
+	sp := &spyStore{
+		buscas: []store.Busca{
+			{
+				ID:           "loja-785541033",
+				ShopIDs:      []int64{785541033},
+				OrigemPadrao: "Coreia",
+				Ativo:        true,
+				OwnerUID:     "test-user",
+			},
+		},
+	}
+
+	produtos := []domain.Product{
+		{
+			ID: "ITEM1", Name: "Sérum Coreano SKIN1004", Category: "beleza",
+			Price: 80, Commission: 0.12, Sales30d: 200, Rating: 4.9,
+			ShopID: "785541033", ShopName: "SKIN1004 Official",
+			Link:        "https://shope.ee/aff111",
+			ProductLink: "https://shopee.com.br/Serum-i.785541033.111",
+		},
+		{
+			ID: "ITEM2", Name: "Fone Bluetooth Genérico", Category: "eletrônicos",
+			Price: 50, Commission: 0.10, Sales30d: 500, Rating: 4.2,
+			ShopID: "999999999", ShopName: "Loja Aleatória",
+			Link:        "https://shope.ee/aff222",
+			ProductLink: "https://shopee.com.br/Fone-i.999999999.222",
+		},
+	}
+
+	fonte := &fonteFake{produtos: produtos}
+	srv := &Server{
+		Eventos: sp,
+		Auth:    fakeVerifier{},
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return fonte, "fake|fixo"
+		},
+	}
+	h := srv.Handler()
+
+	rec := req(t, h, "GET", "/api/candidatos?sem_filtro=true", nil, nil)
+	if rec.Code != 200 {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp struct {
+		Candidatos []struct {
+			ID     string `json:"id"`
+			LojaID string `json:"loja_id"`
+			Origem string `json:"origem"`
+			Loja   string `json:"loja"`
+		} `json:"candidatos"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+
+	if len(resp.Candidatos) < 2 {
+		t.Fatalf("esperava 2 candidatos, veio %d", len(resp.Candidatos))
+	}
+
+	// Encontra cada produto por ID
+	var coreano, generico *struct {
+		ID     string `json:"id"`
+		LojaID string `json:"loja_id"`
+		Origem string `json:"origem"`
+		Loja   string `json:"loja"`
+	}
+	for i := range resp.Candidatos {
+		if resp.Candidatos[i].ID == "ITEM1" {
+			coreano = &resp.Candidatos[i]
+		}
+		if resp.Candidatos[i].ID == "ITEM2" {
+			generico = &resp.Candidatos[i]
+		}
+	}
+
+	if coreano == nil {
+		t.Fatal("produto ITEM1 não encontrado na resposta")
+	}
+	if generico == nil {
+		t.Fatal("produto ITEM2 não encontrado na resposta")
+	}
+
+	// Produto da loja monitorada deve ter origem "Coreia"
+	if coreano.Origem != "Coreia" {
+		t.Errorf("ITEM1 (loja monitorada coreana) deveria ter origem='Coreia', veio %q", coreano.Origem)
+	}
+
+	// Produto de loja não monitorada NÃO deve ter origem
+	if generico.Origem != "" {
+		t.Errorf("ITEM2 (loja não monitorada) deveria ter origem vazia, veio %q", generico.Origem)
+	}
+}
+
+func TestCandidatosNaoSobrescreveOrigemExistente(t *testing.T) {
+	// Se o produto já veio com origem (ex: do coleta service), não sobrescrever
+	sp := &spyStore{
+		buscas: []store.Busca{
+			{
+				ID: "loja-123", ShopIDs: []int64{123},
+				OrigemPadrao: "China", Ativo: true,
+			},
+		},
+	}
+
+	produtos := []domain.Product{
+		{
+			ID: "P1", Name: "Produto", Price: 50, Commission: 0.10,
+			Sales30d: 100, Rating: 4.5, ShopID: "123",
+			Origin: "Japão", // já tem origem (veio do coleta service)
+		},
+	}
+
+	fonte := &fonteFake{produtos: produtos}
+	srv := &Server{
+		Eventos: sp,
+		Auth:    fakeVerifier{},
+		FonteFactory: func(q url.Values) (source.ProductSource, string) {
+			return fonte, "fake|fixo"
+		},
+	}
+	h := srv.Handler()
+
+	rec := req(t, h, "GET", "/api/candidatos?sem_filtro=true", nil, nil)
+	var resp struct {
+		Candidatos []struct {
+			Origem string `json:"origem"`
+		} `json:"candidatos"`
+	}
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+
+	if len(resp.Candidatos) == 0 {
+		t.Fatal("esperava candidatos")
+	}
+	// Deve manter "Japão" (não sobrescrever com "China" da loja)
+	if resp.Candidatos[0].Origem != "Japão" {
+		t.Errorf("origem deveria ser 'Japão' (preservada), veio %q", resp.Candidatos[0].Origem)
 	}
 }
 

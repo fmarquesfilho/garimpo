@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -108,6 +109,10 @@ func (srv *Server) candidatos(w http.ResponseWriter, r *http.Request) {
 
 	out := rankearDTO(produtos, strategyDe(estrategia), pipeline, topN(q),
 		srv.fracaoExploracao(q), rand.New(rand.NewSource(time.Now().UnixNano())))
+
+	// Enriquecer com origem das lojas monitoradas (cruza shopId do produto com origem_padrao)
+	srv.enriquecerOrigem(r, out)
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"fonte":       src.Name(),
 		"estrategia":  estrategia,
@@ -126,9 +131,58 @@ func (srv *Server) comparar(w http.ResponseWriter, r *http.Request) {
 	}
 	n := topN(q)
 	pipeline := strategy.PipelineCuradoria(srv.elegibilidade(q))
+
+	nicho := rankearDTO(produtos, strategy.NewNiche(), pipeline, n, 0, nil)
+	diversificada := rankearDTO(produtos, strategy.Diversified{}, pipeline, n, 0, nil)
+
+	srv.enriquecerOrigem(r, nicho)
+	srv.enriquecerOrigem(r, diversificada)
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"fonte":         src.Name(),
-		"nicho":         rankearDTO(produtos, strategy.NewNiche(), pipeline, n, 0, nil),
-		"diversificada": rankearDTO(produtos, strategy.Diversified{}, pipeline, n, 0, nil),
+		"nicho":         nicho,
+		"diversificada": diversificada,
 	})
+}
+
+// enriquecerOrigem cruza o shopId (loja_id) de cada candidato com as lojas
+// monitoradas que têm origem_padrao configurado. Se o produto pertence a uma
+// loja com origem marcada, preenche o campo Origem no DTO.
+func (srv *Server) enriquecerOrigem(r *http.Request, candidatos []candidatoDTO) {
+	if len(candidatos) == 0 {
+		return
+	}
+
+	// Carrega mapa shopId → origem das lojas monitoradas
+	buscas, err := srv.Eventos.ListarBuscas(r.Context())
+	if err != nil {
+		return
+	}
+
+	origemPorShop := make(map[string]string)
+	for _, b := range buscas {
+		if !b.Ativo || b.OrigemPadrao == "" {
+			continue
+		}
+		for _, sid := range b.ShopIDs {
+			origemPorShop[fmt.Sprintf("%d", sid)] = b.OrigemPadrao
+		}
+	}
+
+	if len(origemPorShop) == 0 {
+		return
+	}
+
+	// Aplica origem nos candidatos que têm loja_id correspondente
+	for i := range candidatos {
+		if candidatos[i].Origem != "" {
+			continue // já tem origem (ex: veio do coleta service)
+		}
+		if candidatos[i].LojaID == "" {
+			continue
+		}
+		if origem, ok := origemPorShop[candidatos[i].LojaID]; ok {
+			candidatos[i].Origem = origem
+		}
+	}
 }
