@@ -10,7 +10,7 @@
 
 	// ── Filtros ───────────────────────────────────────────────────────────────
 	let busca = $state('');
-	let fontes = $state({ curadoria: true, quedas: false, novos: false, favoritos: false });
+	let fontes = $state({ curadoria: true, quedas: true, novos: true, favoritos: false });
 
 	// ── Estado dos dados ──────────────────────────────────────────────────────
 	let carregando = $state(false);
@@ -193,19 +193,24 @@
 
 	<!-- Filtros de fonte -->
 	<div class="fontes">
-		<button class="fonte-btn" class:ativa={fontes.curadoria} onclick={() => { fontes.curadoria = !fontes.curadoria; }} type="button">
-			🔍 Busca
+		<button class="fonte-btn" class:ativa={fontes.curadoria} onclick={() => { fontes.curadoria = !fontes.curadoria; }} type="button" title="Busca por palavra-chave na API de afiliados Shopee">
+			🔍 Busca {#if fontes.curadoria && dadosCuradoria.length > 0}<span class="fonte-badge">{dadosCuradoria.length}</span>{/if}
 		</button>
-		<button class="fonte-btn" class:ativa={fontes.quedas} onclick={() => { fontes.quedas = !fontes.quedas; }} type="button">
-			📉 Quedas
+		<button class="fonte-btn" class:ativa={fontes.quedas} onclick={() => { fontes.quedas = !fontes.quedas; }} type="button" title="Produtos que caíram de preço nas lojas monitoradas">
+			📉 Quedas {#if dadosQuedas.length > 0}<span class="fonte-badge queda">{dadosQuedas.length}</span>{/if}
 		</button>
-		<button class="fonte-btn" class:ativa={fontes.novos} onclick={() => { fontes.novos = !fontes.novos; }} type="button">
-			🆕 Novos
+		<button class="fonte-btn" class:ativa={fontes.novos} onclick={() => { fontes.novos = !fontes.novos; }} type="button" title="Produtos novos detectados nas lojas monitoradas">
+			🆕 Novos {#if dadosNovos.length > 0}<span class="fonte-badge novo">{dadosNovos.length}</span>{/if}
 		</button>
-		<button class="fonte-btn" class:ativa={fontes.favoritos} onclick={() => { fontes.favoritos = !fontes.favoritos; }} type="button">
+		<button class="fonte-btn" class:ativa={fontes.favoritos} onclick={() => { fontes.favoritos = !fontes.favoritos; }} type="button" title="Produtos que você salvou como favorito">
 			⭐ Favoritos {#if $favoritos.length > 0}<span class="fonte-badge">{$favoritos.length}</span>{/if}
 		</button>
 	</div>
+	{#if !fontes.curadoria && !fontes.quedas && !fontes.novos && !fontes.favoritos}
+		<p class="hint-fontes">Ative ao menos uma fonte para ver resultados.</p>
+	{:else if fontes.curadoria && !busca.trim() && !fontes.quedas && !fontes.novos && !fontes.favoritos}
+		<p class="hint-fontes">Digite um termo acima para buscar produtos.</p>
+	{/if}
 
 	<!-- Buscas salvas (atalhos) -->
 	{#if buscasSalvasKw.length > 0}
@@ -239,8 +244,18 @@
 	{:else if resultados.length === 0}
 		<EmptyState
 			icone="🔍"
-			mensagem={busca.trim() ? `Nenhum resultado para "${busca}".` : 'Selecione ao menos uma fonte ou digite um termo.'}
-			dica={busca.trim() ? 'Tente outro termo, ative mais fontes ou reduza filtros.' : 'Ative "Busca" e digite um termo, ou ative "Quedas"/"Novos" para ver oportunidades.'}
+			mensagem={busca.trim()
+				? `Nenhum resultado para "${busca}".`
+				: buscasComLojas.length === 0 && (fontes.quedas || fontes.novos)
+					? 'Você ainda não monitora nenhuma loja.'
+					: 'Nenhum resultado com os filtros atuais.'}
+			dica={busca.trim()
+				? 'Tente outro termo ou ative mais fontes.'
+				: buscasComLojas.length === 0 && (fontes.quedas || fontes.novos)
+					? 'Adicione lojas em <a href="/lojas">Lojas</a> para ver quedas e produtos novos.'
+					: fontes.curadoria
+						? 'Digite um termo acima para buscar por palavra-chave.'
+						: 'Ative "Busca" e digite um termo, ou monitore lojas para ver oportunidades.'}
 		/>
 	{:else}
 		<p class="contagem">{resultados.length} {resultados.length === 1 ? 'produto' : 'produtos'}</p>
@@ -275,6 +290,9 @@
 	.fonte-btn:hover { border-color: var(--ouro); color: var(--tinta); }
 	.fonte-btn.ativa { background: var(--ouro-fundo); border-color: var(--ouro-claro); color: var(--ouro-escuro); }
 	.fonte-badge { font-size: 0.65rem; background: var(--ouro); color: white; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+	.fonte-badge.queda { background: var(--sucesso-texto); }
+	.fonte-badge.novo { background: var(--rosa); }
+	.hint-fontes { font-size: 0.82rem; color: var(--tinta-suave); font-style: italic; margin: 0 0 var(--r4); }
 
 	/* Buscas salvas (atalhos) */
 	.buscas-atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--r5); }
