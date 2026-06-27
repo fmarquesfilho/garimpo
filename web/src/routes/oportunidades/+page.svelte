@@ -86,7 +86,13 @@
 			id: item.produto_id,
 			nome: item.nome,
 			preco: item.preco_atual ?? item.preco,
-			comissao: item.comissao ?? 0
+			comissao: item.comissao ?? 0,
+			link: item.link ?? '',
+			imagem: item.imagem ?? '',
+			categoria: item.categoria ?? '',
+			loja: item.loja ?? '',
+			vendas: item.vendas ?? 0,
+			avaliacao: item.nota ?? 0
 		}));
 		goto(`/publicar?dados=${dados}`);
 	}
