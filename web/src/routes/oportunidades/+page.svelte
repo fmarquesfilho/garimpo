@@ -82,12 +82,21 @@
 	}
 
 	function irParaPublicar(item) {
+		// Gera link do produto a partir do shopId (do busca_id) + produto_id
+		let link = item.link ?? '';
+		if (!link && item.loja && item.produto_id) {
+			const shopId = item.loja.replace('loja-', '');
+			if (/^\d+$/.test(shopId)) {
+				link = `https://shopee.com.br/product-i.${shopId}.${item.produto_id}`;
+			}
+		}
+
 		const dados = encodeURIComponent(JSON.stringify({
 			id: item.produto_id,
 			nome: item.nome,
 			preco: item.preco_atual ?? item.preco,
 			comissao: item.comissao ?? 0,
-			link: item.link ?? '',
+			link: link,
 			imagem: item.imagem ?? '',
 			categoria: item.categoria ?? '',
 			loja: item.loja ?? '',

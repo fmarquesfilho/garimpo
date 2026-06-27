@@ -44,6 +44,17 @@
 			produto = { id: '', nome: '', preco: 0, categoria: '', estrategia: 'nicho', link: '', imagem: '' };
 		}
 
+		// Se veio sem imagem mas com link, tenta resolver dados completos
+		if (produto && !produto.imagem && produto.link) {
+			try {
+				const r = await resolverLinkShopee(produto.link);
+				if (r.imagem) produto = { ...produto, imagem: r.imagem };
+				if (r.nome && !produto.nome) produto = { ...produto, nome: r.nome };
+				if (r.preco && !produto.preco) produto = { ...produto, preco: r.preco };
+				if (r.comissao && !produto.comissao) produto = { ...produto, comissao: r.comissao };
+			} catch { /* falha silenciosa — continua sem imagem */ }
+		}
+
 		try {
 			const [rd, rt] = await Promise.all([
 				listarDestinos().catch(() => ({ destinos: [] })),
@@ -257,6 +268,8 @@
 				<div class="card-produto">
 					{#if produto.imagem}
 						<img src={produto.imagem} alt={produto.nome} class="thumb" />
+					{:else}
+						<div class="thumb-placeholder">📦</div>
 					{/if}
 					<div class="produto-info">
 						<input class="nome-edit" bind:value={produto.nome} placeholder="Nome do produto" />
@@ -395,6 +408,7 @@
 		border: 1px solid var(--linha); border-radius: var(--raio); background: var(--nevoa);
 	}
 	.thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+	.thumb-placeholder { width: 80px; height: 80px; border-radius: 8px; background: var(--porcelana); display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0; }
 	.produto-info { flex: 1; display: flex; flex-direction: column; gap: var(--r2); }
 
 	.campo-pub { display: flex; flex-direction: column; gap: 8px; }

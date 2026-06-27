@@ -316,8 +316,23 @@ export function excluirConta() {
 }
 
 /** Conversões reais da Shopee (conversionReport). */
-export function buscarConversoesReais({ dias = 30 } = {}) {
-	return pegar(`/api/conversoes/reais?dias=${dias}`);
+export async function buscarConversoesReais({ dias = 30 } = {}) {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), 15000);
+	try {
+		const headers = await authHeaders();
+		const resp = await fetch(`${BASE}/api/conversoes/reais?dias=${dias}`, {
+			headers,
+			signal: controller.signal
+		});
+		clearTimeout(timeout);
+		if (!resp.ok) throw await parseProblem(resp, '/api/conversoes/reais');
+		return resp.json();
+	} catch (err) {
+		clearTimeout(timeout);
+		if (err.name === 'AbortError') throw new Error('A Shopee não respondeu a tempo. Tente novamente.');
+		throw err;
+	}
 }
 
 /** Lista os perfis de busca sincronizados no servidor (BigQuery). */
