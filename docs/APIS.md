@@ -33,7 +33,7 @@ Signature = SHA256(AppId + Timestamp + Payload + Secret)
   body — divergência de whitespace dá erro 10020 (Invalid Signature). O adaptador
   Go faz exatamente isso: marshala uma vez, assina e envia o mesmo `[]byte`.
 
-### 1.2 Endpoints que importam para o Garimpo
+### 1.2 Endpoints que importam para o Garimpei
 
 **`productOfferV2`** — o mais usado. Busca produtos com comissão detalhada.
 Parâmetros úteis: `keyword`, `productCatId` (categoria nível 1/2/3 — é como você
@@ -77,7 +77,7 @@ UNPAID → PENDING → COMPLETED → CANCELLED. Paginação por `scrollId` (vale
 **`shopOfferV2`** — busca produtos de uma loja específica pelo `shopId`.
 Mesmos campos de retorno que `productOfferV2` (comissão, preço, vendas, nota,
 offerLink, imageUrl). Aceita `keyword` para filtrar dentro da loja. Implementado
-no Garimpo como `ShopeeShopSource` — usado para monitoramento de lojas (detecta
+no Garimpei como `ShopeeShopSource` — usado para monitoramento de lojas (detecta
 novos produtos e variações de preço via diff de snapshots).
 
 O Garimpo usa amostragem rotativa: em vez de sempre buscar as mesmas 2 páginas,

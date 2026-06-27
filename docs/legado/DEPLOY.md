@@ -1,3 +1,5 @@
+> ⚠️ **ARQUIVADO** — Este documento descreve um deploy em OCI que não foi seguido. O deploy real é GCP (Cloud Run + BigQuery). Veja `docs/DEPLOY_GCP.md`.
+
 # Deploy do Garimpo
 
 Como colocar no ar para sua esposa testar e dar feedback. O ponto que define a

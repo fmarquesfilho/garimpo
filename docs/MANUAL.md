@@ -1,4 +1,4 @@
-# Manual do Garimpo (para quem usa no dia a dia)
+# Manual do Garimpei (para quem usa no dia a dia)
 
 O Garimpo é uma peneira inteligente: de centenas de produtos da Shopee, ele
 separa os que **valem o esforço de divulgar** e te ajuda a publicá-los nos seus
@@ -98,7 +98,7 @@ Histórico de tudo que foi publicado:
 
 ### 📡 Destinos & Conversões
 
-- **Destinos** — gerencie onde o Garimpo publica. Cada destino tem tipo
+- **Destinos** — gerencie onde o Garimpei publica. Cada destino tem tipo
   (Telegram ou WhatsApp) e configuração (chat_id ou grupo(s) WhatsApp).
   - WhatsApp suporta até **5 grupos por destino** (a mensagem é enviada para todos).
   - Ao criar/editar um destino WhatsApp, o app mostra um autocomplete com os

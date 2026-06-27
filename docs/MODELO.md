@@ -1,4 +1,4 @@
-# Garimpo — Modelo de Negócio e Processo
+# Garimpei — Modelo de Negócio e Processo
 
 Documento-arcabouço da prova de conceito. Trata a operação de afiliados da sua
 esposa como um **fluxo de entrega de valor** e aplica nela os conceitos de
@@ -28,7 +28,7 @@ repetitivo de baixo valor agregado que consome justamente o tempo que deveria ir
 para criação de conteúdo. E o passo 7 (medição) praticamente não existe, então
 hoje não há como saber se uma escolha foi boa.
 
-**Estado futuro (alvo):** o Garimpo assume os passos 1–3 entregando, toda manhã,
+**Estado futuro (alvo):** o Garimpei assume os passos 1–3 entregando, toda manhã,
 uma lista priorizada de candidatos elegíveis. Ela passa a *escolher de uma
 short-list curada* em vez de garimpar do zero. E o passo 7 deixa de ser opcional:
 o encurtador próprio captura cliques e fecha o laço de feedback.
@@ -121,7 +121,7 @@ Colunas para o dia a dia dela, com limites de WIP para evitar sobrecarga
 
 | Coluna | WIP | O que é |
 |--------|-----|---------|
-| **Candidatos** | — | preenchida pelo Garimpo toda manhã, já ranqueada |
+| **Candidatos** | — | preenchida pelo Garimpei toda manhã, já ranqueada |
 | **Selecionados do dia** | 3–5 | ela puxa os melhores da curadoria |
 | **Em produção** | 1–2 | montando post + vídeo + link |
 | **Publicado** | — | no ar |

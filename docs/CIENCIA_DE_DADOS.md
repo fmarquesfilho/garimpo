@@ -1,4 +1,4 @@
-# Guia Estratégico de Ciência de Dados para o Garimpo
+# Guia Estratégico de Ciência de Dados para o Garimpei
 
 Curadoria de produtos para marketing de afiliados (Shopee + Instagram/Telegram).
 Nível estratégico: objetivo de negócio → pergunta → técnica → pré-requisito de

@@ -1,6 +1,6 @@
 # Jornada do Usuário — Fluxo de Valor e Pontos de Decisão
 
-Mapeia a jornada da operadora (sua esposa) pelo Garimpo, organizada pelo **fluxo
+Mapeia a jornada da operadora (sua esposa) pelo Garimpei, organizada pelo **fluxo
 de valor** (do dado bruto da Shopee à comissão ganha) e pelas **decisões** que
 determinam a rentabilidade. Complementa o VSM do `MODELO.md`.
 
