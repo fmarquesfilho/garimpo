@@ -231,6 +231,6 @@ Monitoramento
 
 ## Perguntas para o Fernando antes de implementar
 
-1. **Item 3:** Prefere unificar busca+oportunidades em uma página só, ou manter separadas com visual alinhado?
-2. **Item 4 (Favoritos):** O sync com servidor é necessário agora, ou localStorage basta para a Mileny por enquanto?
-3. **Item 7 (Alertas):** Qual destino usar para "produtos novos" enquanto não tem a config? Criar um segundo grupo no Telegram? Ou desabilitar até implementar a config?
+1. **Item 3:** ✅ Unificar busca+oportunidades em uma página só (com abas). Após unificação, fazer refatoração geral e busca por código morto.
+2. **Item 4 (Favoritos):** ✅ Sync com servidor desde o início (BigQuery). Mileny troca de dispositivo e precisa ver os mesmos favoritos.
+3. **Item 7 (Alertas):** ✅ Desabilitar alertas de produtos novos por enquanto (mantendo a funcionalidade no código, pronta para ser habilitada via configuração futura).

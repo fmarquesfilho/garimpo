@@ -26,11 +26,11 @@
 			<div class="menu-secao">
 				<span class="menu-titulo">Publicar</span>
 				<a href="/publicar" class:atual={$page.url.pathname === '/publicar'}>🔗 Link</a>
-				<a href="/publicacoes" class:atual={$page.url.pathname === '/publicacoes'}>📤 Publicações</a>
 			</div>
 			<div class="menu-secao">
 				<span class="menu-titulo">Monitoramento</span>
 				<a href="/estatisticas" class:atual={$page.url.pathname === '/estatisticas'}>📊 Estatísticas</a>
+				<a href="/publicacoes" class:atual={$page.url.pathname === '/publicacoes'}>📤 Publicações</a>
 				{#if isAdmin}
 					<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>⏱ Coletas</a>
 					<a href="/admin" class:atual={$page.url.pathname === '/admin'}>🛠 Admin</a>

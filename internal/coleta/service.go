@@ -201,7 +201,9 @@ func (s *Service) dispararAlertas(buscaID string) {
 	}
 	alerter := alerts.Novo(cfg)
 	alerter.VerificarENotificar(context.Background(), s.deps.Store, buscaID)
-	alerter.VerificarNovos(context.Background(), s.deps.Store, buscaID)
+	// Alertas de produtos novos desabilitados por enquanto — serão reativados
+	// quando a configuração de alertas permitir habilitar/desabilitar por tipo.
+	// alerter.VerificarNovos(context.Background(), s.deps.Store, buscaID)
 }
 
 // ── Helpers (extraídos do httpapi para reuso) ─────────────────────────────────

@@ -12,6 +12,7 @@
 	let conversoesReais = $state(null);
 	let carregando = $state(true);
 	let carregandoReais = $state(false);
+	let tentouReais = $state(false);
 	let erro = $state(null);
 	let erroReais = $state(null);
 	let filtro = $state('');
@@ -44,6 +45,7 @@
 
 	async function carregarReais() {
 		carregandoReais = true;
+		tentouReais = true;
 		erroReais = null;
 
 		let timeoutId;
@@ -67,7 +69,7 @@
 	});
 
 	$effect(() => {
-		if (aba === 'desempenho' && !conversoesReais && !carregandoReais) {
+		if (aba === 'desempenho' && !conversoesReais && !carregandoReais && !tentouReais) {
 			carregarReais();
 		}
 	});
@@ -94,6 +96,7 @@
 	$effect(() => {
 		diasReais; // track
 		if (periodoInicial) { periodoInicial = false; return; }
+		tentouReais = false;
 		carregarReais();
 	});
 </script>
@@ -162,7 +165,7 @@
 		{:else if aba === 'desempenho'}
 			<div class="desemp-header">
 				<PeriodSelector bind:value={diasReais} options={[7, 30, 90]} />
-				<button class="btn-sync" onclick={carregarReais} disabled={carregandoReais}>
+				<button class="btn-sync" onclick={() => { tentouReais = false; carregarReais(); }} disabled={carregandoReais}>
 					{carregandoReais ? '⏳' : '🔄'} Sincronizar
 				</button>
 			</div>

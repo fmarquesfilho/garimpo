@@ -29,13 +29,18 @@
 	<!-- Busca principal — sempre visível -->
 	{#if mostrarBusca}
 		<div class="busca-row">
-			<input
-				type="search"
-				bind:value={busca}
-				placeholder="🔍 Buscar produto… (ex: sérum, perfume, batom)"
-				class="busca-input"
-				onkeydown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
-			/>
+			<div class="busca-wrapper">
+				<input
+					type="search"
+					bind:value={busca}
+					placeholder="🔍 Buscar produto… (ex: sérum, perfume, batom)"
+					class="busca-input"
+					onkeydown={(e) => { if (e.key === 'Escape') { busca = ''; e.target.blur(); } else if (e.key === 'Enter') e.target.blur(); }}
+				/>
+				{#if busca}
+					<button class="btn-limpar" onclick={() => (busca = '')} type="button" aria-label="Limpar busca">✕</button>
+				{/if}
+			</div>
 			<button
 				class="btn-avancado"
 				class:ativo={avancadoAberto}
@@ -102,11 +107,15 @@
 		display: flex;
 		gap: var(--r2);
 	}
-	.busca-input {
+	.busca-wrapper {
 		flex: 1;
+		position: relative;
+	}
+	.busca-input {
+		width: 100%;
 		font-family: var(--ui);
 		font-size: 1rem;
-		padding: 12px 16px;
+		padding: 12px 40px 12px 16px;
 		border-radius: var(--raio);
 		border: 1px solid var(--linha);
 		background: var(--branco);
@@ -118,6 +127,24 @@
 		box-shadow: 0 0 0 3px var(--ouro-fundo);
 	}
 	.busca-input::placeholder { color: var(--tinta-suave); opacity: 0.6; }
+	.btn-limpar {
+		position: absolute;
+		right: 10px;
+		top: 50%;
+		transform: translateY(-50%);
+		border: none;
+		background: var(--porcelana);
+		color: var(--tinta-suave);
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		font-size: 0.75rem;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.btn-limpar:hover { background: var(--linha); color: var(--tinta); }
 
 	.btn-avancado {
 		display: flex;
