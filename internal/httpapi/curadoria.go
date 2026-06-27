@@ -35,7 +35,11 @@ func toDTO(s domain.Scored) candidatoDTO {
 	lojaID := p.ShopID
 	if lojaID == "0" || lojaID == "" {
 		// Tenta extrair do ProductLink (formato: -i.SHOPID.ITEMID)
-		lojaID = extrairShopIDDoLink(p.Link)
+		lojaID = extrairShopIDDoLink(p.ProductLink)
+		if lojaID == "" {
+			// Fallback: tenta no offerLink (raro, mas possível em links antigos)
+			lojaID = extrairShopIDDoLink(p.Link)
+		}
 	}
 	return candidatoDTO{
 		ID: p.ID, Nome: p.Name, Categoria: p.Category, Loja: p.ShopName,
