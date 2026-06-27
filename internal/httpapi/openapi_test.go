@@ -68,6 +68,7 @@ func extrairRotasDoHandler(_ http.Handler) []rotaInfo {
 		{"GET", "/api/estatisticas"},
 		{"GET", "/api/coletas"},
 		{"GET", "/api/conversoes"},
+		{"GET", "/api/conversoes/reais"},
 		{"POST", "/api/conversoes/sync"},
 		{"GET", "/api/buscas"},
 		{"POST", "/api/buscas"},

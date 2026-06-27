@@ -1,14 +1,18 @@
 <script>
 	import { onMount } from 'svelte';
-	import { listarPublicacoes, buscarConversoes } from '$lib/api.js';
+	import { listarPublicacoes, buscarConversoes, buscarConversoesReais } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 
 	let publicacoes = $state([]);
 	let conversoes = $state([]);
+	let conversoesReais = $state(null);
 	let carregando = $state(true);
+	let carregandoReais = $state(false);
 	let erro = $state(null);
-	let filtro = $state(''); // '' | 'agendada' | 'enviada' | 'erro'
-	let aba = $state('historico'); // 'historico' | 'desempenho'
+	let erroReais = $state(null);
+	let filtro = $state('');
+	let aba = $state('historico');
+	let diasReais = $state(30);
 
 	onMount(carregar);
 
@@ -23,15 +27,34 @@
 			publicacoes = rp?.publicacoes ?? [];
 			conversoes = rc?.conversoes ?? [];
 		} catch (e) {
-			erro = e.message;
+			erro = e.message ?? e;
 		} finally {
 			carregando = false;
+		}
+	}
+
+	async function carregarReais() {
+		carregandoReais = true;
+		erroReais = null;
+		try {
+			conversoesReais = await buscarConversoesReais({ dias: diasReais });
+		} catch (e) {
+			erroReais = e.message ?? e;
+		} finally {
+			carregandoReais = false;
 		}
 	}
 
 	$effect(() => {
 		filtro;
 		carregar();
+	});
+
+	// Carrega conversões reais quando muda para aba desempenho
+	$effect(() => {
+		if (aba === 'desempenho' && !conversoesReais && !carregandoReais) {
+			carregarReais();
+		}
 	});
 
 	const statusIcon = { agendada: '⏱', enviada: '✓', erro: '✕' };
@@ -149,54 +172,83 @@
 		{/if}
 
 		{:else if aba === 'desempenho'}
-			<!-- Relatório de conversões REAIS da Shopee -->
-			{#if conversoes.length === 0}
+			<!-- Conversões reais da Shopee -->
+			<div class="desemp-header">
+				<div class="periodo-selector">
+					<button class:ativo={diasReais === 7} onclick={() => { diasReais = 7; carregarReais(); }}>7 dias</button>
+					<button class:ativo={diasReais === 30} onclick={() => { diasReais = 30; carregarReais(); }}>30 dias</button>
+					<button class:ativo={diasReais === 90} onclick={() => { diasReais = 90; carregarReais(); }}>90 dias</button>
+				</div>
+				<button class="btn-sync" onclick={carregarReais} disabled={carregandoReais}>
+					{carregandoReais ? '⏳' : '🔄'} Sincronizar
+				</button>
+			</div>
+
+			{#if erroReais}
+				<div class="msg-erro">{erroReais}</div>
+			{:else if carregandoReais}
+				<p class="loading">Consultando relatório de conversões da Shopee…</p>
+			{:else if !conversoesReais || conversoesReais.total === 0}
 				<div class="info-desempenho">
-					<h3>📊 Rastreamento de conversões</h3>
-					<p>Aqui você verá quais publicações geraram <strong>vendas reais</strong>.</p>
-					<p>O sistema consulta o relatório de conversões da Shopee automaticamente. Quando alguém compra pelo seu link, a venda aparece aqui com:</p>
+					<h3>📊 Nenhuma conversão nos últimos {diasReais} dias</h3>
+					<p>Quando alguém comprar pelo seu link de afiliado, a venda aparece aqui com:</p>
 					<ul class="lista-info">
 						<li>📦 Nome do <strong>produto</strong> vendido</li>
 						<li>🏪 <strong>Loja</strong> que vendeu</li>
 						<li>💰 <strong>Comissão</strong> real recebida</li>
 						<li>📡 <strong>Canal</strong> da publicação (sub_id)</li>
 						<li>📅 Data da <strong>compra</strong></li>
-						<li>⏳ <strong>Status</strong> (pendente, aprovada, cancelada)</li>
+						<li>⏳ <strong>Status</strong> (pendente ou confirmada)</li>
 					</ul>
-					<p class="dica">💡 Dica: para dados aparecerem, é preciso que alguém compre pelo link de afiliado. A sincronização consulta os últimos 30 dias.</p>
+					<p class="dica">💡 O sistema consulta os últimos {diasReais} dias do relatório de conversões da Shopee.</p>
 				</div>
 			{:else}
-				<!-- Resumo de conversões -->
+				<!-- Resumo -->
 				<div class="resumo-conversoes">
+					<div class="resumo-card destaque">
+						<span class="resumo-num">R$ {conversoesReais.comissao_total?.toFixed(2)}</span>
+						<span class="resumo-label">Comissão total</span>
+					</div>
 					<div class="resumo-card">
-						<span class="resumo-num">{conversoes.length}</span>
+						<span class="resumo-num">{conversoesReais.total}</span>
 						<span class="resumo-label">Conversões</span>
 					</div>
-					<div class="resumo-card destaque">
-						<span class="resumo-num">R$ {conversoes.reduce((s, c) => s + (c.comissao_estimada || 0), 0).toFixed(2)}</span>
-						<span class="resumo-label">Comissão total</span>
+					<div class="resumo-card">
+						<span class="resumo-num">{conversoesReais.confirmadas}</span>
+						<span class="resumo-label">Confirmadas</span>
+					</div>
+					<div class="resumo-card">
+						<span class="resumo-num">{conversoesReais.pendentes}</span>
+						<span class="resumo-label">Pendentes</span>
 					</div>
 				</div>
 
+				<!-- Tabela detalhada -->
 				<div class="tabela-desemp">
 					<table>
 						<thead>
 							<tr>
 								<th>Produto</th>
-								<th>Canal</th>
+								<th>Loja</th>
 								<th>Comissão</th>
-								<th>Publicações</th>
-								<th>Último envio</th>
+								<th>Status</th>
+								<th>Canal (sub_id)</th>
+								<th>Compra em</th>
 							</tr>
 						</thead>
 						<tbody>
-							{#each conversoes as c (c.sub_id)}
+							{#each conversoesReais.conversoes as c (c.conversion_id)}
 								<tr>
-									<td class="nome-col">{c.nome || '—'}</td>
-									<td><span class="canal-badge">{c.canal || '—'}</span></td>
-									<td class="num comissao-val">R$ {c.comissao_estimada?.toFixed(2) ?? '—'}</td>
-									<td class="num">{c.publicacoes}</td>
-									<td class="data">{formatarData(c.publicado_em)}</td>
+									<td class="nome-col">{c.product_name || '—'}</td>
+									<td class="loja-col">{c.shop_name || '—'}</td>
+									<td class="num comissao-val">R$ {c.total_commission?.toFixed(2)}</td>
+									<td>
+										<span class="status-badge-conv" class:pendente={c.status === 'PENDING' || c.status === 'UNPAID'} class:confirmada={c.status === 'COMPLETED' || c.status === 'PAID'} class:cancelada={c.status === 'CANCELLED'}>
+											{c.status}
+										</span>
+									</td>
+									<td class="sub-id-col">{c.utm_content || '—'}</td>
+									<td class="data">{formatarData(c.purchase_time)}</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -277,12 +329,25 @@
 	.lista-info li { margin: var(--r2) 0; font-size: var(--text-base); }
 
 	/* Desempenho */
-	.resumo-conversoes { display: flex; gap: var(--r3); margin-bottom: var(--r5); }
-	.resumo-card { display: flex; flex-direction: column; align-items: center; padding: var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); min-width: 120px; }
+	.desemp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r4); flex-wrap: wrap; gap: var(--r3); }
+	.periodo-selector { display: flex; gap: 2px; background: var(--porcelana); border-radius: var(--raio-sm); padding: 3px; border: 1px solid var(--linha); }
+	.periodo-selector button { padding: 6px 14px; border: none; border-radius: var(--raio-sm); background: transparent; font-size: 0.82rem; font-weight: 600; color: var(--tinta-suave); cursor: pointer; }
+	.periodo-selector button.ativo { background: var(--branco); color: var(--tinta); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+	.btn-sync { padding: 6px 14px; border: 1px solid var(--ouro); background: var(--ouro-fundo); color: var(--ouro-escuro); border-radius: var(--raio-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+	.btn-sync:hover:not(:disabled) { background: var(--ouro-claro); }
+	.btn-sync:disabled { opacity: 0.5; }
+	.resumo-conversoes { display: flex; gap: var(--r3); margin-bottom: var(--r5); flex-wrap: wrap; }
+	.resumo-card { display: flex; flex-direction: column; align-items: center; padding: var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); min-width: 100px; }
 	.resumo-card.destaque { background: var(--sucesso-fundo); border-color: var(--sucesso-texto); }
-	.resumo-num { font-size: 1.4rem; font-weight: 700; font-family: var(--mono); }
-	.resumo-label { font-size: 0.72rem; color: var(--tinta-suave); text-transform: uppercase; }
+	.resumo-num { font-size: 1.3rem; font-weight: 700; font-family: var(--mono); }
+	.resumo-label { font-size: 0.7rem; color: var(--tinta-suave); text-transform: uppercase; margin-top: 2px; }
 	.comissao-val { color: var(--sucesso-texto); }
+	.status-badge-conv { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: var(--raio-full); }
+	.status-badge-conv.pendente { background: var(--ouro-fundo); color: var(--ouro-escuro); }
+	.status-badge-conv.confirmada { background: var(--sucesso-fundo); color: var(--sucesso-texto); }
+	.status-badge-conv.cancelada { background: var(--erro-fundo); color: var(--erro-texto); }
+	.sub-id-col { font-size: 0.72rem; font-family: var(--mono); max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+	.loja-col { font-size: 0.82rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	.tabela-desemp { overflow-x: auto; }
 	.tabela-desemp table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 	.tabela-desemp th { text-align: left; font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--linha); font-size: 0.78rem; text-transform: uppercase; color: var(--tinta-suave); }

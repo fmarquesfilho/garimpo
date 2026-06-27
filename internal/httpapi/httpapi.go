@@ -108,6 +108,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/estatisticas", srv.estatisticas)
 	mux.HandleFunc("GET /api/coletas", srv.coletas)
 	mux.HandleFunc("GET /api/conversoes", srv.conversoes)
+	mux.HandleFunc("GET /api/conversoes/reais", srv.conversoesReais)
 	mux.HandleFunc("POST /api/conversoes/sync", srv.syncConversoes)
 
 	// ── Admin ─────────────────────────────────────────────────────────────

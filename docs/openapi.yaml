@@ -596,6 +596,45 @@ paths:
         '200':
           description: Conversões agrupadas
 
+  /api/conversoes/reais:
+    get:
+      tags: [Análise]
+      summary: Conversões reais da Shopee (conversionReport)
+      description: |
+        Consulta o relatório de conversões real da API de afiliados da Shopee.
+        Retorna vendas que aconteceram via links de afiliado, com produto, loja,
+        comissão, status e canal (sub_id).
+      parameters:
+        - name: dias
+          in: query
+          schema: { type: integer, default: 30, maximum: 90 }
+      responses:
+        '200':
+          description: Conversões reais com resumo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dias: { type: integer }
+                  total: { type: integer }
+                  pendentes: { type: integer }
+                  confirmadas: { type: integer }
+                  comissao_total: { type: number }
+                  conversoes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        conversion_id: { type: string }
+                        utm_content: { type: string }
+                        total_commission: { type: number }
+                        status: { type: string, enum: [PENDING, UNPAID, COMPLETED, PAID, CANCELLED] }
+                        purchase_time: { type: string }
+                        product_name: { type: string }
+                        product_id: { type: string }
+                        shop_name: { type: string }
+
   /api/conversoes/sync:
     post:
       tags: [Coleta]
