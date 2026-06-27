@@ -45,11 +45,18 @@
 	async function carregarReais() {
 		carregandoReais = true;
 		erroReais = null;
+
+		let timeoutId;
+		const timeout = new Promise((_, reject) => {
+			timeoutId = setTimeout(() => reject(new Error('A Shopee não respondeu a tempo. Tente novamente.')), 20000);
+		});
+
 		try {
-			conversoesReais = await buscarConversoesReais({ dias: diasReais });
+			conversoesReais = await Promise.race([buscarConversoesReais({ dias: diasReais }), timeout]);
 		} catch (e) {
 			erroReais = { message: e.message ?? e, retry: true };
 		} finally {
+			clearTimeout(timeoutId);
 			carregandoReais = false;
 		}
 	}
@@ -163,7 +170,10 @@
 			{#if erroReais}
 				<ErrorMessage erro={erroReais} onretry={carregarReais} />
 			{:else if carregandoReais}
-				<Loading mensagem="Consultando relatório de conversões da Shopee…" />
+				<div class="loading-desemp">
+					<Loading mensagem="Consultando relatório de conversões da Shopee…" />
+					<p class="loading-sub">Isso pode levar até 15 segundos. Se não responder, tente "Sincronizar" novamente.</p>
+				</div>
 			{:else if !conversoesReais || conversoesReais.total === 0}
 				<div class="info-desempenho">
 					<h3>📊 Nenhuma conversão nos últimos {diasReais} dias</h3>
@@ -281,6 +291,8 @@
 
 	/* Desempenho */
 	.desemp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r4); flex-wrap: wrap; gap: var(--r3); }
+	.loading-desemp { margin: var(--r4) 0; }
+	.loading-sub { color: var(--tinta-suave); font-size: 0.82rem; margin-top: 4px; }
 	.btn-sync { padding: 6px 14px; border: 1px solid var(--ouro); background: var(--ouro-fundo); color: var(--ouro-escuro); border-radius: var(--raio-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; }
 	.btn-sync:hover:not(:disabled) { background: var(--ouro-claro); }
 	.btn-sync:disabled { opacity: 0.5; }

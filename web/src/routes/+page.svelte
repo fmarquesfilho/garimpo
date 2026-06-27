@@ -87,6 +87,8 @@
 	}
 
 	// ── Carregar candidatos ───────────────────────────────────────────────────
+	const TIMEOUT_MS = 20000; // 20s — se não responder, mostra erro
+
 	async function carregar() {
 		// Não busca sem keyword (mostra estado vazio)
 		if (!f.busca.trim()) {
@@ -106,19 +108,26 @@
 			notaMin: f.notaMin,
 			exploracao: f.explorar ? 0.2 : 0
 		};
+
+		let timeoutId;
+		const timeout = new Promise((_, reject) => {
+			timeoutId = setTimeout(() => reject(new Error('A busca demorou demais. Verifique a conexão ou tente outro termo.')), TIMEOUT_MS);
+		});
+
 		try {
 			if (f.modo === 'comparar') {
-				const r = await compararEstrategias({ top: 6, ...filtrosReq });
+				const r = await Promise.race([compararEstrategias({ top: 6, ...filtrosReq }), timeout]);
 				pares = r;
 				
 			} else {
-				const r = await buscarCandidatos({ estrategia: f.modo, top: f.quantos, ...filtrosReq });
+				const r = await Promise.race([buscarCandidatos({ estrategia: f.modo, top: f.quantos, ...filtrosReq }), timeout]);
 				lista = (r.candidatos ?? []).map((c) => ({ ...c, estrategia: f.modo }));
 				
 			}
 		} catch (e) {
 			erro = e;
 		} finally {
+			clearTimeout(timeoutId);
 			carregando = false;
 		}
 	}
@@ -218,19 +227,22 @@
 
 <!-- ── Resultados ──────────────────────────────────────────────────────────── -->
 {#if carregando}
-	<p class="aviso">Buscando os melhores produtos…</p>
+	<div class="aviso-loading">
+		<p class="aviso">Buscando os melhores produtos…</p>
+		<p class="aviso-sub">Consultando a API da Shopee. Isso leva até 20 segundos na primeira vez.</p>
+	</div>
 {:else if erro}
 	<div class="msg-erro">
 		<p><strong>😕 Não consegui buscar produtos.</strong></p>
 		<p>{erro.message ?? erro}</p>
-		{#if erro.retry}
-			<button class="btn-retry" onclick={buscar}>🔄 Tentar novamente</button>
-		{:else if erro.status === 502}
+		{#if erro.status === 502}
 			<p class="dica">A API da Shopee pode estar temporariamente fora. Tente novamente em alguns segundos.</p>
-			<button class="btn-retry" onclick={buscar}>🔄 Tentar novamente</button>
 		{:else if erro.status === 401}
 			<p class="dica">Sua sessão pode ter expirado. Tente fazer logout e login novamente.</p>
+		{:else if !erro.status}
+			<p class="dica">Pode ser timeout ou falha de rede. Tente outro termo ou tente novamente.</p>
 		{/if}
+		<button class="btn-retry" onclick={carregar}>🔄 Tentar novamente</button>
 	</div>
 {:else if lista.length === 0 && (!pares || f.modo !== 'comparar')}
 	<div class="vazio">
@@ -264,6 +276,8 @@
 	}
 
 	.aviso { color: var(--tinta-suave); font-style: italic; }
+	.aviso-loading { margin: var(--r4) 0; }
+	.aviso-sub { color: var(--tinta-suave); font-size: 0.82rem; margin-top: 4px; }
 	.vazio, .msg-erro {
 		background: var(--nevoa); border: 1px solid var(--linha);
 		border-radius: var(--raio); padding: var(--r8); text-align: center;
