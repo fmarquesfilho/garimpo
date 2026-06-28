@@ -11,11 +11,6 @@ import (
 // whatsappGrupos lista os grupos do WhatsApp disponíveis na sessão do Maytapi.
 // Usado pelo frontend para popular o select no cadastro de destinos.
 func (srv *Server) whatsappGrupos(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para listar grupos")
-		return
-	}
 
 	productID := os.Getenv("WHATSAPP_PRODUCT_ID")
 	phoneID := os.Getenv("WHATSAPP_PHONE_ID")

@@ -11,11 +11,6 @@ import (
 // Protegido por autenticação normal (Bearer token), não por COLETA_TOKEN.
 // GET /api/conversoes/reais?dias=30
 func (srv *Server) conversoesReais(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver conversões")
-		return
-	}
 
 	appID := os.Getenv("SHOPEE_APP_ID")
 	secret := os.Getenv("SHOPEE_SECRET")
@@ -71,11 +66,6 @@ func (srv *Server) conversoesReais(w http.ResponseWriter, r *http.Request) {
 // conversoes retorna o relatório de conversões estimadas (baseado em publicações).
 // GET /api/conversoes?dias=30
 func (srv *Server) conversoes(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver conversões")
-		return
-	}
 
 	dias := 30
 	if s := r.URL.Query().Get("dias"); s != "" {

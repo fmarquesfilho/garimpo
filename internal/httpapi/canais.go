@@ -11,11 +11,6 @@ import (
 
 // listarDestinos devolve os destinos ativos.
 func (srv *Server) listarDestinos(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para gerenciar destinos")
-		return
-	}
 	if srv.Destinos == nil {
 		writeErr(w, http.StatusServiceUnavailable, "gerenciamento de destinos não configurado")
 		return
@@ -31,11 +26,6 @@ func (srv *Server) listarDestinos(w http.ResponseWriter, r *http.Request) {
 
 // salvarDestino cria ou atualiza um destino de publicação.
 func (srv *Server) salvarDestino(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para gerenciar destinos")
-		return
-	}
 	if srv.Destinos == nil {
 		writeErr(w, http.StatusServiceUnavailable, "gerenciamento de destinos não configurado")
 		return
@@ -73,11 +63,6 @@ func (srv *Server) salvarDestino(w http.ResponseWriter, r *http.Request) {
 
 // deletarDestino remove um destino por ID (?id=xxx).
 func (srv *Server) deletarDestino(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para gerenciar destinos")
-		return
-	}
 	if srv.Destinos == nil {
 		writeErr(w, http.StatusServiceUnavailable, "gerenciamento de destinos não configurado")
 		return

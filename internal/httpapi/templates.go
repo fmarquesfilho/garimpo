@@ -12,11 +12,6 @@ import (
 
 // listarTemplates devolve os templates ativos.
 func (srv *Server) listarTemplates(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para gerenciar templates")
-		return
-	}
 	lista, err := srv.Templates.Listar(r.Context())
 	if err != nil {
 		srv.Logger.Error("listar templates falhou", slog.String("erro", err.Error()))
@@ -28,11 +23,6 @@ func (srv *Server) listarTemplates(w http.ResponseWriter, r *http.Request) {
 
 // salvarTemplate cria ou atualiza um template de mensagem.
 func (srv *Server) salvarTemplate(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para gerenciar templates")
-		return
-	}
 
 	var t publish.Template
 	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
@@ -66,11 +56,6 @@ func (srv *Server) salvarTemplate(w http.ResponseWriter, r *http.Request) {
 
 // deletarTemplate remove um template por ID (?id=xxx).
 func (srv *Server) deletarTemplate(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para gerenciar templates")
-		return
-	}
 
 	id := r.URL.Query().Get("id")
 	if id == "" {

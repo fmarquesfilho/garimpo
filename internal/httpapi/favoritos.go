@@ -11,11 +11,7 @@ import (
 
 // listarFavoritos retorna os favoritos do usuário logado.
 func (srv *Server) listarFavoritos(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver favoritos")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	favoritos, err := srv.Eventos.ListarFavoritos(r.Context(), user.UID)
 	if err != nil {
@@ -29,11 +25,7 @@ func (srv *Server) listarFavoritos(w http.ResponseWriter, r *http.Request) {
 
 // salvarFavorito adiciona um produto aos favoritos do usuário.
 func (srv *Server) salvarFavorito(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para salvar favoritos")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	var fav store.Favorito
 	if err := json.NewDecoder(r.Body).Decode(&fav); err != nil {
@@ -59,11 +51,7 @@ func (srv *Server) salvarFavorito(w http.ResponseWriter, r *http.Request) {
 
 // removerFavorito remove um produto dos favoritos.
 func (srv *Server) removerFavorito(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para remover favoritos")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	produtoID := r.URL.Query().Get("produto_id")
 	if produtoID == "" {

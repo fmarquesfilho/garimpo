@@ -12,11 +12,6 @@ import (
 
 // alertasConfig retorna a configuração atual de alertas (sem expor o token).
 func (srv *Server) alertasConfig(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver configuração de alertas")
-		return
-	}
 
 	cfg := alerts.ConfigFromEnv()
 	// Mostra chat_id mascarado se configurado
@@ -41,11 +36,6 @@ func (srv *Server) alertasConfig(w http.ResponseWriter, r *http.Request) {
 
 // alertasTestar envia um alerta de teste para o grupo configurado.
 func (srv *Server) alertasTestar(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para testar alertas")
-		return
-	}
 
 	cfg := alerts.ConfigFromEnv()
 	cfg.Logger = srv.Logger
@@ -87,11 +77,6 @@ func (srv *Server) alertasTestar(w http.ResponseWriter, r *http.Request) {
 // alertasAtualizar permite atualizar threshold e apenas_quedas em runtime (via env override).
 // Em produção, as env vars são definidas no Cloud Run; isso serve como override temporário para testes.
 func (srv *Server) alertasAtualizar(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para configurar alertas")
-		return
-	}
 
 	var req struct {
 		ChatID       string  `json:"chat_id"`

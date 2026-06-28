@@ -193,7 +193,7 @@ func TestListarBuscasRetornaShopIDs(t *testing.T) {
 
 func TestAlertasConfigExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/alertas", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/alertas", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
 	}
@@ -251,7 +251,7 @@ func TestAlertasConfigurarAtualizaThreshold(t *testing.T) {
 
 func TestAlertasConfigurarExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "POST", "/api/alertas/configurar", []byte(`{}`),
+	rec := reqSemAuth(t, h, "POST", "/api/alertas/configurar", []byte(`{}`),
 		map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)

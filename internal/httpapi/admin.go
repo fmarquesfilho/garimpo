@@ -11,11 +11,6 @@ import (
 // adminLogs retorna os últimos logs capturados pelo buffer.
 // GET /api/admin/logs?n=100&nivel=error
 func (srv *Server) adminLogs(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil || !user.Admin {
-		writeErr(w, http.StatusForbidden, "acesso restrito a administradores")
-		return
-	}
 
 	if srv.LogBuffer == nil {
 		writeJSON(w, http.StatusOK, map[string]any{"logs": []any{}, "stats": map[string]int{}})
@@ -58,11 +53,6 @@ func (srv *Server) adminLogs(w http.ResponseWriter, r *http.Request) {
 // adminLogLevel permite mudar o nível de log em runtime.
 // POST /api/admin/log-level  body: {"nivel": "debug|info|warn|error"}
 func (srv *Server) adminLogLevel(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil || !user.Admin {
-		writeErr(w, http.StatusForbidden, "acesso restrito a administradores")
-		return
-	}
 
 	var req struct {
 		Nivel string `json:"nivel"`
@@ -105,11 +95,7 @@ func parseLogLevel(s string) slog.Level {
 // adminMe retorna informações do usuário logado (incluindo se é admin).
 // GET /api/admin/me
 func (srv *Server) adminMe(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "não autenticado")
-		return
-	}
+	user := usuarioDoCtx(r)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"uid":   user.UID,
 		"email": user.Email,

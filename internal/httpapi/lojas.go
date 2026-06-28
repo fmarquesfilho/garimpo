@@ -16,11 +16,6 @@ import (
 // - produtos novos (presentes no último snapshot mas não no anterior)
 // - variações de preço (mesmo produto_id com preço diferente)
 func (srv *Server) novidades(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver novidades")
-		return
-	}
 
 	buscaID := r.URL.Query().Get("busca_id")
 	dias := 7
@@ -59,11 +54,6 @@ func (srv *Server) novidades(w http.ResponseWriter, r *http.Request) {
 
 // evolucaoLojas retorna a evolução de preço das lojas monitoradas ao longo do tempo.
 func (srv *Server) evolucaoLojas(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver evolução de lojas")
-		return
-	}
 
 	dias := 30
 	if s := r.URL.Query().Get("dias"); s != "" {
@@ -100,11 +90,7 @@ type adicionarLojaResp struct {
 // adicionarLoja aceita uma URL de loja Shopee ou ID numérico, extrai o shopID
 // e cria uma Busca com shop_ids para monitoramento.
 func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para adicionar lojas")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	var req adicionarLojaReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -188,11 +174,7 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 
 // listarLojas retorna as buscas ativas do usuário que têm shop_ids.
 func (srv *Server) listarLojas(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver lojas")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	buscas, err := srv.Eventos.ListarBuscas(r.Context())
 	if err != nil {
@@ -213,11 +195,7 @@ func (srv *Server) listarLojas(w http.ResponseWriter, r *http.Request) {
 
 // removerLoja desativa uma busca de loja (tombstone).
 func (srv *Server) removerLoja(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para remover lojas")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	id := r.URL.Query().Get("id")
 	if id == "" {

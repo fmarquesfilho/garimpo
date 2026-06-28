@@ -19,11 +19,7 @@ import (
 
 // onboardingStatus retorna o progresso do onboarding do tenant.
 func (srv *Server) onboardingStatus(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	cfg, err := srv.Tenants.Buscar(r.Context(), user.UID)
 	if err != nil {
@@ -52,11 +48,7 @@ func (srv *Server) onboardingStatus(w http.ResponseWriter, r *http.Request) {
 
 // onboardingTermos aceita os termos de uso (LGPD).
 func (srv *Server) onboardingTermos(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	var req struct {
 		Aceito bool `json:"aceito"`
@@ -92,11 +84,7 @@ func (srv *Server) onboardingTermos(w http.ResponseWriter, r *http.Request) {
 
 // onboardingShopee salva as credenciais da Shopee Affiliate API.
 func (srv *Server) onboardingShopee(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	var req struct {
 		AppID  string `json:"app_id"`
@@ -148,11 +136,7 @@ func (srv *Server) onboardingShopee(w http.ResponseWriter, r *http.Request) {
 
 // onboardingTelegram salva a configuração do bot Telegram (opcional).
 func (srv *Server) onboardingTelegram(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	var req struct {
 		Token  string `json:"token"`
@@ -202,11 +186,7 @@ func (srv *Server) onboardingTelegram(w http.ResponseWriter, r *http.Request) {
 
 // onboardingValidar testa as credenciais Shopee fazendo uma chamada real à API.
 func (srv *Server) onboardingValidar(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	cfg, _ := srv.Tenants.Buscar(r.Context(), user.UID)
 	if cfg == nil || cfg.ShopeeAppID == "" {
@@ -241,11 +221,7 @@ func (srv *Server) onboardingValidar(w http.ResponseWriter, r *http.Request) {
 
 // onboardingExcluirConta exclui a conta e todos os dados do tenant (LGPD).
 func (srv *Server) onboardingExcluirConta(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	var req struct {
 		Confirmar bool `json:"confirmar"`

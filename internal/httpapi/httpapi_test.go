@@ -161,8 +161,38 @@ func req(t *testing.T, h http.Handler, metodo, alvo string, corpo []byte, header
 	} else {
 		r = httptest.NewRequest(metodo, alvo, nil)
 	}
+	// Sempre envia token para o fakeVerifier (simula usuário autenticado),
+	// a menos que o caller passe "Authorization" explicitamente no mapa.
+	if _, explicit := headers["Authorization"]; !explicit {
+		r.Header.Set("Authorization", "Bearer fake-token")
+	}
 	for k, v := range headers {
-		r.Header.Set(k, v)
+		if v != "" {
+			r.Header.Set(k, v)
+		}
+	}
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, r)
+	return rec
+}
+
+// reqSemAuth faz request sem header Authorization (testa rejeição por middleware).
+func reqSemAuth(t *testing.T, h http.Handler, metodo, alvo string, corpo []byte, headers map[string]string) *httptest.ResponseRecorder {
+	t.Helper()
+	if headers == nil {
+		headers = map[string]string{}
+	}
+	headers["Authorization"] = "" // marca presença para o req() não setar default
+	var r *http.Request
+	if corpo != nil {
+		r = httptest.NewRequest(metodo, alvo, bytes.NewReader(corpo))
+	} else {
+		r = httptest.NewRequest(metodo, alvo, nil)
+	}
+	for k, v := range headers {
+		if v != "" {
+			r.Header.Set(k, v)
+		}
 	}
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, r)
@@ -342,14 +372,14 @@ func TestBuscasSalvaCompatibilidadeLegada(t *testing.T) {
 func TestBuscasExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
 	// POST sem auth → 401
-	rec := req(t, h, "POST", "/api/buscas", []byte(`{"keywords":["x"]}`), map[string]string{"Content-Type": "application/json"})
+	rec := reqSemAuth(t, h, "POST", "/api/buscas", []byte(`{"keywords":["x"]}`), map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 401 {
 		t.Errorf("busca sem auth deveria dar 401, veio %d", rec.Code)
 	}
-	// GET sem auth → 200 mas lista vazia
-	rec = req(t, h, "GET", "/api/buscas", nil, nil)
-	if rec.Code != 200 {
-		t.Errorf("GET sem auth deveria dar 200, veio %d", rec.Code)
+	// GET sem auth → 401 (middleware rejeita antes do handler)
+	rec = reqSemAuth(t, h, "GET", "/api/buscas", nil, nil)
+	if rec.Code != 401 {
+		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
 	}
 }
 
@@ -501,7 +531,7 @@ func TestDestinosCRUD(t *testing.T) {
 
 func TestDestinosExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/destinos", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/destinos", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
 	}
@@ -655,11 +685,11 @@ func TestPublicacoesAgendar(t *testing.T) {
 
 func TestPublicacoesExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/publicacoes", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/publicacoes", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
 	}
-	rec = req(t, h, "POST", "/api/publicacoes", []byte(`{"nome":"x"}`),
+	rec = reqSemAuth(t, h, "POST", "/api/publicacoes", []byte(`{"nome":"x"}`),
 		map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 401 {
 		t.Errorf("POST sem auth deveria dar 401, veio %d", rec.Code)
@@ -670,7 +700,7 @@ func TestPublicacoesExigeAuth(t *testing.T) {
 
 func TestConversoesExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/conversoes", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/conversoes", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
 	}
@@ -850,7 +880,7 @@ func TestCandidatosTotalBruto(t *testing.T) {
 
 func TestNovidadesExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/lojas/novidades", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/lojas/novidades", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
 	}

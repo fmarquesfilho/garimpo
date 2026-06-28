@@ -17,13 +17,13 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `BQ_DATASET` | `internal/store/novo_gcp.go` | 18 |
 | `BQ_TABELA_SNAP` | `internal/store/novo_gcp.go` | 23 |
 | `BQ_TABELA` | `internal/store/novo_gcp.go` | 19 |
-| `COLETA_TOKEN` | `internal/httpapi/helpers.go` | 87 |
+| `COLETA_TOKEN` | `internal/httpapi/auth_middleware.go` | 53 |
 | `DOCS_DIR` | `internal/httpapi/docs.go` | 14 |
 | `ENCRYPTION_KEY` | `internal/tenant/crypto.go` | 25 |
 | `GCP_REGION` | `internal/scheduler/novo_gcp.go` | 19 |
 | `GOOGLE_CLOUD_PROJECT` | `internal/scheduler/novo_gcp.go` | 18 |
 | `K_SERVICE` | `internal/logs/logs.go` | 59 |
-| `LOG_FORMAT` | `internal/httpapi/admin.go` | 79 |
+| `LOG_FORMAT` | `internal/httpapi/admin.go` | 69 |
 | `LOG_LEVEL` | `internal/logs/logs.go` | 22 |
 | `PORT` | `cmd/garimpo-api/main.go` | 39 |
 | `SCHEDULER_API_URL` | `internal/scheduler/novo_gcp.go` | 24 |
@@ -31,7 +31,7 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `SHOPEE_SECRET` | `cmd/garimpo/main.go` | 57 |
 | `TELEGRAM_BOT_TOKEN` | `internal/alerts/alerts.go` | 50 |
 | `TELEGRAM_CHAT_ID` | `internal/publish/novo.go` | 21 |
-| `WEB_DIR` | `internal/httpapi/httpapi.go` | 187 |
-| `WHATSAPP_API_KEY` | `internal/httpapi/whatsapp.go` | 22 |
-| `WHATSAPP_PHONE_ID` | `internal/httpapi/whatsapp.go` | 21 |
-| `WHATSAPP_PRODUCT_ID` | `internal/httpapi/whatsapp.go` | 20 |
+| `WEB_DIR` | `internal/httpapi/httpapi.go` | 202 |
+| `WHATSAPP_API_KEY` | `internal/httpapi/whatsapp.go` | 17 |
+| `WHATSAPP_PHONE_ID` | `internal/httpapi/whatsapp.go` | 16 |
+| `WHATSAPP_PRODUCT_ID` | `internal/httpapi/whatsapp.go` | 15 |

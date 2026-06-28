@@ -79,73 +79,88 @@ func (srv *Server) Handler() http.Handler {
 	r.Use(cors)
 	r.Use(srv.logRequests)
 
-	// ── Curadoria ─────────────────────────────────────────────────────────
+	// ── Rotas públicas (sem autenticação) ─────────────────────────────────
+	r.Get("/api/health", srv.health)
 	r.Get("/api/candidatos", srv.candidatos)
 	r.Get("/api/comparar", srv.comparar)
-	r.Post("/api/eventos", srv.eventos)
-	r.Get("/api/buscas", srv.listarBuscas)
-	r.Post("/api/buscas", srv.salvarBusca)
-	r.Post("/api/resolver-link", srv.resolverLink)
 	r.Get("/api/produto/origem", srv.produtoOrigem)
 	r.Post("/api/produto/origem/batch", srv.produtoOrigemBatch)
-
-	// ── Lojas (monitoramento) ─────────────────────────────────────────────
-	r.Get("/api/lojas", srv.listarLojas)
-	r.Post("/api/lojas", srv.adicionarLoja)
-	r.Delete("/api/lojas", srv.removerLoja)
-	r.Get("/api/lojas/novidades", srv.novidades)
-	r.Get("/api/lojas/evolucao", srv.evolucaoLojas)
-
-	// ── Alertas ───────────────────────────────────────────────────────────
-	r.Get("/api/alertas", srv.alertasConfig)
-	r.Post("/api/alertas/testar", srv.alertasTestar)
-	r.Post("/api/alertas/configurar", srv.alertasAtualizar)
-
-	// ── Favoritos ─────────────────────────────────────────────────────────
-	r.Get("/api/favoritos", srv.listarFavoritos)
-	r.Post("/api/favoritos", srv.salvarFavorito)
-	r.Delete("/api/favoritos", srv.removerFavorito)
-
-	// ── Publicação ────────────────────────────────────────────────────────
-	r.Post("/api/publicar", srv.publicar)
-	r.Get("/api/publicacoes", srv.listarPublicacoes)
-	r.Post("/api/publicacoes", srv.agendarPublicacao)
-	r.Post("/api/publicar-pendentes", srv.publicarPendentes)
-
-	// ── Destinos e Templates ──────────────────────────────────────────────
-	r.Get("/api/destinos", srv.listarDestinos)
-	r.Post("/api/destinos", srv.salvarDestino)
-	r.Delete("/api/destinos", srv.deletarDestino)
-	r.Get("/api/templates", srv.listarTemplates)
-	r.Post("/api/templates", srv.salvarTemplate)
-	r.Delete("/api/templates", srv.deletarTemplate)
-	r.Post("/api/templates/preview", srv.templatePreview)
-	r.Get("/api/whatsapp/grupos", srv.whatsappGrupos)
-
-	// ── Coleta e Análise ──────────────────────────────────────────────────
-	r.Post("/api/coletar", srv.coletar)
-	r.Get("/api/estatisticas", srv.estatisticas)
-	r.Get("/api/coletas", srv.coletas)
-	r.Get("/api/conversoes", srv.conversoes)
-	r.Get("/api/conversoes/reais", srv.conversoesReais)
-	r.Post("/api/conversoes/sync", srv.syncConversoes)
-
-	// ── Admin ─────────────────────────────────────────────────────────────
-	r.Get("/api/health", srv.health)
-	r.Get("/api/admin/logs", srv.adminLogs)
-	r.Post("/api/admin/log-level", srv.adminLogLevel)
-	r.Get("/api/admin/me", srv.adminMe)
-	r.Get("/api/admin/shopee-introspect", srv.adminShopeeIntrospect)
 	r.Get("/api/docs", srv.apiDocs)
 	r.Get("/api/openapi.yaml", srv.openapiSpec)
 
-	// ── Onboarding / Tenant ──────────────────────────────────────────────
-	r.Get("/api/onboarding/status", srv.onboardingStatus)
-	r.Post("/api/onboarding/termos", srv.onboardingTermos)
-	r.Post("/api/onboarding/shopee", srv.onboardingShopee)
-	r.Post("/api/onboarding/telegram", srv.onboardingTelegram)
-	r.Post("/api/onboarding/validar", srv.onboardingValidar)
-	r.Post("/api/onboarding/excluir-conta", srv.onboardingExcluirConta)
+	// ── Rotas protegidas por token de coleta (Cloud Scheduler) ────────────
+	r.Group(func(r chi.Router) {
+		r.Use(srv.requireColetaToken)
+		r.Post("/api/coletar", srv.coletar)
+		r.Post("/api/conversoes/sync", srv.syncConversoes)
+		r.Post("/api/publicar-pendentes", srv.publicarPendentes)
+	})
+
+	// ── Rotas autenticadas (usuário Firebase) ─────────────────────────────
+	r.Group(func(r chi.Router) {
+		r.Use(srv.requireAuth)
+
+		// Curadoria
+		r.Post("/api/eventos", srv.eventos)
+		r.Get("/api/buscas", srv.listarBuscas)
+		r.Post("/api/buscas", srv.salvarBusca)
+		r.Post("/api/resolver-link", srv.resolverLink)
+
+		// Lojas
+		r.Get("/api/lojas", srv.listarLojas)
+		r.Post("/api/lojas", srv.adicionarLoja)
+		r.Delete("/api/lojas", srv.removerLoja)
+		r.Get("/api/lojas/novidades", srv.novidades)
+		r.Get("/api/lojas/evolucao", srv.evolucaoLojas)
+
+		// Alertas
+		r.Get("/api/alertas", srv.alertasConfig)
+		r.Post("/api/alertas/testar", srv.alertasTestar)
+		r.Post("/api/alertas/configurar", srv.alertasAtualizar)
+
+		// Favoritos
+		r.Get("/api/favoritos", srv.listarFavoritos)
+		r.Post("/api/favoritos", srv.salvarFavorito)
+		r.Delete("/api/favoritos", srv.removerFavorito)
+
+		// Publicação
+		r.Post("/api/publicar", srv.publicar)
+		r.Get("/api/publicacoes", srv.listarPublicacoes)
+		r.Post("/api/publicacoes", srv.agendarPublicacao)
+
+		// Destinos e Templates
+		r.Get("/api/destinos", srv.listarDestinos)
+		r.Post("/api/destinos", srv.salvarDestino)
+		r.Delete("/api/destinos", srv.deletarDestino)
+		r.Get("/api/templates", srv.listarTemplates)
+		r.Post("/api/templates", srv.salvarTemplate)
+		r.Delete("/api/templates", srv.deletarTemplate)
+		r.Post("/api/templates/preview", srv.templatePreview)
+		r.Get("/api/whatsapp/grupos", srv.whatsappGrupos)
+
+		// Análise
+		r.Get("/api/estatisticas", srv.estatisticas)
+		r.Get("/api/coletas", srv.coletas)
+		r.Get("/api/conversoes", srv.conversoes)
+		r.Get("/api/conversoes/reais", srv.conversoesReais)
+
+		// Onboarding
+		r.Get("/api/onboarding/status", srv.onboardingStatus)
+		r.Post("/api/onboarding/termos", srv.onboardingTermos)
+		r.Post("/api/onboarding/shopee", srv.onboardingShopee)
+		r.Post("/api/onboarding/telegram", srv.onboardingTelegram)
+		r.Post("/api/onboarding/validar", srv.onboardingValidar)
+		r.Post("/api/onboarding/excluir-conta", srv.onboardingExcluirConta)
+
+		// Admin (requer auth + admin)
+		r.Group(func(r chi.Router) {
+			r.Use(srv.requireAdmin)
+			r.Get("/api/admin/logs", srv.adminLogs)
+			r.Post("/api/admin/log-level", srv.adminLogLevel)
+			r.Get("/api/admin/me", srv.adminMe)
+			r.Get("/api/admin/shopee-introspect", srv.adminShopeeIntrospect)
+		})
+	})
 
 	// ── Documentação (Starlight) ──────────────────────────────────────────
 	r.Mount("/docs", srv.docsFileServer())

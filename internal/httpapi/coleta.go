@@ -12,11 +12,6 @@ import (
 )
 
 func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
-	if !srv.autorizadoColeta(r) {
-		writeErr(w, http.StatusUnauthorized, "token de coleta inválido")
-		return
-	}
-
 	q := r.URL.Query()
 
 	// Parse dos parâmetros HTTP → struct de domínio
@@ -75,11 +70,7 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (srv *Server) listarBuscas(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"buscas": []store.Busca{}, "store": srv.Eventos.Nome()})
-		return
-	}
+	user := usuarioDoCtx(r)
 	lista, err := srv.Eventos.ListarBuscas(r.Context())
 	if err != nil {
 		srv.Logger.Error("listar buscas falhou", slog.String("erro", err.Error()))
@@ -96,11 +87,7 @@ func (srv *Server) listarBuscas(w http.ResponseWriter, r *http.Request) {
 }
 
 func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para salvar buscas")
-		return
-	}
+	user := usuarioDoCtx(r)
 	var b store.Busca
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")

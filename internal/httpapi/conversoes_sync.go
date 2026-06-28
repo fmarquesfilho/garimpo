@@ -28,10 +28,6 @@ type shopeeConversao struct {
 
 // syncConversoes consulta o conversionReport da Shopee e retorna conversões reais.
 func (srv *Server) syncConversoes(w http.ResponseWriter, r *http.Request) {
-	if !srv.autorizadoColeta(r) {
-		writeErr(w, http.StatusUnauthorized, "token inválido")
-		return
-	}
 
 	appID := os.Getenv("SHOPEE_APP_ID")
 	secret := os.Getenv("SHOPEE_SECRET")

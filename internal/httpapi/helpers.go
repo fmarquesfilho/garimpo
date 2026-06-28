@@ -3,7 +3,6 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"github.com/fmarquesfilho/garimpo/internal/auth"
 )
@@ -81,12 +80,4 @@ func (srv *Server) usuarioDoRequest(r *http.Request) *auth.User {
 		return nil
 	}
 	return srv.Auth.Verify(r.Context(), token)
-}
-
-func (srv *Server) autorizadoColeta(r *http.Request) bool {
-	tok := os.Getenv("COLETA_TOKEN")
-	if tok == "" {
-		return true
-	}
-	return r.Header.Get("X-Garimpo-Token") == tok
 }

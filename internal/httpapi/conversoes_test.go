@@ -10,7 +10,7 @@ import (
 
 func TestConversoesReaisExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/conversoes/reais", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/conversoes/reais", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
 	}

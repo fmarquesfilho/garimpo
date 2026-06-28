@@ -167,7 +167,7 @@ func TestCleanURL(t *testing.T) {
 func TestAdicionarLojaExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
 	corpo := []byte(`{"input":"12345"}`)
-	rec := req(t, h, "POST", "/api/lojas", corpo, map[string]string{"Content-Type": "application/json"})
+	rec := reqSemAuth(t, h, "POST", "/api/lojas", corpo, map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
 	}
@@ -296,7 +296,7 @@ func TestAdicionarLojaDuplicata(t *testing.T) {
 
 func TestListarLojasExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/lojas", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/lojas", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
 	}
@@ -339,7 +339,7 @@ func TestListarLojasFiltraBuscasComShopIDs(t *testing.T) {
 
 func TestRemoverLojaExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "DELETE", "/api/lojas?id=loja-123456", nil, nil)
+	rec := reqSemAuth(t, h, "DELETE", "/api/lojas?id=loja-123456", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
 	}
@@ -413,7 +413,7 @@ type shopSourceConfig struct {
 
 func TestEvolucaoLojasExigeAuth(t *testing.T) {
 	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
-	rec := req(t, h, "GET", "/api/lojas/evolucao", nil, nil)
+	rec := reqSemAuth(t, h, "GET", "/api/lojas/evolucao", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
 	}

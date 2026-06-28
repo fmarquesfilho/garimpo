@@ -18,11 +18,6 @@ import (
 // e retorna os campos disponíveis. Restrito a admin.
 // GET /api/admin/shopee-introspect
 func (srv *Server) adminShopeeIntrospect(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil || !user.Admin {
-		writeErr(w, http.StatusForbidden, "acesso restrito a administradores")
-		return
-	}
 
 	appID := os.Getenv("SHOPEE_APP_ID")
 	secret := os.Getenv("SHOPEE_SECRET")

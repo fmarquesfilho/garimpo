@@ -12,11 +12,6 @@ import (
 
 // listarPublicacoes retorna publicações filtradas por status (?status=agendada|enviada|erro).
 func (srv *Server) listarPublicacoes(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para ver publicações")
-		return
-	}
 	status := r.URL.Query().Get("status") // vazio = todas
 	lista, err := srv.Eventos.ListarPublicacoes(r.Context(), status)
 	if err != nil {
@@ -29,11 +24,7 @@ func (srv *Server) listarPublicacoes(w http.ResponseWriter, r *http.Request) {
 
 // agendarPublicacao cria uma publicação agendada (ou imediata se agendada_em está vazio).
 func (srv *Server) agendarPublicacao(w http.ResponseWriter, r *http.Request) {
-	user := srv.usuarioDoRequest(r)
-	if user == nil {
-		writeErr(w, http.StatusUnauthorized, "faça login para agendar publicações")
-		return
-	}
+	user := usuarioDoCtx(r)
 
 	var req struct {
 		ProdutoID     string  `json:"produto_id"`
@@ -123,11 +114,6 @@ func generateID(produtoID string, t time.Time) string {
 // publicarPendentes executa publicações com status=agendada cujo agendada_em já passou.
 // Disparado periodicamente pelo Cloud Scheduler (ex.: a cada 5 min).
 func (srv *Server) publicarPendentes(w http.ResponseWriter, r *http.Request) {
-	if !srv.autorizadoColeta(r) {
-		writeErr(w, http.StatusUnauthorized, "token inválido")
-		return
-	}
-
 	lista, err := srv.Eventos.ListarPublicacoes(r.Context(), "agendada")
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
