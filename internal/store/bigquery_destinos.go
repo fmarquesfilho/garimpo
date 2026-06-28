@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
-	"github.com/fmarquesfilho/garimpo/internal/publish"
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"google.golang.org/api/iterator"
 )
 
@@ -23,7 +23,7 @@ type linhaDestinoBQ struct {
 	SalvoEm time.Time `bigquery:"salvo_em"`
 }
 
-// BQDestinoStore implementa publish.DestinoStore com BigQuery.
+// BQDestinoStore implementa DestinoRepo com BigQuery.
 type BQDestinoStore struct {
 	client  *bigquery.Client
 	dataset string
@@ -33,7 +33,7 @@ func NovoBQDestinoStore(client *bigquery.Client, dataset string) *BQDestinoStore
 	return &BQDestinoStore{client: client, dataset: dataset}
 }
 
-func (s *BQDestinoStore) Listar(ctx context.Context) ([]publish.Destino, error) {
+func (s *BQDestinoStore) ListarDestinos(ctx context.Context) ([]Destino, error) {
 	q := s.client.Query(`
 		WITH ranked AS (
 		  SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY salvo_em DESC) AS rn
@@ -45,9 +45,9 @@ func (s *BQDestinoStore) Listar(ctx context.Context) ([]publish.Destino, error) 
 	`)
 	it, err := q.Read(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("bq listar destinos: %w", err)
 	}
-	var out []publish.Destino
+	var out []Destino
 	for {
 		var r struct {
 			ID     string `bigquery:"id"`
@@ -61,27 +61,27 @@ func (s *BQDestinoStore) Listar(ctx context.Context) ([]publish.Destino, error) 
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("bq destinos next: %w", err)
 		}
-		out = append(out, publish.Destino{ID: r.ID, Nome: r.Nome, Tipo: r.Tipo, Config: r.Config, Ativo: r.Ativo})
+		out = append(out, Destino{ID: r.ID, Nome: r.Nome, Tipo: r.Tipo, Config: r.Config, Ativo: r.Ativo})
 	}
 	return out, nil
 }
 
-func (s *BQDestinoStore) Buscar(ctx context.Context, id string) (publish.Destino, error) {
-	lista, err := s.Listar(ctx)
+func (s *BQDestinoStore) BuscarDestino(ctx context.Context, id string) (Destino, error) {
+	lista, err := s.ListarDestinos(ctx)
 	if err != nil {
-		return publish.Destino{}, err
+		return Destino{}, err
 	}
 	for _, d := range lista {
 		if d.ID == id {
 			return d, nil
 		}
 	}
-	return publish.Destino{}, fmt.Errorf("destino %q não encontrado", id)
+	return Destino{}, fmt.Errorf("destino %q: %w", id, apperr.ErrNotFound)
 }
 
-func (s *BQDestinoStore) Salvar(ctx context.Context, d publish.Destino) error {
+func (s *BQDestinoStore) SalvarDestino(ctx context.Context, d Destino) error {
 	row := linhaDestinoBQ{
 		ID: d.ID, Nome: d.Nome, Tipo: d.Tipo, Config: d.Config,
 		Ativo: d.Ativo, SalvoEm: time.Now().UTC(),
@@ -89,7 +89,7 @@ func (s *BQDestinoStore) Salvar(ctx context.Context, d publish.Destino) error {
 	return s.client.Dataset(s.dataset).Table("destinos").Inserter().Put(ctx, row)
 }
 
-func (s *BQDestinoStore) Deletar(ctx context.Context, id string) error {
+func (s *BQDestinoStore) DeletarDestino(ctx context.Context, id string) error {
 	// Append-only tombstone
 	row := linhaDestinoBQ{ID: id, Ativo: false, SalvoEm: time.Now().UTC()}
 	return s.client.Dataset(s.dataset).Table("destinos").Inserter().Put(ctx, row)

@@ -34,6 +34,11 @@ type Server struct {
 	Exploracao float64
 	CacheTTL   time.Duration
 
+	// Repo é o ponto de acesso unificado à persistência (novo padrão).
+	// Quando presente, tem precedência sobre os campos legados abaixo.
+	Repo store.Repository
+
+	// ── Campos legados (mantidos para backward compat durante migração) ──
 	Eventos    store.EventoStore
 	Publicador publish.Publicador
 	Scheduler  scheduler.Scheduler

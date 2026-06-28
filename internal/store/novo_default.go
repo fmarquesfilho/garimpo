@@ -9,3 +9,8 @@ func Novo(ctx context.Context) (EventoStore, error) {
 	_ = ctx
 	return NopStore{}, nil
 }
+
+// NovoRepository (padrão) cria o NopRepository em memória.
+func NovoRepository(_ context.Context, _ TenantRepo) (Repository, error) {
+	return NovoNopRepository(), nil
+}

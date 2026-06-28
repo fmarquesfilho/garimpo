@@ -61,12 +61,18 @@ func main() {
 		log.Fatalf("store: %v", err)
 	}
 
+	// Repository unificado (novo padrão).
+	repo, err := store.NovoRepository(context.Background(), tenant.NewRepoAdapter(tenant.NewMemoryStore()))
+	if err != nil {
+		log.Fatalf("repository: %v", err)
+	}
+
 	// Migration automática: garante que as tabelas existam no BigQuery. Idempotente.
-	if err := eventos.EnsureSchema(context.Background()); err != nil {
+	if err := repo.EnsureSchema(context.Background()); err != nil {
 		logger.Warn("EnsureSchema falhou (talvez tabelas já existam ou permissão insuficiente)",
 			"erro", err)
 	} else {
-		logger.Info("schema do banco verificado", "store", eventos.Nome())
+		logger.Info("schema do banco verificado", "store", repo.Nome())
 	}
 
 	// Publicador: Dispatcher com TelegramSender se TELEGRAM_BOT_TOKEN/CHAT_ID
@@ -100,6 +106,7 @@ func main() {
 		NotaMin:    *notaMin,
 		Exploracao: *exploracao,
 		CacheTTL:   time.Duration(*cacheSeg) * time.Second,
+		Repo:       repo,
 		Eventos:    eventos,
 		Logger:     logger,
 		Publicador: pub,
@@ -113,7 +120,7 @@ func main() {
 	logger.Info("garimpo-api iniciando",
 		"addr", *addr, "fonte", *fonte, "categoria", *categoria, "keyword", *keyword,
 		"vendas_min", *vendasMin, "nota_min", *notaMin, "exploracao", *exploracao,
-		"cache_s", *cacheSeg, "store", eventos.Nome(), "publicador", pub.Nome())
+		"cache_s", *cacheSeg, "store", repo.Nome(), "publicador", pub.Nome())
 
 	httpSrv := &http.Server{
 		Addr:         *addr,
