@@ -64,3 +64,10 @@ dependenciesRules:
     shouldOnlyDependsOn:
       internal:
         - "github.com/fmarquesfilho/garimpo/internal/apperr"  # só ele mesmo
+
+  # ── crypto: leaf, depende apenas de apperr ─────────────────────────────
+  - package: "github.com/fmarquesfilho/garimpo/internal/crypto"
+    shouldOnlyDependsOn:
+      internal:
+        - "github.com/fmarquesfilho/garimpo/internal/crypto"
+        - "github.com/fmarquesfilho/garimpo/internal/apperr"
