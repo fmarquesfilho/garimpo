@@ -70,6 +70,9 @@ jobs:
       - name: Limite de tamanho de arquivo (max 400 linhas — bloqueia deploy)
         run: ./scripts/check-file-size.sh 400
 
+      - name: Verificar docs geradas (ER, env-vars, board — sem drift)
+        run: make docs-check
+
   # ── 2. Testes do frontend ────────────────────────────────────────────────
   # Roda em paralelo com os testes Go. Deploy não depende deste job —
   # se os testes frontend falharem, o workflow falha mas o deploy já rolou.
