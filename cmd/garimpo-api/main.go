@@ -40,7 +40,7 @@ func main() {
 	}
 
 	addr := flag.String("addr", addrPadrao, "endereço de escuta")
-	csv := flag.String("csv", "data/candidatos_exemplo.csv", "CSV padrão (fonte csv)")
+	csv := flag.String("csv", "scripts/candidatos_exemplo.csv", "CSV padrão (fonte csv)")
 	fonte := flag.String("fonte", "csv", "fonte padrão: csv | shopee")
 	cat := flag.Int("cat", 0, "productCatId da Shopee (fonte shopee)")
 	categoria := flag.String("categoria", "", "rótulo de categoria carimbado (fonte shopee)")

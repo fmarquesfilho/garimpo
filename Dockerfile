@@ -18,12 +18,13 @@ RUN npm ci --ignore-scripts
 COPY docs-site/ .
 # Sincronizar docs canônicos (fonte única: docs/) para content do Starlight
 COPY docs/ /docs-src/
+COPY backlog/tasks/ /backlog-src/
 COPY scripts/sync-docs-to-site.sh /scripts/sync-docs-to-site.sh
 RUN chmod +x /scripts/sync-docs-to-site.sh
 ENV ROOT=/
 RUN /bin/sh -c '\
   SRC=/docs-src && DST=/docs-site/src/content/docs && \
-  mkdir -p "$DST/decisoes" "$DST/gerado" && \
+  mkdir -p "$DST/decisoes" "$DST/gerado" "$DST/backlog" && \
   for doc in "$SRC"/0[1-7]-*.md; do \
     [ -f "$doc" ] || continue; \
     base=$(basename "$doc"); \
@@ -43,7 +44,18 @@ RUN /bin/sh -c '\
   printf "%s\n" "---" "title: \"Quadro (Kanban)\"" "description: \"Quadro do sprint atual, gerado do backlog YAML.\"" "---" "" ":::caution[Arquivo gerado]" "Não edite manualmente. Rode \`make docs\` para regenerar." ":::" "" > "$DST/gerado/board.md" && \
   tail -n +2 "$SRC/gerado/BOARD.md" >> "$DST/gerado/board.md" && \
   printf "%s\n" "---" "title: \"Roadmap\"" "description: \"Roadmap Now/Next/Later, gerado do backlog YAML.\"" "---" "" ":::caution[Arquivo gerado]" "Não edite manualmente. Rode \`make docs\` para regenerar." ":::" "" > "$DST/gerado/roadmap.md" && \
-  tail -n +2 "$SRC/gerado/ROADMAP.md" >> "$DST/gerado/roadmap.md"'
+  tail -n +2 "$SRC/gerado/ROADMAP.md" >> "$DST/gerado/roadmap.md" && \
+  for task in /backlog-src/T-*.yaml; do \
+    [ -f "$task" ] || continue; \
+    base=$(basename "$task" .yaml); \
+    id=$(grep "^id:" "$task" | sed "s/^id: *//"); \
+    titulo=$(grep "^titulo:" "$task" | sed "s/^titulo: *//; s/^\"//; s/\"$//"); \
+    printf "%s\n" "---" "title: \"$id — $titulo\"" "---" "" > "$DST/backlog/$base.md"; \
+    epic=$(grep "^epic:" "$task" | sed "s/^epic: *//"); \
+    status=$(grep "^status:" "$task" | sed "s/^status: *//"); \
+    prio=$(grep "^prioridade:" "$task" | sed "s/^prioridade: *//"); \
+    printf "%s\n" "| Campo | Valor |" "|-------|-------|" "| Status | $status |" "| Épico | $epic |" "| Prioridade | $prio |" "" >> "$DST/backlog/$base.md"; \
+  done'
 RUN npm run build
 
 # ── 2. Build do backend Go ──────────────────────────────────────────────────

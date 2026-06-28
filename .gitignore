@@ -15,6 +15,7 @@ docs-site/.astro/
 docs-site/src/content/docs/0[1-7]-*.md
 docs-site/src/content/docs/decisoes/
 docs-site/src/content/docs/gerado/*.md
+docs-site/src/content/docs/backlog/
 
 # Binários Go compilados
 /gen-er

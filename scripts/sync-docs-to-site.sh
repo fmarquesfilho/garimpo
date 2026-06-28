@@ -88,9 +88,107 @@ wrap_generated "$SRC/gerado/BOARD.md" "$DST/gerado/board.md" \
 wrap_generated "$SRC/gerado/ROADMAP.md" "$DST/gerado/roadmap.md" \
   "Roadmap" "Roadmap Now/Next/Later, gerado do backlog YAML."
 
+# ── Backlog (tarefas YAML → Markdown) ──────────────────────────────────────
+
+mkdir -p "$DST/backlog"
+for task in "$ROOT"/backlog/tasks/T-*.yaml; do
+  [ -f "$task" ] || continue
+  base=$(basename "$task" .yaml)
+
+  # Extrair campos do YAML (parse simplificado — campos de linha única)
+  id=$(grep '^id:' "$task" | sed 's/^id: *//')
+  titulo=$(grep '^titulo:' "$task" | sed 's/^titulo: *//; s/^"//; s/"$//')
+  epic=$(grep '^epic:' "$task" | sed 's/^epic: *//' || true)
+  status=$(grep '^status:' "$task" | sed 's/^status: *//')
+  prioridade=$(grep '^prioridade:' "$task" | sed 's/^prioridade: *//')
+  estimativa=$(grep '^estimativa:' "$task" | sed 's/^estimativa: *//' || true)
+  sprint=$(grep '^sprint:' "$task" | sed 's/^sprint: *//; s/^"//; s/"$//' || true)
+  criada=$(grep '^criada_em:' "$task" | sed 's/^criada_em: *//; s/^"//; s/"$//' || true)
+  atualizada=$(grep '^atualizada_em:' "$task" | sed 's/^atualizada_em: *//; s/^"//; s/"$//' || true)
+
+  # Extrair valor (campo multi-linha com >)
+  valor=$(awk '/^valor:/{found=1; sub(/^valor: *>? */, ""); if ($0) print; next} found && /^  /{sub(/^  /,""); print; next} found{exit}' "$task" | tr '\n' ' ' | sed 's/  */ /g; s/ *$//')
+
+  # Extrair critérios (lista YAML)
+  criterios=$(awk '/^criterios:/{found=1; next} found && /^  - /{sub(/^  - /,""); print; next} found{exit}' "$task")
+
+  # Extrair depende_de (inline [X, Y] ou multi-linha)
+  deps=$(grep '^depende_de:' "$task" | sed 's/^depende_de: *//; s/\[//; s/\]//; s/,/ /g; s/^ *//; s/ *$//' || true)
+  if [ "$deps" = "" ] || [ "$deps" = "[]" ]; then
+    deps=""
+  fi
+
+  # Extrair tags
+  tags=$(grep '^tags:' "$task" | sed 's/^tags: *\[//; s/\]//; s/, */ /g' || true)
+
+  # Status badge
+  case "$status" in
+    done)    badge="✅ Concluída" ;;
+    doing)   badge="🔨 Em andamento" ;;
+    next)    badge="⏭️ Próximo" ;;
+    blocked) badge="🚫 Bloqueada" ;;
+    review)  badge="👀 Revisão" ;;
+    *)       badge="📋 Backlog" ;;
+  esac
+
+  # Gerar Markdown
+  {
+    echo "---"
+    echo "title: \"$id — $titulo\""
+    echo "---"
+    echo ""
+    echo "| Campo | Valor |"
+    echo "|-------|-------|"
+    echo "| Status | $badge |"
+    echo "| Épico | $epic |"
+    echo "| Prioridade | $prioridade |"
+    [ -n "$estimativa" ] && echo "| Estimativa | $estimativa |"
+    [ -n "$sprint" ] && echo "| Sprint | $sprint |"
+    [ -n "$criada" ] && echo "| Criada | $criada |"
+    [ -n "$atualizada" ] && echo "| Atualizada | $atualizada |"
+    echo ""
+    if [ -n "$valor" ]; then
+      echo "## Valor"
+      echo ""
+      echo "$valor"
+      echo ""
+    fi
+    if [ -n "$criterios" ]; then
+      echo "## Critérios de aceite"
+      echo ""
+      echo "$criterios" | while IFS= read -r c; do
+        echo "- $c"
+      done
+      echo ""
+    fi
+    if [ -n "$deps" ]; then
+      echo "## Dependências"
+      echo ""
+      for d in $deps; do
+        # Procurar o ficheiro da tarefa para gerar o link correcto
+        task_file=$(find "$ROOT/backlog/tasks" -name "${d}-*" -print -quit 2>/dev/null)
+        if [ -n "$task_file" ]; then
+          link_base=$(basename "$task_file" .yaml)
+          echo "- [$d](/docs/backlog/$link_base/)"
+        else
+          echo "- $d"
+        fi
+      done
+      echo ""
+    fi
+    if [ -n "$tags" ]; then
+      echo "## Tags"
+      echo ""
+      printf '`%s` ' $tags
+      echo ""
+    fi
+  } > "$DST/backlog/$base.md"
+done
+
 # ── Resumo ──────────────────────────────────────────────────────────────────
 
 n_docs=$(find "$DST" -maxdepth 1 -name "0*.md" | wc -l | tr -d ' ')
 n_adrs=$(find "$DST/decisoes" -name "*.md" | wc -l | tr -d ' ')
 n_gen=$(find "$DST/gerado" -name "*.md" | wc -l | tr -d ' ')
-echo "✓ Sincronizados: $n_docs docs, $n_adrs ADRs, $n_gen gerados → docs-site"
+n_tasks=$(find "$DST/backlog" -name "*.md" | wc -l | tr -d ' ')
+echo "✓ Sincronizados: $n_docs docs, $n_adrs ADRs, $n_gen gerados, $n_tasks tarefas → docs-site"

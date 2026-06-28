@@ -25,7 +25,7 @@ import (
 
 func main() {
 	fonte := flag.String("fonte", "csv", "fonte de candidatos: csv | shopee")
-	csvPath := flag.String("csv", "data/candidatos_exemplo.csv", "caminho do CSV (fonte csv)")
+	csvPath := flag.String("csv", "scripts/candidatos_exemplo.csv", "caminho do CSV (fonte csv)")
 	catID := flag.Int("cat", 0, "productCatId da Shopee (fonte shopee)")
 	categoria := flag.String("categoria", "", "rótulo de categoria carimbado nos produtos (fonte shopee)")
 	keyword := flag.String("keyword", "", "busca por palavra-chave (fonte shopee)")

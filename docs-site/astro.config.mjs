@@ -31,6 +31,7 @@ export default defineConfig({
           ],
         },
         { label: 'Decisões (ADRs)', autogenerate: { directory: 'decisoes' } },
+        { label: 'Backlog', autogenerate: { directory: 'backlog' } },
       ],
     }),
   ],
