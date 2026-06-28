@@ -1,20 +1,20 @@
-# Sessão 2026-06-28 — Refactors: Tratamento de Erros + Repository Pattern
+# Sessão 2026-06-28 — Refactors Completos
 
 ## Resumo executivo
 
-Duas mudanças estruturais grandes foram aplicadas nesta sessão:
+Duas mudanças estruturais completas nesta sessão:
 
-1. **T-0008 — Tratamento de erros idiomático** (concluído 100%)
-2. **Repository Pattern** (estrutura no lugar, migração de consumers em andamento)
+1. **T-0008 — Tratamento de erros idiomático** ✅ 100%
+2. **Repository Pattern** ✅ 100% (migração completa, sem legado)
 
 ---
 
 ## 1. Tratamento de Erros (T-0008)
 
-### O que foi feito
+### Métricas
 
-| Item | Antes | Depois |
-|------|-------|--------|
+| Métrica | Antes | Depois |
+|---------|-------|--------|
 | Issues err113 | 29 | 0 |
 | Issues wrapcheck | 36 | 0 |
 | Issues errorlint | 0 | 0 |
@@ -24,175 +24,160 @@ Duas mudanças estruturais grandes foram aplicadas nesta sessão:
 
 ### Pacote `internal/apperr`
 
-Erros sentinel do domínio, sem dependências:
+Erros sentinel do domínio, leaf package sem dependências:
 
 ```go
-apperr.ErrShopeeAPI         // falha na API de afiliados
-apperr.ErrTelegram          // falha no Telegram Bot API
-apperr.ErrMaytapi           // falha na Maytapi (WhatsApp)
-apperr.ErrInvalidInput      // dado inválido do usuário
+apperr.ErrShopeeAPI         // API de afiliados
+apperr.ErrTelegram          // Telegram Bot API
+apperr.ErrMaytapi           // Maytapi (WhatsApp)
+apperr.ErrInvalidInput      // dado inválido
 apperr.ErrNotFound          // recurso não encontrado
 apperr.ErrInactive          // recurso desabilitado
-apperr.ErrUnauthorized      // falta autenticação
-apperr.ErrForbidden         // falta permissão
+apperr.ErrUnauthorized      // sem autenticação
+apperr.ErrForbidden         // sem permissão
 apperr.ErrCrypto            // falha criptográfica
 apperr.ErrIO                // falha de I/O
 apperr.ErrNoConfig          // configuração ausente
 apperr.ErrTooManyRedirects  // excesso de redirects
 apperr.ErrNoProvider        // provedor não registrado
-apperr.ErrCSV               // erro no parsing de CSV
+apperr.ErrCSV               // erro no parsing CSV
 ```
 
 ### Padrão de uso
 
 ```go
-// Wrapping com contexto (identificar ONDE falhou)
 return fmt.Errorf("telegram enviar grupo %s: %w", groupID, apperr.ErrTelegram)
 
-// Teste em camadas superiores
-if errors.Is(err, apperr.ErrTelegram) {
-    // retry ou fallback
-}
+if errors.Is(err, apperr.ErrTelegram) { /* retry */ }
 ```
 
 ### Frontend (`web/src/lib/errors.js`)
 
-Classificação por status HTTP com helpers:
-- `isAuthError(err)` — 401
-- `isRetryable(err)` — backend indica `retry: true`
-- `isExternalServiceError(err)` — 502/503
-- `mensagemAmigavel(err)` — texto para toast
+- `isAuthError(err)` → 401
+- `isRetryable(err)` → retry: true
+- `isExternalServiceError(err)` → 502/503
+- `mensagemAmigavel(err)` → texto para toast
 
 ### Travas no CI
 
-- `golangci-lint` com err113 + wrapcheck + errorlint **sem exclusões** — bloqueia deploy
-- Teste `internal/apperr/errors_test.go`:
-  - Sentinels são distintos entre si
-  - `errors.Is` funciona com wrapping (1 e 2 níveis)
-  - Mensagem preserva contexto textual
-
-### Arquivos modificados (15 Go + 2 frontend)
-
-```
-internal/apperr/errors.go          ← NOVO
-internal/apperr/errors_test.go     ← NOVO
-web/src/lib/errors.js              ← NOVO
-.golangci.yml                      ← removidas exclusões
-internal/alerts/alerts.go
-internal/coleta/service.go
-internal/engine/engine.go
-internal/httpapi/conversoes_sync.go
-internal/httpapi/introspect.go
-internal/httpapi/onboarding.go
-internal/httpapi/resolver.go
-internal/httpapi/shopee_resolver.go
-internal/httpapi/whatsapp.go
-internal/publish/canais.go
-internal/publish/dispatcher.go
-internal/publish/telegram.go
-internal/publish/template.go
-internal/publish/whatsapp.go
-internal/source/csv.go
-internal/source/flex.go
-internal/source/shopee.go
-internal/source/shopee_shop.go
-internal/tenant/crypto.go
-web/src/lib/api.js
-docs/decisoes/0010-error-handling.md
-```
+- **golangci-lint** — err113 + wrapcheck + errorlint sem exclusões (bloqueia deploy)
+- **`internal/apperr/errors_test.go`** — 3 testes:
+  - Sentinels distintos entre si
+  - `errors.Is` funciona com wrapping em 1 e 2 níveis
+  - Mensagem preserva contexto + sentinel
 
 ---
 
-## 2. Repository Pattern
+## 2. Repository Pattern (migração completa)
 
-### O que foi feito
+### Antes vs Depois
 
-| Item | Antes | Depois |
-|------|-------|--------|
-| Interface principal | `EventoStore` (17 métodos, god interface) | 8 interfaces segregadas |
-| Agregador | Nenhum (5 campos no Server) | `store.Repository` |
-| Tipos canônicos | Espalhados (publish, tenant) | Centralizados no `store` |
-| Factories | `store.Novo()` retorna EventoStore | `store.NovoRepository()` retorna Repository |
-| Conformidade | Nenhum | Compile-time checks + arch-go |
+| Aspecto | Antes | Depois |
+|---------|-------|--------|
+| Interface principal | `EventoStore` (17 métodos) | 8 interfaces segregadas |
+| Agregador | Nenhum — 5 campos no Server | `store.Repository` |
+| Server fields | Eventos, Destinos, Templates, Tenants, Publicador | Repo, Publicador |
+| Tipos canônicos | Espalhados (publish, tenant) | `store.Destino`, `store.Template`, `store.TenantConfig` |
+| Wiring | `criarStoresAuxiliares()` + build tags | `store.NovoRepository()` |
+| Crypto | Em `tenant` (causava import cycle) | Em `internal/crypto` (leaf) |
+| Bridge adapter | Temporário | **Removido** |
 
-### Interfaces segregadas
+### Arquitetura final
 
 ```
 store.Repository
-├── Eventos()     → EventoRepo (1 método)
-├── Snapshots()   → SnapshotRepo (5 métodos)
-├── Buscas()      → BuscaRepo (2 métodos)
-├── Publicacoes() → PublicacaoRepo (4 métodos)
-├── Destinos()    → DestinoRepo (4 métodos)
-├── Templates()   → TemplateRepo (4 métodos)
-├── Favoritos()   → FavoritoRepo (3 métodos)
-├── Tenants()     → TenantRepo (3 métodos)
+├── Eventos()     → EventoRepo       (1 método)
+├── Snapshots()   → SnapshotRepo     (5 métodos)
+├── Buscas()      → BuscaRepo        (2 métodos)
+├── Publicacoes() → PublicacaoRepo   (4 métodos)
+├── Destinos()    → DestinoRepo      (4 métodos)
+├── Templates()   → TemplateRepo     (4 métodos)
+├── Favoritos()   → FavoritoRepo     (3 métodos)
+├── Tenants()     → TenantRepo       (3 métodos)
 ├── EnsureSchema()
 └── Nome()
 ```
 
 ### Implementações
 
-- **NopRepository** — dev/testes, tudo em memória
-- **BQRepository** — produção, compõe BigQueryStore + BQDestinoStore + BQTemplateStore
+| Implementação | Uso | Build tag |
+|---|---|---|
+| `NopRepository` | Dev/testes (memória) | `!gcp` (default) |
+| `BQRepository` | Produção (BigQuery) | `gcp` |
 
-### Migração gradual (em andamento)
+### Como um consumer declara dependência
 
-O `repoEventoStoreAdapter` no httpapi faz bridge: handlers continuam usando
-`srv.Eventos` (interface antiga), mas por baixo delegam para o Repository.
+```go
+// Handler recebe apenas o que precisa (ISP)
+func (srv *Server) listarFavoritos(w http.ResponseWriter, r *http.Request) {
+    favs, err := srv.Repo.Favoritos().ListarFavoritos(r.Context(), uid)
+}
 
-### O que falta (próxima sessão)
-
-1. Migrar cada handler para `srv.Repo.Destinos()`, `srv.Repo.Templates()`, etc.
-2. Migrar `coleta/service.go` para receber sub-interfaces
-3. Remover `publish.DestinoStore`, `publish.TemplateStore`, `tenant.Store`
-4. Remover `store.EventoStore`, `store.NopStore`
-5. Remover bridge adapter
+// Service de coleta recebe o Repository inteiro
+svc := coleta.Novo(coleta.Deps{Repo: srv.Repo, Logger: logger})
+```
 
 ### Travas no CI
 
-- `arch-go` — 7 regras de dependência (100% compliance)
-  - `domain` não importa ninguém
-  - `apperr` não importa ninguém
+- **arch-go** — 7 regras (100% compliance):
+  - `apperr` é leaf (sem imports internos)
   - `store` não importa httpapi/source/engine
-  - `source` não importa store/publish/httpapi
-  - `engine` não importa httpapi/store
-  - `strategy` não importa httpapi/store/source
-  - `tenant` não importa httpapi/source/engine
-- `conformance_test.go` — compile-time interface checks
+  - `domain` não importa ninguém
+- **`conformance_test.go`** — compile-time checks garantem que MemDestinoRepo/MemTemplateRepo/etc satisfazem as interfaces
 
-### Arquivos criados
+---
 
+## Pacote `internal/crypto` (novo)
+
+Extração de `tenant/crypto.go` para um pacote leaf sem dependências além de `apperr`. Ambos `store` e `tenant` importam sem ciclo.
+
+---
+
+## Arquivos criados/removidos
+
+### Criados
 ```
-internal/store/repository.go       ← interfaces segregadas
-internal/store/memstore.go         ← NopRepository + Mem*Repo
-internal/store/bqrepository.go     ← BQRepository (gcp)
-internal/store/destino.go          ← store.Destino
-internal/store/template.go         ← store.Template
-internal/store/tenant.go           ← store.TenantConfig
-internal/store/conformance_test.go ← compile-time checks
-internal/tenant/adapter.go         ← bridge tenant.Store → store.TenantRepo
+internal/apperr/errors.go
+internal/apperr/errors_test.go
+internal/crypto/crypto.go
+internal/store/repository.go
+internal/store/memstore.go
+internal/store/bqrepository.go
+internal/store/destino.go
+internal/store/template.go
+internal/store/tenant.go
+internal/store/conformance_test.go
+web/src/lib/errors.js
+docs/decisoes/0010-error-handling.md
 docs/decisoes/0011-repository-pattern.md
+```
+
+### Removidos
+```
+cmd/garimpo-api/stores_default.go
+cmd/garimpo-api/stores_gcp.go
+internal/tenant/adapter.go
 ```
 
 ---
 
-## Commits desta sessão
+## Commits
 
 ```
-ec6de49 feat(T-0008): tratamento de erros idiomático — sentinels, wrapping, Problem Details
+ec6de49 feat(T-0008): tratamento de erros idiomático
 b91acd4 refactor(store): adiciona Repository pattern com interfaces segregadas
 d592154 refactor(httpapi): bridge adapter conecta Repository ao EventoStore legado
 753a4ae refactor(store): testes de conformidade + travas arquiteturais + ADR 0011
 2ce3391 test(apperr): testes unitários dos erros sentinel
+e9f6a8b docs: documento consolidado da sessão 2026-06-28
+13eb78f refactor(store): migração completa — remove campos legados e bridge adapter
 ```
 
-## Como verificar que está tudo verde
+## Verificação
 
 ```bash
-go test ./...                  # testes unitários
-golangci-lint run ./...        # lint (err113, wrapcheck, errorlint)
-arch-go                        # regras de arquitetura
-cd web && npx vitest --run     # testes frontend
-make docs-check                # docs geradas atualizadas
+go test ./...                  # 13 pacotes OK
+golangci-lint run ./...        # 0 issues
+arch-go                        # 7/7 regras, 100% compliance
+cd web && npx vitest --run     # 109 testes frontend
 ```

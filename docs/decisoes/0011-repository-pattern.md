@@ -79,14 +79,14 @@ Um `repoEventoStoreAdapter` no httpapi faz bridge entre o `Repository` e o
 
 ### Negativas
 
-- Período de coexistência: `EventoStore` legado ainda existe durante a migração
-- Bridge adapter adiciona uma camada de indireção (será removida ao final)
-- Tipos duplicados temporariamente (`publish.Destino` + `store.Destino`)
+- Período de transição requer atualização dos imports nos consumers
+- Tipos temporariamente duplicados (`publish.Destino` + `store.Destino`)
+  até remoção dos antigos numa sessão futura
 
-### Próximos passos
+### Removidos na migração
 
-1. Migrar handlers do httpapi para usar `srv.Repo.X()` diretamente
-2. Migrar `coleta/service.go` para receber sub-interfaces
-3. Remover `publish.DestinoStore`, `publish.TemplateStore`, `tenant.Store`
-4. Remover `store.EventoStore` e `store.NopStore`
-5. Remover bridge adapter
+- `store.EventoStore` (god interface) → substituída por sub-interfaces
+- `publish.DestinoStore` / `publish.TemplateStore` → `store.DestinoRepo` / `store.TemplateRepo`
+- `tenant.Store` → `store.TenantRepo`
+- `tenant.RepoAdapter` → desnecessário (crypto movido para `internal/crypto`)
+- `cmd/garimpo-api/stores_default.go` / `stores_gcp.go` → `store.NovoRepository()`
