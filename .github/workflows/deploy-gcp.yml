@@ -33,7 +33,7 @@ jobs:
           cache: true
 
       - name: Cachear binários de ferramentas
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/go/bin
           key: go-tools-${{ runner.os }}-${{ hashFiles('go.mod') }}
@@ -111,7 +111,7 @@ jobs:
         run: ../scripts/check-file-size.sh 400
 
       - name: Cachear binários do Playwright
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
