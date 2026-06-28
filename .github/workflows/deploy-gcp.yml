@@ -4,10 +4,10 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'docs/**'
-      - '*.md'
       - 'LICENSE'
-      - '.gitignore'
+      - 'README.md'
+      - 'docs/legado/**'
+      - 'docs/meta/**'
 
 # Variáveis de repositório (Settings → Secrets and variables → Variables):
 #   GCP_REGION  = southamerica-east1   (ou a região do seu projeto)
