@@ -1,33 +1,40 @@
 package httpapi
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 )
 
-func TestDocsHandlerServesIndex(t *testing.T) {
+func TestDocsFileServer(t *testing.T) {
 	// Cria um diretório temporário simulando docs-site/dist
 	dir := t.TempDir()
 	os.WriteFile(dir+"/index.html", []byte("<html>docs</html>"), 0o644)
-	os.MkdirAll(dir+"/02-arquitetura", 0o755)
-	os.WriteFile(dir+"/02-arquitetura/index.html", []byte("<html>arq</html>"), 0o644)
+	os.MkdirAll(dir+"/01-visao-e-negocio", 0o755)
+	os.WriteFile(dir+"/01-visao-e-negocio/index.html", []byte("<html>visao</html>"), 0o644)
+	os.MkdirAll(dir+"/_astro", 0o755)
+	os.WriteFile(dir+"/_astro/page.js", []byte("//js"), 0o644)
+	os.WriteFile(dir+"/404.html", []byte("<html>404</html>"), 0o644)
 
 	t.Setenv("DOCS_DIR", dir)
 
 	srv := &Server{}
 	srv.inicializar()
-	handler := srv.docsHandler()
+
+	// Simula o setup real: StripPrefix("/docs") + docsFileServer
+	handler := http.StripPrefix("/docs", srv.docsFileServer())
 
 	tests := []struct {
-		path   string
-		status int
-		body   string
+		path         string
+		status       int
+		bodyContains string
 	}{
 		{"/docs/", 200, "<html>docs</html>"},
-		{"/docs", 200, "<html>docs</html>"},
-		{"/docs/02-arquitetura/", 200, "<html>arq</html>"},
-		{"/docs/nao-existe", 404, ""},
+		{"/docs/01-visao-e-negocio/", 200, "<html>visao</html>"},
+		{"/docs/01-visao-e-negocio", 200, "<html>visao</html>"},
+		{"/docs/_astro/page.js", 200, "//js"},
+		{"/docs/nao-existe", 404, "<html>404</html>"},
 	}
 
 	for _, tt := range tests {
@@ -38,8 +45,8 @@ func TestDocsHandlerServesIndex(t *testing.T) {
 		if rec.Code != tt.status {
 			t.Errorf("%s: esperava status %d, obteve %d", tt.path, tt.status, rec.Code)
 		}
-		if tt.body != "" && rec.Body.String() != tt.body {
-			t.Errorf("%s: body inesperado: %q", tt.path, rec.Body.String())
+		if tt.bodyContains != "" && rec.Body.String() != tt.bodyContains {
+			t.Errorf("%s: body esperado %q, obteve %q", tt.path, tt.bodyContains, rec.Body.String())
 		}
 	}
 }

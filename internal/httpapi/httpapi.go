@@ -142,7 +142,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/onboarding/excluir-conta", srv.onboardingExcluirConta)
 
 	// ── Documentação (admin-only) ─────────────────────────────────────────
-	mux.Handle("/docs/", srv.docsHandler())
+	mux.Handle("/docs/", http.StripPrefix("/docs", srv.docsFileServer()))
 	mux.Handle("/docs", http.RedirectHandler("/docs/", http.StatusMovedPermanently))
 
 	// ── Frontend (SPA fallback) ───────────────────────────────────────────

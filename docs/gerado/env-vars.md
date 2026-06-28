@@ -18,7 +18,7 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `BQ_TABELA_SNAP` | `internal/store/novo_gcp.go` | 23 |
 | `BQ_TABELA` | `internal/store/novo_gcp.go` | 19 |
 | `COLETA_TOKEN` | `internal/httpapi/helpers.go` | 87 |
-| `DOCS_DIR` | `internal/httpapi/docs.go` | 13 |
+| `DOCS_DIR` | `internal/httpapi/docs.go` | 12 |
 | `ENCRYPTION_KEY` | `internal/tenant/crypto.go` | 25 |
 | `GCP_REGION` | `internal/scheduler/novo_gcp.go` | 19 |
 | `GOOGLE_CLOUD_PROJECT` | `internal/scheduler/novo_gcp.go` | 18 |

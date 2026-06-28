@@ -4,32 +4,39 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
 )
 
-// docsHandler serve o site de documentação (Starlight) com autenticação de admin.
-// GET /docs/**
-func (srv *Server) docsHandler() http.Handler {
+// docsFileServer serve o site de documentação (Starlight).
+// Recebe requests já com StripPrefix("/docs") aplicado.
+func (srv *Server) docsFileServer() http.Handler {
 	dir := os.Getenv("DOCS_DIR")
 	if dir == "" {
 		dir = "docs-site/dist"
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extrair caminho relativo (remover prefixo /docs)
-		relPath := strings.TrimPrefix(r.URL.Path, "/docs")
+		relPath := r.URL.Path
 		if relPath == "" || relPath == "/" {
 			relPath = "/index.html"
 		}
 
 		// Tentar servir o arquivo diretamente
 		fullPath := path.Join(dir, relPath)
-		if _, err := os.Stat(fullPath); err == nil {
-			http.ServeFile(w, r, fullPath)
-			return
+		if info, err := os.Stat(fullPath); err == nil {
+			if info.IsDir() {
+				// Diretório → tentar index.html dentro dele
+				indexPath := path.Join(fullPath, "index.html")
+				if _, err := os.Stat(indexPath); err == nil {
+					http.ServeFile(w, r, indexPath)
+					return
+				}
+			} else {
+				http.ServeFile(w, r, fullPath)
+				return
+			}
 		}
 
-		// Starlight gera /page/index.html para /page/
+		// Starlight gera /page/index.html para /page/ (sem trailing slash)
 		dirPath := path.Join(dir, relPath, "index.html")
 		if _, err := os.Stat(dirPath); err == nil {
 			http.ServeFile(w, r, dirPath)
