@@ -1,7 +1,7 @@
 id: T-0006
 titulo: Integrar docs-check e docs-board na CI
 epic: qualidade
-status: next
+status: done
 prioridade: media
 estimativa: P
 sprint: "2026-S27"
