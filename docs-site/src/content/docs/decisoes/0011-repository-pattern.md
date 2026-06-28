@@ -1,6 +1,7 @@
 ---
-title: "ADR 0011 — Repository Pattern para persistência"
+title: "ADR 0011 — Repository Pattern para a camada de persistência"
 ---
+
 
 **Status:** aceito  
 **Data:** 2026-06-28  
@@ -87,9 +88,9 @@ Um `repoEventoStoreAdapter` no httpapi faz bridge entre o `Repository` e o
 
 ### Removidos na migração
 
-- `store.EventoStore` (god interface) → removida do código
-- `store.NopStore` → removido (substituído por `NopRepository`)
-- `store.Novo()` → removido (substituído por `store.NovoRepository()`)
+- `store.EventoStore` (god interface) → **removida** do código
+- `store.NopStore` → **removido** (substituído por `NopRepository`)
+- `store.Novo()` → **removido** (substituído por `store.NovoRepository()`)
 - `publish.DestinoStore` / `publish.TemplateStore` → mantidas no publish (uso interno do Dispatcher), mas httpapi usa `store.DestinoRepo` / `store.TemplateRepo`
 - `tenant.Store` → mantida para backward compat com testes de tenant, mas httpapi usa `store.TenantRepo`
 - `tenant.RepoAdapter` → desnecessário (crypto movido para `internal/crypto`)

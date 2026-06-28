@@ -2,6 +2,7 @@
 title: "ADR 0010 — Tratamento de erros idiomático"
 ---
 
+
 **Status:** aceito  
 **Data:** 2026-06-28  
 **Tarefa:** T-0008

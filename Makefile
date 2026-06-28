@@ -25,9 +25,13 @@ docs-sync: ## Sincroniza docs canônicos para docs-site
 docs-site: ## Build do site Starlight
 	cd docs-site && npm run build
 
-docs-check: ## CI: falha se docs geradas estiverem desatualizadas
+docs-publish: docs docs-site ## Gera, sincroniza e builda — pronto para commit
+
+docs-check: ## CI: falha se docs geradas ou site estiverem desatualizados
 	$(MAKE) docs-er docs-env docs-board
 	git diff --exit-code docs/gerado || (echo "❌ Docs geradas desatualizadas: rode 'make docs'"; exit 1)
+	./scripts/sync-docs-to-site.sh
+	git diff --exit-code docs-site/src/content/docs || (echo "❌ docs-site desatualizado: rode 'make docs'"; exit 1)
 
 # ─── Desenvolvimento ────────────────────────────────────────────
 

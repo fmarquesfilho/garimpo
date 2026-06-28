@@ -2,8 +2,6 @@
 title: "ADR 0009 — Adoção do Chi como router HTTP"
 ---
 
-**Status:** aceito  
-**Data:** 2026-06-28  
 
 ## Contexto
 

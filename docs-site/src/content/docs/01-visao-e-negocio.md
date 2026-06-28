@@ -69,7 +69,7 @@ mercado Shopee → COLETA → CURADORIA → DECISÃO → PUBLICAÇÃO → ATRIBU
 Apenas a estratégia **nicho** está ativa. A "diversificada" foi descontinuada da UI.
 O código do Strategy pattern permanece como dívida técnica documentada.
 
-Ver [ADR 0002](/docs/decisoes/0002-so-nicho/).
+Ver [ADR 0002](/docs/decisoes/0002-so-nicho.md).
 
 ## Canais de publicação
 
