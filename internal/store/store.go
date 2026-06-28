@@ -1,11 +1,10 @@
 // Package store registra eventos (decisões de curadoria, e depois conversões)
-// para análise posterior. A interface isola o destino: NopStore em dev/local,
-// BigQueryStore em produção (atrás da build tag `gcp`, para não pesar o build
-// padrão nem o CI com a dependência do BigQuery).
+// para análise posterior. A persistência é isolada via interfaces segregadas
+// (Repository pattern): NopRepository em dev/local, BQRepository em produção
+// (atrás da build tag `gcp`).
 package store
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -187,31 +186,6 @@ func slugificar(s string) string {
 	return result
 }
 
-// EventoStore registra eventos. Implementações: NopStore e BigQueryStore.
-type EventoStore interface {
-	Registrar(ctx context.Context, e Evento) error
-	RegistrarSnapshot(ctx context.Context, s Snapshot) error
-	Estatisticas(ctx context.Context, dias int) (Estatisticas, error)
-	SalvarBusca(ctx context.Context, b Busca) error
-	ListarBuscas(ctx context.Context) ([]Busca, error)
-	HistoricoColetas(ctx context.Context, dias int) ([]ColetaResumo, error)
-	Conversoes(ctx context.Context, dias int) ([]ConversaoResumo, error)
-	// Publicações agendadas
-	SalvarPublicacao(ctx context.Context, p Publicacao) error
-	ListarPublicacoes(ctx context.Context, status string) ([]Publicacao, error)
-	AtualizarPublicacao(ctx context.Context, id, status, detalhe string) error
-	// Novidades de lojas monitoradas (diff de snapshots)
-	Novidades(ctx context.Context, buscaID string, dias int) (NovidadesLojas, error)
-	// Evolução de preços das lojas monitoradas ao longo do tempo
-	EvolucaoLojas(ctx context.Context, dias int) (EvolucaoLojasResult, error)
-	// Favoritos (produtos salvos pelo usuário)
-	SalvarFavorito(ctx context.Context, f Favorito) error
-	ListarFavoritos(ctx context.Context, ownerUID string) ([]Favorito, error)
-	RemoverFavorito(ctx context.Context, ownerUID, produtoID string) error
-	EnsureSchema(ctx context.Context) error
-	Nome() string
-}
-
 // NovidadesLojas é o resultado da comparação de snapshots para lojas monitoradas.
 type NovidadesLojas struct {
 	BuscaID       string          `json:"busca_id"`
@@ -356,38 +330,3 @@ type Snapshot struct {
 	Em         time.Time
 	Itens      []ItemSnapshot
 }
-
-// NopStore descarta eventos — usado localmente e quando o BigQuery não está ligado.
-type NopStore struct{}
-
-func (NopStore) Registrar(context.Context, Evento) error           { return nil }
-func (NopStore) RegistrarSnapshot(context.Context, Snapshot) error { return nil }
-func (NopStore) Estatisticas(_ context.Context, dias int) (Estatisticas, error) {
-	// Sem persistência local: devolve um resumo vazio, deixando claro a fonte.
-	return Estatisticas{Fonte: "nop", DiasJanela: dias, GeradoEm: time.Now().UTC()}, nil
-}
-
-// SalvarBusca/ListarBuscas no Nop são no-op: localmente, as buscas vivem no
-// navegador (localStorage). O sync server-side só acontece com o BigQuery ligado.
-func (NopStore) SalvarBusca(context.Context, Busca) error      { return nil }
-func (NopStore) ListarBuscas(context.Context) ([]Busca, error) { return nil, nil }
-func (NopStore) HistoricoColetas(context.Context, int) ([]ColetaResumo, error) {
-	return nil, nil
-}
-func (NopStore) Conversoes(context.Context, int) ([]ConversaoResumo, error) {
-	return nil, nil
-}
-func (NopStore) SalvarPublicacao(context.Context, Publicacao) error                { return nil }
-func (NopStore) ListarPublicacoes(context.Context, string) ([]Publicacao, error)   { return nil, nil }
-func (NopStore) AtualizarPublicacao(context.Context, string, string, string) error { return nil }
-func (NopStore) Novidades(_ context.Context, buscaID string, dias int) (NovidadesLojas, error) {
-	return NovidadesLojas{BuscaID: buscaID, DiasJanela: dias}, nil
-}
-func (NopStore) EvolucaoLojas(_ context.Context, dias int) (EvolucaoLojasResult, error) {
-	return EvolucaoLojasResult{DiasJanela: dias}, nil
-}
-func (NopStore) SalvarFavorito(context.Context, Favorito) error              { return nil }
-func (NopStore) ListarFavoritos(context.Context, string) ([]Favorito, error) { return nil, nil }
-func (NopStore) RemoverFavorito(context.Context, string, string) error       { return nil }
-func (NopStore) EnsureSchema(context.Context) error                          { return nil }
-func (NopStore) Nome() string                                                { return "nop" }

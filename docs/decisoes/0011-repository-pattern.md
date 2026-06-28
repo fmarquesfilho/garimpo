@@ -85,8 +85,10 @@ Um `repoEventoStoreAdapter` no httpapi faz bridge entre o `Repository` e o
 
 ### Removidos na migração
 
-- `store.EventoStore` (god interface) → substituída por sub-interfaces
-- `publish.DestinoStore` / `publish.TemplateStore` → `store.DestinoRepo` / `store.TemplateRepo`
-- `tenant.Store` → `store.TenantRepo`
+- `store.EventoStore` (god interface) → **removida** do código
+- `store.NopStore` → **removido** (substituído por `NopRepository`)
+- `store.Novo()` → **removido** (substituído por `store.NovoRepository()`)
+- `publish.DestinoStore` / `publish.TemplateStore` → mantidas no publish (uso interno do Dispatcher), mas httpapi usa `store.DestinoRepo` / `store.TemplateRepo`
+- `tenant.Store` → mantida para backward compat com testes de tenant, mas httpapi usa `store.TenantRepo`
 - `tenant.RepoAdapter` → desnecessário (crypto movido para `internal/crypto`)
 - `cmd/garimpo-api/stores_default.go` / `stores_gcp.go` → `store.NovoRepository()`

@@ -1,7 +1,7 @@
 id: T-0008
 titulo: "Refactor: tratamento de erros idiomático + telemetria"
 epic: qualidade
-status: next
+status: done
 prioridade: alta
 estimativa: G
 sprint: "2026-S27"
