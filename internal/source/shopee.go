@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 )
 
@@ -135,7 +135,7 @@ type gqlResponse struct {
 
 func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 	if s.AppID == "" || s.Secret == "" {
-		return nil, errors.New("shopee api: AppID/Secret não configurados")
+		return nil, fmt.Errorf("AppID/Secret não configurados: %w", apperr.ErrNoConfig)
 	}
 	client := s.HTTPClient
 	if client == nil {
@@ -154,7 +154,7 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 	for page := 1; page <= maxPages; page++ {
 		body, err := json.Marshal(map[string]string{"query": s.buildQuery(page)})
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("shopee marshal query: %w", err)
 		}
 
 		ts := strconv.FormatInt(time.Now().Unix(), 10)
@@ -163,7 +163,7 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 
 		req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(body))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("shopee criar request: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization",
@@ -176,7 +176,7 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 		raw, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("shopee ler resposta: %w", err)
 		}
 
 		var gql gqlResponse
@@ -185,7 +185,7 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 		}
 		if len(gql.Errors) > 0 {
 			e := gql.Errors[0]
-			return nil, fmt.Errorf("shopee api: erro %d: %s", e.Extensions.Code, e.Message)
+			return nil, fmt.Errorf("shopee api erro %d %s: %w", e.Extensions.Code, e.Message, apperr.ErrShopeeAPI)
 		}
 
 		for _, n := range gql.Data.ProductOfferV2.Nodes {

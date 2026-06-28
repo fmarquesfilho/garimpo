@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/source"
 )
@@ -31,7 +31,7 @@ func (srv *Server) resolverLink(w http.ResponseWriter, r *http.Request) {
 		Timeout: 10 * time.Second,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) > 5 {
-				return fmt.Errorf("muitos redirects")
+				return apperr.ErrTooManyRedirects
 			}
 			return nil
 		},

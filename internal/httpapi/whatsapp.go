@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // whatsappGrupos lista os grupos do WhatsApp disponíveis na sessão do Maytapi.
@@ -43,18 +45,18 @@ func buscarGruposMaytapi(r *http.Request, productID, phoneID, token string) ([]g
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("maytapi criar request: %w", apperr.ErrMaytapi)
 	}
 	req.Header.Set("x-maytapi-key", token)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("maytapi getGroups: %w", apperr.ErrMaytapi)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Maytapi retornou HTTP %d", resp.StatusCode)
+		return nil, fmt.Errorf("maytapi HTTP %d: %w", resp.StatusCode, apperr.ErrMaytapi)
 	}
 
 	var body struct {
@@ -65,10 +67,10 @@ func buscarGruposMaytapi(r *http.Request, productID, phoneID, token string) ([]g
 		} `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return nil, fmt.Errorf("erro ao decodificar resposta: %w", err)
+		return nil, fmt.Errorf("maytapi decodificar resposta: %w", err)
 	}
 	if !body.Success {
-		return nil, fmt.Errorf("Maytapi: resposta não-success")
+		return nil, fmt.Errorf("maytapi resposta não-success: %w", apperr.ErrMaytapi)
 	}
 
 	grupos := make([]grupoWA, 0, len(body.Data))

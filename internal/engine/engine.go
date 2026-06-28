@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -93,7 +94,7 @@ func SelecionarComExploracao(scored []domain.Scored, n int, fracao float64, r *r
 func (e *Engine) Rank() ([]domain.Scored, error) {
 	produtos, err := e.Source.Fetch()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("engine fetch: %w", err)
 	}
 	return Rankear(produtos, e.Strategy, e.Elegibilidade), nil
 }

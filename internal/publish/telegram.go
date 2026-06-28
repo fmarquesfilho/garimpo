@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // TelegramSender implementa Sender para o Telegram Bot API.
@@ -80,13 +82,13 @@ func (t *TelegramSender) Enviar(ctx context.Context, o Oferta, chatID string) (R
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
 	if err != nil {
-		return Resultado{}, err
+		return Resultado{}, fmt.Errorf("telegram criar request: %w", apperr.ErrTelegram)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := t.http.Do(req)
 	if err != nil {
-		return Resultado{Canal: "telegram", Enviado: false, Mensagem: msg, Detalhe: err.Error()}, err
+		return Resultado{Canal: "telegram", Enviado: false, Mensagem: msg, Detalhe: err.Error()}, fmt.Errorf("telegram enviar: %w", apperr.ErrTelegram)
 	}
 	defer resp.Body.Close()
 
@@ -97,7 +99,7 @@ func (t *TelegramSender) Enviar(ctx context.Context, o Oferta, chatID string) (R
 	_ = json.NewDecoder(resp.Body).Decode(&r)
 	if !r.Ok {
 		return Resultado{Canal: "telegram", Enviado: false, Mensagem: msg, Detalhe: r.Description},
-			fmt.Errorf("telegram: %s", r.Description)
+			fmt.Errorf("telegram %s: %w", r.Description, apperr.ErrTelegram)
 	}
 	return Resultado{Canal: "telegram", Enviado: true, Mensagem: msg, Detalhe: "enviado"}, nil
 }
@@ -119,13 +121,13 @@ func (t *TelegramSender) enviarFoto(ctx context.Context, o Oferta, chatID, capti
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
 	if err != nil {
-		return Resultado{}, err
+		return Resultado{}, fmt.Errorf("telegram foto criar request: %w", apperr.ErrTelegram)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := t.http.Do(req)
 	if err != nil {
-		return Resultado{Canal: "telegram", Enviado: false, Mensagem: caption, Detalhe: err.Error()}, err
+		return Resultado{Canal: "telegram", Enviado: false, Mensagem: caption, Detalhe: err.Error()}, fmt.Errorf("telegram foto enviar: %w", apperr.ErrTelegram)
 	}
 	defer resp.Body.Close()
 
@@ -136,7 +138,7 @@ func (t *TelegramSender) enviarFoto(ctx context.Context, o Oferta, chatID, capti
 	_ = json.NewDecoder(resp.Body).Decode(&r)
 	if !r.Ok {
 		return Resultado{Canal: "telegram", Enviado: false, Mensagem: caption, Detalhe: r.Description},
-			fmt.Errorf("telegram: %s", r.Description)
+			fmt.Errorf("telegram foto %s: %w", r.Description, apperr.ErrTelegram)
 	}
 	return Resultado{Canal: "telegram", Enviado: true, Mensagem: caption, Detalhe: "enviado com foto"}, nil
 }

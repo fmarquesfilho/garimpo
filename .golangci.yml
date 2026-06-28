@@ -88,9 +88,7 @@ issues:
   max-same-issues: 0
 
   # ── Baseline de debt existente (T-0008) ────────────────────────────────
-  # err113 e wrapcheck estão habilitados e bloqueiam código NOVO.
-  # As 73 issues existentes são toleradas até o refactor T-0008.
-  # Após T-0008, remover este bloco inteiro.
+  # Resolvido no T-0008 — linters err113 e wrapcheck agora bloqueiam tudo.
   exclude-rules:
     # Código de terceiros (node_modules contém Go de exemplo)
     - path: node_modules/
@@ -117,17 +115,6 @@ issues:
         - funlen
         - wrapcheck
         - err113
-    # ── Debt existente (remover após T-0008) ──────────────────────────────
-    - path: internal/alerts/
-      linters: [err113, wrapcheck]
-    - path: internal/publish/
-      linters: [err113, wrapcheck]
-    - path: internal/source/
-      linters: [err113, wrapcheck]
-    - path: internal/tenant/
-      linters: [err113, wrapcheck]
-    - path: internal/httpapi/(conversoes_sync|introspect|onboarding|resolver|shopee_resolver|whatsapp)\.go
-      linters: [err113, wrapcheck]
 
 severity:
   default: error

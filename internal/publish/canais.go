@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sync"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // MemDestinoStore é uma implementação em memória do DestinoStore (dev/testes).
@@ -33,7 +35,7 @@ func (m *MemDestinoStore) Buscar(_ context.Context, id string) (Destino, error) 
 	defer m.mu.RUnlock()
 	d, ok := m.destinos[id]
 	if !ok {
-		return Destino{}, fmt.Errorf("destino %q não encontrado", id)
+		return Destino{}, fmt.Errorf("destino %q: %w", id, apperr.ErrNotFound)
 	}
 	return d, nil
 }

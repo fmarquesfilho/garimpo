@@ -126,11 +126,7 @@ export async function deletarDestino(id) {
 		headers
 	});
 	if (!resp.ok) {
-		let detalhe = '';
-		try {
-			detalhe = (await resp.json())?.erro ?? '';
-		} catch { /* */ }
-		throw new Error(detalhe || `Falha ${resp.status}`);
+		throw await parseProblem(resp, '/api/destinos');
 	}
 	return resp.json();
 }
@@ -158,11 +154,7 @@ export async function deletarTemplate(id) {
 		headers
 	});
 	if (!resp.ok) {
-		let detalhe = '';
-		try {
-			detalhe = (await resp.json())?.erro ?? '';
-		} catch { /* */ }
-		throw new Error(detalhe || `Falha ${resp.status}`);
+		throw await parseProblem(resp, '/api/templates');
 	}
 	return resp.json();
 }
@@ -263,11 +255,7 @@ export async function removerLoja(id) {
 		headers
 	});
 	if (!resp.ok) {
-		let detalhe = '';
-		try {
-			detalhe = (await resp.json())?.erro ?? '';
-		} catch { /* */ }
-		throw new Error(detalhe || `Falha ${resp.status}`);
+		throw await parseProblem(resp, '/api/lojas');
 	}
 	return resp.json();
 }

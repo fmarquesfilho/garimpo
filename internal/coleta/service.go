@@ -5,6 +5,7 @@ package coleta
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -67,7 +68,7 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 	// 2. Fetch de produtos
 	produtos, err := src.Fetch()
 	if err != nil {
-		return Resultado{}, err
+		return Resultado{}, fmt.Errorf("coleta fetch: %w", err)
 	}
 
 	// 2.5 Fallback de origem: se a Busca tem OrigemPadrao, aplicar nos produtos sem Origin
@@ -117,7 +118,7 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 	}
 
 	if err := s.deps.Store.RegistrarSnapshot(ctx, snap); err != nil {
-		return Resultado{}, err
+		return Resultado{}, fmt.Errorf("coleta registrar snapshot: %w", err)
 	}
 
 	s.deps.Logger.Info("coleta",
@@ -223,5 +224,9 @@ func elegibilidade(p Params) strategy.Elegibilidade {
 
 // FetchDireto busca produtos sem cache (para uso fora do HTTP handler).
 func FetchDireto(src source.ProductSource) ([]domain.Product, error) {
-	return src.Fetch()
+	p, err := src.Fetch()
+	if err != nil {
+		return nil, fmt.Errorf("fetch direto: %w", err)
+	}
+	return p, nil
 }

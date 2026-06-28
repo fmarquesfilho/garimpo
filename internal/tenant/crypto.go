@@ -8,9 +8,11 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"errors"
+	"fmt"
 	"io"
 	"os"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // deriveKey deriva uma chave AES-256 (32 bytes) a partir de uma passphrase.
@@ -40,15 +42,15 @@ func Encrypt(plaintext string) (string, error) {
 	key := deriveKey(encryptionKey())
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("encrypt new cipher: %w", apperr.ErrCrypto)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("encrypt new gcm: %w", apperr.ErrCrypto)
 	}
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", err
+		return "", fmt.Errorf("encrypt nonce: %w", apperr.ErrCrypto)
 	}
 	sealed := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
 	return base64.StdEncoding.EncodeToString(sealed), nil
@@ -62,24 +64,24 @@ func Decrypt(ciphertext string) (string, error) {
 	key := deriveKey(encryptionKey())
 	data, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("decrypt base64: %w", apperr.ErrCrypto)
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("decrypt new cipher: %w", apperr.ErrCrypto)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("decrypt new gcm: %w", apperr.ErrCrypto)
 	}
 	nonceSize := gcm.NonceSize()
 	if len(data) < nonceSize {
-		return "", errors.New("ciphertext too short")
+		return "", fmt.Errorf("decrypt ciphertext too short: %w", apperr.ErrCrypto)
 	}
 	nonce, ct := data[:nonceSize], data[nonceSize:]
 	plain, err := gcm.Open(nil, nonce, ct, nil)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("decrypt open: %w", apperr.ErrCrypto)
 	}
 	return string(plain), nil
 }

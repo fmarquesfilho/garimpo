@@ -12,6 +12,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // shopeeConversao representa uma conversão retornada pelo conversionReport.
@@ -75,7 +77,7 @@ func buscarConversoesShopee(appID, secret string, dias int) ([]shopeeConversao, 
 	client := &http.Client{Timeout: 30 * time.Second}
 	req, err := http.NewRequest(http.MethodPost, "https://open-api.affiliate.shopee.com.br/graphql", bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("conversoes criar request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("SHA256 Credential=%s, Timestamp=%s, Signature=%s", appID, ts, sig))
@@ -87,7 +89,7 @@ func buscarConversoesShopee(appID, secret string, dias int) ([]shopeeConversao, 
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("conversoes ler resposta: %w", err)
 	}
 
 	var gql struct {
@@ -121,7 +123,7 @@ func buscarConversoesShopee(appID, secret string, dias int) ([]shopeeConversao, 
 		return nil, fmt.Errorf("resposta inválida: %w", err)
 	}
 	if len(gql.Errors) > 0 {
-		return nil, fmt.Errorf("API: %s", gql.Errors[0].Message)
+		return nil, fmt.Errorf("shopee API %s: %w", gql.Errors[0].Message, apperr.ErrShopeeAPI)
 	}
 
 	var result []shopeeConversao

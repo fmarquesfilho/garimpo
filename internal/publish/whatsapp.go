@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // WhatsAppSender implementa Sender para a Maytapi (cloud-hosted).
@@ -44,7 +46,7 @@ func (w *WhatsAppSender) Enviar(ctx context.Context, o Oferta, config string) (R
 	grupos := parseGrupos(config)
 	if len(grupos) == 0 {
 		return Resultado{Canal: "whatsapp", Enviado: false, Detalhe: "nenhum grupo configurado"},
-			fmt.Errorf("whatsapp: config vazio")
+			fmt.Errorf("whatsapp config vazio: %w", apperr.ErrNoConfig)
 	}
 
 	// Monta a mensagem (converte HTML se necessário)
@@ -101,14 +103,14 @@ func (w *WhatsAppSender) enviarParaGrupo(ctx context.Context, o Oferta, groupID,
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
 	if err != nil {
-		return err
+		return fmt.Errorf("whatsapp criar request grupo %s: %w", groupID, apperr.ErrMaytapi)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-maytapi-key", w.token)
 
 	resp, err := w.http.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("whatsapp enviar grupo %s: %w", groupID, apperr.ErrMaytapi)
 	}
 	defer resp.Body.Close()
 
@@ -119,11 +121,11 @@ func (w *WhatsAppSender) enviarParaGrupo(ctx context.Context, o Oferta, groupID,
 	_ = json.NewDecoder(resp.Body).Decode(&r)
 
 	if !r.Success {
-		msg := r.Message
-		if msg == "" {
-			msg = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		detail := r.Message
+		if detail == "" {
+			detail = fmt.Sprintf("HTTP %d", resp.StatusCode)
 		}
-		return fmt.Errorf("grupo %s: %s", groupID, msg)
+		return fmt.Errorf("whatsapp grupo %s %s: %w", groupID, detail, apperr.ErrMaytapi)
 	}
 	return nil
 }

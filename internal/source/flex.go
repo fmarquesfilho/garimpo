@@ -1,6 +1,7 @@
 package source
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -19,7 +20,7 @@ func (f *flexFloat) UnmarshalJSON(b []byte) error {
 	}
 	v, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("flexFloat parse %q: %w", s, err)
 	}
 	*f = flexFloat(v)
 	return nil
@@ -39,7 +40,7 @@ func (i *flexInt) UnmarshalJSON(b []byte) error {
 	}
 	fv, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("flexInt parse %q: %w", s, err)
 	}
 	*i = flexInt(int(fv))
 	return nil

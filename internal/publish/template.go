@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // Template é um modelo de mensagem configurável pela usuária.
@@ -86,7 +88,7 @@ func (m *MemTemplateStore) Buscar(_ context.Context, id string) (Template, error
 	defer m.mu.RUnlock()
 	t, ok := m.templates[id]
 	if !ok {
-		return Template{}, fmt.Errorf("template %q não encontrado", id)
+		return Template{}, fmt.Errorf("template %q: %w", id, apperr.ErrNotFound)
 	}
 	return t, nil
 }

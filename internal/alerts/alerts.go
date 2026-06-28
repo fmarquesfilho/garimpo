@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
@@ -206,13 +207,13 @@ func (a *Alerter) enviarTelegram(ctx context.Context, msg string) error {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
 	if err != nil {
-		return err
+		return fmt.Errorf("alertas criar request: %w", apperr.ErrTelegram)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("alertas enviar: %w", apperr.ErrTelegram)
 	}
 	defer resp.Body.Close()
 
@@ -222,7 +223,7 @@ func (a *Alerter) enviarTelegram(ctx context.Context, msg string) error {
 	}
 	_ = json.NewDecoder(resp.Body).Decode(&r)
 	if !r.Ok {
-		return fmt.Errorf("telegram: %s", r.Description)
+		return fmt.Errorf("telegram %s: %w", r.Description, apperr.ErrTelegram)
 	}
 	return nil
 }

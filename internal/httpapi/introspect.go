@@ -123,7 +123,7 @@ func shopeeGraphQL(appID, secret, query string) ([]byte, error) {
 	endpoint := "https://open-api.affiliate.shopee.com.br/graphql"
 	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("introspect criar request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization",
@@ -138,7 +138,7 @@ func shopeeGraphQL(appID, secret, query string) ([]byte, error) {
 
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("introspect ler resposta: %w", err)
 	}
 	return raw, nil
 }

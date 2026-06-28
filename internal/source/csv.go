@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 )
 
@@ -39,14 +40,14 @@ func (c *CSVSource) Fetch() ([]domain.Product, error) {
 		return nil, fmt.Errorf("lendo csv: %w", err)
 	}
 	if len(rows) < 2 {
-		return nil, fmt.Errorf("csv sem linhas de dados")
+		return nil, fmt.Errorf("csv sem linhas de dados: %w", apperr.ErrCSV)
 	}
 
 	produtos := make([]domain.Product, 0, len(rows)-1)
 	for i, row := range rows[1:] { // pula o cabeçalho
 		linha := i + 2
 		if len(row) < 7 {
-			return nil, fmt.Errorf("linha %d: esperava 7 colunas, veio %d", linha, len(row))
+			return nil, fmt.Errorf("linha %d: esperava 7 colunas, veio %d: %w", linha, len(row), apperr.ErrCSV)
 		}
 		price, err := strconv.ParseFloat(strings.TrimSpace(row[3]), 64)
 		if err != nil {

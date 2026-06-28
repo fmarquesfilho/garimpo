@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/tenant"
 )
 
@@ -252,7 +253,7 @@ func validarCredenciaisShopee(appID, secret string) error {
 
 	req, err := http.NewRequest(http.MethodPost, "https://open-api.affiliate.shopee.com.br/graphql", bytes.NewReader(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("validar credenciais criar request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization",
@@ -277,11 +278,11 @@ func validarCredenciaisShopee(appID, secret string) error {
 		} `json:"errors"`
 	}
 	if err := json.Unmarshal(raw, &gql); err != nil {
-		return fmt.Errorf("resposta inválida da Shopee")
+		return fmt.Errorf("resposta inválida da Shopee: %w", apperr.ErrShopeeAPI)
 	}
 	if len(gql.Errors) > 0 {
 		e := gql.Errors[0]
-		return fmt.Errorf("código %d: %s", e.Extensions.Code, e.Message)
+		return fmt.Errorf("shopee código %d %s: %w", e.Extensions.Code, e.Message, apperr.ErrShopeeAPI)
 	}
 	return nil
 }

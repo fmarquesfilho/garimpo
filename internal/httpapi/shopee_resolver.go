@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 )
 
 // ── Regex para parsing de inputs de loja Shopee ───────────────────────────
@@ -51,7 +53,7 @@ func (srv *Server) parseShopInputWithName(input string) (int64, string, error) {
 	if m := reShopIDURL.FindStringSubmatch(input); len(m) == 2 {
 		id, err := strconv.ParseInt(m[1], 10, 64)
 		if err != nil {
-			return 0, "", err
+			return 0, "", fmt.Errorf("shop id parse: %w", err)
 		}
 		nome := srv.buscarNomeLoja(id)
 		return id, nome, nil
@@ -61,7 +63,7 @@ func (srv *Server) parseShopInputWithName(input string) (int64, string, error) {
 	if m := reProductURL.FindStringSubmatch(input); len(m) == 2 {
 		id, err := strconv.ParseInt(m[1], 10, 64)
 		if err != nil {
-			return 0, "", err
+			return 0, "", fmt.Errorf("product shop id parse: %w", err)
 		}
 		nome := srv.buscarNomeLoja(id)
 		return id, nome, nil
@@ -71,11 +73,11 @@ func (srv *Server) parseShopInputWithName(input string) (int64, string, error) {
 	if m := reSlugURL.FindStringSubmatch(input); len(m) == 2 {
 		slug := m[1]
 		if pathsReservados[slug] {
-			return 0, "", fmt.Errorf("'%s' é um caminho reservado da Shopee, não um slug de loja", slug)
+			return 0, "", fmt.Errorf("'%s' é um caminho reservado da Shopee: %w", slug, apperr.ErrInvalidInput)
 		}
 		id, nome, err := srv.resolveShopSlugWithName(input)
 		if err != nil {
-			return 0, "", fmt.Errorf("não consegui encontrar o ID da loja '%s'. Tente copiar a URL no formato shopee.com.br/shop/123456 ou use o ID numérico", slug)
+			return 0, "", fmt.Errorf("loja '%s' não encontrada (tente shopee.com.br/shop/ID ou ID numérico): %w", slug, apperr.ErrNotFound)
 		}
 		return id, nome, nil
 	}
@@ -84,13 +86,13 @@ func (srv *Server) parseShopInputWithName(input string) (int64, string, error) {
 	if reNumericID.MatchString(input) {
 		id, err := strconv.ParseInt(input, 10, 64)
 		if err != nil {
-			return 0, "", err
+			return 0, "", fmt.Errorf("numeric id parse: %w", err)
 		}
 		nome := srv.buscarNomeLoja(id)
 		return id, nome, nil
 	}
 
-	return 0, "", fmt.Errorf("formato não reconhecido. Aceitos: URL da Shopee (shopee.com.br/shop/ID, link curto s.shopee.com.br/..., ou link de produto) ou ID numérico (5-15 dígitos)")
+	return 0, "", fmt.Errorf("formato não reconhecido (aceitos: URL Shopee ou ID numérico 5-15 dígitos): %w", apperr.ErrInvalidInput)
 }
 
 // buscarNomeLoja consulta a API pública da Shopee para obter o nome da loja via shopId.
@@ -127,7 +129,7 @@ func (srv *Server) resolveShortLink(shortURL string) (string, error) {
 		Timeout: 10 * time.Second,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) > 5 {
-				return fmt.Errorf("muitos redirects")
+				return apperr.ErrTooManyRedirects
 			}
 			return nil
 		},
@@ -138,7 +140,7 @@ func (srv *Server) resolveShortLink(shortURL string) (string, error) {
 		// Fallback: tenta GET se HEAD falhar
 		resp, err = client.Get(shortURL)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("resolver short link: %w", err)
 		}
 		defer resp.Body.Close()
 	} else {
@@ -152,7 +154,7 @@ func (srv *Server) resolveShortLink(shortURL string) (string, error) {
 func (srv *Server) resolveShopSlugWithName(shopURL string) (int64, string, error) {
 	m := reSlugURL.FindStringSubmatch(cleanURL(shopURL))
 	if len(m) < 2 {
-		return 0, "", fmt.Errorf("slug não encontrado na URL")
+		return 0, "", fmt.Errorf("slug não encontrado na URL: %w", apperr.ErrInvalidInput)
 	}
 	slug := m[1]
 
@@ -161,7 +163,7 @@ func (srv *Server) resolveShopSlugWithName(shopURL string) (int64, string, error
 
 	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
 	if err != nil {
-		return 0, "", err
+		return 0, "", fmt.Errorf("shopee slug criar request: %w", err)
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
 
@@ -184,10 +186,10 @@ func (srv *Server) resolveShopSlugWithName(shopURL string) (int64, string, error
 		return 0, "", fmt.Errorf("resposta inválida da Shopee: %w", err)
 	}
 	if result.Error != 0 {
-		return 0, "", fmt.Errorf("Shopee retornou erro: %s", result.ErrorMsg)
+		return 0, "", fmt.Errorf("Shopee retornou erro %s: %w", result.ErrorMsg, apperr.ErrShopeeAPI)
 	}
 	if result.Data.ShopID <= 0 {
-		return 0, "", fmt.Errorf("shopId não encontrado para '%s'", slug)
+		return 0, "", fmt.Errorf("shopId para '%s': %w", slug, apperr.ErrNotFound)
 	}
 
 	return result.Data.ShopID, result.Data.Name, nil
