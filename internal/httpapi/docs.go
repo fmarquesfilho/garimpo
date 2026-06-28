@@ -22,22 +22,6 @@ func (srv *Server) docsHandler() http.Handler {
 			relPath = "/index.html"
 		}
 
-		// Assets estáticos (CSS, JS, fontes, busca) não exigem auth —
-		// o navegador faz requests diretos sem header Authorization.
-		isAsset := strings.HasPrefix(relPath, "/_astro/") ||
-			strings.HasPrefix(relPath, "/pagefind/") ||
-			relPath == "/favicon.svg" ||
-			relPath == "/sitemap-index.xml"
-
-		if !isAsset {
-			// Autenticação: exige token Firebase de admin
-			user := srv.usuarioDoRequest(r)
-			if user == nil || !user.Admin {
-				writeErr(w, http.StatusForbidden, "documentação restrita a administradores")
-				return
-			}
-		}
-
 		// Tentar servir o arquivo diretamente
 		fullPath := path.Join(dir, relPath)
 		if _, err := os.Stat(fullPath); err == nil {
