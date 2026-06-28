@@ -51,10 +51,16 @@ dependenciesRules:
         - "github.com/fmarquesfilho/garimpo/internal/source"
         - "github.com/fmarquesfilho/garimpo/internal/engine"
 
-  # ── tenant: isolado, não depende de httpapi ───────────────────────────
+  # ── tenant: depende de store (adapter) mas não de httpapi ──────────────
   - package: "github.com/fmarquesfilho/garimpo/internal/tenant"
     shouldNotDependsOn:
       internal:
         - "github.com/fmarquesfilho/garimpo/internal/httpapi"
         - "github.com/fmarquesfilho/garimpo/internal/source"
-        - "github.com/fmarquesfilho/garimpo/internal/store"
+        - "github.com/fmarquesfilho/garimpo/internal/engine"
+
+  # ── apperr: erros de domínio, sem dependências internas ────────────────
+  - package: "github.com/fmarquesfilho/garimpo/internal/apperr"
+    shouldOnlyDependsOn:
+      internal:
+        - "github.com/fmarquesfilho/garimpo/internal/apperr"  # só ele mesmo
