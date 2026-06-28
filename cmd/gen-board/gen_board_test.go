@@ -29,10 +29,17 @@ func TestGenBoardMatchesCommitted(t *testing.T) {
 		t.Fatalf("não conseguiu ler BOARD.md após regenerar: %v", err)
 	}
 
-	if strings.TrimSpace(string(regenerated)) != strings.TrimSpace(string(committed)) {
-		t.Errorf("docs/gerado/BOARD.md está desatualizado.\n" +
+	// Comparar ignorando a linha "Gerado em" (varia com a data)
+	committedLines := stripDateLines(string(committed))
+	regeneratedLines := stripDateLines(string(regenerated))
+
+	if committedLines != regeneratedLines {
+		t.Errorf("docs/gerado/BOARD.md está desatualizado (diff ignorando datas).\n" +
 			"Rode: make docs-board && git add docs/gerado/")
 	}
+
+	// Restaurar o arquivo original para não sujar o working tree
+	os.WriteFile(boardPath, committed, 0o644)
 }
 
 // TestGenBoardValidatesTasks verifica que todas as tarefas têm campos obrigatórios.
@@ -78,4 +85,16 @@ func TestGenBoardNoBrokenDependencies(t *testing.T) {
 			}
 		}
 	}
+}
+
+// stripDateLines remove linhas que contêm "Gerado em" para comparação estável.
+func stripDateLines(s string) string {
+	var lines []string
+	for _, line := range strings.Split(s, "\n") {
+		if strings.Contains(line, "Gerado em") {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
