@@ -4,7 +4,7 @@
 
 ## 🔵 Now (em andamento)
 
-- **T-0003** Backlog como código (schema + gen-board) · docs-migration · M
+_Nenhuma tarefa em andamento._
 
 ## 🟡 Next (próximo sprint)
 
@@ -20,3 +20,4 @@
 ## ✅ Concluídas
 
 - **T-0001** Docs: site Starlight + geradores + consolidação · docs-migration · G
+- **T-0003** Backlog como código (schema + gen-board) · docs-migration · M
