@@ -39,4 +39,35 @@ bash "$ROOT/scripts/copy-adrs.sh"
 # Sincronizar gerados (já têm frontmatter)
 cp "$ROOT/docs/gerado/ENTIDADES.md" "$DST/gerado/entidades.md" 2>/dev/null || true
 
+# Board e Roadmap: copiar conteúdo para dentro do frontmatter do placeholder
+if [ -f "$ROOT/docs/gerado/BOARD.md" ]; then
+  {
+    echo "---"
+    echo "title: \"Quadro (Kanban)\""
+    echo "description: \"Quadro do sprint atual, gerado do backlog YAML.\""
+    echo "---"
+    echo ""
+    echo ":::caution[Arquivo gerado]"
+    echo "Não edite manualmente. Rode \`make docs-board\` para regenerar."
+    echo ":::"
+    echo ""
+    cat "$ROOT/docs/gerado/BOARD.md"
+  } > "$DST/gerado/board.md"
+fi
+
+if [ -f "$ROOT/docs/gerado/ROADMAP.md" ]; then
+  {
+    echo "---"
+    echo "title: \"Roadmap\""
+    echo "description: \"Roadmap Now/Next/Later, gerado do backlog YAML.\""
+    echo "---"
+    echo ""
+    echo ":::caution[Arquivo gerado]"
+    echo "Não edite manualmente. Rode \`make docs-board\` para regenerar."
+    echo ":::"
+    echo ""
+    cat "$ROOT/docs/gerado/ROADMAP.md"
+  } > "$DST/gerado/roadmap.md"
+fi
+
 echo "Sincronizados $(ls "$DST"/*.md 2>/dev/null | wc -l) docs canônicos para docs-site"

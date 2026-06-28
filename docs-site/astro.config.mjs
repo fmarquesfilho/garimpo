@@ -26,6 +26,8 @@ export default defineConfig({
             { label: 'Referência da API', link: '/gerado/api/' },
             { label: 'Modelo de dados (ER)', link: '/gerado/entidades/' },
             { label: 'Variáveis de ambiente', link: '/gerado/env-vars/' },
+            { label: 'Quadro (Kanban)', link: '/gerado/board/' },
+            { label: 'Roadmap', link: '/gerado/roadmap/' },
           ],
         },
         { label: 'Decisões (ADRs)', autogenerate: { directory: 'decisoes' } },
