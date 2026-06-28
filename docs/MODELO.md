@@ -18,7 +18,7 @@ A operação dela, hoje, ponta a ponta:
 | 3 | Escolher o produto do dia | julgamento | **gargalo — sem dado de apoio** |
 | 4 | Selecionar um vídeo pronto | manual | ok |
 | 5 | Montar post + link de afiliado | manual | repetitivo |
-| 6 | Publicar no Instagram | manual | ok |
+| 6 | Publicar no Telegram/WhatsApp | manual | ok |
 | 7 | Acompanhar resultado | quase inexistente | **sem feedback** |
 
 **O gargalo é o bloco 1–3: a descoberta e seleção do produto.** É o passo que
@@ -56,6 +56,8 @@ resultado real** ao longo do tempo. Nenhuma ferramenta paga sabe o que converte
 | Risco | crescimento mais lento | audiência dispersa, menos fidelização |
 
 Elas não competem — **coexistem como um experimento**. A ideia é alocar parte dos
+> 🔮 **Visão futura.** Hoje apenas a estratégia "nicho" está ativa. A comparação de estratégias será retomada quando houver dados de conversão.
+
 slots da semana a cada estratégia (ex.: 70% nicho / 30% diversificada),
 **etiquetar cada post com a estratégia que o gerou**, e comparar os resultados.
 A sobreposição entre os dois rankings (produtos que ambas escolhem) é a aposta de
@@ -114,6 +116,8 @@ Visualização sem reinventar gráfico. Energia fica na coleta e na modelagem.
 
 ---
 
+> 🔮 **Removido.** O quadro Kanban foi descontinuado (não era utilizado). A gestão de trabalho usa o backlog versionado.
+
 ## 5. Quadro Kanban da operação
 
 Colunas para o dia a dia dela, com limites de WIP para evitar sobrecarga
@@ -159,6 +163,8 @@ existe se o tempo for registrado, daí o cuidado com o dado de esforço).
   avaliação), gera short links com subIds e tem relatório de conversão. Detalhes
   e mapeamento em `docs/APIS.md`. O padrão de adaptador segue valendo para trocar
   de fonte sem tocar no motor.
+> 🔮 **Instagram é visão futura** — não implementado. Os canais ativos são Telegram e WhatsApp.
+
 - **Instagram não fecha o loop de clique.** A Graph API dá performance de
   conteúdo (alcance/engajamento), mas não coloca link clicável em feed, não
   adiciona sticker de link em Stories via API e não expõe o clique de afiliado.
