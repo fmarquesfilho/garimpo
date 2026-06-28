@@ -74,7 +74,7 @@ func (srv *Server) conversoes(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	conversoes, err := srv.Eventos.Conversoes(r.Context(), dias)
+	conversoes, err := srv.Repo.Publicacoes().Conversoes(r.Context(), dias)
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return

@@ -27,7 +27,7 @@ func TestColetaLojaGravaKeywordComBuscaID(t *testing.T) {
 		},
 	}
 	srv := &Server{
-		Eventos:   sp,
+		Repo:      &spyRepo{sp: sp},
 		Auth:      fakeVerifier{},
 		Scheduler: nopSched{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
@@ -57,7 +57,7 @@ func TestColetaLojaGravaKeywordComBuscaID(t *testing.T) {
 // O importante é que o campo 'nome' exista na resposta.
 func TestAdicionarLojaRetornaCampoNome(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	corpo := []byte(`{"input":"123456"}`)
@@ -101,7 +101,7 @@ func TestListarBuscasComShopIDsRetornaOsIDs(t *testing.T) {
 			{ID: "kw-perfume", Keywords: []string{"perfume"}, Ativo: true, OwnerUID: "test-user"},
 		},
 	}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	rec := req(t, h, "GET", "/api/buscas", nil, map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {
@@ -157,7 +157,7 @@ func TestPublicarPendentesPreservaTodosOsCampos(t *testing.T) {
 	}
 	pub := &spyPub{}
 	srv := &Server{
-		Eventos:    sp,
+		Repo:       &spyRepo{sp: sp},
 		Publicador: pub,
 		Auth:       fakeVerifier{},
 		Scheduler:  nopSched{},
@@ -203,7 +203,7 @@ func TestPublicarPendentesPreservaTodosOsCampos(t *testing.T) {
 func TestColetaNormalNaoEAfetadaPorLogicaDeLoja(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "segredo")
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	// Coleta padrão por keyword (sem busca_id, sem shop_ids)
 	rec := req(t, h, "POST", "/api/coletar?keyword=perfume&categoria=perfumaria&top=5",
@@ -244,7 +244,7 @@ func TestAlertasConfigRefletaEnvVars(t *testing.T) {
 	t.Setenv("ALERTAS_THRESHOLD", "0.20")
 	t.Setenv("ALERTAS_APENAS_QUEDAS", "true")
 
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/alertas", nil, map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)
@@ -276,7 +276,7 @@ func TestListarLojasFiltralPorOwner(t *testing.T) {
 			{ID: "loja-outra", ShopIDs: []int64{222}, Ativo: true, OwnerUID: "outro-user"},
 		},
 	}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	rec := req(t, h, "GET", "/api/lojas", nil, map[string]string{"Authorization": "Bearer tok"})
 	var resp struct {
@@ -296,7 +296,7 @@ func TestListarLojasFiltralPorOwner(t *testing.T) {
 // --- Testes do endpoint de conversões ─────────────────────────────────────
 
 func TestConversoesExigeAuthRegressao(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/conversoes", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
@@ -305,7 +305,7 @@ func TestConversoesExigeAuthRegressao(t *testing.T) {
 
 func TestSyncConversoesExigeToken(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "segredo")
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 
 	// Sem token → 401
 	rec := req(t, h, "POST", "/api/conversoes/sync", nil, nil)
@@ -318,7 +318,7 @@ func TestSyncConversoesSemCredenciais(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "segredo")
 	t.Setenv("SHOPEE_APP_ID", "")
 	t.Setenv("SHOPEE_SECRET", "")
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 
 	rec := req(t, h, "POST", "/api/conversoes/sync", nil,
 		map[string]string{"X-Garimpo-Token": "segredo"})
@@ -336,7 +336,7 @@ func TestBuscasSalvasNaoCuradoriaExcluiLojas(t *testing.T) {
 			{ID: "loja-123", ShopIDs: []int64{123}, Ativo: true, OwnerUID: "test-user"},
 		},
 	}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	// GET /api/buscas retorna AMBAS (é a API, não filtra)
 	rec := req(t, h, "GET", "/api/buscas", nil, map[string]string{"Authorization": "Bearer tok"})
@@ -357,7 +357,7 @@ func TestBuscasSalvasNaoCuradoriaExcluiLojas(t *testing.T) {
 func TestSyncConversoesRotaRegistrada(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "tok")
 	t.Setenv("SHOPEE_APP_ID", "")
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	// A rota deve existir (não 404/405)
 	rec := req(t, h, "POST", "/api/conversoes/sync", nil,
 		map[string]string{"X-Garimpo-Token": "tok"})
@@ -371,9 +371,8 @@ func TestSyncConversoesRotaRegistrada(t *testing.T) {
 
 func TestColetaServiceSempreUsaNicho(t *testing.T) {
 	// Mesmo passando "diversificada", o service deve funcionar (usa nicho internamente)
-	st := &mockStoreMinimal{}
 	src := &mockSourceMinimal{produtos: amostra}
-	svc := coleta.Novo(coleta.Deps{Store: st, Logger: slog.Default()})
+	svc := coleta.Novo(coleta.Deps{Repo: store.NovoNopRepository(), Logger: slog.Default()})
 
 	resultado, err := svc.Executar(context.Background(), src, coleta.Params{
 		Estrategia: "diversificada", // ignorado — sempre nicho
@@ -392,10 +391,8 @@ func TestColetaServiceSempreUsaNicho(t *testing.T) {
 }
 
 // Mocks mínimos para testar o service de coleta no contexto httpapi
-type mockStoreMinimal struct{ spyStore }
-type mockSourceMinimal struct {
-	produtos []domain.Product
-}
+
+type mockSourceMinimal struct{ produtos []domain.Product }
 
 func (m *mockSourceMinimal) Name() string                     { return "mock" }
 func (m *mockSourceMinimal) Fetch() ([]domain.Product, error) { return m.produtos, nil }

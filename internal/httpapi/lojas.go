@@ -38,7 +38,7 @@ func (srv *Server) novidades(w http.ResponseWriter, r *http.Request) {
 	}
 	srv.muNov.Unlock()
 
-	novidades, err := srv.Eventos.Novidades(r.Context(), buscaID, dias)
+	novidades, err := srv.Repo.Snapshots().Novidades(r.Context(), buscaID, dias)
 	if err != nil {
 		srv.Logger.Error("novidades falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -62,7 +62,7 @@ func (srv *Server) evolucaoLojas(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	evolucao, err := srv.Eventos.EvolucaoLojas(r.Context(), dias)
+	evolucao, err := srv.Repo.Snapshots().EvolucaoLojas(r.Context(), dias)
 	if err != nil {
 		srv.Logger.Error("evolução lojas falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -111,7 +111,7 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verifica duplicata: busca ativa com mesmo shop_id
-	buscas, _ := srv.Eventos.ListarBuscas(r.Context())
+	buscas, _ := srv.Repo.Buscas().ListarBuscas(r.Context())
 	for _, b := range buscas {
 		if !b.Ativo || b.OwnerUID != user.UID {
 			continue
@@ -139,7 +139,7 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 		OrigemPadrao: req.OrigemPadrao,
 	})
 
-	if err := srv.Eventos.SalvarBusca(r.Context(), busca); err != nil {
+	if err := srv.Repo.Buscas().SalvarBusca(r.Context(), busca); err != nil {
 		srv.Logger.Error("adicionar loja falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -176,7 +176,7 @@ func (srv *Server) adicionarLoja(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) listarLojas(w http.ResponseWriter, r *http.Request) {
 	user := usuarioDoCtx(r)
 
-	buscas, err := srv.Eventos.ListarBuscas(r.Context())
+	buscas, err := srv.Repo.Buscas().ListarBuscas(r.Context())
 	if err != nil {
 		srv.Logger.Error("listar lojas falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -204,7 +204,7 @@ func (srv *Server) removerLoja(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Busca a busca existente para confirmar ownership
-	buscas, err := srv.Eventos.ListarBuscas(r.Context())
+	buscas, err := srv.Repo.Buscas().ListarBuscas(r.Context())
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -223,7 +223,7 @@ func (srv *Server) removerLoja(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encontrada.Ativo = false
-	if err := srv.Eventos.SalvarBusca(r.Context(), *encontrada); err != nil {
+	if err := srv.Repo.Buscas().SalvarBusca(r.Context(), *encontrada); err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}

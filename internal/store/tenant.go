@@ -1,6 +1,10 @@
 package store
 
-import "time"
+import (
+	"time"
+
+	"github.com/fmarquesfilho/garimpo/internal/crypto"
+)
 
 // TenantConfig armazena as credenciais e configurações de um tenant (usuário).
 type TenantConfig struct {
@@ -20,4 +24,40 @@ type TenantConfig struct {
 // Configurado retorna true se o tenant tem credenciais Shopee válidas.
 func (c *TenantConfig) Configurado() bool {
 	return c != nil && c.OnboardingStep >= 4 && c.ShopeeAppID != ""
+}
+
+// ShopeeSecret descriptografa e retorna o secret da Shopee.
+func (c *TenantConfig) ShopeeSecret() (string, error) {
+	if c == nil || c.ShopeeSecretEnc == "" {
+		return "", nil
+	}
+	return crypto.Decrypt(c.ShopeeSecretEnc)
+}
+
+// TelegramToken descriptografa e retorna o token do bot Telegram.
+func (c *TenantConfig) TelegramToken() (string, error) {
+	if c == nil || c.TelegramTokenEnc == "" {
+		return "", nil
+	}
+	return crypto.Decrypt(c.TelegramTokenEnc)
+}
+
+// SetShopeeSecret criptografa e armazena o secret.
+func (c *TenantConfig) SetShopeeSecret(plain string) error {
+	enc, err := crypto.Encrypt(plain)
+	if err != nil {
+		return err
+	}
+	c.ShopeeSecretEnc = enc
+	return nil
+}
+
+// SetTelegramToken criptografa e armazena o token do bot.
+func (c *TenantConfig) SetTelegramToken(plain string) error {
+	enc, err := crypto.Encrypt(plain)
+	if err != nil {
+		return err
+	}
+	c.TelegramTokenEnc = enc
+	return nil
 }

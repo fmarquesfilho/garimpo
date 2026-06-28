@@ -124,8 +124,8 @@ func TestCandidatosRetornaLojaIDELinkProduto(t *testing.T) {
 
 	fonte := &fonteFake{produtos: produtos}
 	srv := &Server{
-		Eventos: &spyStore{},
-		Auth:    fakeVerifier{},
+		Repo: store.NovoNopRepository(),
+		Auth: fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return fonte, "fake|fixo"
 		},
@@ -191,7 +191,7 @@ func TestProdutoOrigemComMockShopee(t *testing.T) {
 
 	salvarOrigemNoCache("999:777", origemCacheEntry{Origem: "Coreia", Marca: "SKIN1004"})
 
-	srv := &Server{Eventos: &spyStore{}, Auth: fakeVerifier{}}
+	srv := &Server{Repo: store.NovoNopRepository(), Auth: fakeVerifier{}}
 	h := srv.Handler()
 
 	rec := httptest.NewRequest("GET", "/api/produto/origem?item_id=777&shop_id=999", nil)
@@ -216,7 +216,7 @@ func TestProdutoOrigemComMockShopee(t *testing.T) {
 }
 
 func TestProdutoOrigemSemShopIdRetorna400(t *testing.T) {
-	srv := &Server{Eventos: &spyStore{}, Auth: fakeVerifier{}}
+	srv := &Server{Repo: store.NovoNopRepository(), Auth: fakeVerifier{}}
 	h := srv.Handler()
 
 	// Sem item_id
@@ -316,8 +316,8 @@ func TestCandidatosEnriqueceOrigemDaLojaMonitorada(t *testing.T) {
 
 	fonte := &fonteFake{produtos: produtos}
 	srv := &Server{
-		Eventos: sp,
-		Auth:    fakeVerifier{},
+		Repo: &spyRepo{sp: sp},
+		Auth: fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return fonte, "fake|fixo"
 		},
@@ -398,8 +398,8 @@ func TestCandidatosNaoSobrescreveOrigemExistente(t *testing.T) {
 
 	fonte := &fonteFake{produtos: produtos}
 	srv := &Server{
-		Eventos: sp,
-		Auth:    fakeVerifier{},
+		Repo: &spyRepo{sp: sp},
+		Auth: fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return fonte, "fake|fixo"
 		},
@@ -441,8 +441,8 @@ func TestCandidatosShopID_FallbackParaProductLink(t *testing.T) {
 
 	fonte := &fonteFake{produtos: produtos}
 	srv := &Server{
-		Eventos: &spyStore{},
-		Auth:    fakeVerifier{},
+		Repo: store.NovoNopRepository(),
+		Auth: fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return fonte, "fake|fixo"
 		},

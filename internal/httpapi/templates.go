@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/fmarquesfilho/garimpo/internal/publish"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 // listarTemplates devolve os templates ativos.
 func (srv *Server) listarTemplates(w http.ResponseWriter, r *http.Request) {
-	lista, err := srv.Templates.Listar(r.Context())
+	lista, err := srv.Repo.Templates().ListarTemplates(r.Context())
 	if err != nil {
 		srv.Logger.Error("listar templates falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -24,7 +25,7 @@ func (srv *Server) listarTemplates(w http.ResponseWriter, r *http.Request) {
 // salvarTemplate cria ou atualiza um template de mensagem.
 func (srv *Server) salvarTemplate(w http.ResponseWriter, r *http.Request) {
 
-	var t publish.Template
+	var t store.Template
 	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")
 		return
@@ -45,7 +46,7 @@ func (srv *Server) salvarTemplate(w http.ResponseWriter, r *http.Request) {
 		t.CriadoEm = time.Now().UTC().Format(time.RFC3339)
 	}
 
-	if err := srv.Templates.Salvar(r.Context(), t); err != nil {
+	if err := srv.Repo.Templates().SalvarTemplate(r.Context(), t); err != nil {
 		srv.Logger.Error("salvar template falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -62,7 +63,7 @@ func (srv *Server) deletarTemplate(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "informe ?id=")
 		return
 	}
-	if err := srv.Templates.Deletar(r.Context(), id); err != nil {
+	if err := srv.Repo.Templates().DeletarTemplate(r.Context(), id); err != nil {
 		srv.Logger.Error("deletar template falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -89,16 +90,16 @@ func (srv *Server) templatePreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tmpl publish.Template
+	var tmpl store.Template
 	if req.TemplateID != "" {
 		var err error
-		tmpl, err = srv.Templates.Buscar(r.Context(), req.TemplateID)
+		tmpl, err = srv.Repo.Templates().BuscarTemplate(r.Context(), req.TemplateID)
 		if err != nil {
 			writeErr(w, http.StatusNotFound, "template não encontrado")
 			return
 		}
 	} else {
-		tmpl = publish.Template{Corpo: req.Corpo, ComFoto: req.ComFoto}
+		tmpl = store.Template{Corpo: req.Corpo, ComFoto: req.ComFoto}
 	}
 
 	oferta := publish.Oferta{
@@ -124,7 +125,7 @@ func (srv *Server) templatePreview(w http.ResponseWriter, r *http.Request) {
 		oferta.Estrategia = "nicho"
 	}
 
-	rendered := tmpl.Renderizar(oferta)
+	rendered := tmpl.Renderizar(oferta.Nome, oferta.Preco, oferta.Categoria, oferta.Estrategia, oferta.Link)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"preview":  rendered,
 		"com_foto": tmpl.ComFoto,

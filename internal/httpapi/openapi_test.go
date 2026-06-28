@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 // TestOpenapiCoversAllRoutes verifica que toda rota registrada no mux
@@ -20,7 +22,7 @@ func TestOpenapiCoversAllRoutes(t *testing.T) {
 	spec := string(specBytes)
 
 	// Extrai as rotas do handler real
-	srv := &Server{Eventos: &spyStore{}, Auth: fakeVerifier{}}
+	srv := &Server{Repo: store.NovoNopRepository(), Auth: fakeVerifier{}}
 	handler := srv.Handler()
 
 	// Rotas conhecidas registradas no código (extraímos do handler montado)

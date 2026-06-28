@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 func TestNormalizarOrigemProduto(t *testing.T) {
@@ -45,7 +47,7 @@ func TestNormalizarOrigemProduto(t *testing.T) {
 }
 
 func TestProdutoOrigemEndpoint_MissingParams(t *testing.T) {
-	srv := &Server{Eventos: &spyStore{}, Auth: fakeVerifier{}}
+	srv := &Server{Repo: store.NovoNopRepository(), Auth: fakeVerifier{}}
 	handler := srv.Handler()
 
 	// Sem item_id
@@ -69,7 +71,7 @@ func TestProdutoOrigemEndpoint_CacheHit(t *testing.T) {
 	// Pre-popula o cache
 	salvarOrigemNoCache("999:888", origemCacheEntry{Origem: "Coreia", Marca: "SKIN1004"})
 
-	srv := &Server{Eventos: &spyStore{}, Auth: fakeVerifier{}}
+	srv := &Server{Repo: store.NovoNopRepository(), Auth: fakeVerifier{}}
 	handler := srv.Handler()
 
 	req := httptest.NewRequest("GET", "/api/produto/origem?item_id=888&shop_id=999", nil)
@@ -95,7 +97,7 @@ func TestProdutoOrigemEndpoint_CacheHit(t *testing.T) {
 }
 
 func TestProdutoOrigemBatch_EmptyList(t *testing.T) {
-	srv := &Server{Eventos: &spyStore{}, Auth: fakeVerifier{}}
+	srv := &Server{Repo: store.NovoNopRepository(), Auth: fakeVerifier{}}
 	handler := srv.Handler()
 
 	body := `{"itens": []}`
@@ -113,7 +115,7 @@ func TestProdutoOrigemBatch_WithCache(t *testing.T) {
 	// Pre-popula o cache
 	salvarOrigemNoCache("100:200", origemCacheEntry{Origem: "Japão", Marca: "Shiseido"})
 
-	srv := &Server{Eventos: &spyStore{}, Auth: fakeVerifier{}}
+	srv := &Server{Repo: store.NovoNopRepository(), Auth: fakeVerifier{}}
 	handler := srv.Handler()
 
 	body := `{"itens": [{"item_id": "200", "shop_id": "100"}]}`

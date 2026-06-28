@@ -40,7 +40,7 @@ type Resultado struct {
 
 // Deps agrupa as dependências do service (injeção explícita).
 type Deps struct {
-	Store  store.EventoStore
+	Repo   store.Repository
 	Logger *slog.Logger
 }
 
@@ -117,7 +117,7 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 		})
 	}
 
-	if err := s.deps.Store.RegistrarSnapshot(ctx, snap); err != nil {
+	if err := s.deps.Repo.Snapshots().RegistrarSnapshot(ctx, snap); err != nil {
 		return Resultado{}, fmt.Errorf("coleta registrar snapshot: %w", err)
 	}
 
@@ -145,7 +145,7 @@ func (s *Service) Executar(ctx context.Context, src source.ProductSource, params
 // ── Métodos internos ─────────────────────────────────────────────────────────
 
 func (s *Service) carregarBusca(ctx context.Context, buscaID string) *store.Busca {
-	buscas, err := s.deps.Store.ListarBuscas(ctx)
+	buscas, err := s.deps.Repo.Buscas().ListarBuscas(ctx)
 	if err != nil {
 		return nil
 	}
@@ -188,7 +188,7 @@ func (s *Service) atualizarCursor(ctx context.Context, src source.ProductSource,
 	}
 	// Persiste o cursor (best-effort, não bloqueia)
 	go func() {
-		if err := s.deps.Store.SalvarBusca(context.Background(), *busca); err != nil {
+		if err := s.deps.Repo.Buscas().SalvarBusca(context.Background(), *busca); err != nil {
 			s.deps.Logger.Error("atualizar rotation cursor falhou",
 				slog.String("busca", busca.ID), slog.String("erro", err.Error()))
 		}
@@ -202,10 +202,7 @@ func (s *Service) dispararAlertas(buscaID string) {
 		return
 	}
 	alerter := alerts.Novo(cfg)
-	alerter.VerificarENotificar(context.Background(), s.deps.Store, buscaID)
-	// Alertas de produtos novos desabilitados por enquanto — serão reativados
-	// quando a configuração de alertas permitir habilitar/desabilitar por tipo.
-	// alerter.VerificarNovos(context.Background(), s.deps.Store, buscaID)
+	alerter.VerificarENotificar(context.Background(), s.deps.Repo.Snapshots(), buscaID)
 }
 
 // ── Helpers (extraídos do httpapi para reuso) ─────────────────────────────────

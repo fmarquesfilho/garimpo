@@ -164,7 +164,7 @@ func (srv *Server) enriquecerOrigem(r *http.Request, candidatos []candidatoDTO) 
 	}
 
 	// Carrega mapa shopId → origem das lojas monitoradas
-	buscas, err := srv.Eventos.ListarBuscas(r.Context())
+	buscas, err := srv.Repo.Buscas().ListarBuscas(r.Context())
 	if err != nil {
 		return
 	}

@@ -113,6 +113,22 @@ func (s *spyStore) ListarFavoritos(_ context.Context, _ string) ([]store.Favorit
 func (s *spyStore) RemoverFavorito(_ context.Context, _, _ string) error { return nil }
 func (s *spyStore) EnsureSchema(_ context.Context) error                 { return nil }
 
+// spyRepo wraps spyStore to satisfy store.Repository.
+type spyRepo struct {
+	sp *spyStore
+}
+
+func (r *spyRepo) Eventos() store.EventoRepo          { return r.sp }
+func (r *spyRepo) Snapshots() store.SnapshotRepo      { return r.sp }
+func (r *spyRepo) Buscas() store.BuscaRepo            { return r.sp }
+func (r *spyRepo) Publicacoes() store.PublicacaoRepo  { return r.sp }
+func (r *spyRepo) Destinos() store.DestinoRepo        { return store.NovoNopRepository().Destinos() }
+func (r *spyRepo) Templates() store.TemplateRepo      { return store.NovoNopRepository().Templates() }
+func (r *spyRepo) Favoritos() store.FavoritoRepo      { return r.sp }
+func (r *spyRepo) Tenants() store.TenantRepo          { return store.NovoMemTenantRepo() }
+func (r *spyRepo) EnsureSchema(context.Context) error { return nil }
+func (r *spyRepo) Nome() string                       { return "spy" }
+
 type spyPub struct {
 	chamadas int
 	ultima   publish.Oferta
@@ -141,9 +157,9 @@ var amostra = []domain.Product{
 	{ID: "P3", Name: "Creme", Category: "cosméticos", Price: 50, Commission: 0.05, Sales30d: 300, Rating: 4.9}, // 5% -> fora
 }
 
-func montar(fonte *fonteFake, ev store.EventoStore, pub publish.Publicador) http.Handler {
+func montar(fonte *fonteFake, repo store.Repository, pub publish.Publicador) http.Handler {
 	srv := &Server{
-		Eventos:    ev,
+		Repo:       repo,
 		Publicador: pub,
 		Auth:       fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
@@ -202,7 +218,7 @@ func reqSemAuth(t *testing.T, h http.Handler, metodo, alvo string, corpo []byte,
 // --- testes ---------------------------------------------------------------
 
 func TestCandidatosRankeiaEFiltra(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/candidatos?estrategia=nicho", nil, nil)
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)
@@ -225,7 +241,7 @@ func TestCandidatosRankeiaEFiltra(t *testing.T) {
 }
 
 func TestCandidatosFiltroVendasMin(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/candidatos?estrategia=diversificada&vendas_min=100", nil, nil)
 	var resp struct {
 		Candidatos []struct {
@@ -239,7 +255,7 @@ func TestCandidatosFiltroVendasMin(t *testing.T) {
 }
 
 func TestCompararTrazAsDuas(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/comparar", nil, nil)
 	var resp struct {
 		Nicho         []map[string]any `json:"nicho"`
@@ -253,7 +269,7 @@ func TestCompararTrazAsDuas(t *testing.T) {
 
 func TestEventosRegistra(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	corpo := []byte(`{"tipo":"selecao","id":"P1","nome":"Sérum","estrategia":"nicho"}`)
 	rec := req(t, h, "POST", "/api/eventos", corpo, map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 202 {
@@ -265,7 +281,7 @@ func TestEventosRegistra(t *testing.T) {
 }
 
 func TestEventosRecusaGET(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/eventos", nil, nil)
 	// Com SPA handler, rotas /api/* sem handler retornam 404 ou 405.
 	if rec.Code != 405 && rec.Code != 404 {
@@ -276,7 +292,7 @@ func TestEventosRecusaGET(t *testing.T) {
 func TestPublicarChamaPublicadorERegistra(t *testing.T) {
 	sp := &spyStore{}
 	pub := &spyPub{}
-	h := montar(&fonteFake{produtos: amostra}, sp, pub)
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, pub)
 	corpo := []byte(`{"id":"P1","nome":"Sérum","preco":100,"comissao":0.15,"link":"http://l","estrategia":"nicho"}`)
 	rec := req(t, h, "POST", "/api/publicar", corpo, map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 200 {
@@ -301,7 +317,7 @@ func TestPublicarChamaPublicadorERegistra(t *testing.T) {
 func TestColetarGravaSnapshotComToken(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "segredo")
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	// sem token -> 401
 	if rec := req(t, h, "POST", "/api/coletar", nil, nil); rec.Code != 401 {
@@ -319,7 +335,7 @@ func TestColetarGravaSnapshotComToken(t *testing.T) {
 
 func TestBuscasSalvaEListagem(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
 
@@ -351,7 +367,7 @@ func TestBuscasSalvaEListagem(t *testing.T) {
 
 func TestBuscasSalvaCompatibilidadeLegada(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
 
@@ -370,7 +386,7 @@ func TestBuscasSalvaCompatibilidadeLegada(t *testing.T) {
 }
 
 func TestBuscasExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	// POST sem auth → 401
 	rec := reqSemAuth(t, h, "POST", "/api/buscas", []byte(`{"keywords":["x"]}`), map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 401 {
@@ -384,7 +400,7 @@ func TestBuscasExigeAuth(t *testing.T) {
 }
 
 func TestBuscasExigeAlgumCriterio(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	// sem keywords, lojas, categorias ou fontes → 400
 	rec := req(t, h, "POST", "/api/buscas", []byte(`{}`), map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"})
 	if rec.Code != 400 {
@@ -394,7 +410,7 @@ func TestBuscasExigeAlgumCriterio(t *testing.T) {
 
 func TestBuscasRemoverMarcaInativo(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
 	req(t, h, "POST", "/api/buscas?remover", []byte(`{"id":"minha-busca","keywords":["x"]}`), authH)
 	if len(sp.buscas) != 1 || sp.buscas[0].Ativo {
@@ -403,7 +419,7 @@ func TestBuscasRemoverMarcaInativo(t *testing.T) {
 }
 
 func TestEstatisticasRetornaResumo(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/estatisticas?dias=15", nil, nil)
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)
@@ -426,7 +442,7 @@ func TestEstatisticasRetornaResumo(t *testing.T) {
 
 func TestCacheBuscaUmaVez(t *testing.T) {
 	f := &fonteFake{produtos: amostra}
-	h := montar(f, &spyStore{}, &spyPub{})
+	h := montar(f, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	req(t, h, "GET", "/api/candidatos?estrategia=nicho", nil, nil)
 	req(t, h, "GET", "/api/candidatos?estrategia=diversificada", nil, nil)
 	req(t, h, "GET", "/api/comparar", nil, nil)
@@ -437,7 +453,7 @@ func TestCacheBuscaUmaVez(t *testing.T) {
 
 func TestBuscasMultiKeyword(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer fake-token"}
 	corpo := []byte(`{"keywords":["kenzo","shiseido","issey miyake"],"categoria":"perfumaria","estrategia":"ambas","cron":"0 8,18 * * *","top":12}`)
@@ -464,7 +480,7 @@ func TestBuscasMultiKeyword(t *testing.T) {
 }
 
 func TestHealthRetornaStoreELogs(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/health", nil, nil)
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)
@@ -482,12 +498,10 @@ func TestHealthRetornaStoreELogs(t *testing.T) {
 // --- Testes de destinos ---------------------------------------------------
 
 func TestDestinosCRUD(t *testing.T) {
-	destinos := publish.NovoMemDestinoStore()
 	srv := &Server{
-		Eventos:    &spyStore{},
+		Repo:       store.NovoNopRepository(),
 		Publicador: &spyPub{},
 		Auth:       fakeVerifier{},
-		Destinos:   destinos,
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -530,7 +544,7 @@ func TestDestinosCRUD(t *testing.T) {
 }
 
 func TestDestinosExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/destinos", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
@@ -541,10 +555,9 @@ func TestDestinosExigeAuth(t *testing.T) {
 
 func TestTemplatesCRUD(t *testing.T) {
 	srv := &Server{
-		Eventos:    &spyStore{},
+		Repo:       store.NovoNopRepository(),
 		Publicador: &spyPub{},
 		Auth:       fakeVerifier{},
-		Templates:  publish.NovoMemTemplateStore(),
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -581,10 +594,9 @@ func TestTemplatesCRUD(t *testing.T) {
 
 func TestTemplatePreview(t *testing.T) {
 	srv := &Server{
-		Eventos:    &spyStore{},
+		Repo:       store.NovoNopRepository(),
 		Publicador: &spyPub{},
 		Auth:       fakeVerifier{},
-		Templates:  publish.NovoMemTemplateStore(),
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -615,10 +627,9 @@ func TestPublicacoesAgendarImediato(t *testing.T) {
 	sp := &spyStore{}
 	pub := &spyPub{}
 	srv := &Server{
-		Eventos:    sp,
+		Repo:       &spyRepo{sp: sp},
 		Publicador: pub,
 		Auth:       fakeVerifier{},
-		Templates:  publish.NovoMemTemplateStore(),
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -651,10 +662,9 @@ func TestPublicacoesAgendar(t *testing.T) {
 	sp := &spyStore{}
 	pub := &spyPub{}
 	srv := &Server{
-		Eventos:    sp,
+		Repo:       &spyRepo{sp: sp},
 		Publicador: pub,
 		Auth:       fakeVerifier{},
-		Templates:  publish.NovoMemTemplateStore(),
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -684,7 +694,7 @@ func TestPublicacoesAgendar(t *testing.T) {
 }
 
 func TestPublicacoesExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/publicacoes", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
@@ -699,7 +709,7 @@ func TestPublicacoesExigeAuth(t *testing.T) {
 // --- Testes de conversões --------------------------------------------------
 
 func TestConversoesExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/conversoes", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("GET sem auth deveria dar 401, veio %d", rec.Code)
@@ -707,7 +717,7 @@ func TestConversoesExigeAuth(t *testing.T) {
 }
 
 func TestConversoesComAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/conversoes", nil, map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
@@ -718,17 +728,15 @@ func TestConversoesComAuth(t *testing.T) {
 
 func TestPublicarComDestinoIDETemplateID(t *testing.T) {
 	pub := &spyPub{}
-	destinos := publish.NovoMemDestinoStore()
-	_ = destinos.Salvar(context.Background(), publish.Destino{
+	repo := store.NovoNopRepository()
+	_ = repo.Destinos().SalvarDestino(context.Background(), store.Destino{
 		ID: "beleza", Nome: "Beleza", Tipo: "telegram", Config: "@beleza", Ativo: true,
 	})
 
 	srv := &Server{
-		Eventos:    &spyStore{},
+		Repo:       repo,
 		Publicador: pub,
 		Auth:       fakeVerifier{},
-		Destinos:   destinos,
-		Templates:  publish.NovoMemTemplateStore(),
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -757,10 +765,9 @@ func TestPublicarComDestinoIDETemplateID(t *testing.T) {
 func TestPublicarComTemplateFotoMantemImagem(t *testing.T) {
 	pub := &spyPub{}
 	srv := &Server{
-		Eventos:    &spyStore{},
+		Repo:       store.NovoNopRepository(),
 		Publicador: pub,
 		Auth:       fakeVerifier{},
-		Templates:  publish.NovoMemTemplateStore(),
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -791,10 +798,9 @@ func TestPublicarPendentesExecutaAgendadasVencidas(t *testing.T) {
 	}
 	pub := &spyPub{}
 	srv := &Server{
-		Eventos:    sp,
+		Repo:       &spyRepo{sp: sp},
 		Publicador: pub,
 		Auth:       fakeVerifier{},
-		Templates:  publish.NovoMemTemplateStore(),
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -835,7 +841,7 @@ func TestPublicarPendentesExecutaAgendadasVencidas(t *testing.T) {
 
 func TestPublicarPendentesExigeToken(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "segredo")
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "POST", "/api/publicar-pendentes", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem token deveria dar 401, veio %d", rec.Code)
@@ -846,7 +852,7 @@ func TestPublicarPendentesExigeToken(t *testing.T) {
 
 func TestCandidatosComSemFiltro(t *testing.T) {
 	// Sem sem_filtro: aplica piso de comissão 7% (P3 com 5% cai fora)
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/candidatos?estrategia=nicho", nil, nil)
 	var resp struct {
 		Candidatos []struct{ ID string } `json:"candidatos"`
@@ -867,7 +873,7 @@ func TestCandidatosComSemFiltro(t *testing.T) {
 }
 
 func TestCandidatosTotalBruto(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/candidatos?estrategia=nicho", nil, nil)
 	var resp struct {
 		TotalBruto int `json:"total_bruto"`
@@ -879,7 +885,7 @@ func TestCandidatosTotalBruto(t *testing.T) {
 }
 
 func TestNovidadesExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/lojas/novidades", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
@@ -887,7 +893,7 @@ func TestNovidadesExigeAuth(t *testing.T) {
 }
 
 func TestNovidadesComAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/lojas/novidades?busca_id=teste&dias=7", nil,
 		map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {
@@ -907,7 +913,7 @@ func TestNovidadesComAuth(t *testing.T) {
 }
 
 func TestCompararRetornaDuasListas(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/comparar?top=5", nil, nil)
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)

@@ -6,16 +6,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fmarquesfilho/garimpo/internal/publish"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 // listarDestinos devolve os destinos ativos.
 func (srv *Server) listarDestinos(w http.ResponseWriter, r *http.Request) {
-	if srv.Destinos == nil {
-		writeErr(w, http.StatusServiceUnavailable, "gerenciamento de destinos não configurado")
-		return
-	}
-	lista, err := srv.Destinos.Listar(r.Context())
+	lista, err := srv.Repo.Destinos().ListarDestinos(r.Context())
 	if err != nil {
 		srv.Logger.Error("listar destinos falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -26,12 +22,7 @@ func (srv *Server) listarDestinos(w http.ResponseWriter, r *http.Request) {
 
 // salvarDestino cria ou atualiza um destino de publicação.
 func (srv *Server) salvarDestino(w http.ResponseWriter, r *http.Request) {
-	if srv.Destinos == nil {
-		writeErr(w, http.StatusServiceUnavailable, "gerenciamento de destinos não configurado")
-		return
-	}
-
-	var d publish.Destino
+	var d store.Destino
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		writeErr(w, http.StatusBadRequest, "json inválido")
 		return
@@ -52,7 +43,7 @@ func (srv *Server) salvarDestino(w http.ResponseWriter, r *http.Request) {
 	}
 	d.Ativo = true
 
-	if err := srv.Destinos.Salvar(r.Context(), d); err != nil {
+	if err := srv.Repo.Destinos().SalvarDestino(r.Context(), d); err != nil {
 		srv.Logger.Error("salvar destino falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -63,17 +54,12 @@ func (srv *Server) salvarDestino(w http.ResponseWriter, r *http.Request) {
 
 // deletarDestino remove um destino por ID (?id=xxx).
 func (srv *Server) deletarDestino(w http.ResponseWriter, r *http.Request) {
-	if srv.Destinos == nil {
-		writeErr(w, http.StatusServiceUnavailable, "gerenciamento de destinos não configurado")
-		return
-	}
-
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		writeErr(w, http.StatusBadRequest, "informe ?id=")
 		return
 	}
-	if err := srv.Destinos.Deletar(r.Context(), id); err != nil {
+	if err := srv.Repo.Destinos().DeletarDestino(r.Context(), id); err != nil {
 		srv.Logger.Error("deletar destino falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return

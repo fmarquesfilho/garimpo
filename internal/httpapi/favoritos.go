@@ -13,7 +13,7 @@ import (
 func (srv *Server) listarFavoritos(w http.ResponseWriter, r *http.Request) {
 	user := usuarioDoCtx(r)
 
-	favoritos, err := srv.Eventos.ListarFavoritos(r.Context(), user.UID)
+	favoritos, err := srv.Repo.Favoritos().ListarFavoritos(r.Context(), user.UID)
 	if err != nil {
 		srv.Logger.Error("listar favoritos falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -40,7 +40,7 @@ func (srv *Server) salvarFavorito(w http.ResponseWriter, r *http.Request) {
 	fav.OwnerUID = user.UID
 	fav.SalvoEm = time.Now().UTC()
 
-	if err := srv.Eventos.SalvarFavorito(r.Context(), fav); err != nil {
+	if err := srv.Repo.Favoritos().SalvarFavorito(r.Context(), fav); err != nil {
 		srv.Logger.Error("salvar favorito falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -59,7 +59,7 @@ func (srv *Server) removerFavorito(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := srv.Eventos.RemoverFavorito(r.Context(), user.UID, produtoID); err != nil {
+	if err := srv.Repo.Favoritos().RemoverFavorito(r.Context(), user.UID, produtoID); err != nil {
 		srv.Logger.Error("remover favorito falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return

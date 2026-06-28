@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/fmarquesfilho/garimpo/internal/source"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 func TestConversoesReaisExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/conversoes/reais", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
@@ -19,8 +20,8 @@ func TestConversoesReaisExigeAuth(t *testing.T) {
 func TestConversoesReaisSemCredenciais(t *testing.T) {
 	// Com auth mas sem SHOPEE_APP_ID/SECRET → 503
 	srv := &Server{
-		Eventos: &spyStore{},
-		Auth:    fakeVerifier{},
+		Repo: store.NovoNopRepository(),
+		Auth: fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -40,8 +41,8 @@ func TestConversoesReaisComCredenciais(t *testing.T) {
 	t.Setenv("SHOPEE_SECRET", "test-secret")
 
 	srv := &Server{
-		Eventos: &spyStore{},
-		Auth:    fakeVerifier{},
+		Repo: store.NovoNopRepository(),
+		Auth: fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},
@@ -61,8 +62,8 @@ func TestConversoesReaisLimitaDias(t *testing.T) {
 	t.Setenv("SHOPEE_SECRET", "test-secret")
 
 	srv := &Server{
-		Eventos: &spyStore{},
-		Auth:    fakeVerifier{},
+		Repo: store.NovoNopRepository(),
+		Auth: fakeVerifier{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
 			return &fonteFake{produtos: amostra}, "fake"
 		},

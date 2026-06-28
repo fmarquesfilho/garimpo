@@ -81,12 +81,12 @@ func Novo(cfg Config) *Alerter {
 
 // VerificarENotificar compara as novidades de uma busca e envia alertas
 // para variações que excedam o threshold.
-func (a *Alerter) VerificarENotificar(ctx context.Context, eventos store.EventoStore, buscaID string) {
+func (a *Alerter) VerificarENotificar(ctx context.Context, snapshots store.SnapshotRepo, buscaID string) {
 	if !a.cfg.Ativo() {
 		return
 	}
 
-	novidades, err := eventos.Novidades(ctx, buscaID, 7)
+	novidades, err := snapshots.Novidades(ctx, buscaID, 7)
 	if err != nil {
 		a.cfg.Logger.Error("alertas: falha ao buscar novidades",
 			slog.String("busca", buscaID), slog.String("erro", err.Error()))
@@ -129,12 +129,12 @@ func (a *Alerter) VerificarENotificar(ctx context.Context, eventos store.EventoS
 }
 
 // VerificarNovos envia alerta sobre produtos novos detectados.
-func (a *Alerter) VerificarNovos(ctx context.Context, eventos store.EventoStore, buscaID string) {
+func (a *Alerter) VerificarNovos(ctx context.Context, snapshots store.SnapshotRepo, buscaID string) {
 	if !a.cfg.Ativo() {
 		return
 	}
 
-	novidades, err := eventos.Novidades(ctx, buscaID, 2) // últimos 2 dias para pegar novos recentes
+	novidades, err := snapshots.Novidades(ctx, buscaID, 2) // últimos 2 dias para pegar novos recentes
 	if err != nil || len(novidades.ProdutosNovos) == 0 {
 		return
 	}

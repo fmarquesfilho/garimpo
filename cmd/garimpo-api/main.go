@@ -30,7 +30,6 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/publish"
 	"github.com/fmarquesfilho/garimpo/internal/scheduler"
 	"github.com/fmarquesfilho/garimpo/internal/store"
-	"github.com/fmarquesfilho/garimpo/internal/tenant"
 )
 
 func main() {
@@ -55,14 +54,9 @@ func main() {
 	// Logging estruturado por criticidade (LOG_LEVEL / LOG_FORMAT no ambiente).
 	logger := logs.Init()
 
-	// Store de eventos: NopStore por padrão; BigQueryStore com -tags gcp + env.
-	eventos, err := store.Novo(context.Background())
-	if err != nil {
-		log.Fatalf("store: %v", err)
-	}
-
-	// Repository unificado (novo padrão).
-	repo, err := store.NovoRepository(context.Background(), tenant.NewRepoAdapter(tenant.NewMemoryStore()))
+	// Repository: ponto unificado de acesso à persistência.
+	// NopRepository em dev, BQRepository com -tags gcp + env vars.
+	repo, err := store.NovoRepository(context.Background(), store.NovoMemTenantRepo())
 	if err != nil {
 		log.Fatalf("repository: %v", err)
 	}
@@ -77,8 +71,7 @@ func main() {
 
 	// Publicador: Dispatcher com TelegramSender se TELEGRAM_BOT_TOKEN/CHAT_ID
 	// estiverem no ambiente (com suporte a múltiplos destinos); senão, Mock.
-	destinos, templates := criarStoresAuxiliares(eventos)
-	pub := publish.NovoComDestinos(destinos)
+	pub := publish.Novo()
 
 	// Scheduler: Cloud Scheduler com -tags gcp + env; NopScheduler caso contrário.
 	sched, err := scheduler.Novo(context.Background())
@@ -107,14 +100,10 @@ func main() {
 		Exploracao: *exploracao,
 		CacheTTL:   time.Duration(*cacheSeg) * time.Second,
 		Repo:       repo,
-		Eventos:    eventos,
-		Logger:     logger,
 		Publicador: pub,
 		Scheduler:  sched,
 		Auth:       verifier,
-		Destinos:   destinos,
-		Templates:  templates,
-		Tenants:    tenant.NewMemoryStore(),
+		Logger:     logger,
 		LogBuffer:  logs.NovoBuffer(500),
 	}
 	logger.Info("garimpo-api iniciando",

@@ -165,7 +165,7 @@ func TestCleanURL(t *testing.T) {
 // --- Testes de endpoint POST /api/lojas ───────────────────────────────────
 
 func TestAdicionarLojaExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	corpo := []byte(`{"input":"12345"}`)
 	rec := reqSemAuth(t, h, "POST", "/api/lojas", corpo, map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 401 {
@@ -175,7 +175,7 @@ func TestAdicionarLojaExigeAuth(t *testing.T) {
 
 func TestAdicionarLojaComIDNumerico(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	corpo := []byte(`{"input":"123456"}`)
@@ -220,7 +220,7 @@ func TestAdicionarLojaComIDNumerico(t *testing.T) {
 
 func TestAdicionarLojaComURL(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	corpo := []byte(`{"input":"https://shopee.com.br/shop/789012"}`)
@@ -238,7 +238,7 @@ func TestAdicionarLojaComURL(t *testing.T) {
 
 func TestAdicionarLojaComCronCustom(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	corpo := []byte(`{"input":"55555","cron":"0 8 * * *"}`)
@@ -252,7 +252,7 @@ func TestAdicionarLojaComCronCustom(t *testing.T) {
 }
 
 func TestAdicionarLojaInputVazio(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	corpo := []byte(`{"input":""}`)
@@ -263,7 +263,7 @@ func TestAdicionarLojaInputVazio(t *testing.T) {
 }
 
 func TestAdicionarLojaFormatoInvalido(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	corpo := []byte(`{"input":"abc"}`)
@@ -275,7 +275,7 @@ func TestAdicionarLojaFormatoInvalido(t *testing.T) {
 
 func TestAdicionarLojaDuplicata(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	// Primeira vez — sucesso
@@ -295,7 +295,7 @@ func TestAdicionarLojaDuplicata(t *testing.T) {
 // --- Testes de GET /api/lojas ─────────────────────────────────────────────
 
 func TestListarLojasExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/lojas", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
@@ -304,7 +304,7 @@ func TestListarLojasExigeAuth(t *testing.T) {
 
 func TestListarLojasFiltraBuscasComShopIDs(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	// Adiciona uma loja
@@ -338,7 +338,7 @@ func TestListarLojasFiltraBuscasComShopIDs(t *testing.T) {
 // --- Testes de DELETE /api/lojas ───────────────────────────────────────────
 
 func TestRemoverLojaExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "DELETE", "/api/lojas?id=loja-123456", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
@@ -346,7 +346,7 @@ func TestRemoverLojaExigeAuth(t *testing.T) {
 }
 
 func TestRemoverLojaExigeID(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "DELETE", "/api/lojas", nil, map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 400 {
 		t.Errorf("sem id deveria dar 400, veio %d", rec.Code)
@@ -354,7 +354,7 @@ func TestRemoverLojaExigeID(t *testing.T) {
 }
 
 func TestRemoverLojaInexistente(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "DELETE", "/api/lojas?id=naoexiste", nil, map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 404 {
 		t.Errorf("loja inexistente deveria dar 404, veio %d", rec.Code)
@@ -363,7 +363,7 @@ func TestRemoverLojaInexistente(t *testing.T) {
 
 func TestRemoverLojaComSucesso(t *testing.T) {
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	authH := map[string]string{"Content-Type": "application/json", "Authorization": "Bearer tok"}
 
 	// Adiciona
@@ -412,7 +412,7 @@ type shopSourceConfig struct {
 // --- Testes de GET /api/lojas/evolucao ────────────────────────────────────
 
 func TestEvolucaoLojasExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/lojas/evolucao", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
@@ -420,7 +420,7 @@ func TestEvolucaoLojasExigeAuth(t *testing.T) {
 }
 
 func TestEvolucaoLojasComAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/lojas/evolucao?dias=30", nil,
 		map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {
@@ -436,7 +436,7 @@ func TestEvolucaoLojasComAuth(t *testing.T) {
 }
 
 func TestEvolucaoLojasCustomDias(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/lojas/evolucao?dias=7", nil,
 		map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {

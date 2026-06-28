@@ -13,7 +13,7 @@ import (
 // listarPublicacoes retorna publicações filtradas por status (?status=agendada|enviada|erro).
 func (srv *Server) listarPublicacoes(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status") // vazio = todas
-	lista, err := srv.Eventos.ListarPublicacoes(r.Context(), status)
+	lista, err := srv.Repo.Publicacoes().ListarPublicacoes(r.Context(), status)
 	if err != nil {
 		srv.Logger.Error("listar publicacoes falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -87,7 +87,7 @@ func (srv *Server) agendarPublicacao(w http.ResponseWriter, r *http.Request) {
 			pub.EnviadaEm = agora.Format(time.RFC3339)
 
 			// Registra no BigQuery (best-effort)
-			_ = srv.Eventos.Registrar(r.Context(), store.Evento{
+			_ = srv.Repo.Eventos().Registrar(r.Context(), store.Evento{
 				Tipo: "publicacao", Canal: res.Canal, SubID: pub.Detalhe,
 				ProdutoID: req.ProdutoID, Nome: req.Nome, Categoria: req.Categoria,
 				Estrategia: req.Estrategia, Comissao: req.Comissao, Preco: req.Preco,
@@ -96,7 +96,7 @@ func (srv *Server) agendarPublicacao(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Persiste a publicação
-	_ = srv.Eventos.SalvarPublicacao(r.Context(), pub)
+	_ = srv.Repo.Publicacoes().SalvarPublicacao(r.Context(), pub)
 
 	srv.Logger.Info("publicacao criada",
 		slog.String("id", pub.ID),
@@ -114,7 +114,7 @@ func generateID(produtoID string, t time.Time) string {
 // publicarPendentes executa publicações com status=agendada cujo agendada_em já passou.
 // Disparado periodicamente pelo Cloud Scheduler (ex.: a cada 5 min).
 func (srv *Server) publicarPendentes(w http.ResponseWriter, r *http.Request) {
-	lista, err := srv.Eventos.ListarPublicacoes(r.Context(), "agendada")
+	lista, err := srv.Repo.Publicacoes().ListarPublicacoes(r.Context(), "agendada")
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -144,8 +144,8 @@ func (srv *Server) publicarPendentes(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Aplica template
-		if p.TemplateID != "" && srv.Templates != nil {
-			tmpl, err := srv.Templates.Buscar(r.Context(), p.TemplateID)
+		if p.TemplateID != "" && true {
+			tmpl, err := srv.Repo.Templates().BuscarTemplate(r.Context(), p.TemplateID)
 			if err == nil && !tmpl.ComFoto {
 				oferta.Imagem = ""
 			}
@@ -155,7 +155,7 @@ func (srv *Server) publicarPendentes(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			p.Status = "erro"
 			p.Detalhe = err.Error()
-			_ = srv.Eventos.SalvarPublicacao(r.Context(), p)
+			_ = srv.Repo.Publicacoes().SalvarPublicacao(r.Context(), p)
 			erros++
 			srv.Logger.Error("publicar-pendentes falhou",
 				slog.String("id", p.ID), slog.String("erro", err.Error()))
@@ -164,11 +164,11 @@ func (srv *Server) publicarPendentes(w http.ResponseWriter, r *http.Request) {
 			p.Status = "enviada"
 			p.Detalhe = subID
 			p.EnviadaEm = agora.Format(time.RFC3339)
-			_ = srv.Eventos.SalvarPublicacao(r.Context(), p)
+			_ = srv.Repo.Publicacoes().SalvarPublicacao(r.Context(), p)
 			enviadas++
 
 			// Registra evento de publicação
-			_ = srv.Eventos.Registrar(r.Context(), store.Evento{
+			_ = srv.Repo.Eventos().Registrar(r.Context(), store.Evento{
 				Tipo: "publicacao", Canal: res.Canal, SubID: subID,
 				ProdutoID: p.ProdutoID, Nome: p.Nome, Categoria: p.Categoria,
 				Estrategia: p.Estrategia, Comissao: p.Comissao, Preco: p.Preco,

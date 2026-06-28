@@ -56,8 +56,8 @@ func (srv *Server) alertasTestar(w http.ResponseWriter, r *http.Request) {
 
 	if req.BuscaID != "" {
 		// Envia alertas reais da busca
-		alerter.VerificarENotificar(r.Context(), srv.Eventos, req.BuscaID)
-		alerter.VerificarNovos(r.Context(), srv.Eventos, req.BuscaID)
+		alerter.VerificarENotificar(r.Context(), srv.Repo.Snapshots(), req.BuscaID)
+		alerter.VerificarNovos(r.Context(), srv.Repo.Snapshots(), req.BuscaID)
 		writeJSON(w, http.StatusOK, map[string]string{
 			"status": "alertas verificados e enviados (se houver variações)",
 			"busca":  req.BuscaID,

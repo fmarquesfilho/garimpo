@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/fmarquesfilho/garimpo/internal/apperr"
-	"github.com/fmarquesfilho/garimpo/internal/tenant"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 // ── Endpoints de onboarding ──────────────────────────────────────────────────
@@ -22,7 +22,7 @@ import (
 func (srv *Server) onboardingStatus(w http.ResponseWriter, r *http.Request) {
 	user := usuarioDoCtx(r)
 
-	cfg, err := srv.Tenants.Buscar(r.Context(), user.UID)
+	cfg, err := srv.Repo.Tenants().BuscarTenant(r.Context(), user.UID)
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -59,9 +59,9 @@ func (srv *Server) onboardingTermos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg, _ := srv.Tenants.Buscar(r.Context(), user.UID)
+	cfg, _ := srv.Repo.Tenants().BuscarTenant(r.Context(), user.UID)
 	if cfg == nil {
-		cfg = &tenant.Config{
+		cfg = &store.TenantConfig{
 			UID:      user.UID,
 			Email:    user.Email,
 			CriadoEm: time.Now().UTC(),
@@ -75,7 +75,7 @@ func (srv *Server) onboardingTermos(w http.ResponseWriter, r *http.Request) {
 	}
 	cfg.AtualizadoEm = time.Now().UTC()
 
-	if err := srv.Tenants.Salvar(r.Context(), *cfg); err != nil {
+	if err := srv.Repo.Tenants().SalvarTenant(r.Context(), *cfg); err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
@@ -103,9 +103,9 @@ func (srv *Server) onboardingShopee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg, _ := srv.Tenants.Buscar(r.Context(), user.UID)
+	cfg, _ := srv.Repo.Tenants().BuscarTenant(r.Context(), user.UID)
 	if cfg == nil {
-		cfg = &tenant.Config{
+		cfg = &store.TenantConfig{
 			UID:      user.UID,
 			Email:    user.Email,
 			CriadoEm: time.Now().UTC(),
@@ -127,7 +127,7 @@ func (srv *Server) onboardingShopee(w http.ResponseWriter, r *http.Request) {
 	}
 	cfg.AtualizadoEm = time.Now().UTC()
 
-	if err := srv.Tenants.Salvar(r.Context(), *cfg); err != nil {
+	if err := srv.Repo.Tenants().SalvarTenant(r.Context(), *cfg); err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
@@ -149,7 +149,7 @@ func (srv *Server) onboardingTelegram(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg, _ := srv.Tenants.Buscar(r.Context(), user.UID)
+	cfg, _ := srv.Repo.Tenants().BuscarTenant(r.Context(), user.UID)
 	if cfg == nil {
 		writeErr(w, http.StatusBadRequest, "complete os steps anteriores primeiro")
 		return
@@ -177,7 +177,7 @@ func (srv *Server) onboardingTelegram(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfg.AtualizadoEm = time.Now().UTC()
-	if err := srv.Tenants.Salvar(r.Context(), *cfg); err != nil {
+	if err := srv.Repo.Tenants().SalvarTenant(r.Context(), *cfg); err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
@@ -189,7 +189,7 @@ func (srv *Server) onboardingTelegram(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) onboardingValidar(w http.ResponseWriter, r *http.Request) {
 	user := usuarioDoCtx(r)
 
-	cfg, _ := srv.Tenants.Buscar(r.Context(), user.UID)
+	cfg, _ := srv.Repo.Tenants().BuscarTenant(r.Context(), user.UID)
 	if cfg == nil || cfg.ShopeeAppID == "" {
 		writeErr(w, http.StatusBadRequest, "configure as credenciais Shopee primeiro")
 		return
@@ -209,7 +209,7 @@ func (srv *Server) onboardingValidar(w http.ResponseWriter, r *http.Request) {
 
 	cfg.OnboardingStep = 4
 	cfg.AtualizadoEm = time.Now().UTC()
-	if err := srv.Tenants.Salvar(r.Context(), *cfg); err != nil {
+	if err := srv.Repo.Tenants().SalvarTenant(r.Context(), *cfg); err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
@@ -232,7 +232,7 @@ func (srv *Server) onboardingExcluirConta(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := srv.Tenants.Excluir(r.Context(), user.UID); err != nil {
+	if err := srv.Repo.Tenants().ExcluirTenant(r.Context(), user.UID); err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}

@@ -29,7 +29,7 @@ func TestColetarComBuscaIDAplicaRotacao(t *testing.T) {
 	// Precisamos de uma fonte shopee-shop real (com mock HTTP) para testar rotação.
 	// Aqui testamos que o handler aceita busca_id e não falha.
 	srv := &Server{
-		Eventos:   sp,
+		Repo:      &spyRepo{sp: sp},
 		Auth:      fakeVerifier{},
 		Scheduler: nopSched{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
@@ -53,7 +53,7 @@ func TestColetarComBuscaIDAplicaRotacao(t *testing.T) {
 func TestColetarSemBuscaIDFuncionaNormalmente(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "segredo")
 	sp := &spyStore{}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 
 	rec := req(t, h, "POST", "/api/coletar?top=3", nil, map[string]string{"X-Garimpo-Token": "segredo"})
 	if rec.Code != 202 {
@@ -67,9 +67,8 @@ func TestColetarSemBuscaIDFuncionaNormalmente(t *testing.T) {
 func TestColetarBuscaIDInexistenteNaoQuebraRotacao(t *testing.T) {
 	t.Setenv("COLETA_TOKEN", "segredo")
 	// Busca não existe no store — rotação não deve ser aplicada, mas não deve crashar
-	sp := &spyStore{}
 	srv := &Server{
-		Eventos:   sp,
+		Repo:      store.NovoNopRepository(),
 		Auth:      fakeVerifier{},
 		Scheduler: nopSched{},
 		FonteFactory: func(q url.Values) (source.ProductSource, string) {
@@ -107,7 +106,7 @@ func TestPublicacaoAgendadaPreservaTituloAoEnviar(t *testing.T) {
 	}
 	pub := &spyPub{}
 	srv := &Server{
-		Eventos:    sp,
+		Repo:       &spyRepo{sp: sp},
 		Publicador: pub,
 		Auth:       fakeVerifier{},
 		Scheduler:  nopSched{},
@@ -143,7 +142,7 @@ func TestPublicacaoAgendadaPreservaTituloAoEnviar(t *testing.T) {
 
 func TestColetasExigeNada(t *testing.T) {
 	// /api/coletas é público (não exige auth)
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/coletas?dias=7", nil, nil)
 	if rec.Code != 200 {
 		t.Errorf("esperava 200, veio %d", rec.Code)
@@ -159,7 +158,7 @@ func TestListarBuscasRetornaShopIDs(t *testing.T) {
 			{ID: "perfume", Keywords: []string{"perfume"}, Ativo: true, OwnerUID: "test-user"},
 		},
 	}
-	h := montar(&fonteFake{produtos: amostra}, sp, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: sp}, &spyPub{})
 	rec := req(t, h, "GET", "/api/buscas", nil, map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)
@@ -192,7 +191,7 @@ func TestListarBuscasRetornaShopIDs(t *testing.T) {
 // --- Testes de alertas ────────────────────────────────────────────────────
 
 func TestAlertasConfigExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "GET", "/api/alertas", nil, nil)
 	if rec.Code != 401 {
 		t.Errorf("sem auth deveria dar 401, veio %d", rec.Code)
@@ -200,7 +199,7 @@ func TestAlertasConfigExigeAuth(t *testing.T) {
 }
 
 func TestAlertasConfigComAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "GET", "/api/alertas", nil, map[string]string{"Authorization": "Bearer tok"})
 	if rec.Code != 200 {
 		t.Fatalf("com auth deveria dar 200, veio %d: %s", rec.Code, rec.Body.String())
@@ -220,7 +219,7 @@ func TestAlertasConfigComAuth(t *testing.T) {
 }
 
 func TestAlertasTestarSemConfigRetornaErro(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := req(t, h, "POST", "/api/alertas/testar", nil,
 		map[string]string{"Authorization": "Bearer tok", "Content-Type": "application/json"})
 	if rec.Code != 400 {
@@ -229,7 +228,7 @@ func TestAlertasTestarSemConfigRetornaErro(t *testing.T) {
 }
 
 func TestAlertasConfigurarAtualizaThreshold(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	corpo := []byte(`{"threshold":0.20,"apenas_quedas":false}`)
 	rec := req(t, h, "POST", "/api/alertas/configurar", corpo,
 		map[string]string{"Authorization": "Bearer tok", "Content-Type": "application/json"})
@@ -250,7 +249,7 @@ func TestAlertasConfigurarAtualizaThreshold(t *testing.T) {
 }
 
 func TestAlertasConfigurarExigeAuth(t *testing.T) {
-	h := montar(&fonteFake{produtos: amostra}, &spyStore{}, &spyPub{})
+	h := montar(&fonteFake{produtos: amostra}, &spyRepo{sp: &spyStore{}}, &spyPub{})
 	rec := reqSemAuth(t, h, "POST", "/api/alertas/configurar", []byte(`{}`),
 		map[string]string{"Content-Type": "application/json"})
 	if rec.Code != 401 {

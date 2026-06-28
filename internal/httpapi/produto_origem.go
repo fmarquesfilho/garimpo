@@ -140,7 +140,7 @@ func (srv *Server) produtoOrigemBatch(w http.ResponseWriter, r *http.Request) {
 // buscarOrigemPadraoDoShop procura nas buscas monitoradas se o shopId
 // pertence a uma loja com origem_padrao configurado.
 func (srv *Server) buscarOrigemPadraoDoShop(r *http.Request, shopID string) string {
-	buscas, err := srv.Eventos.ListarBuscas(r.Context())
+	buscas, err := srv.Repo.Buscas().ListarBuscas(r.Context())
 	if err != nil {
 		return ""
 	}

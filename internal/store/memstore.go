@@ -223,6 +223,11 @@ type MemTenantRepo struct {
 	items map[string]TenantConfig
 }
 
+// NovoMemTenantRepo cria um MemTenantRepo inicializado.
+func NovoMemTenantRepo() *MemTenantRepo {
+	return &MemTenantRepo{items: make(map[string]TenantConfig)}
+}
+
 func (m *MemTenantRepo) BuscarTenant(_ context.Context, uid string) (*TenantConfig, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

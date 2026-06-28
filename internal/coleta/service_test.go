@@ -65,6 +65,22 @@ func (m *mockStore) RemoverFavorito(context.Context, string, string) error { ret
 func (m *mockStore) EnsureSchema(context.Context) error                    { return nil }
 func (m *mockStore) Nome() string                                          { return "mock" }
 
+// mockRepo wraps mockStore to satisfy store.Repository.
+type mockRepo struct {
+	st *mockStore
+}
+
+func (r *mockRepo) Eventos() store.EventoRepo          { return r.st }
+func (r *mockRepo) Snapshots() store.SnapshotRepo      { return r.st }
+func (r *mockRepo) Buscas() store.BuscaRepo            { return r.st }
+func (r *mockRepo) Publicacoes() store.PublicacaoRepo  { return r.st }
+func (r *mockRepo) Destinos() store.DestinoRepo        { return store.NovoNopRepository().Destinos() }
+func (r *mockRepo) Templates() store.TemplateRepo      { return store.NovoNopRepository().Templates() }
+func (r *mockRepo) Favoritos() store.FavoritoRepo      { return r.st }
+func (r *mockRepo) Tenants() store.TenantRepo          { return store.NovoMemTenantRepo() }
+func (r *mockRepo) EnsureSchema(context.Context) error { return nil }
+func (r *mockRepo) Nome() string                       { return "mock" }
+
 // ── Dados de teste ───────────────────────────────────────────────────────────
 
 var produtosTeste = []domain.Product{
@@ -78,7 +94,7 @@ var produtosTeste = []domain.Product{
 func TestExecutarColetaBasica(t *testing.T) {
 	st := &mockStore{}
 	src := &mockSource{produtos: produtosTeste}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	resultado, err := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -110,7 +126,7 @@ func TestExecutarColetaBasica(t *testing.T) {
 func TestExecutarColetaComBuscaIDUsaKeywordDaBusca(t *testing.T) {
 	st := &mockStore{}
 	src := &mockSource{produtos: produtosTeste}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	resultado, err := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -133,7 +149,7 @@ func TestExecutarColetaComBuscaIDUsaKeywordDaBusca(t *testing.T) {
 func TestExecutarColetaTopLimitaResultados(t *testing.T) {
 	st := &mockStore{}
 	src := &mockSource{produtos: produtosTeste}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	resultado, _ := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -155,7 +171,7 @@ func TestExecutarColetaTopDefaultE20(t *testing.T) {
 
 	st := &mockStore{}
 	src := &mockSource{produtos: muitos}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	resultado, _ := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -171,7 +187,7 @@ func TestExecutarColetaTopDefaultE20(t *testing.T) {
 func TestExecutarColetaGravaTimestamp(t *testing.T) {
 	st := &mockStore{}
 	src := &mockSource{produtos: produtosTeste}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	resultado, _ := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -187,7 +203,7 @@ func TestExecutarColetaGravaTimestamp(t *testing.T) {
 func TestExecutarColetaFalhaGraciosamente(t *testing.T) {
 	st := &mockStore{}
 	src := &mockSource{produtos: nil} // sem produtos
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	resultado, err := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",

@@ -55,7 +55,7 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 
 	// Delega toda a lógica ao Service
 	svc := coleta.Novo(coleta.Deps{
-		Store:  srv.Eventos,
+		Repo:   srv.Repo,
 		Logger: srv.Logger,
 	})
 
@@ -71,7 +71,7 @@ func (srv *Server) coletar(w http.ResponseWriter, r *http.Request) {
 
 func (srv *Server) listarBuscas(w http.ResponseWriter, r *http.Request) {
 	user := usuarioDoCtx(r)
-	lista, err := srv.Eventos.ListarBuscas(r.Context())
+	lista, err := srv.Repo.Buscas().ListarBuscas(r.Context())
 	if err != nil {
 		srv.Logger.Error("listar buscas falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -83,7 +83,7 @@ func (srv *Server) listarBuscas(w http.ResponseWriter, r *http.Request) {
 			filtrada = append(filtrada, b)
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"buscas": filtrada, "store": srv.Eventos.Nome()})
+	writeJSON(w, http.StatusOK, map[string]any{"buscas": filtrada, "store": srv.Repo.Nome()})
 }
 
 func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +102,7 @@ func (srv *Server) salvarBusca(w http.ResponseWriter, r *http.Request) {
 	b.Ativo = !r.URL.Query().Has("remover")
 	b.OwnerUID = user.UID
 
-	if err := srv.Eventos.SalvarBusca(r.Context(), b); err != nil {
+	if err := srv.Repo.Buscas().SalvarBusca(r.Context(), b); err != nil {
 		srv.Logger.Error("salvar busca falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
@@ -136,7 +136,7 @@ func (srv *Server) estatisticas(w http.ResponseWriter, r *http.Request) {
 			dias = v
 		}
 	}
-	est, err := srv.Eventos.Estatisticas(r.Context(), dias)
+	est, err := srv.Repo.Snapshots().Estatisticas(r.Context(), dias)
 	if err != nil {
 		srv.Logger.Error("estatisticas falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())
@@ -152,7 +152,7 @@ func (srv *Server) coletas(w http.ResponseWriter, r *http.Request) {
 			dias = v
 		}
 	}
-	historico, err := srv.Eventos.HistoricoColetas(r.Context(), dias)
+	historico, err := srv.Repo.Snapshots().HistoricoColetas(r.Context(), dias)
 	if err != nil {
 		srv.Logger.Error("historico coletas falhou", slog.String("erro", err.Error()))
 		writeErr(w, http.StatusBadGateway, err.Error())

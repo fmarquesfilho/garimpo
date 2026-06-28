@@ -21,7 +21,7 @@ func TestExecutarColetaAplicaOrigemPadrao(t *testing.T) {
 		{ID: "P2", Name: "Tônico", Price: 50, Commission: 0.10, Sales30d: 80, Rating: 4.3, Origin: ""},
 	}
 	src := &mockSource{produtos: produtos}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	_, err := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -55,7 +55,7 @@ func TestExecutarColetaNaoSobrescreveOrigemDaAPI(t *testing.T) {
 		{ID: "P1", Name: "Produto", Price: 100, Commission: 0.15, Sales30d: 50, Rating: 4.0, Origin: "Japão"},
 	}
 	src := &mockSource{produtos: produtos}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	_, err := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -83,7 +83,7 @@ func TestExecutarColetaSemOrigemPadraoNaoAlteraProdutos(t *testing.T) {
 		{ID: "P1", Name: "Produto", Price: 100, Commission: 0.15, Sales30d: 50, Rating: 4.0, Origin: ""},
 	}
 	src := &mockSource{produtos: produtos}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	_, err := svc.Executar(context.Background(), src, Params{
 		Estrategia: "nicho",
@@ -107,7 +107,7 @@ func TestExecutarColetaComElegibilidade(t *testing.T) {
 		{ID: "P2", Name: "Fraco", Price: 50, Commission: 0.03, Sales30d: 5, Rating: 2.0}, // abaixo dos pisos
 	}
 	src := &mockSource{produtos: produtos}
-	svc := Novo(Deps{Store: st, Logger: slog.Default()})
+	svc := Novo(Deps{Repo: &mockRepo{st: st}, Logger: slog.Default()})
 
 	resultado, _ := svc.Executar(context.Background(), src, Params{
 		Estrategia:  "nicho",
