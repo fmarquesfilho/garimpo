@@ -2,6 +2,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -181,6 +182,16 @@ func (srv *Server) inicializar() {
 	if srv.CacheTTL == 0 {
 		srv.CacheTTL = 60 * time.Second
 	}
+
+	// Se Repo está presente, preenche campos legados a partir dele (bridge).
+	// Isso permite migração gradual: handlers ainda leem os campos antigos,
+	// mas a source of truth é o Repository.
+	if srv.Repo != nil {
+		if srv.Eventos == nil {
+			srv.Eventos = &repoEventoStoreAdapter{repo: srv.Repo}
+		}
+	}
+
 	if srv.Eventos == nil {
 		srv.Eventos = store.NopStore{}
 	}
@@ -200,6 +211,65 @@ func (srv *Server) inicializar() {
 		srv.Logger = slog.Default()
 	}
 	srv.cache = map[string]*cacheEntry{}
+}
+
+// repoEventoStoreAdapter faz bridge entre Repository e o EventoStore legado.
+// Delega para as sub-interfaces do Repo, mantendo compatibilidade com código
+// que ainda usa srv.Eventos.
+type repoEventoStoreAdapter struct {
+	repo store.Repository
+}
+
+func (a *repoEventoStoreAdapter) Registrar(ctx context.Context, e store.Evento) error {
+	return a.repo.Eventos().Registrar(ctx, e)
+}
+func (a *repoEventoStoreAdapter) RegistrarSnapshot(ctx context.Context, s store.Snapshot) error {
+	return a.repo.Snapshots().RegistrarSnapshot(ctx, s)
+}
+func (a *repoEventoStoreAdapter) Estatisticas(ctx context.Context, dias int) (store.Estatisticas, error) {
+	return a.repo.Snapshots().Estatisticas(ctx, dias)
+}
+func (a *repoEventoStoreAdapter) SalvarBusca(ctx context.Context, b store.Busca) error {
+	return a.repo.Buscas().SalvarBusca(ctx, b)
+}
+func (a *repoEventoStoreAdapter) ListarBuscas(ctx context.Context) ([]store.Busca, error) {
+	return a.repo.Buscas().ListarBuscas(ctx)
+}
+func (a *repoEventoStoreAdapter) HistoricoColetas(ctx context.Context, dias int) ([]store.ColetaResumo, error) {
+	return a.repo.Snapshots().HistoricoColetas(ctx, dias)
+}
+func (a *repoEventoStoreAdapter) Conversoes(ctx context.Context, dias int) ([]store.ConversaoResumo, error) {
+	return a.repo.Publicacoes().Conversoes(ctx, dias)
+}
+func (a *repoEventoStoreAdapter) SalvarPublicacao(ctx context.Context, p store.Publicacao) error {
+	return a.repo.Publicacoes().SalvarPublicacao(ctx, p)
+}
+func (a *repoEventoStoreAdapter) ListarPublicacoes(ctx context.Context, status string) ([]store.Publicacao, error) {
+	return a.repo.Publicacoes().ListarPublicacoes(ctx, status)
+}
+func (a *repoEventoStoreAdapter) AtualizarPublicacao(ctx context.Context, id, status, detalhe string) error {
+	return a.repo.Publicacoes().AtualizarPublicacao(ctx, id, status, detalhe)
+}
+func (a *repoEventoStoreAdapter) Novidades(ctx context.Context, buscaID string, dias int) (store.NovidadesLojas, error) {
+	return a.repo.Snapshots().Novidades(ctx, buscaID, dias)
+}
+func (a *repoEventoStoreAdapter) EvolucaoLojas(ctx context.Context, dias int) (store.EvolucaoLojasResult, error) {
+	return a.repo.Snapshots().EvolucaoLojas(ctx, dias)
+}
+func (a *repoEventoStoreAdapter) SalvarFavorito(ctx context.Context, f store.Favorito) error {
+	return a.repo.Favoritos().SalvarFavorito(ctx, f)
+}
+func (a *repoEventoStoreAdapter) ListarFavoritos(ctx context.Context, ownerUID string) ([]store.Favorito, error) {
+	return a.repo.Favoritos().ListarFavoritos(ctx, ownerUID)
+}
+func (a *repoEventoStoreAdapter) RemoverFavorito(ctx context.Context, ownerUID, produtoID string) error {
+	return a.repo.Favoritos().RemoverFavorito(ctx, ownerUID, produtoID)
+}
+func (a *repoEventoStoreAdapter) EnsureSchema(ctx context.Context) error {
+	return a.repo.EnsureSchema(ctx)
+}
+func (a *repoEventoStoreAdapter) Nome() string {
+	return a.repo.Nome()
 }
 
 // spaHandler serve os arquivos estáticos do frontend (web/build) com fallback SPA.
