@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/fmarquesfilho/garimpo/internal/auth"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/logs"
@@ -67,88 +69,91 @@ type cacheEntryNov struct {
 	em    time.Time
 }
 
-// Handler monta o mux com todas as rotas, organizadas por domínio.
+// Handler monta o router Chi com todas as rotas, organizadas por domínio.
 func (srv *Server) Handler() http.Handler {
 	srv.inicializar()
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
+
+	// ── Middleware global ──────────────────────────────────────────────────
+	r.Use(cors)
+	r.Use(srv.logRequests)
 
 	// ── Curadoria ─────────────────────────────────────────────────────────
-	mux.HandleFunc("GET /api/candidatos", srv.candidatos)
-	mux.HandleFunc("GET /api/comparar", srv.comparar)
-	mux.HandleFunc("POST /api/eventos", srv.eventos)
-	mux.HandleFunc("GET /api/buscas", srv.listarBuscas)
-	mux.HandleFunc("POST /api/buscas", srv.salvarBusca)
-	mux.HandleFunc("POST /api/resolver-link", srv.resolverLink)
-	mux.HandleFunc("GET /api/produto/origem", srv.produtoOrigem)
-	mux.HandleFunc("POST /api/produto/origem/batch", srv.produtoOrigemBatch)
+	r.Get("/api/candidatos", srv.candidatos)
+	r.Get("/api/comparar", srv.comparar)
+	r.Post("/api/eventos", srv.eventos)
+	r.Get("/api/buscas", srv.listarBuscas)
+	r.Post("/api/buscas", srv.salvarBusca)
+	r.Post("/api/resolver-link", srv.resolverLink)
+	r.Get("/api/produto/origem", srv.produtoOrigem)
+	r.Post("/api/produto/origem/batch", srv.produtoOrigemBatch)
 
 	// ── Lojas (monitoramento) ─────────────────────────────────────────────
-	mux.HandleFunc("GET /api/lojas", srv.listarLojas)
-	mux.HandleFunc("POST /api/lojas", srv.adicionarLoja)
-	mux.HandleFunc("DELETE /api/lojas", srv.removerLoja)
-	mux.HandleFunc("GET /api/lojas/novidades", srv.novidades)
-	mux.HandleFunc("GET /api/lojas/evolucao", srv.evolucaoLojas)
+	r.Get("/api/lojas", srv.listarLojas)
+	r.Post("/api/lojas", srv.adicionarLoja)
+	r.Delete("/api/lojas", srv.removerLoja)
+	r.Get("/api/lojas/novidades", srv.novidades)
+	r.Get("/api/lojas/evolucao", srv.evolucaoLojas)
 
 	// ── Alertas ───────────────────────────────────────────────────────────
-	mux.HandleFunc("GET /api/alertas", srv.alertasConfig)
-	mux.HandleFunc("POST /api/alertas/testar", srv.alertasTestar)
-	mux.HandleFunc("POST /api/alertas/configurar", srv.alertasAtualizar)
+	r.Get("/api/alertas", srv.alertasConfig)
+	r.Post("/api/alertas/testar", srv.alertasTestar)
+	r.Post("/api/alertas/configurar", srv.alertasAtualizar)
 
 	// ── Favoritos ─────────────────────────────────────────────────────────
-	mux.HandleFunc("GET /api/favoritos", srv.listarFavoritos)
-	mux.HandleFunc("POST /api/favoritos", srv.salvarFavorito)
-	mux.HandleFunc("DELETE /api/favoritos", srv.removerFavorito)
+	r.Get("/api/favoritos", srv.listarFavoritos)
+	r.Post("/api/favoritos", srv.salvarFavorito)
+	r.Delete("/api/favoritos", srv.removerFavorito)
 
 	// ── Publicação ────────────────────────────────────────────────────────
-	mux.HandleFunc("POST /api/publicar", srv.publicar)
-	mux.HandleFunc("GET /api/publicacoes", srv.listarPublicacoes)
-	mux.HandleFunc("POST /api/publicacoes", srv.agendarPublicacao)
-	mux.HandleFunc("POST /api/publicar-pendentes", srv.publicarPendentes)
+	r.Post("/api/publicar", srv.publicar)
+	r.Get("/api/publicacoes", srv.listarPublicacoes)
+	r.Post("/api/publicacoes", srv.agendarPublicacao)
+	r.Post("/api/publicar-pendentes", srv.publicarPendentes)
 
 	// ── Destinos e Templates ──────────────────────────────────────────────
-	mux.HandleFunc("GET /api/destinos", srv.listarDestinos)
-	mux.HandleFunc("POST /api/destinos", srv.salvarDestino)
-	mux.HandleFunc("DELETE /api/destinos", srv.deletarDestino)
-	mux.HandleFunc("GET /api/templates", srv.listarTemplates)
-	mux.HandleFunc("POST /api/templates", srv.salvarTemplate)
-	mux.HandleFunc("DELETE /api/templates", srv.deletarTemplate)
-	mux.HandleFunc("POST /api/templates/preview", srv.templatePreview)
-	mux.HandleFunc("GET /api/whatsapp/grupos", srv.whatsappGrupos)
+	r.Get("/api/destinos", srv.listarDestinos)
+	r.Post("/api/destinos", srv.salvarDestino)
+	r.Delete("/api/destinos", srv.deletarDestino)
+	r.Get("/api/templates", srv.listarTemplates)
+	r.Post("/api/templates", srv.salvarTemplate)
+	r.Delete("/api/templates", srv.deletarTemplate)
+	r.Post("/api/templates/preview", srv.templatePreview)
+	r.Get("/api/whatsapp/grupos", srv.whatsappGrupos)
 
 	// ── Coleta e Análise ──────────────────────────────────────────────────
-	mux.HandleFunc("POST /api/coletar", srv.coletar)
-	mux.HandleFunc("GET /api/estatisticas", srv.estatisticas)
-	mux.HandleFunc("GET /api/coletas", srv.coletas)
-	mux.HandleFunc("GET /api/conversoes", srv.conversoes)
-	mux.HandleFunc("GET /api/conversoes/reais", srv.conversoesReais)
-	mux.HandleFunc("POST /api/conversoes/sync", srv.syncConversoes)
+	r.Post("/api/coletar", srv.coletar)
+	r.Get("/api/estatisticas", srv.estatisticas)
+	r.Get("/api/coletas", srv.coletas)
+	r.Get("/api/conversoes", srv.conversoes)
+	r.Get("/api/conversoes/reais", srv.conversoesReais)
+	r.Post("/api/conversoes/sync", srv.syncConversoes)
 
 	// ── Admin ─────────────────────────────────────────────────────────────
-	mux.HandleFunc("GET /api/health", srv.health)
-	mux.HandleFunc("GET /api/admin/logs", srv.adminLogs)
-	mux.HandleFunc("POST /api/admin/log-level", srv.adminLogLevel)
-	mux.HandleFunc("GET /api/admin/me", srv.adminMe)
-	mux.HandleFunc("GET /api/admin/shopee-introspect", srv.adminShopeeIntrospect)
-	mux.HandleFunc("GET /api/docs", srv.apiDocs)
-	mux.HandleFunc("GET /api/openapi.yaml", srv.openapiSpec)
+	r.Get("/api/health", srv.health)
+	r.Get("/api/admin/logs", srv.adminLogs)
+	r.Post("/api/admin/log-level", srv.adminLogLevel)
+	r.Get("/api/admin/me", srv.adminMe)
+	r.Get("/api/admin/shopee-introspect", srv.adminShopeeIntrospect)
+	r.Get("/api/docs", srv.apiDocs)
+	r.Get("/api/openapi.yaml", srv.openapiSpec)
 
 	// ── Onboarding / Tenant ──────────────────────────────────────────────
-	mux.HandleFunc("GET /api/onboarding/status", srv.onboardingStatus)
-	mux.HandleFunc("POST /api/onboarding/termos", srv.onboardingTermos)
-	mux.HandleFunc("POST /api/onboarding/shopee", srv.onboardingShopee)
-	mux.HandleFunc("POST /api/onboarding/telegram", srv.onboardingTelegram)
-	mux.HandleFunc("POST /api/onboarding/validar", srv.onboardingValidar)
-	mux.HandleFunc("POST /api/onboarding/excluir-conta", srv.onboardingExcluirConta)
+	r.Get("/api/onboarding/status", srv.onboardingStatus)
+	r.Post("/api/onboarding/termos", srv.onboardingTermos)
+	r.Post("/api/onboarding/shopee", srv.onboardingShopee)
+	r.Post("/api/onboarding/telegram", srv.onboardingTelegram)
+	r.Post("/api/onboarding/validar", srv.onboardingValidar)
+	r.Post("/api/onboarding/excluir-conta", srv.onboardingExcluirConta)
 
-	// ── Documentação (admin-only) ─────────────────────────────────────────
-	mux.Handle("/docs/", http.StripPrefix("/docs", srv.docsFileServer()))
-	mux.Handle("/docs", http.RedirectHandler("/docs/", http.StatusMovedPermanently))
+	// ── Documentação (Starlight) ──────────────────────────────────────────
+	r.Mount("/docs", srv.docsFileServer())
 
 	// ── Frontend (SPA fallback) ───────────────────────────────────────────
-	mux.Handle("/", srv.spaHandler())
+	r.NotFound(srv.spaHandler().ServeHTTP)
 
-	return cors(srv.logRequests(mux))
+	return r
 }
 
 // inicializar preenche campos com defaults quando não injetados (dev/local).

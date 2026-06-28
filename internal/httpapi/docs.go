@@ -4,27 +4,29 @@ import (
 	"net/http"
 	"os"
 	"path"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // docsFileServer serve o site de documentação (Starlight).
-// Recebe requests já com StripPrefix("/docs") aplicado.
+// Chi Mount("/docs", ...) remove o prefixo; usamos chi.RouteContext para o path real.
 func (srv *Server) docsFileServer() http.Handler {
 	dir := os.Getenv("DOCS_DIR")
 	if dir == "" {
 		dir = "docs-site/dist"
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		relPath := r.URL.Path
-		if relPath == "" || relPath == "/" {
-			relPath = "/index.html"
+	sub := chi.NewRouter()
+	sub.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		relPath := chi.URLParam(r, "*")
+		if relPath == "" {
+			relPath = "index.html"
 		}
 
 		// Tentar servir o arquivo diretamente
 		fullPath := path.Join(dir, relPath)
 		if info, err := os.Stat(fullPath); err == nil {
 			if info.IsDir() {
-				// Diretório → tentar index.html dentro dele
 				indexPath := path.Join(fullPath, "index.html")
 				if _, err := os.Stat(indexPath); err == nil {
 					http.ServeFile(w, r, indexPath)
@@ -36,7 +38,7 @@ func (srv *Server) docsFileServer() http.Handler {
 			}
 		}
 
-		// Starlight gera /page/index.html para /page/ (sem trailing slash)
+		// Starlight gera /page/index.html para /page/
 		dirPath := path.Join(dir, relPath, "index.html")
 		if _, err := os.Stat(dirPath); err == nil {
 			http.ServeFile(w, r, dirPath)
@@ -53,6 +55,7 @@ func (srv *Server) docsFileServer() http.Handler {
 
 		http.NotFound(w, r)
 	})
+	return sub
 }
 
 // apiDocs serve a referência de API (Scalar/Swagger UI).

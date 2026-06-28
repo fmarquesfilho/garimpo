@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/bigquery v1.77.0
 	cloud.google.com/go/scheduler v1.16.0
 	firebase.google.com/go/v4 v4.20.0
+	github.com/go-chi/chi/v5 v5.2.1
 	google.golang.org/api v0.279.0
 	google.golang.org/grpc v1.81.1
 	gopkg.in/yaml.v3 v3.0.1
