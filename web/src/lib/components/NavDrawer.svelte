@@ -33,6 +33,7 @@
 				{#if isAdmin}
 					<a href="/coletas" class:atual={$page.url.pathname === '/coletas'}>⏱ Coletas</a>
 					<a href="/admin" class:atual={$page.url.pathname === '/admin'}>🛠 Admin</a>
+					<a href="/docs/" target="_blank">📚 Docs</a>
 				{/if}
 			</div>
 			<div class="menu-secao">

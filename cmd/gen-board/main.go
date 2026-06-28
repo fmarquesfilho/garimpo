@@ -142,7 +142,7 @@ func generateBoard(path string, tasks []Task, sprint string) {
 	// Tabela
 	buf.WriteString("|")
 	for _, col := range columns {
-		buf.WriteString(fmt.Sprintf(" %s %s |", statusEmoji[col], strings.Title(col)))
+		buf.WriteString(fmt.Sprintf(" %s %s |", statusEmoji[col], capitalize(col)))
 	}
 	buf.WriteString("\n|")
 	for range columns {
@@ -286,4 +286,11 @@ func writeFile(path, content string) {
 		fmt.Fprintf(os.Stderr, "Erro escrevendo %s: %v\n", path, err)
 		os.Exit(1)
 	}
+}
+
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
