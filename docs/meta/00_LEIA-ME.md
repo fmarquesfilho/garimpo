@@ -94,6 +94,18 @@ Trate-as como verdade; o `01` lista onde cada doc precisa ser ajustado.
 
 Mantenha no topo o mais recente. Formato: `versão — data — autor — resumo`.
 
+### docs-v2.1.0 — 2026-06-27 — Fernando + IA
+- **Fundação do site**: `docs-site/` com Astro Starlight criado (package.json,
+  astro.config.mjs, 7 páginas + gerado + decisões).
+- **openapi.yaml promovido**: copiado para `api/openapi.yaml` (SSOT do contrato).
+- **Geração automática funcionando**: `cmd/gen-er` gera ER Mermaid do schema BQ,
+  `scripts/gen-env-doc.sh` extrai variáveis de ambiente. `make docs-check` na CI.
+- **7 docs canônicos criados**: `01-visao-e-negocio` a `07-dados-e-ia` na raiz de `docs/`.
+- **ADRs extraídos**: 8 decisões canônicas em `docs/decisoes/0001-*.md` a `0008-*.md`.
+- **MELHORIAS_28_06.md arquivado** em `docs/legado/`.
+- **Makefile** com alvos `docs`, `docs-check`, `test`, `lint`.
+- **docs/README.md** criado como índice da nova estrutura.
+
 ### docs-v2.0.0 — 2026-06-27 — Fernando + IA
 - **Reestruturação proposta**: de 18 arquivos soltos em `docs/` para 7 documentos
   canônicos + site gerado (ver `02_PLANO_DOCUMENTACAO.md`).

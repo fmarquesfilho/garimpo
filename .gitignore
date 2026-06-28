@@ -5,3 +5,15 @@
 *.cache*.out
 cloudflare-worker/.wrangler/
 coverage.out
+
+# Docs site (Astro Starlight)
+docs-site/node_modules/
+docs-site/dist/
+docs-site/.astro/
+
+# Binários Go compilados
+/gen-er
+/gen-board
+
+# Chaves (nunca comitar)
+key.json

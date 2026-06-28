@@ -1,0 +1,42 @@
+---
+title: Referência da API
+description: Documentação interativa da API Garimpei (OpenAPI 3.1 + Scalar).
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+
+A referência completa da API é gerada a partir do contrato `api/openapi.yaml`.
+
+<LinkCard
+  title="Abrir referência interativa (Scalar)"
+  description="Explore endpoints, schemas e exemplos de request/response."
+  href="/api-reference.html"
+/>
+
+## Fonte única
+
+O arquivo `api/openapi.yaml` é a **fonte canônica** do contrato da API.
+Nenhum endpoint é descrito em prosa em outro documento — todos linkam para cá.
+
+### Validação na CI
+
+```bash
+npx @redocly/cli lint api/openapi.yaml
+```
+
+A CI bloqueia merge se o spec estiver inválido.
+
+## Endpoints por tag
+
+| Tag | Descrição |
+|---|---|
+| Curadoria | Busca, ranking, seleção, favoritos |
+| Lojas | Monitoramento de lojas Shopee |
+| Alertas | Notificações de preço via Telegram |
+| Publicação | Envio de ofertas para canais |
+| Coleta | Snapshots periódicos de mercado |
+| Destinos | Canais de publicação (Telegram, WhatsApp) |
+| Templates | Modelos de mensagem |
+| Análise | Estatísticas e evolução |
+| Onboarding | Configuração de conta (multi-tenant) |
+| Admin | Logs e administração |
