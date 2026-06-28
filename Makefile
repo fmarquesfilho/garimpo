@@ -1,5 +1,5 @@
 # Makefile — Garimpei
-# Alvos de documentação + build
+# Alvos de documentação, build e deploy
 
 .PHONY: docs docs-api docs-er docs-env docs-site docs-check test lint
 
