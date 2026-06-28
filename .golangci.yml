@@ -24,6 +24,10 @@ linters:
     - goimports      # Imports organizados
     - funlen         # Funções com mais de N linhas (previne crescimento descontrolado)
     - cyclop         # Complexidade ciclomática alta
+    # ── Qualidade de tratamento de erros (telemetria + observabilidade) ──
+    - wrapcheck      # Erros de pacotes externos devem ser wrapped (contexto de onde veio)
+    - errorlint      # Uso correto de errors.Is/As em vez de == (Go 1.13+)
+    - err113         # Erros devem ser sentinel vars, não strings dinâmicas
 
 linters-settings:
   errcheck:
@@ -54,11 +58,39 @@ linters-settings:
       - G304  # File path from variable (necessário no projeto)
       - G404  # math/rand usado intencionalmente para exploração (não cripto)
 
+  wrapcheck:
+    # Só exige wrap para erros de pacotes EXTERNOS ao módulo.
+    # Erros internos do projeto já têm contexto suficiente.
+    ignoreSigs:
+      - .Errorf(
+      - errors.New(
+      - errors.Unwrap(
+      - errors.Join(
+      - .Wrap(
+      - .Wrapf(
+      - .WithMessage(
+      - .WithMessagef(
+      - .WithStack(
+    ignorePackageGlobs:
+      - github.com/fmarquesfilho/garimpo/*
+
+  errorlint:
+    # Exige errors.Is() em vez de == para comparar erros
+    comparison: true
+    # Exige errors.As() em vez de type assertion
+    asserts: true
+    # Exige %w em vez de %v para wrapping em fmt.Errorf
+    errorf: true
+
 issues:
   # Não limitar número de issues reportadas
   max-issues-per-linter: 0
   max-same-issues: 0
 
+  # ── Baseline de debt existente (T-0008) ────────────────────────────────
+  # err113 e wrapcheck estão habilitados e bloqueiam código NOVO.
+  # As 73 issues existentes são toleradas até o refactor T-0008.
+  # Após T-0008, remover este bloco inteiro.
   exclude-rules:
     # Código de terceiros (node_modules contém Go de exemplo)
     - path: node_modules/
@@ -67,6 +99,8 @@ issues:
         - funlen
         - gosec
         - revive
+        - wrapcheck
+        - err113
     # Testes podem ter erros não tratados e funções longas
     - path: _test\.go
       linters:
@@ -74,7 +108,26 @@ issues:
         - gosec
         - funlen
         - cyclop
-    # main.go é naturalmente longo
+        - wrapcheck
+        - err113
+        - errorlint
+    # main.go e geradores CLI: erros vão para stderr + os.Exit
     - path: cmd/
       linters:
         - funlen
+        - wrapcheck
+        - err113
+    # ── Debt existente (remover após T-0008) ──────────────────────────────
+    - path: internal/alerts/
+      linters: [err113, wrapcheck]
+    - path: internal/publish/
+      linters: [err113, wrapcheck]
+    - path: internal/source/
+      linters: [err113, wrapcheck]
+    - path: internal/tenant/
+      linters: [err113, wrapcheck]
+    - path: internal/httpapi/(conversoes_sync|introspect|onboarding|resolver|shopee_resolver|whatsapp)\.go
+      linters: [err113, wrapcheck]
+
+severity:
+  default: error

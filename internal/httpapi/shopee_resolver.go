@@ -42,7 +42,7 @@ func (srv *Server) parseShopInputWithName(input string) (int64, string, error) {
 	if reShortLink.MatchString(input) {
 		resolved, err := srv.resolveShortLink(input)
 		if err != nil {
-			return 0, "", fmt.Errorf("não consegui resolver o link curto: %v", err)
+			return 0, "", fmt.Errorf("não consegui resolver o link curto: %w", err)
 		}
 		input = cleanURL(resolved)
 	}
@@ -167,7 +167,7 @@ func (srv *Server) resolveShopSlugWithName(shopURL string) (int64, string, error
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, "", fmt.Errorf("falha ao consultar Shopee: %v", err)
+		return 0, "", fmt.Errorf("falha ao consultar Shopee: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -181,7 +181,7 @@ func (srv *Server) resolveShopSlugWithName(shopURL string) (int64, string, error
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return 0, "", fmt.Errorf("resposta inválida da Shopee: %v", err)
+		return 0, "", fmt.Errorf("resposta inválida da Shopee: %w", err)
 	}
 	if result.Error != 0 {
 		return 0, "", fmt.Errorf("Shopee retornou erro: %s", result.ErrorMsg)

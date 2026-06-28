@@ -11,6 +11,7 @@ _Nenhuma tarefa em andamento._
 - **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
 - **T-0004** ScopedStore por owner_uid (multi-tenant) · multi-tenant · G
 - **T-0005** Alertas configuráveis por usuário · produto · M
+- **T-0008** Refactor: tratamento de erros idiomático + telemetria · qualidade · G
 
 ## ⚪ Later (radar)
 
