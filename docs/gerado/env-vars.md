@@ -17,12 +17,12 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `BQ_DATASET` | `internal/store/novo_gcp.go` | 18 |
 | `BQ_TABELA_SNAP` | `internal/store/novo_gcp.go` | 23 |
 | `BQ_TABELA` | `internal/store/novo_gcp.go` | 19 |
-| `COLETA_TOKEN` | `internal/scheduler/novo_gcp.go` | 23 |
+| `COLETA_TOKEN` | `internal/httpapi/helpers.go` | 87 |
 | `DOCS_DIR` | `internal/httpapi/docs.go` | 13 |
 | `ENCRYPTION_KEY` | `internal/tenant/crypto.go` | 25 |
 | `GCP_REGION` | `internal/scheduler/novo_gcp.go` | 19 |
 | `GOOGLE_CLOUD_PROJECT` | `internal/scheduler/novo_gcp.go` | 18 |
-| `K_SERVICE` | `internal/scheduler/novo_gcp.go` | 27 |
+| `K_SERVICE` | `internal/logs/logs.go` | 59 |
 | `LOG_FORMAT` | `internal/httpapi/admin.go` | 79 |
 | `LOG_LEVEL` | `internal/logs/logs.go` | 22 |
 | `PORT` | `cmd/garimpo-api/main.go` | 39 |

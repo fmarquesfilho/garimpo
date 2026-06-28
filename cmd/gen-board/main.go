@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -84,14 +83,9 @@ func main() {
 func readSprint(path string) string {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return time.Now().Format("2006") + "-S" + fmt.Sprintf("%02d", isoWeek())
+		return "current"
 	}
 	return strings.TrimSpace(string(data))
-}
-
-func isoWeek() int {
-	_, w := time.Now().ISOWeek()
-	return w
 }
 
 func loadTasks(dir string) []Task {
@@ -125,10 +119,9 @@ func loadTasks(dir string) []Task {
 
 func generateBoard(path string, tasks []Task, sprint string) {
 	var buf strings.Builder
-	today := time.Now().Format("2006-01-02")
 
 	buf.WriteString(fmt.Sprintf("# Quadro — Sprint %s\n\n", sprint))
-	buf.WriteString(fmt.Sprintf("> Gerado em %s. Não edite manualmente — rode `make docs-board`.\n\n", today))
+	buf.WriteString("> Gerado automaticamente. Não edite — rode `make docs-board`.\n\n")
 
 	// Agrupar por status
 	grouped := map[string][]Task{}
@@ -204,10 +197,8 @@ func generateBoard(path string, tasks []Task, sprint string) {
 
 func generateRoadmap(path string, tasks []Task) {
 	var buf strings.Builder
-	today := time.Now().Format("2006-01-02")
-
 	buf.WriteString("# Roadmap\n\n")
-	buf.WriteString(fmt.Sprintf("> Gerado em %s. Não edite manualmente — rode `make docs-board`.\n\n", today))
+	buf.WriteString("> Gerado automaticamente. Não edite — rode `make docs-board`.\n\n")
 
 	// Now = doing + review
 	// Next = next

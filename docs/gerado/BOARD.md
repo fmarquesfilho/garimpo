@@ -1,6 +1,6 @@
 # Quadro — Sprint 2026-S26
 
-> Gerado em 2026-06-27. Não edite manualmente — rode `make docs-board`.
+> Gerado automaticamente. Não edite — rode `make docs-board`.
 
 | 📋 Backlog | ⏭️ Next | 🔨 Doing | 👀 Review | ✅ Done |
 |---|---|---|---|---|

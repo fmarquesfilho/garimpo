@@ -24,6 +24,8 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 HEADER
 
 # Busca por os.Getenv("...") e os.LookupEnv("...") nos fontes Go
+# sort -t'|' -k2,2 -k3,3: ordena por variável, depois por arquivo (determinístico)
+# awk: mantém apenas a primeira ocorrência de cada variável
 grep -rn "os\.Getenv\|os\.LookupEnv" "$ROOT" \
   --include="*.go" \
   --exclude-dir=vendor \
@@ -33,7 +35,6 @@ grep -rn "os\.Getenv\|os\.LookupEnv" "$ROOT" \
       file="${match%%:*}"
       rest="${match#*:}"
       line="${rest%%:*}"
-      # Extrair variável: tudo entre as aspas após Getenv( ou LookupEnv(
       var=$(echo "$match" | sed -n 's/.*Getenv("\([^"]*\)".*/\1/p')
       if [ -z "$var" ]; then
         var=$(echo "$match" | sed -n 's/.*LookupEnv("\([^"]*\)".*/\1/p')
@@ -42,4 +43,5 @@ grep -rn "os\.Getenv\|os\.LookupEnv" "$ROOT" \
         echo "| \`$var\` | \`$file\` | $line |"
       fi
     done \
-  | sort -u -t'|' -k2,2
+  | sort -t'|' -k2,2 -k3,3 \
+  | awk -F'|' '!seen[$2]++' 

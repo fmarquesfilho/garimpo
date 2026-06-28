@@ -1,6 +1,6 @@
 # Roadmap
 
-> Gerado em 2026-06-27. Não edite manualmente — rode `make docs-board`.
+> Gerado automaticamente. Não edite — rode `make docs-board`.
 
 ## 🔵 Now (em andamento)
 
