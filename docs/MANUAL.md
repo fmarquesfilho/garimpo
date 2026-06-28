@@ -38,7 +38,7 @@ URL ou ID numérico) — não precisa mais ir à Curadoria.
 - **Remover** — botão ✕ no card da loja.
 - **Produtos** — lista completa da loja (sem filtro de elegibilidade), com botão
   de publicar direto.
-- **🆕 Novidades** — produtos que apareceram pela primeira vez nos últimos 7 dias.
+- **🆕 Novidades** — produtos que apareceram pela primeira vez nos últimos N dias (padrão 7, configurável por busca).
 - **📉 Preços** — variações de preço com badges coloridos (verde ↓ queda,
   vermelho ↑ subida). Botão 📤 para publicar direto como oferta.
 - **🔔 Alertas Telegram** — painel colapsável para configurar notificações
@@ -70,7 +70,7 @@ mensagem formatada ao grupo configurado.
 ⏰ 25/06 08:15
 ```
 
-Também notifica produtos novos detectados (🆕).
+Alerta de produtos novos: preparado mas desabilitado por ora (será habilitável na configuração de alertas).
 
 **Env vars necessárias (Cloud Run):**
 - `ALERTAS_TELEGRAM_CHAT_ID` — chat_id do grupo

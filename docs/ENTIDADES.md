@@ -1,6 +1,6 @@
 # Diagrama de Entidades — Garimpei
 
-Atualizado em: 2026-06-27
+Atualizado em: 2026-06-28
 
 ## Diagrama ER (Mermaid)
 
@@ -9,20 +9,22 @@ erDiagram
     BUSCA {
         string id PK "slug (ex: 'perfume' ou 'loja-457864097')"
         string nome "nome amigável (da loja ou perfil)"
-        string[] keywords "termos de busca (pode ser vazio para lojas)"
-        int[] shop_ids "IDs de lojas Shopee (vazio para buscas por keyword)"
-        string categoria "rótulo opcional"
-        string estrategia "sempre 'nicho' (diversificada descontinuada)"
-        string origem_padrao "país de origem padrão (ex: Coreia, Japão)"
+        string[] keywords "termos de busca (pode ser vazio)"
+        int[] shop_ids "IDs de lojas Shopee (vazio = todas do user)"
+        string[] categorias "categorias Shopee (filtro OR)"
+        string[] fontes "curadoria | quedas | novos | favoritos"
+        int dias_janela "janela para 'novo' (default 7 dias)"
+        string estrategia "sempre 'nicho'"
+        string origem_padrao "país de origem padrão (ex: Coreia)"
         float comissao_min
         int vendas_min
         float nota_min
         int top
-        string cron "expressão cron (ex: '0 */4 * * *')"
+        string cron "expressão cron (vazio = só manual)"
         bool ativo
         string owner_uid "FK para Firebase Auth"
         json rotation_cursor "map shopID→próxima página"
-        json full_scan_at "map shopID→timestamp última varredura"
+        json full_scan_at "map shopID→timestamp"
         timestamp salvo_em
     }
 
@@ -39,7 +41,10 @@ erDiagram
         int vendas
         float nota
         float score
-        string origin "país de origem do produto (quando disponível)"
+        string origin "país de origem do produto"
+        string imagem "URL da imagem do produto"
+        string link "URL de afiliado"
+        string loja "nome da loja"
     }
 
     PUBLICACAO {
@@ -112,6 +117,22 @@ erDiagram
     PUBLICACAO ||--o| CONVERSAO_REAL : "rastreada via sub_id"
     EVENTO }o--|| PUBLICACAO : "registra ação"
     TENANT_CONFIG ||--o{ BUSCA : "possui (owner_uid)"
+    TENANT_CONFIG ||--o{ FAVORITO : "possui (owner_uid)"
+
+    FAVORITO {
+        string produto_id PK
+        string nome
+        float preco
+        float comissao
+        string link
+        string imagem
+        string loja
+        string categoria
+        string origem
+        bool ativo
+        string owner_uid
+        timestamp salvo_em
+    }
 
     TENANT_CONFIG {
         string uid PK "Firebase Auth UID"
@@ -132,12 +153,17 @@ erDiagram
 
 | Entidade | Regra |
 |----------|-------|
-| BUSCA com `shop_ids` | É monitoramento de loja. Gera coleta com `productOfferV2(shopId)`. |
-| BUSCA com `keywords` | É busca por palavra-chave. Gera coleta com `productOfferV2(keyword)`. |
-| BUSCA sem `keywords` nem `shop_ids` | Inválida (rejeitada pela API). |
+| BUSCA com `shop_ids` | Monitoramento de loja. Coleta via `productOfferV2(shopId)`. |
+| BUSCA com `keywords` | Busca por palavra-chave. Coleta via `productOfferV2(keyword)`. |
+| BUSCA com `categorias` | Filtra por categoria (resolve nome→catID via mapeamento). |
+| BUSCA com `fontes` | Define quais tipos de resultado: curadoria, quedas, novos, favoritos. |
+| BUSCA sem keywords, shop_ids, categorias nem fontes | Inválida (rejeitada pela API). |
+| BUSCA.dias_janela | Define quantos dias um produto é considerado "novo" (default 7). |
 | SNAPSHOT.keyword | Para lojas = `busca.id` (ex: "loja-457864097"). Para keywords = o termo buscado. |
+| SNAPSHOT.imagem/link/loja | Gravados a partir da coleta. Snapshots antigos podem ter esses campos vazios. |
 | PUBLICACAO.detalhe | Quando status=enviada, contém o `sub_id`. Quando status=erro, contém a mensagem. |
 | CONVERSAO_REAL.sub_id | Cruza com `PUBLICACAO.detalhe` para fechar o ciclo. |
+| FAVORITO | Append-only com tombstone (ativo=false para remover). Sync localStorage↔BigQuery. |
 
 ## Decisões tomadas
 
