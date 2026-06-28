@@ -1,0 +1,16 @@
+id: T-0006
+titulo: Integrar docs-check e docs-board na CI
+epic: qualidade
+status: next
+prioridade: media
+estimativa: P
+sprint: "2026-S27"
+valor: >
+  Adicionar make docs-check e make docs-board no workflow deploy-gcp.yml.
+  Garante que docs geradas e board estejam sempre atualizados.
+criterios:
+  - CI falha se docs/gerado/ estiver desatualizado
+  - CI falha se BOARD.md/ROADMAP.md divergirem
+tags: [ci, docs]
+criada_em: "2026-06-27"
+atualizada_em: "2026-06-27"

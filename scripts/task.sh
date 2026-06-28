@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# scripts/task.sh — Cria uma nova tarefa no backlog.
+#
+# Uso: ./scripts/task.sh "Titulo da tarefa" [--epic nome] [--prioridade alta|media|baixa]
+#
+# Exemplo: ./scripts/task.sh "Scroll infinito na busca" --epic produto --prioridade media
+
+set -euo pipefail
+
+TITULO="${1:?Uso: $0 \"Titulo\" [--epic nome] [--prioridade alta|media|baixa]}"
+shift
+
+EPIC=""
+PRIORIDADE="media"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --epic) EPIC="$2"; shift 2 ;;
+    --prioridade) PRIORIDADE="$2"; shift 2 ;;
+    *) echo "Flag desconhecida: $1"; exit 1 ;;
+  esac
+done
+
+# Encontrar próximo ID
+TASKS_DIR="backlog/tasks"
+LAST_ID=$(ls "$TASKS_DIR"/T-*.yaml 2>/dev/null | sed 's/.*T-\([0-9]*\).*/\1/' | sort -n | tail -1)
+NEXT_ID=$(printf "T-%04d" $(( ${LAST_ID:-0} + 1 )))
+
+# Gerar slug do título
+SLUG=$(echo "$TITULO" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//' | cut -c1-40)
+
+FILE="$TASKS_DIR/${NEXT_ID}-${SLUG}.yaml"
+TODAY=$(date +%Y-%m-%d)
+
+cat > "$FILE" << EOF
+id: ${NEXT_ID}
+titulo: "${TITULO}"
+epic: ${EPIC}
+status: backlog
+prioridade: ${PRIORIDADE}
+estimativa: M
+sprint: ""
+valor: ""
+criterios: []
+depende_de: []
+tags: []
+criada_em: "${TODAY}"
+atualizada_em: "${TODAY}"
+EOF
+
+echo "✅ Criada: $FILE"
+echo "   ID: $NEXT_ID | Status: backlog | Prioridade: $PRIORIDADE"

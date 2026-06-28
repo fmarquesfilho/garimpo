@@ -1,0 +1,23 @@
+- id: conversoes
+  titulo: Fechar o ciclo de atribuição
+  cor: "#2e7d32"
+
+- id: multi-tenant
+  titulo: SaaS multi-tenant + LGPD
+  cor: "#1565c0"
+
+- id: docs-migration
+  titulo: Migração da documentação v2
+  cor: "#6a1b9a"
+
+- id: dados-ia
+  titulo: Análises e IA integrada
+  cor: "#ef6c00"
+
+- id: produto
+  titulo: Funcionalidades do produto
+  cor: "#c62828"
+
+- id: qualidade
+  titulo: Qualidade e testes
+  cor: "#00695c"

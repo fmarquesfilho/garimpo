@@ -1,0 +1,22 @@
+# Roadmap
+
+> Gerado em 2026-06-27. Não edite manualmente — rode `make docs-board`.
+
+## 🔵 Now (em andamento)
+
+- **T-0003** Backlog como código (schema + gen-board) · docs-migration · M
+
+## 🟡 Next (próximo sprint)
+
+- **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
+- **T-0004** ScopedStore por owner_uid (multi-tenant) · multi-tenant · G
+- **T-0005** Alertas configuráveis por usuário · produto · M
+- **T-0006** Integrar docs-check e docs-board na CI · qualidade · P
+
+## ⚪ Later (radar)
+
+- **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
+
+## ✅ Concluídas
+
+- **T-0001** Docs: site Starlight + geradores + consolidação · docs-migration · G

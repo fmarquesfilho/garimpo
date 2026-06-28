@@ -1,0 +1,18 @@
+id: T-0005
+titulo: Alertas configuráveis por usuário
+epic: produto
+status: next
+prioridade: media
+estimativa: M
+sprint: ""
+valor: >
+  Hoje alertas estão desabilitados por falta de configuração por tenant.
+  Cada usuário deve poder definir threshold, canais e categorias.
+criterios:
+  - Tela de configuração de alertas no frontend
+  - Config salva por tenant no BigQuery
+  - Alertas disparam automaticamente nas coletas
+depende_de: [T-0004]
+tags: [backend, frontend, alertas]
+criada_em: "2026-06-27"
+atualizada_em: "2026-06-27"

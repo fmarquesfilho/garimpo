@@ -1,0 +1,18 @@
+id: T-0002
+titulo: Persistir conversões da Shopee no BigQuery
+epic: conversoes
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  Hoje /api/conversoes/reais consulta a Shopee on-demand. Persistir fecha o laço
+  receita-curadoria e destrava análise histórica.
+criterios:
+  - Tabela conversoes populada via job periódico (validatedReport)
+  - Idempotência por conversion_id (sem duplicar)
+  - Cruzamento sub_id com publicacao testado
+depende_de: []
+tags: [backend, bigquery, atribuicao]
+criada_em: "2026-06-27"
+atualizada_em: "2026-06-27"

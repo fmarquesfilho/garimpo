@@ -1,0 +1,19 @@
+id: T-0001
+titulo: "Docs: site Starlight + geradores + consolidação"
+epic: docs-migration
+status: done
+prioridade: alta
+estimativa: G
+sprint: "2026-S26"
+valor: >
+  Migrar 18 docs soltos para 7 canônicos + site gerado. Inclui cmd/gen-er,
+  gen-env-doc.sh, ADRs, Makefile com docs-check.
+criterios:
+  - Site Starlight gera 20 páginas
+  - cmd/gen-er funciona e gera ER do schema
+  - gen-env-doc.sh extrai variáveis
+  - make docs-check passa na CI
+  - Docs antigos removidos
+tags: [docs, infra]
+criada_em: "2026-06-27"
+atualizada_em: "2026-06-27"

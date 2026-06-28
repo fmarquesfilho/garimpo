@@ -1,0 +1,17 @@
+id: T-0004
+titulo: ScopedStore por owner_uid (multi-tenant)
+epic: multi-tenant
+status: next
+prioridade: alta
+estimativa: G
+sprint: "2026-S27"
+valor: >
+  Isolar dados por tenant (owner_uid) no BigQuery. Pré-requisito para
+  onboarding de novos afiliados.
+criterios:
+  - Queries filtram por owner_uid automaticamente
+  - Testes verificam isolamento entre tenants
+  - Buscas e eventos vinculados ao owner
+tags: [backend, bigquery, seguranca]
+criada_em: "2026-06-27"
+atualizada_em: "2026-06-27"

@@ -1,0 +1,17 @@
+id: T-0007
+titulo: Recomendação personalizada baseada em histórico
+epic: dados-ia
+status: backlog
+prioridade: baixa
+estimativa: G
+sprint: ""
+valor: >
+  Aprender preferências do afiliado (categorias, faixa de preço) para
+  personalizar ranking. Depende de volume de dados de conversão.
+criterios:
+  - Modelo treinado com dados de conversão
+  - A/B test mostra melhora no teor médio convertido
+depende_de: [T-0002]
+tags: [backend, ia, dados]
+criada_em: "2026-06-27"
+atualizada_em: "2026-06-27"

@@ -1,0 +1,58 @@
+{
+  "title": "Tarefa do Backlog Garimpei",
+  "type": "object",
+  "required": ["id", "titulo", "status", "prioridade"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^T-\\d{4}$"
+    },
+    "titulo": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 120
+    },
+    "epic": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["backlog", "next", "doing", "review", "done", "blocked"]
+    },
+    "prioridade": {
+      "type": "string",
+      "enum": ["alta", "media", "baixa"]
+    },
+    "estimativa": {
+      "type": "string",
+      "enum": ["P", "M", "G"]
+    },
+    "sprint": {
+      "type": "string"
+    },
+    "valor": {
+      "type": "string"
+    },
+    "criterios": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "depende_de": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^T-\\d{4}$" }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "criada_em": {
+      "type": "string",
+      "format": "date"
+    },
+    "atualizada_em": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "additionalProperties": false
+}

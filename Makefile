@@ -5,7 +5,7 @@
 
 # ─── Documentação ───────────────────────────────────────────────
 
-docs: docs-api docs-er docs-env docs-sync docs-site ## Gera toda a documentação
+docs: docs-api docs-er docs-env docs-board docs-sync docs-site ## Gera toda a documentação
 
 docs-api: ## Renderiza openapi.yaml → HTML com Scalar
 	npx @scalar/cli bundle api/openapi.yaml -o docs/gerado/api.html
@@ -16,6 +16,9 @@ docs-er: ## Gera o Mermaid ER do schema BigQuery
 docs-env: ## Extrai variáveis de ambiente referenciadas no código
 	./scripts/gen-env-doc.sh > docs/gerado/env-vars.md
 
+docs-board: ## Gera quadro Kanban e roadmap do backlog
+	go run ./cmd/gen-board
+
 docs-sync: ## Sincroniza docs canônicos para docs-site
 	./scripts/sync-docs-to-site.sh
 
@@ -23,7 +26,7 @@ docs-site: ## Build do site Starlight
 	cd docs-site && npm run build
 
 docs-check: ## CI: falha se docs geradas estiverem desatualizadas
-	$(MAKE) docs-er docs-env
+	$(MAKE) docs-er docs-env docs-board
 	git diff --exit-code docs/gerado || (echo "❌ Docs geradas desatualizadas: rode 'make docs'"; exit 1)
 
 # ─── Desenvolvimento ────────────────────────────────────────────
