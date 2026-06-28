@@ -21,7 +21,7 @@ O diagrama ER completo é gerado automaticamente — ver `docs/gerado/ENTIDADES.
 **Busca:**
 - `keywords[]` (JSON array de termos)
 - `shop_ids[]` (JSON array de IDs de lojas)
-- `categorias[]` (plural, filtro OR) — ver [ADR 0006](/docs/decisoes/0006-categorias-plural.md)
+- `categorias[]` (plural, filtro OR) — ver [ADR 0006](/docs/decisoes/0006-categorias-plural/)
 - `cron` vazio = atalho manual (sem agendamento)
 - `ativo = false` = tombstone (soft delete append-only)
 - `rotation_cursor` = JSON map shopID→próxima página (rotação de catálogo)
@@ -53,7 +53,7 @@ Schema: `produto_id`, `nome`, `preco`, `comissao`, `link`, `imagem`, `loja`,
 
 Conflitos resolvidos por last-write-wins (`salvo_em`).
 
-Ver [ADR 0007](/docs/decisoes/0007-persistencia-favoritos.md).
+Ver [ADR 0007](/docs/decisoes/0007-persistencia-favoritos/).
 
 ## Buscas agendadas
 
@@ -97,4 +97,4 @@ Ver [ADR 0007](/docs/decisoes/0007-persistencia-favoritos.md).
 Implementados no backend, desabilitados por padrão (aguardando config por usuário).
 Quando ativos: variação de preço > threshold → notificação Telegram.
 
-Ver [ADR 0008](/docs/decisoes/0008-alertas-desabilitados.md).
+Ver [ADR 0008](/docs/decisoes/0008-alertas-desabilitados/).
