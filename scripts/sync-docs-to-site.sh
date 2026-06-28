@@ -1,73 +1,96 @@
 #!/usr/bin/env bash
-# scripts/sync-docs-to-site.sh — Sincroniza docs canônicos para docs-site/src/content/docs
-# Os docs/ são a fonte; docs-site/ é gerado para o Starlight.
+# scripts/sync-docs-to-site.sh — Gera docs-site/src/content/docs a partir de docs/
+#
+# Fonte única: docs/ (Markdown puro, legível no GitHub)
+# Destino: docs-site/src/content/docs/ (com frontmatter para Starlight)
+#
+# Ficheiros originais do site (index.mdx, gerado/api.mdx) NÃO são tocados.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/docs"
 DST="$ROOT/docs-site/src/content/docs"
 
-# Mapear docs canônicos
-declare -a DOCS=(
-  "01-visao-e-negocio.md"
-  "02-arquitetura.md"
-  "03-fluxos-e-modelo.md"
-  "04-operacao-shopee.md"
-  "05-manual-do-usuario.md"
-  "06-qualidade-e-testes.md"
-  "07-dados-e-ia.md"
-)
+# ── Helpers ─────────────────────────────────────────────────────────────────
 
-for doc in "${DOCS[@]}"; do
-  if [ -f "$SRC/$doc" ]; then
-    # Extrair título (primeira linha com #)
-    title=$(head -1 "$SRC/$doc" | sed 's/^# //')
-    # Criar versão com frontmatter
-    {
-      echo "---"
-      echo "title: \"$title\""
-      echo "---"
-      echo ""
-      tail -n +2 "$SRC/$doc"
-    } > "$DST/$doc"
-  fi
+# Converte um .md com "# Título" na linha 1 em versão com frontmatter YAML.
+add_frontmatter() {
+  local src_file="$1" dst_file="$2"
+  local title
+  title=$(head -1 "$src_file" | sed 's/^# //')
+  {
+    echo "---"
+    echo "title: \"$title\""
+    echo "---"
+    echo ""
+    # Pula a primeira linha (título já está no frontmatter)
+    tail -n +2 "$src_file"
+  } > "$dst_file"
+}
+
+# Copia ficheiro que já tem frontmatter YAML (---\n...\n---)
+copy_with_frontmatter() {
+  local src_file="$1" dst_file="$2"
+  cp "$src_file" "$dst_file"
+}
+
+# Wraps conteúdo sem frontmatter com título e aviso de gerado.
+wrap_generated() {
+  local src_file="$1" dst_file="$2" title="$3" desc="$4"
+  {
+    echo "---"
+    echo "title: \"$title\""
+    echo "description: \"$desc\""
+    echo "---"
+    echo ""
+    echo ":::caution[Arquivo gerado]"
+    echo "Não edite manualmente. Rode \`make docs\` para regenerar."
+    echo ":::"
+    echo ""
+    # Pula a primeira linha se for um heading (evita duplicação de título)
+    if head -1 "$src_file" | grep -q '^# '; then
+      tail -n +2 "$src_file"
+    else
+      cat "$src_file"
+    fi
+  } > "$dst_file"
+}
+
+# ── Docs canónicos (01-07) ──────────────────────────────────────────────────
+
+for doc in "$SRC"/0[1-7]-*.md; do
+  [ -f "$doc" ] || continue
+  base=$(basename "$doc")
+  add_frontmatter "$doc" "$DST/$base"
 done
 
-# Sincronizar ADRs
-bash "$ROOT/scripts/copy-adrs.sh"
+# ── ADRs (decisoes/) ───────────────────────────────────────────────────────
 
-# Sincronizar gerados (já têm frontmatter)
-cp "$ROOT/docs/gerado/ENTIDADES.md" "$DST/gerado/entidades.md" 2>/dev/null || true
+mkdir -p "$DST/decisoes"
+for adr in "$SRC"/decisoes/*.md; do
+  [ -f "$adr" ] || continue
+  base=$(basename "$adr")
+  add_frontmatter "$adr" "$DST/decisoes/$base"
+done
 
-# Board e Roadmap: copiar conteúdo para dentro do frontmatter do placeholder
-if [ -f "$ROOT/docs/gerado/BOARD.md" ]; then
-  {
-    echo "---"
-    echo "title: \"Quadro (Kanban)\""
-    echo "description: \"Quadro do sprint atual, gerado do backlog YAML.\""
-    echo "---"
-    echo ""
-    echo ":::caution[Arquivo gerado]"
-    echo "Não edite manualmente. Rode \`make docs-board\` para regenerar."
-    echo ":::"
-    echo ""
-    cat "$ROOT/docs/gerado/BOARD.md"
-  } > "$DST/gerado/board.md"
-fi
+# ── Gerados ─────────────────────────────────────────────────────────────────
 
-if [ -f "$ROOT/docs/gerado/ROADMAP.md" ]; then
-  {
-    echo "---"
-    echo "title: \"Roadmap\""
-    echo "description: \"Roadmap Now/Next/Later, gerado do backlog YAML.\""
-    echo "---"
-    echo ""
-    echo ":::caution[Arquivo gerado]"
-    echo "Não edite manualmente. Rode \`make docs-board\` para regenerar."
-    echo ":::"
-    echo ""
-    cat "$ROOT/docs/gerado/ROADMAP.md"
-  } > "$DST/gerado/roadmap.md"
-fi
+mkdir -p "$DST/gerado"
 
-echo "Sincronizados $(ls "$DST"/*.md 2>/dev/null | wc -l) docs canônicos para docs-site"
+# ENTIDADES e env-vars já têm frontmatter no source
+copy_with_frontmatter "$SRC/gerado/ENTIDADES.md" "$DST/gerado/entidades.md"
+copy_with_frontmatter "$SRC/gerado/env-vars.md" "$DST/gerado/env-vars.md"
+
+# BOARD e ROADMAP não têm frontmatter — wrappear
+wrap_generated "$SRC/gerado/BOARD.md" "$DST/gerado/board.md" \
+  "Quadro (Kanban)" "Quadro do sprint atual, gerado do backlog YAML."
+
+wrap_generated "$SRC/gerado/ROADMAP.md" "$DST/gerado/roadmap.md" \
+  "Roadmap" "Roadmap Now/Next/Later, gerado do backlog YAML."
+
+# ── Resumo ──────────────────────────────────────────────────────────────────
+
+n_docs=$(find "$DST" -maxdepth 1 -name "0*.md" | wc -l | tr -d ' ')
+n_adrs=$(find "$DST/decisoes" -name "*.md" | wc -l | tr -d ' ')
+n_gen=$(find "$DST/gerado" -name "*.md" | wc -l | tr -d ' ')
+echo "✓ Sincronizados: $n_docs docs, $n_adrs ADRs, $n_gen gerados → docs-site"

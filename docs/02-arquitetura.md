@@ -39,7 +39,7 @@ Custo: Cloud Run escala a zero, BigQuery free tier (10 GB storage + 1 TB consult
 
 Runbook completo para setup do zero: ver `docs/DEPLOY_GCP.md` (legado, ainda válido para GCP).
 
-Ver [ADR 0003](/docs/decisoes/0003-deploy-gcp.md).
+Ver [ADR 0003](/docs/decisoes/0003-deploy-gcp/).
 
 ## Coleta e scheduler
 

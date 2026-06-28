@@ -22,16 +22,14 @@ docs-board: ## Gera quadro Kanban e roadmap do backlog
 docs-sync: ## Sincroniza docs canônicos para docs-site
 	./scripts/sync-docs-to-site.sh
 
-docs-site: ## Build do site Starlight
+docs-site: docs-sync ## Build do site Starlight (sync + build)
 	cd docs-site && npm run build
 
 docs-publish: docs docs-site ## Gera, sincroniza e builda — pronto para commit
 
-docs-check: ## CI: falha se docs geradas ou site estiverem desatualizados
+docs-check: ## CI: falha se docs geradas estiverem desatualizados
 	$(MAKE) docs-er docs-env docs-board
 	git diff --exit-code docs/gerado || (echo "❌ Docs geradas desatualizadas: rode 'make docs'"; exit 1)
-	./scripts/sync-docs-to-site.sh
-	git diff --exit-code docs-site/src/content/docs || (echo "❌ docs-site desatualizado: rode 'make docs'"; exit 1)
 
 # ─── Desenvolvimento ────────────────────────────────────────────
 
