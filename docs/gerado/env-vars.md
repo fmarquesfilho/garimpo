@@ -17,7 +17,7 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `BQ_DATASET` | `internal/store/novo_gcp.go` | 18 |
 | `BQ_TABELA_SNAP` | `internal/store/novo_gcp.go` | 23 |
 | `BQ_TABELA` | `internal/store/novo_gcp.go` | 19 |
-| `COLETA_TOKEN` | `internal/httpapi/auth_middleware.go` | 53 |
+| `COLETA_TOKEN` | `internal/httpapi/middleware_auth.go` | 53 |
 | `DOCS_DIR` | `internal/httpapi/docs.go` | 14 |
 | `ENCRYPTION_KEY` | `internal/tenant/crypto.go` | 25 |
 | `GCP_REGION` | `internal/scheduler/novo_gcp.go` | 19 |
