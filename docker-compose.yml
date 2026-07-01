@@ -29,8 +29,8 @@ services:
   # ── Web App C# (ASP.NET Core 10) ────────────────────────────────────────
   garimpei-api-v2:
     build:
-      context: ./src
-      dockerfile: Garimpei.Api/Dockerfile
+      context: .
+      dockerfile: src/Garimpei.Api/Dockerfile
     ports:
       - "8090:8080"
     environment:
