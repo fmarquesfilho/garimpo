@@ -1,7 +1,7 @@
 id: T-0023
 titulo: "Migrar WhatsApp sender de Maytapi para Meta Cloud API"
 epic: migracao-arch
-status: doing
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S27"

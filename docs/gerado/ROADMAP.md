@@ -4,7 +4,7 @@
 
 ## 🔵 Now (em andamento)
 
-- **T-0023** Migrar WhatsApp sender de Maytapi para Meta Cloud API · migracao-arch · M
+_Nenhuma tarefa em andamento._
 
 ## 🟡 Next (próximo sprint)
 
@@ -37,3 +37,4 @@
 - **T-0016** Curadoria controller + scoring port em C# · migracao-arch · G
 - **T-0017** Routing split (Cloudflare Worker v1→v2) · migracao-arch · P
 - **T-0021** Cloud Run multi-container deploy (C# + sidecars Go) · migracao-arch · M
+- **T-0023** Migrar WhatsApp sender de Maytapi para Meta Cloud API · migracao-arch · M
