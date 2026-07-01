@@ -31,7 +31,7 @@ while IFS= read -r file; do
             EXIT_CODE=1
         fi
     fi
-done < <(find . -name "*.go" -not -path "./vendor/*" -not -path "./.git/*")
+done < <(find . -name "*.go" -not -path "./vendor/*" -not -path "./.git/*" -not -path "./gen/*")
 
 # ── Frontend Svelte/JS/TS ──────────────────────────────────────────────────
 while IFS= read -r file; do

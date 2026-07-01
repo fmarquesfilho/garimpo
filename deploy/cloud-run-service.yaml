@@ -1,0 +1,179 @@
+# Cloud Run multi-container service definition
+# Deploy: gcloud run services replace deploy/cloud-run-service.yaml --region=southamerica-east1
+#
+# Architecture:
+#   - garimpei-api (C#): main ingress container (HTTP :8080)
+#   - collector (Go): sidecar gRPC (:50051)
+#   - publisher (Go): sidecar gRPC (:50052)
+#   - alerter (Go): sidecar gRPC (:50053)
+#   - scheduler (Go): sidecar gRPC (:50054)
+#
+# All sidecars communicate via localhost within the same instance.
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: garimpei-v2
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler"]}'
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: garimpo-api-sa@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        # ── Main container: C# Web App ─────────────────────────────────
+        - name: garimpei-api
+          image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/garimpei-api-v2:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: Auth__ProjectId
+              value: PROJECT_ID
+            - name: ConnectionStrings__PostgreSQL
+              valueFrom:
+                secretKeyRef:
+                  name: GARIMPEI_PG_CONNECTION_STRING
+                  key: latest
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+
+        # ── Sidecar: shopee-collector ──────────────────────────────────
+        - name: collector
+          image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/collector:latest
+          env:
+            - name: PORT
+              value: "50051"
+            - name: SHOPEE_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: SHOPEE_APP_ID
+                  key: latest
+            - name: SHOPEE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: SHOPEE_SECRET
+                  key: latest
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 256Mi
+          startupProbe:
+            grpc:
+              port: 50051
+              service: collector.v1.CollectorService
+            periodSeconds: 5
+            failureThreshold: 5
+
+        # ── Sidecar: publisher ─────────────────────────────────────────
+        - name: publisher
+          image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/publisher:latest
+          env:
+            - name: PORT
+              value: "50052"
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: TELEGRAM_BOT_TOKEN
+                  key: latest
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: TELEGRAM_CHAT_ID
+                  key: latest
+            - name: WHATSAPP_PHONE_NUMBER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: WHATSAPP_PHONE_NUMBER_ID
+                  key: latest
+            - name: WHATSAPP_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: WHATSAPP_ACCESS_TOKEN
+                  key: latest
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 128Mi
+          startupProbe:
+            grpc:
+              port: 50052
+              service: publisher.v1.PublisherService
+            periodSeconds: 5
+            failureThreshold: 5
+
+        # ── Sidecar: alerter ───────────────────────────────────────────
+        - name: alerter
+          image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/alerter:latest
+          env:
+            - name: PORT
+              value: "50053"
+            - name: ALERTAS_TELEGRAM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ALERTAS_TELEGRAM_TOKEN
+                  key: latest
+            - name: ALERTAS_TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ALERTAS_TELEGRAM_CHAT_ID
+                  key: latest
+            - name: ALERTAS_THRESHOLD
+              value: "0.15"
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 128Mi
+          startupProbe:
+            grpc:
+              port: 50053
+              service: alerter.v1.AlerterService
+            periodSeconds: 5
+            failureThreshold: 5
+
+        # ── Sidecar: scheduler ─────────────────────────────────────────
+        - name: scheduler
+          image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/scheduler:latest
+          env:
+            - name: PORT
+              value: "50054"
+            - name: COLLECTOR_ADDR
+              value: "localhost:50051"
+            - name: PUBLISHER_ADDR
+              value: "localhost:50052"
+            - name: ALERTER_ADDR
+              value: "localhost:50053"
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 128Mi
+          startupProbe:
+            grpc:
+              port: 50054
+              service: scheduler.v1.SchedulerService
+            periodSeconds: 5
+            failureThreshold: 5

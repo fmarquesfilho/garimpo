@@ -1,7 +1,7 @@
 id: T-0021
 titulo: Cloud Run multi-container deploy (C# + sidecars Go)
 epic: migracao-arch
-status: next
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S28"

@@ -1,7 +1,7 @@
 id: T-0013
 titulo: "C# Web App — auth middleware + health + CI"
 epic: migracao-arch
-status: next
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S28"

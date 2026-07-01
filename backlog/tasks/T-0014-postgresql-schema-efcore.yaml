@@ -1,7 +1,7 @@
 id: T-0014
 titulo: PostgreSQL schema + EF Core migrations (dados transacionais)
 epic: migracao-arch
-status: next
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S28"

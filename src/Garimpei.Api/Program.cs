@@ -1,5 +1,8 @@
 using Garimpei.Application;
 using Garimpei.Infrastructure;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,17 +15,20 @@ builder.Host.UseSerilog((context, config) =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Auth (Firebase JWT)
+// Auth (Firebase JWT — validates tokens issued by Firebase Auth)
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = builder.Configuration["Auth:Authority"];
+        var projectId = builder.Configuration["Auth:ProjectId"]
+            ?? throw new InvalidOperationException("Auth:ProjectId is required");
+
+        options.Authority = $"https://securetoken.google.com/{projectId}";
         options.TokenValidationParameters = new()
         {
             ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Auth:Authority"],
+            ValidIssuer = $"https://securetoken.google.com/{projectId}",
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["Auth:Audience"],
+            ValidAudience = projectId,
             ValidateLifetime = true
         };
     });
@@ -30,7 +36,23 @@ builder.Services.AddAuthentication("Bearer")
 builder.Services.AddAuthorization();
 
 // Health checks
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("PostgreSQL") ?? "",
+        name: "postgresql",
+        tags: ["db", "ready"]);
+
+// OpenTelemetry
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService("garimpei-api-v2"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter())
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter());
 
 // OpenAPI
 builder.Services.AddOpenApi();
@@ -42,14 +64,18 @@ app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Health check
+// Health checks
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new()
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 // OpenAPI endpoint
 app.MapOpenApi();
 
 // API routes
-app.MapGet("/", () => Results.Ok(new { service = "garimpei-api", status = "ok" }));
+app.MapGet("/", () => Results.Ok(new { service = "garimpei-api", version = "v2", status = "ok" }));
 
 app.MapGroup("/api/v2")
     .RequireAuthorization()
