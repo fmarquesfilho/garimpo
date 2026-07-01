@@ -42,15 +42,17 @@ Cloudflare Worker ──routing──► /api/v2/* → C#, /api/* → Go (legado
 
 | Camada | Tecnologia |
 |---|---|
-| Web App (novo) | C# / ASP.NET Core 10, Minimal API, EF Core, MediatR |
-| Backend legado | Go 1.26, Cloud Run |
-| Microserviços | Go, gRPC (collector, publisher, alerter, scheduler) |
+| Web App | C# / ASP.NET Core 10, Minimal API, EF Core, MediatR |
+| Microserviços I/O | Go, gRPC (collector, publisher, alerter, scheduler) |
+| Analytics | Python, FastAPI, pandas, BigQuery |
 | Frontend | SvelteKit 2, Svelte 5, Vite 8 |
-| DB transacional | PostgreSQL 17 (Cloud SQL) |
+| DB transacional | PostgreSQL 17 (Neon) |
 | DB analytics | BigQuery |
-| Autenticação | Firebase Auth (JWT, validado em ambos backends) |
+| Autenticação | Firebase Auth (JWT, validado no C#) |
 | Canais | Telegram Bot API, Meta WhatsApp Business Cloud API |
-| CI/CD | GitHub Actions (deploy-gcp.yml + ci-csharp.yml) |
+| CI | GitHub Actions (ci.yml — Go + C# + Python + Proto + Frontend + Docker) |
+| Hosting frontend | Cloudflare Pages |
+| Proxy/Routing | Cloudflare Workers |
 | Infra | Cloud Run multi-container, Artifact Registry, Secret Manager |
 | Observabilidade | OpenTelemetry + Serilog (C#), slog JSON (Go) |
 | Contratos | Protocol Buffers (buf) — Go + C# stubs pré-gerados |
@@ -76,49 +78,75 @@ Isolamento por `owner_uid` (Firebase user_id):
 
 Ver ADR-0012, T-0015.
 
-## Microserviços gRPC
+## Microserviços gRPC + REST
 
-| Serviço | Porta | Responsabilidade | Proto |
-|---------|-------|-----------------|-------|
-| collector | 50051 | Fetch de produtos Shopee (keyword/shop) | `collector/v1/collector.proto` |
-| publisher | 50052 | Publicação em Telegram/WhatsApp | `publisher/v1/publisher.proto` |
-| alerter | 50053 | Verificação de preço + notificação | `alerter/v1/alerter.proto` |
-| scheduler | 50054 | Cron jobs + orquestração dos outros serviços | `scheduler/v1/scheduler.proto` |
+| Serviço | Porta | Stack | Responsabilidade | Proto/API |
+|---------|-------|-------|-----------------|-----------|
+| collector | 50051 | Go gRPC | Fetch de produtos Shopee (keyword/shop) | `collector/v1/collector.proto` |
+| publisher | 50052 | Go gRPC | Publicação em Telegram/WhatsApp | `publisher/v1/publisher.proto` |
+| alerter | 50053 | Go gRPC | Verificação de preço + notificação | `alerter/v1/alerter.proto` |
+| scheduler | 50054 | Go gRPC | Cron jobs + orquestração dos outros serviços | `scheduler/v1/scheduler.proto` |
+| analyzer | 8060 | Python REST | Analytics, novidades, quedas, evolução | FastAPI (OpenAPI auto-gerado) |
 
 Todos rodam como sidecars no Cloud Run multi-container. Comunicação via localhost.
 Health checks gRPC + graceful shutdown em todos.
 
 ## Deploy
 
-### Cloud Run multi-container (novo — ADR-0012)
+### Cloud Run multi-container (produção)
 
 ```yaml
-# deploy/cloud-run-service.yaml
+# deploy/cloud-run-deploy-now.yaml
 containers:
   - garimpei-api (C#, ingress :8080)
   - collector (Go, gRPC :50051)
   - publisher (Go, gRPC :50052)
   - alerter (Go, gRPC :50053)
   - scheduler (Go, gRPC :50054)
+  - analyzer (Python, HTTP :8060)
 ```
 
 Container dependencies: C# espera sidecars ficarem healthy antes de receber tráfego.
 
-### CI/CD Pipeline
+Deploy manual:
+```bash
+# Build e push (--platform linux/amd64 --provenance=false)
+docker build ... -f src/Garimpei.Api/Dockerfile src/
+docker build ... -f services/collector/Dockerfile .
+docker build ... -f services/analyzer/Dockerfile services/analyzer/
+# (publisher, alerter, scheduler análogos)
+
+# Deploy
+gcloud run services replace deploy/cloud-run-deploy-now.yaml --region=southamerica-east1
+```
+
+### Frontend (Cloudflare Pages)
+
+```bash
+cd web && npm run build
+npx wrangler pages deploy build --project-name garimpei-web
+```
+
+### CI Pipeline
 
 ```
-push main
-  ├─ deploy-gcp.yml (Go legado)
-  │    └─ test-go → build → deploy Cloud Run
-  └─ ci-csharp.yml (C# + protos)
-       └─ build → test → proto-lint → proto-sync-check → docker build
+push main → ci.yml
+  ├─ go (build + test + lint + arch-go + docs-check)
+  ├─ csharp (build + test)
+  ├─ python (ruff + syntax)
+  ├─ proto (lint + sync check)
+  ├─ frontend (build + lint + vitest)
+  └─ docker (build all 6 images)
 ```
 
-### Monólito Go (legado — coexistência)
+### Routing (Cloudflare Worker)
 
-O monólito Go continua servindo tráfego nas rotas `/api/*` durante a migração.
-Rotas são migradas gradualmente para `/api/v2/*` (C#) com feature flags no
-Cloudflare Worker (T-0017).
+```
+garimpei.app.br/api/* → Cloud Run (C# garimpei-v2)
+garimpei.app.br/*     → Cloudflare Pages (frontend SPA)
+```
+
+Rollback: `V2_ENABLED=false` no Worker → `/api/*` volta para Go legado (se ainda existir).
 
 ## Coleta e scheduler
 
@@ -166,3 +194,4 @@ Para lojas monitoradas, a coleta usa paginação rotativa:
 - [ADR-0003](/docs/decisoes/0003-deploy-gcp/) — Deploy no GCP
 - [ADR-0012](/docs/decisoes/0012-migracao-csharp-go-microservices/) — Migração C# + Go
 - [ADR-0013](/docs/decisoes/0013-whatsapp-meta-cloud-api/) — WhatsApp Meta Cloud API
+- [ADR-0014](/docs/decisoes/0014-analyzer-python-fastapi/) — Analyzer Python (FastAPI + BigQuery)
