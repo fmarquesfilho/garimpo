@@ -1,0 +1,20 @@
+id: T-0015
+titulo: Multi-tenant em C# (EF Core + PostgreSQL)
+epic: migracao-arch
+status: next
+prioridade: alta
+estimativa: G
+sprint: "2026-S28"
+valor: >
+  Implementar isolamento multi-tenant com EF Core global query filters
+  por owner_uid. Scoped DI resolve tenant do JWT claims. Base para T-0004.
+criterios:
+  - TenantContext resolvido via JWT claim (owner_uid)
+  - Global query filter aplica tenant em todas as queries automaticamente
+  - Testes verificam isolamento (tenant A não vê dados de B)
+  - Middleware rejeita requests sem tenant válido
+  - Scoped services injectam tenant context
+depende_de: [T-0014]
+tags: [backend, csharp, multi-tenant, seguranca, efcore]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

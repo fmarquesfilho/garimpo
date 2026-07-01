@@ -1,0 +1,94 @@
+# docker-compose.yml — Garimpei mono-repo (dev local)
+# Sobe: PostgreSQL, Web App C#, monólito Go (legado), BigQuery emulator
+
+services:
+  # ── Dependências ─────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: garimpei
+      POSTGRES_PASSWORD: garimpei_dev
+      POSTGRES_DB: garimpei
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U garimpei"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  bigquery-emulator:
+    image: ghcr.io/goccy/bigquery-emulator:latest
+    command: ["--project=garimpei-dev", "--dataset=garimpei"]
+    ports:
+      - "9050:9050"
+      - "9060:9060"
+
+  # ── Web App C# (ASP.NET Core 10) ────────────────────────────────────────
+  garimpei-api-v2:
+    build:
+      context: ./src
+      dockerfile: Garimpei.Api/Dockerfile
+    ports:
+      - "8090:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__PostgreSQL: "Host=postgres;Port=5432;Database=garimpei;Username=garimpei;Password=garimpei_dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── Monólito Go (legado — mantido durante migração) ──────────────────────
+  garimpei-api-legacy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      BQ_PROJECT: garimpei-dev
+      BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+    depends_on:
+      - bigquery-emulator
+
+  # ── Microserviços Go (gRPC) — stubs iniciais ────────────────────────────
+  # Descomente conforme forem implementados (T-0010, T-0011, T-0012):
+  #
+  # shopee-collector:
+  #   build:
+  #     context: .
+  #     dockerfile: services/collector/Dockerfile
+  #   ports:
+  #     - "50051:50051"
+  #   environment:
+  #     BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+  #
+  # publisher:
+  #   build:
+  #     context: .
+  #     dockerfile: services/publisher/Dockerfile
+  #   ports:
+  #     - "50052:50052"
+  #
+  # alerter:
+  #   build:
+  #     context: .
+  #     dockerfile: services/alerter/Dockerfile
+  #   ports:
+  #     - "50053:50053"
+  #
+  # scheduler:
+  #   build:
+  #     context: .
+  #     dockerfile: services/scheduler/Dockerfile
+  #   ports:
+  #     - "50054:50054"
+  #   depends_on:
+  #     - shopee-collector
+  #     - publisher
+  #     - alerter
+
+volumes:
+  pgdata:

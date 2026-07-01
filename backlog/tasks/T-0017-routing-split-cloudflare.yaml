@@ -1,0 +1,19 @@
+id: T-0017
+titulo: Routing split (Cloudflare Worker v1→v2)
+epic: migracao-arch
+status: backlog
+prioridade: media
+estimativa: P
+sprint: ""
+valor: >
+  Cloudflare Worker faz routing inteligente: /api/v2/* → C#, /api/* → Go.
+  Permite coexistência durante migração gradual sem impacto no frontend.
+criterios:
+  - Worker roteia por path prefix (v2 → C#, default → Go)
+  - Feature flag para migrar rotas individualmente
+  - Health check de ambos backends antes de rotear
+  - Rollback instantâneo (flag volta para Go)
+depende_de: [T-0013, T-0021]
+tags: [infra, cloudflare, routing, migration]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

@@ -21,3 +21,7 @@
 - id: qualidade
   titulo: Qualidade e testes
   cor: "#00695c"
+
+- id: migracao-arch
+  titulo: "Migração arquitetural: C# + Go microservices (ADR-0012)"
+  cor: "#37474f"

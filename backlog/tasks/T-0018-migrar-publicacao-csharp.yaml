@@ -1,0 +1,20 @@
+id: T-0018
+titulo: Migrar handlers de publicação para C#
+epic: migracao-arch
+status: backlog
+prioridade: media
+estimativa: G
+sprint: ""
+valor: >
+  Migrar os endpoints de publicação (criar, listar, republicar) para o
+  Web App C#. C# orquestra e chama publisher Go via gRPC para envio.
+criterios:
+  - PublicacaoController com CRUD de publicações
+  - Persistência em PostgreSQL (histórico de publicações)
+  - Chamada gRPC ao publisher Go para envio efetivo
+  - Templates geridos no C# (Scriban)
+  - Testes E2E com paridade funcional
+depende_de: [T-0016, T-0011]
+tags: [backend, csharp, publicacao, grpc]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

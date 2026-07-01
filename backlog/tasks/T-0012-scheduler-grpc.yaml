@@ -1,0 +1,22 @@
+id: T-0012
+titulo: Scheduler gRPC server (serviço Go separado)
+epic: migracao-arch
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  Extrair o scheduler para um microserviço Go com cron nativo e
+  goroutines. Orquestra jobs periódicos: coleta Shopee, export BigQuery,
+  verificação de alertas. Substitui Cloud Scheduler e Hangfire.
+criterios:
+  - scheduler.proto com TriggerJob, ListJobs, SetSchedule RPCs
+  - Servidor Go com cron library (robfig/cron ou similar)
+  - Chama collector, publisher, alerter via gRPC interno
+  - Configuração de schedules via proto/config
+  - Dockerfile multi-stage
+  - Health check + métricas de jobs executados
+depende_de: [T-0009, T-0010, T-0011]
+tags: [backend, go-microservice, grpc, scheduler, cron]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

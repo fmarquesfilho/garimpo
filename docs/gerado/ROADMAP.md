@@ -11,10 +11,23 @@ _Nenhuma tarefa em andamento._
 - **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
 - **T-0004** ScopedStore por owner_uid (multi-tenant) · multi-tenant · G
 - **T-0005** Alertas configuráveis por usuário · produto · M
+- **T-0010** Proto definitions + shopee-collector gRPC server · migracao-arch · M
+- **T-0011** Publisher gRPC server (extract publish package) · migracao-arch · M
+- **T-0012** Scheduler gRPC server (serviço Go separado) · migracao-arch · M
+- **T-0013** C# Web App — auth middleware + health + CI · migracao-arch · M
+- **T-0014** PostgreSQL schema + EF Core migrations (dados transacionais) · migracao-arch · M
+- **T-0015** Multi-tenant em C# (EF Core + PostgreSQL) · migracao-arch · G
+- **T-0016** Curadoria controller + scoring port em C# · migracao-arch · G
+- **T-0021** Cloud Run multi-container deploy (C# + sidecars Go) · migracao-arch · M
 
 ## ⚪ Later (radar)
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
+- **T-0017** Routing split (Cloudflare Worker v1→v2) · migracao-arch · P
+- **T-0018** Migrar handlers de publicação para C# · migracao-arch · G
+- **T-0019** Migrar handlers de lojas/buscas para C# · migracao-arch · G
+- **T-0020** PostgreSQL como fonte primária + BigQuery analytics-only · migracao-arch · G
+- **T-0022** Descomissionar monólito Go · migracao-arch · M
 
 ## ✅ Concluídas
 
@@ -22,3 +35,4 @@ _Nenhuma tarefa em andamento._
 - **T-0003** Backlog como código (schema + gen-board) · docs-migration · M
 - **T-0006** Integrar docs-check e docs-board na CI · qualidade · P
 - **T-0008** Refactor: tratamento de erros idiomático + telemetria · qualidade · G
+- **T-0009** Setup mono-repo (Go + C# + protos) + Docker Compose · migracao-arch · M

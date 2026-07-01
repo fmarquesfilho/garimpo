@@ -1,0 +1,20 @@
+id: T-0011
+titulo: Publisher gRPC server (extract publish package)
+epic: migracao-arch
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  Extrair o pacote publish (Telegram, WhatsApp) para servidor gRPC
+  standalone. Mantém rate limiting e retry logic existentes.
+criterios:
+  - publisher.proto com Publish e ListGroups RPCs
+  - Servidor Go implementa o service Publisher
+  - Dockerfile multi-stage para o publisher
+  - Testes com mock dos endpoints Telegram/WhatsApp
+  - Health check gRPC implementado
+depende_de: [T-0009]
+tags: [backend, go-microservice, grpc, telegram, whatsapp]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

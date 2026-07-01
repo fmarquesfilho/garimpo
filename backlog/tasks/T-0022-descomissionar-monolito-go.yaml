@@ -1,0 +1,22 @@
+id: T-0022
+titulo: Descomissionar monólito Go
+epic: migracao-arch
+status: backlog
+prioridade: baixa
+estimativa: M
+sprint: ""
+valor: >
+  Remover rotas migradas do monólito Go original. Go vira apenas os 4
+  microserviços gRPC (collector, publisher, alerter, scheduler).
+  Cloudflare Worker aponta 100% para C#.
+criterios:
+  - Todas as rotas HTTP removidas do Go
+  - Go serve apenas gRPC (4 microserviços)
+  - Cloudflare Worker aponta 100% para C#
+  - cmd/garimpo-api removido ou repurposed
+  - Documentação atualizada
+  - Zero downtime na transição
+depende_de: [T-0018, T-0019, T-0020]
+tags: [backend, migration, cleanup]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

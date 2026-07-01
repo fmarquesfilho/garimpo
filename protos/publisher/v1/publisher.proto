@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package publisher.v1;
+
+option go_package = "github.com/fmarquesfilho/garimpo/gen/go/publisher/v1;publisherv1";
+option csharp_namespace = "Garimpei.Protos.Publisher.V1";
+
+service Publisher {
+  // Publish a curated offer to one or more channels
+  rpc Publish(PublishRequest) returns (PublishResponse);
+  // List configured destination groups
+  rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse);
+}
+
+message PublishRequest {
+  string owner_uid = 1;
+  string channel = 2; // telegram, whatsapp
+  string group_id = 3;
+  PublishContent content = 4;
+}
+
+message PublishContent {
+  string title = 1;
+  string description = 2;
+  string image_url = 3;
+  string product_url = 4;
+  double price = 5;
+  double original_price = 6;
+  double discount_percent = 7;
+}
+
+message PublishResponse {
+  bool success = 1;
+  string message_id = 2;
+  string published_at = 3; // RFC3339
+}
+
+message ListGroupsRequest {
+  string owner_uid = 1;
+  string channel = 2; // filter by channel, empty = all
+}
+
+message ListGroupsResponse {
+  repeated Group groups = 1;
+}
+
+message Group {
+  string id = 1;
+  string name = 2;
+  string channel = 3;
+  bool active = 4;
+}

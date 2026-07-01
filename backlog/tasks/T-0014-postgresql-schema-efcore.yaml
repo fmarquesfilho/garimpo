@@ -1,0 +1,21 @@
+id: T-0014
+titulo: PostgreSQL schema + EF Core migrations (dados transacionais)
+epic: migracao-arch
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S28"
+valor: >
+  Definir schema PostgreSQL para dados transacionais (produtos, buscas,
+  tenants, configs, publicações). EF Core code-first migrations. BigQuery
+  permanece para analytics (conversões, métricas históricas).
+criterios:
+  - Entities EF Core mapeiam domínio (Product, Busca, Tenant, AlertConfig)
+  - Migrations iniciais criadas e aplicáveis
+  - Cloud SQL PostgreSQL provisionado (ou docker local para dev)
+  - Seed data para desenvolvimento
+  - Repository pattern com interface (testável)
+depende_de: [T-0013]
+tags: [backend, csharp, postgresql, efcore, database]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

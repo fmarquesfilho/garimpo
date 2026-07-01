@@ -1,0 +1,21 @@
+id: T-0020
+titulo: PostgreSQL como fonte primária + BigQuery analytics-only
+epic: migracao-arch
+status: backlog
+prioridade: media
+estimativa: G
+sprint: ""
+valor: >
+  Completar a separação de responsabilidades: PostgreSQL é a fonte
+  primária para dados transacionais, BigQuery recebe apenas export
+  periódico para analytics e métricas históricas.
+criterios:
+  - Todas as rotas leem/escrevem em PostgreSQL
+  - Export periódico PG → BQ para analytics (via scheduler Go)
+  - Conversões permanecem direto no BQ (write pelo scheduler)
+  - Dashboard/analytics consultam BQ
+  - Dual-write removido (fase final)
+depende_de: [T-0018, T-0019, T-0012]
+tags: [backend, database, postgresql, bigquery, migration]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

@@ -1,0 +1,20 @@
+id: T-0019
+titulo: Migrar handlers de lojas/buscas para C#
+epic: migracao-arch
+status: backlog
+prioridade: media
+estimativa: G
+sprint: ""
+valor: >
+  Migrar endpoints de lojas e buscas para C#. CRUD completo com
+  persistência em PostgreSQL e integração com collector Go via gRPC.
+criterios:
+  - LojaController e BuscaController implementados
+  - Persistência em PostgreSQL (EF Core)
+  - Integração gRPC com collector para fetch on-demand
+  - Testes E2E validam paridade com Go
+  - Frontend consome sem alterações (mesma API shape)
+depende_de: [T-0016, T-0010]
+tags: [backend, csharp, lojas, buscas, grpc]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

@@ -1,7 +1,8 @@
 # ADR 0012 — Migração para C# (Web App) + Go (Microserviços gRPC)
 
-**Status:** proposta (aguarda decisão)  
+**Status:** aceite  
 **Data:** 2026-06-29  
+**Atualizada:** 2026-07-01  
 
 ## Contexto
 
@@ -34,12 +35,12 @@ Separar o sistema em:
 | API REST (todas as rotas /api/*) | `httpapi` | CRUD-heavy, muita lógica de request/response, ideal para Controllers/Minimal API |
 | Autenticação e autorização | `auth` | ASP.NET Identity/JWT middleware é superior ao wrapper manual |
 | Multi-tenancy e onboarding | `tenant` | Scoped services, EF Core, DI nativo |
-| Persistência (Repository pattern) | `store` | Entity Framework / Dapper + PostgreSQL ou SQL Server |
+| Persistência (Repository pattern) | `store` | Entity Framework / Dapper + PostgreSQL (dados transacionais) |
 | Domain model (Product, Busca, etc.) | `domain`, `store` (tipos) | C# records, value objects, rich domain model |
 | Lógica de negócio (scoring, ranking) | `scoring`, `strategy`, `engine` | Port para C# — ~400 linhas, puro cálculo |
 | Templates e formatação | `publish` (parcial) | Template engine .NET (Scriban/Razor) |
 | Admin, logs, métricas | `httpapi`, `logs` | ASP.NET Health Checks, Serilog, OpenTelemetry |
-| Scheduler / Jobs | `scheduler` | Hangfire ou Quartz.NET (substituem Cloud Scheduler) |
+| Scheduler / Jobs | `scheduler` | Delegado ao microserviço Go `scheduler` via gRPC |
 | Documentação (site Starlight) | `docs-site` | Mantém-se separado (build estático) |
 
 ### Microserviços Go (gRPC)
@@ -49,6 +50,7 @@ Separar o sistema em:
 | **shopee-collector** | `source`, `coleta` | Throttling (200ms/60s delays), HMAC-SHA256 auth, goroutines para paginação paralela. Raramente muda. |
 | **publisher** | `publish` (Telegram, WhatsApp) | HTTP clients com retry, multi-destino, rate limiting. APIs externas não mudam frequentemente. |
 | **alerter** | `alerts` | Comparação de snapshots + envio Telegram. Simples, autónomo, fire-and-forget. |
+| **scheduler** | `scheduler` | Orquestração de jobs periódicos (coleta, export BQ, alertas). Goroutines + cron nativo. Mantém controle fino de timing e paralelismo. |
 
 ### Contratos gRPC (proto)
 
@@ -68,6 +70,13 @@ service Publisher {
 // alerter
 service Alerter {
   rpc CheckAndNotify(AlertRequest) returns (AlertResponse);
+}
+
+// scheduler
+service Scheduler {
+  rpc TriggerJob(TriggerJobRequest) returns (TriggerJobResponse);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc SetSchedule(SetScheduleRequest) returns (SetScheduleResponse);
 }
 ```
 
@@ -101,21 +110,32 @@ O Web App C# chama os microserviços Go via gRPC quando precisa de coleta, publi
                     │  └── EligibilityPipeline                   │
                     │                                            │
                     │  Infrastructure                            │
-                    │  ├── PostgreSQL (EF Core)                  │
+                    │  ├── PostgreSQL (EF Core) — dados app      │
                     │  ├── Firebase Auth (JWT validation)        │
-                    │  ├── gRPC clients (Collector, Publisher)   │
-                    │  └── Hangfire (scheduled jobs)             │
-                    └──────┬──────────────┬──────────────┬───────┘
-                           │gRPC          │gRPC          │gRPC
-                    ┌──────▼──────┐ ┌─────▼──────┐ ┌────▼──────┐
-                    │  shopee-    │ │  publisher  │ │  alerter  │
-                    │  collector  │ │  (Go)       │ │  (Go)     │
-                    │  (Go)       │ │             │ │           │
-                    │  Shopee API │ │  Telegram   │ │  Telegram │
-                    │  throttling │ │  WhatsApp   │ │  snapshots│
-                    │  rotation   │ │  templates  │ │           │
-                    └─────────────┘ └─────────────┘ └───────────┘
+                    │  ├── gRPC clients (Collector, Publisher,   │
+                    │  │    Alerter, Scheduler)                  │
+                    │  └── OpenTelemetry + Serilog               │
+                    └──────┬────────┬────────┬────────┬──────────┘
+                           │gRPC    │gRPC    │gRPC    │gRPC
+                    ┌──────▼──────┐ ┌▼───────┐ ┌─────▼──┐ ┌─────▼─────┐
+                    │  shopee-    │ │publisher│ │alerter │ │ scheduler │
+                    │  collector  │ │  (Go)  │ │ (Go)   │ │   (Go)    │
+                    │  (Go)       │ │        │ │        │ │           │
+                    │  Shopee API │ │Telegram│ │Telegram│ │ cron jobs │
+                    │  throttling │ │WhatsApp│ │compare │ │ coleta    │
+                    │  rotation   │ │        │ │        │ │ export BQ │
+                    └─────────────┘ └────────┘ └────────┘ └─────┬─────┘
+                                                                │
+                    ┌───────────────────────────────────────────▼──────┐
+                    │              BigQuery (analytics)                 │
+                    │  conversões · métricas · histórico · export       │
+                    └──────────────────────────────────────────────────┘
 ```
+
+**Deploy: Cloud Run multi-container (mono-repo)**
+- Container principal: Web App C# + PostgreSQL (Cloud SQL)
+- Sidecars gRPC: collector, publisher, alerter, scheduler
+- Comunicação interna via localhost (mesma instância)
 
 ---
 
@@ -158,32 +178,37 @@ O Web App C# chama os microserviços Go via gRPC quando precisa de coleta, publi
 
 ## Plano de migração gradual
 
-### Fase 0 — Preparação (1-2 sprints)
+### Fase 0 — Preparação (1-2 sprints: S27-S28)
 
-- [ ] Criar repo `garimpei-api` (C# solution) com estrutura Clean Architecture
-- [ ] Definir `.proto` files para os 3 serviços gRPC
-- [ ] Criar projecto `Garimpei.Collector` (extrair `source` + `coleta` para gRPC server)
-- [ ] Manter monólito Go a funcionar em paralelo (feature flag por rota)
+- [ ] T-0009: Criar mono-repo (Go + C# + protos) com Docker Compose
+- [ ] T-0010: Definir `.proto` files + shopee-collector gRPC server
+- [ ] T-0011: Publisher gRPC server (extrair publish package)
+- [ ] T-0012: Scheduler gRPC server (extrair scheduler para serviço Go separado)
+- [ ] T-0013: Criar Web App C# com auth, health, CI
+- [ ] T-0014: PostgreSQL schema + EF Core migrations
+- [ ] T-0021: Cloud Run multi-container deploy
 
-### Fase 1 — Coexistência (2-3 sprints)
+### Fase 1 — Coexistência (2-3 sprints: S28-S30)
 
-- [ ] Web App C# serve rotas novas (ex: T-0004 multi-tenant, T-0005 alertas)
-- [ ] Go monólito continua a servir rotas existentes
-- [ ] Cloudflare Worker faz routing: `/api/v2/*` → C#, `/api/*` → Go
+- [ ] T-0015: Multi-tenant em C# (EF Core global query filters)
+- [ ] T-0016: Curadoria controller + scoring port em C#
+- [ ] T-0017: Cloudflare Worker faz routing: `/api/v2/*` → C#, `/api/*` → Go
 - [ ] Dual-write: C# escreve em PostgreSQL + BigQuery (transição)
 - [ ] `shopee-collector` Go serve via gRPC (chamado por ambos)
+- [ ] Monólito Go continua servindo rotas existentes
 
 ### Fase 2 — Migração de rotas (3-4 sprints)
 
-- [ ] Migrar handlers por domínio (curadoria → lojas → publicação → admin)
+- [ ] T-0018: Migrar handlers de publicação para C#
+- [ ] T-0019: Migrar handlers de lojas/buscas para C#
+- [ ] T-0020: PostgreSQL fonte primária + BigQuery analytics-only
 - [ ] Cada grupo migrado: testes E2E validam paridade
 - [ ] Frontend aponta gradualmente para v2 (feature flag no SPA)
-- [ ] PostgreSQL torna-se fonte primária; BigQuery vira analytics-only (export)
 
 ### Fase 3 — Descomissionar monólito Go (1 sprint)
 
-- [ ] Remover rotas migradas do Go
-- [ ] Go vira apenas os 3 microserviços gRPC (collector, publisher, alerter)
+- [ ] T-0022: Remover rotas migradas do Go
+- [ ] Go vira apenas os 4 microserviços gRPC (collector, publisher, alerter, scheduler)
 - [ ] Cloudflare Worker aponta 100% para C#
 - [ ] Documentação actualizada
 
@@ -195,17 +220,20 @@ O Web App C# chama os microserviços Go via gRPC quando precisa de coleta, publi
 
 | ID | Título | Fase | Estimativa |
 |---|---|---|---|
-| T-0009 | Setup C# solution (Clean Architecture + Docker) | 0 | M |
+| T-0009 | Setup mono-repo (Go + C# + protos) + Docker Compose | 0 | M |
 | T-0010 | Proto definitions + shopee-collector gRPC server | 0 | M |
 | T-0011 | Publisher gRPC server (extract publish package) | 0 | M |
-| T-0012 | C# Web App — auth middleware + health + CI | 0 | M |
-| T-0013 | Multi-tenant em C# (EF Core + PostgreSQL) | 1 | G |
-| T-0014 | Curadoria controller + scoring port em C# | 1 | G |
-| T-0015 | Routing split (Cloudflare Worker v1→v2) | 1 | P |
-| T-0016 | Migrar handlers de publicação para C# | 2 | G |
-| T-0017 | Migrar handlers de lojas/buscas para C# | 2 | G |
-| T-0018 | PostgreSQL como fonte primária + export BQ | 2 | G |
-| T-0019 | Descomissionar monólito Go | 3 | M |
+| T-0012 | Scheduler gRPC server (extract scheduler para serviço Go) | 0 | M |
+| T-0013 | C# Web App — auth middleware + health + CI | 0 | M |
+| T-0014 | PostgreSQL schema + EF Core migrations (dados transacionais) | 1 | M |
+| T-0015 | Multi-tenant em C# (EF Core + PostgreSQL) | 1 | G |
+| T-0016 | Curadoria controller + scoring port em C# | 1 | G |
+| T-0017 | Routing split (Cloudflare Worker v1→v2) | 1 | P |
+| T-0018 | Migrar handlers de publicação para C# | 2 | G |
+| T-0019 | Migrar handlers de lojas/buscas para C# | 2 | G |
+| T-0020 | PostgreSQL como fonte primária + BigQuery analytics-only | 2 | G |
+| T-0021 | Cloud Run multi-container deploy (C# + sidecars Go) | 1 | M |
+| T-0022 | Descomissionar monólito Go | 3 | M |
 
 ### Tarefas existentes afetadas
 
@@ -225,11 +253,13 @@ O Web App C# chama os microserviços Go via gRPC quando precisa de coleta, publi
 | Validação | FluentValidation |
 | Auth | Microsoft.AspNetCore.Authentication.JwtBearer + FirebaseAdmin |
 | Logging | Serilog + OpenTelemetry |
-| Jobs | Hangfire (PostgreSQL storage) |
+| Jobs | Delegado ao microserviço Go `scheduler` (cron nativo + goroutines) |
 | gRPC Client | Grpc.Net.Client |
 | Testes | xUnit + NSubstitute + TestContainers + Bogus |
 | Docs API | Swashbuckle / NSwag (OpenAPI) |
 | Container | .NET 9 Alpine image (~80MB) |
+| DB transacional | PostgreSQL (Cloud SQL) |
+| DB analytics | BigQuery (acesso via microserviços Go) |
 
 ---
 
@@ -243,14 +273,16 @@ O Web App C# chama os microserviços Go via gRPC quando precisa de coleta, publi
 
 ---
 
-## Decisão pendente
+## Decisões tomadas (2026-07-01)
 
-Antes de iniciar a Fase 0, decidir:
-
-1. **PostgreSQL vs manter BigQuery?** — PG é melhor para CRUD transacional; BQ pode ficar só para analytics/export
-2. **Mono-repo ou multi-repo?** — Mono-repo (Go + C# + protos) simplifica CI; multi-repo isola deployments
-3. **Cloud Run multi-container ou serviços separados?** — Multi-container é mais simples (sidecar gRPC); separados escalam independentemente
-4. **Timeline:** iniciar Fase 0 na sprint S28 (próxima semana)?
+1. **PostgreSQL para dados da aplicação, BigQuery para analytics** — Dois repositórios de dados separados:
+   - C# (Web App) → PostgreSQL via EF Core (dados transacionais: produtos, buscas, tenants, configs)
+   - Go (microserviços) → BigQuery (analytics, conversões, métricas históricas, export)
+   - Migration gradual: dual-write na Fase 1, PG como fonte primária na Fase 2
+2. **Mono-repo** (Go + C# + protos) — simplifica CI, proto sharing, e versionamento
+3. **Cloud Run multi-container** — Web App C# como container principal, microserviços Go como sidecars gRPC na mesma instância. Migrar para serviços separados se necessário no futuro.
+4. **Scheduler como serviço Go separado** — quarto microserviço Go (`scheduler`) em vez de Hangfire no C#. Mantém a orquestração de jobs (coleta periódica, export BQ) em Go com goroutines/cron nativo.
+5. **Timeline:** iniciar Fase 0 na sprint S27 (atual)
 
 ## Consequências
 

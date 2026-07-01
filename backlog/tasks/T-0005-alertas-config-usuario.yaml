@@ -7,12 +7,14 @@ estimativa: M
 sprint: ""
 valor: >
   Hoje alertas estão desabilitados por falta de configuração por tenant.
-  Cada usuário deve poder definir threshold, canais e categorias.
+  Cada usuário deve poder definir threshold, canais e categorias. Após ADR-0012,
+  config salva em PostgreSQL (C#), disparo via alerter Go (gRPC).
 criterios:
   - Tela de configuração de alertas no frontend
-  - Config salva por tenant no BigQuery
-  - Alertas disparam automaticamente nas coletas
-depende_de: [T-0004]
-tags: [backend, frontend, alertas]
+  - Config salva por tenant no PostgreSQL (via Web App C#)
+  - Alertas disparam automaticamente nas coletas (alerter Go via gRPC)
+  - Scheduler Go orquestra a verificação periódica
+depende_de: [T-0004, T-0012]
+tags: [backend, frontend, alertas, csharp, go-microservice]
 criada_em: "2026-06-27"
-atualizada_em: "2026-06-27"
+atualizada_em: "2026-07-01"

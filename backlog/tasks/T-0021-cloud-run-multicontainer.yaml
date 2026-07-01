@@ -1,0 +1,22 @@
+id: T-0021
+titulo: Cloud Run multi-container deploy (C# + sidecars Go)
+epic: migracao-arch
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S28"
+valor: >
+  Configurar deploy no Cloud Run com multi-container: Web App C# como
+  container principal (ingress), microserviços Go como sidecars gRPC.
+  Comunicação interna via localhost.
+criterios:
+  - cloud-run service YAML com multi-container config
+  - Container principal (C#) recebe tráfego HTTP externo
+  - Sidecars (collector, publisher, alerter, scheduler) expõem gRPC em localhost
+  - CI/CD deploya todos os containers atomicamente
+  - Health checks para cada container
+  - Rollback funcional (revisão anterior)
+depende_de: [T-0013, T-0010, T-0011, T-0012]
+tags: [infra, devops, cloud-run, docker, deploy]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

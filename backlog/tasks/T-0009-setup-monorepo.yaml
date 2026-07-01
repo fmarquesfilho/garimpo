@@ -1,0 +1,21 @@
+id: T-0009
+titulo: Setup mono-repo (Go + C# + protos) + Docker Compose
+epic: migracao-arch
+status: done
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  Estruturar o mono-repo com as áreas Go (microserviços), C# (Web App),
+  e protos (contratos gRPC). Docker Compose para dev local com todos os
+  serviços + PostgreSQL + emulador BigQuery.
+criterios:
+  - "Estrutura de pastas: /services/go, /src (C#), /protos"
+  - "Docker Compose sobe todos os serviços + deps (PG, BQ emulator)"
+  - "Makefile unificado com targets para build, test, proto-gen"
+  - "CI (GitHub Actions) compila ambas stacks"
+  - "README com instruções de setup local"
+depende_de: []
+tags: [infra, devops, monorepo, docker]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

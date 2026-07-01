@@ -23,3 +23,18 @@ docs-site/src/content/docs/backlog/
 
 # Chaves (nunca comitar)
 key.json
+
+# ─── C# / .NET ──────────────────────────────────────────────────
+src/**/bin/
+src/**/obj/
+src/**/.vs/
+src/**/*.user
+src/**/*.suo
+*.DotSettings.user
+
+# ─── Proto gerado ───────────────────────────────────────────────
+gen/
+src/Garimpei.Protos/Generated/
+
+# ─── Docker ─────────────────────────────────────────────────────
+.env.local

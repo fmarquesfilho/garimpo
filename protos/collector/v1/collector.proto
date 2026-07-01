@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package collector.v1;
+
+option go_package = "github.com/fmarquesfilho/garimpo/gen/go/collector/v1;collectorv1";
+option csharp_namespace = "Garimpei.Protos.Collector.V1";
+
+service Collector {
+  // Fetch products from Shopee by search keyword
+  rpc Fetch(FetchRequest) returns (FetchResponse);
+  // Fetch all products from a specific shop
+  rpc FetchShop(FetchShopRequest) returns (FetchResponse);
+}
+
+message FetchRequest {
+  string keyword = 1;
+  int32 limit = 2;
+  string sort_by = 3; // relevance, sales, price
+  string owner_uid = 4;
+}
+
+message FetchShopRequest {
+  int64 shop_id = 1;
+  int32 limit = 2;
+  string owner_uid = 3;
+}
+
+message FetchResponse {
+  repeated Product products = 1;
+  int32 total_found = 2;
+  string fetched_at = 3; // RFC3339
+}
+
+message Product {
+  int64 item_id = 1;
+  int64 shop_id = 2;
+  string name = 3;
+  double price = 4;
+  double original_price = 5;
+  int32 sold = 6;
+  double rating = 7;
+  string image_url = 8;
+  string product_url = 9;
+  string shop_name = 10;
+  double discount_percent = 11;
+}

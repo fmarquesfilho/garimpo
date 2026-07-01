@@ -1,7 +1,7 @@
-# Makefile — Garimpei
-# Alvos de documentação, build e deploy
+# Makefile — Garimpei (mono-repo: Go + C# + protos)
 
-.PHONY: docs docs-api docs-er docs-env docs-site docs-check test lint
+.PHONY: docs docs-api docs-er docs-env docs-site docs-check test lint build \
+        proto up down test-go test-csharp build-go build-csharp
 
 # ─── Documentação ───────────────────────────────────────────────
 
@@ -31,21 +31,70 @@ docs-check: ## CI: falha se docs geradas estiverem desatualizados
 	$(MAKE) docs-er docs-env docs-board
 	git diff --exit-code docs/gerado || (echo "❌ Docs geradas desatualizadas: rode 'make docs'"; exit 1)
 
-# ─── Desenvolvimento ────────────────────────────────────────────
+# ─── Proto (gRPC) ──────────────────────────────────────────────
 
-test: ## Roda todos os testes
+proto: ## Gera código Go e C# a partir dos .proto
+	cd protos && buf generate
+	@echo "✅ Proto gerados em gen/go/ e src/Garimpei.Protos/Generated/"
+
+proto-lint: ## Lint nos .proto files
+	cd protos && buf lint
+
+proto-breaking: ## Verifica breaking changes nos .proto
+	cd protos && buf breaking --against '.git#subdir=protos'
+
+# ─── Build ──────────────────────────────────────────────────────
+
+build: build-go build-csharp ## Build de tudo
+
+build-go: ## Build do monólito Go + microserviços
+	go build ./...
+
+build-csharp: ## Build da solution C#
+	cd src && dotnet build --no-restore
+
+restore-csharp: ## Restore NuGet packages
+	cd src && dotnet restore
+
+# ─── Testes ─────────────────────────────────────────────────────
+
+test: test-go test-csharp ## Roda todos os testes
+
+test-go: ## Testes Go
 	go test ./...
-	cd web && npx vitest --run
 
-lint: ## Roda linters
+test-csharp: ## Testes C#
+	cd src && dotnet test --no-build
+
+# ─── Lint ───────────────────────────────────────────────────────
+
+lint: lint-go lint-web ## Roda linters
+
+lint-go: ## Lint Go
 	golangci-lint run ./...
+
+lint-web: ## Lint frontend
 	cd web && npx eslint .
 
-build: ## Build da imagem Docker
-	docker build -t garimpo-api .
+# ─── Docker Compose (dev local) ────────────────────────────────
+
+up: ## Sobe todos os serviços (dev local)
+	docker compose up -d
+
+down: ## Para todos os serviços
+	docker compose down
+
+logs: ## Logs de todos os containers
+	docker compose logs -f
+
+ps: ## Status dos containers
+	docker compose ps
+
+up-deps: ## Sobe apenas dependências (PG + BQ emulator)
+	docker compose up -d postgres bigquery-emulator
 
 # ─── Ajuda ──────────────────────────────────────────────────────
 
 help: ## Mostra esta ajuda
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'

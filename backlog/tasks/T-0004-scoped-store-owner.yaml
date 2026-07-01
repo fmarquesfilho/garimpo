@@ -4,14 +4,18 @@ epic: multi-tenant
 status: next
 prioridade: alta
 estimativa: G
-sprint: "2026-S27"
+sprint: "2026-S28"
 valor: >
-  Isolar dados por tenant (owner_uid) no BigQuery. Pré-requisito para
-  onboarding de novos afiliados.
+  Isolar dados por tenant (owner_uid). Pré-requisito para onboarding de novos
+  afiliados. Após ADR-0012, será implementado em C# com EF Core + PostgreSQL
+  (global query filters por tenant). Candidata natural para primeira feature no
+  Web App C#.
 criterios:
-  - Queries filtram por owner_uid automaticamente
+  - Queries filtram por owner_uid automaticamente (EF Core global filter)
   - Testes verificam isolamento entre tenants
   - Buscas e eventos vinculados ao owner
-tags: [backend, bigquery, seguranca]
+  - Implementado no Web App C# (PostgreSQL)
+depende_de: [T-0013, T-0014, T-0015]
+tags: [backend, csharp, postgresql, seguranca, multi-tenant]
 criada_em: "2026-06-27"
-atualizada_em: "2026-06-27"
+atualizada_em: "2026-07-01"

@@ -7,12 +7,14 @@ estimativa: M
 sprint: "2026-S27"
 valor: >
   Hoje /api/conversoes/reais consulta a Shopee on-demand. Persistir fecha o laço
-  receita-curadoria e destrava análise histórica.
+  receita-curadoria e destrava análise histórica. Após ADR-0012, conversões ficam
+  no BigQuery (analytics) e o job periódico roda no microserviço scheduler (Go).
 criterios:
   - Tabela conversoes populada via job periódico (validatedReport)
   - Idempotência por conversion_id (sem duplicar)
   - Cruzamento sub_id com publicacao testado
-depende_de: []
-tags: [backend, bigquery, atribuicao]
+  - Job orquestrado pelo scheduler Go (gRPC)
+depende_de: [T-0012]
+tags: [backend, bigquery, atribuicao, go-microservice]
 criada_em: "2026-06-27"
-atualizada_em: "2026-06-27"
+atualizada_em: "2026-07-01"

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package scheduler.v1;
+
+option go_package = "github.com/fmarquesfilho/garimpo/gen/go/scheduler/v1;schedulerv1";
+option csharp_namespace = "Garimpei.Protos.Scheduler.V1";
+
+service Scheduler {
+  // Trigger a job manually (e.g., collect, export, alert-check)
+  rpc TriggerJob(TriggerJobRequest) returns (TriggerJobResponse);
+  // List all registered jobs and their status
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  // Create or update a job schedule
+  rpc SetSchedule(SetScheduleRequest) returns (SetScheduleResponse);
+}
+
+message TriggerJobRequest {
+  string job_id = 1;
+  map<string, string> params = 2;
+}
+
+message TriggerJobResponse {
+  bool accepted = 1;
+  string execution_id = 2;
+  string started_at = 3; // RFC3339
+}
+
+message ListJobsRequest {
+  string status_filter = 1; // active, paused, all
+}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
+}
+
+message Job {
+  string id = 1;
+  string name = 2;
+  string cron_expression = 3;
+  string status = 4; // active, paused, running
+  string last_run_at = 5; // RFC3339
+  string next_run_at = 6; // RFC3339
+}
+
+message SetScheduleRequest {
+  string job_id = 1;
+  string cron_expression = 2;
+  bool enabled = 3;
+  map<string, string> params = 4;
+}
+
+message SetScheduleResponse {
+  bool success = 1;
+  Job job = 2;
+}

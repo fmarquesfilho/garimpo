@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package alerter.v1;
+
+option go_package = "github.com/fmarquesfilho/garimpo/gen/go/alerter/v1;alerterv1";
+option csharp_namespace = "Garimpei.Protos.Alerter.V1";
+
+service Alerter {
+  // Check product snapshots and notify if thresholds are met
+  rpc CheckAndNotify(AlertRequest) returns (AlertResponse);
+}
+
+message AlertRequest {
+  string owner_uid = 1;
+  repeated AlertRule rules = 2;
+}
+
+message AlertRule {
+  string rule_id = 1;
+  string keyword = 2;
+  double price_threshold = 3;
+  double discount_min_percent = 4;
+  string channel = 5; // telegram
+  string group_id = 6;
+}
+
+message AlertResponse {
+  int32 alerts_sent = 1;
+  repeated AlertResult results = 2;
+}
+
+message AlertResult {
+  string rule_id = 1;
+  bool triggered = 2;
+  int32 products_matched = 3;
+  string notified_at = 4; // RFC3339
+}

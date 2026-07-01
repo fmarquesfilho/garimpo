@@ -1,0 +1,22 @@
+id: T-0016
+titulo: Curadoria controller + scoring port em C#
+epic: migracao-arch
+status: next
+prioridade: alta
+estimativa: G
+sprint: "2026-S29"
+valor: >
+  Portar a lógica de curadoria (scoring, ranking, eligibility) para C#.
+  MediatR handlers para queries/commands. Primeira rota funcional no
+  Web App C#.
+criterios:
+  - CuradoriaController com endpoints de ranking e curadoria
+  - ScoringStrategy interface + implementações portadas do Go
+  - EligibilityPipeline em C# com testes unitários
+  - MediatR handlers (RankearProdutosQuery, etc.)
+  - Paridade funcional com endpoints Go existentes
+  - Testes E2E validam mesmos resultados
+depende_de: [T-0015]
+tags: [backend, csharp, dominio, scoring, curadoria]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"
