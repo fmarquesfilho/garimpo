@@ -15,6 +15,10 @@ info:
 servers:
   - url: https://garimpo-api-vj6afttbza-rj.a.run.app
     description: Produção — Go legado (Cloud Run)
+  - url: https://garimpei-v2-879269475961.southamerica-east1.run.app
+    description: Produção — C# v2 (Cloud Run multi-container)
+  - url: https://garimpei.app.br
+    description: Produção — via Cloudflare Worker (routing split)
   - url: http://localhost:8080
     description: Desenvolvimento local (Go)
   - url: http://localhost:8090
@@ -26,6 +30,8 @@ security:
 tags:
   - name: Curadoria
     description: Busca, ranking, seleção de produtos e favoritos
+  - name: Curadoria v2
+    description: "Endpoints C# — curadoria com scoring, 4 fontes (busca, quedas, novos, favoritos)"
   - name: Lojas
     description: Monitoramento de lojas Shopee
   - name: Alertas
@@ -996,6 +1002,156 @@ paths:
         '400':
           description: Confirmação não enviada
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # API v2 (C# ASP.NET Core 10) — servida pelo garimpei-v2 Cloud Run
+  # Spec completa auto-gerada em: /openapi/v1.json (no serviço C#)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /api/v2/curadoria/ranking:
+    get:
+      tags: [Curadoria v2]
+      summary: Ranking de produtos por scoring (fetch via gRPC collector)
+      description: |
+        Busca produtos na Shopee via microserviço collector (gRPC), aplica filtros
+        de elegibilidade e scoring (comissão 45%, EV 35%, avaliação 20%).
+        Fonte: "Busca" na página publicar.
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema: { type: string }
+          example: "sérum vitamina c"
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: comissao_min
+          in: query
+          schema: { type: number, default: 0.07 }
+        - name: vendas_min
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: nota_min
+          in: query
+          schema: { type: number, default: 0 }
+      responses:
+        '200':
+          description: Produtos rankeados com score e componentes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fonte: { type: string, example: "collector-grpc" }
+                  total_bruto: { type: integer }
+                  candidatos:
+                    type: array
+                    items: { $ref: '#/components/schemas/ScoredProduct' }
+        '400':
+          description: keyword ausente
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/ranking/shop:
+    get:
+      tags: [Curadoria v2]
+      summary: Ranking de produtos de uma loja específica
+      description: |
+        Fetch via collector gRPC (FetchShop) + scoring. Útil para monitoramento
+        de lojas específicas.
+      parameters:
+        - name: shop_id
+          in: query
+          required: true
+          schema: { type: integer }
+          example: 785541033
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: comissao_min
+          in: query
+          schema: { type: number, default: 0.07 }
+        - name: vendas_min
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: nota_min
+          in: query
+          schema: { type: number, default: 0 }
+      responses:
+        '200':
+          description: Produtos da loja rankeados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fonte: { type: string, example: "collector-grpc-shop" }
+                  total_bruto: { type: integer }
+                  candidatos:
+                    type: array
+                    items: { $ref: '#/components/schemas/ScoredProduct' }
+        '400':
+          description: shop_id ausente
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/quedas:
+    get:
+      tags: [Curadoria v2]
+      summary: Produtos com queda de preço
+      description: |
+        Fonte: "Quedas" na página publicar. Retorna produtos que tiveram variação
+        negativa de preço detectada entre snapshots. Stub durante migração (dados
+        ainda em BigQuery via Go legado).
+      responses:
+        '200':
+          description: Produtos com queda de preço
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/novos:
+    get:
+      tags: [Curadoria v2]
+      summary: Produtos recém-detectados
+      description: |
+        Fonte: "Novos" na página publicar. Retorna produtos que apareceram pela
+        primeira vez nos snapshots recentes. Stub durante migração.
+      responses:
+        '200':
+          description: Produtos novos detectados
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/favoritos:
+    get:
+      tags: [Curadoria v2]
+      summary: Produtos favoritos do usuário
+      description: |
+        Fonte: "Favoritos" na página publicar. Retorna produtos salvos pelo
+        usuário no PostgreSQL, filtrados pelo tenant (owner_uid do JWT).
+      responses:
+        '200':
+          description: Lista de produtos favoritos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fonte: { type: string, example: "favoritos" }
+                  candidatos:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProductEntity' }
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/health:
+    get:
+      tags: [Admin]
+      summary: Health check do C# Web App
+      security: []
+      responses:
+        '200':
+          description: Healthy (inclui conectividade com PostgreSQL)
+
 components:
   securitySchemes:
     BearerAuth:
@@ -1208,3 +1364,54 @@ components:
         categoria: { type: string }
         origem: { type: string }
         salvo_em: { type: string, format: date-time }
+
+    # ── Schemas v2 (C#) ──────────────────────────────────────────────────
+
+    ScoredProduct:
+      type: object
+      description: Produto pontuado pelo scoring engine (C#)
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        shopName: { type: string }
+        shopId: { type: string }
+        origin: { type: string }
+        price: { type: number }
+        originalPrice: { type: number }
+        discountPercent: { type: number }
+        commission: { type: number }
+        sales: { type: integer }
+        rating: { type: number }
+        link: { type: string, format: uri }
+        productLink: { type: string, format: uri }
+        imageUrl: { type: string, format: uri }
+        score: { type: number, description: "0-1, composto dos componentes" }
+        components:
+          type: object
+          properties:
+            commission: { type: number, description: "0.45 * normalized" }
+            expectedValue: { type: number, description: "0.35 * normalized" }
+            rating: { type: number, description: "0.20 * normalized" }
+        suspicious: { type: boolean, description: "Comissão alta + zero tração" }
+        offerExpiresAt: { type: string, format: date-time }
+
+    ProductEntity:
+      type: object
+      description: Produto armazenado no PostgreSQL (entidade EF Core)
+      properties:
+        id: { type: string, format: uuid }
+        itemId: { type: integer }
+        shopId: { type: integer }
+        name: { type: string }
+        price: { type: number }
+        originalPrice: { type: number }
+        sold: { type: integer }
+        rating: { type: number }
+        imageUrl: { type: string, format: uri }
+        productUrl: { type: string, format: uri }
+        shopName: { type: string }
+        discountPercent: { type: number }
+        ownerUid: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
