@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { usuario, getIdToken } from '$lib/firebase.js';
 
 	let health = $state(null);
 	let carregando = $state(true);
