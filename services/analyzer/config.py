@@ -1,0 +1,19 @@
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    """Configuration loaded from environment variables."""
+
+    bq_project: str = ""
+    bq_dataset: str = "garimpei"
+    port: int = 8060
+
+    # BigQuery emulator (dev local)
+    bigquery_emulator_host: str = ""
+
+    class Config:
+        env_prefix = ""
+        case_sensitive = False
+
+
+settings = Settings()

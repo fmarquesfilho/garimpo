@@ -1,7 +1,7 @@
 id: T-0020
 titulo: PostgreSQL como fonte primária + BigQuery analytics-only
 epic: migracao-arch
-status: backlog
+status: done
 prioridade: media
 estimativa: G
 sprint: ""

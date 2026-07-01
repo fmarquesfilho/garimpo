@@ -1,7 +1,7 @@
 id: T-0018
 titulo: Migrar handlers de publicação para C#
 epic: migracao-arch
-status: backlog
+status: done
 prioridade: media
 estimativa: G
 sprint: ""

@@ -93,19 +93,35 @@ public static partial class EndpointExtensions
         });
 
         // GET /api/v2/curadoria/quedas — products with price drops
-        // TODO: wire to snapshots repository when migrated to PG
-        curadoria.MapGet("/quedas", () =>
+        curadoria.MapGet("/quedas", async (
+            HttpClient httpClient,
+            IConfiguration config,
+            int? dias,
+            double? threshold,
+            int? limit,
+            CancellationToken ct) =>
         {
-            // Will query PostgreSQL snapshots for price variations < -threshold
-            return Results.Ok(new { fonte = "quedas", candidatos = Array.Empty<object>(), info = "migração pendente — dados em BigQuery via Go legado" });
+            var analyzerUrl = config["Analyzer:BaseUrl"] ?? "http://localhost:8060";
+            var url = $"{analyzerUrl}/quedas?dias={dias ?? 7}&threshold={threshold ?? 0.15}&limit={limit ?? 50}";
+            var response = await httpClient.GetFromJsonAsync<object>(url, ct);
+            return Results.Ok(response);
         });
 
         // GET /api/v2/curadoria/novos — recently detected products
-        // TODO: wire to snapshots repository when migrated to PG
-        curadoria.MapGet("/novos", () =>
+        curadoria.MapGet("/novos", async (
+            HttpClient httpClient,
+            IConfiguration config,
+            string? busca_id,
+            int? dias,
+            CancellationToken ct) =>
         {
-            // Will query PostgreSQL snapshots for products with aparicoes == 1
-            return Results.Ok(new { fonte = "novos", candidatos = Array.Empty<object>(), info = "migração pendente — dados em BigQuery via Go legado" });
+            if (string.IsNullOrWhiteSpace(busca_id))
+                return Results.BadRequest(new { error = "busca_id é obrigatório" });
+
+            var analyzerUrl = config["Analyzer:BaseUrl"] ?? "http://localhost:8060";
+            var url = $"{analyzerUrl}/novidades?busca_id={busca_id}&dias={dias ?? 7}";
+            var response = await httpClient.GetFromJsonAsync<object>(url, ct);
+            return Results.Ok(response);
         });
 
         // GET /api/v2/curadoria/favoritos — user's saved products

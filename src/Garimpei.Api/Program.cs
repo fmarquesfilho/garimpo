@@ -44,6 +44,9 @@ builder.Services.AddHealthChecks()
         name: "postgresql",
         tags: ["db", "ready"]);
 
+// HttpClient for analyzer service
+builder.Services.AddHttpClient();
+
 // OpenTelemetry
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(r => r.AddService("garimpei-api-v2"))
@@ -80,10 +83,15 @@ app.MapOpenApi();
 // API routes
 app.MapGet("/", () => Results.Ok(new { service = "garimpei-api", version = "v2", status = "ok" }));
 
+// Compatibility routes (/api/*) for frontend during migration
+app.MapCompatEndpoints();
+
 app.MapGroup("/api/v2")
     .RequireAuthorization()
     .MapBuscasEndpoints()
-    .MapCuradoriaEndpoints();
+    .MapCuradoriaEndpoints()
+    .MapLojasEndpoints()
+    .MapPublicacaoEndpoints();
 
 app.Run();
 

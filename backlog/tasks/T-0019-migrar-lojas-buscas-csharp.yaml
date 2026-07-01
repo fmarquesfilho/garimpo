@@ -1,7 +1,7 @@
 id: T-0019
 titulo: Migrar handlers de lojas/buscas para C#
 epic: migracao-arch
-status: backlog
+status: done
 prioridade: media
 estimativa: G
 sprint: ""

@@ -28,7 +28,12 @@ export default {
       return proxyTo(request, url, v2Origin);
     }
 
-    // Everything else goes to Go legacy
+    // Route ALL /api/* to C# if v2 is enabled (migration complete)
+    if (v2Enabled && v2Origin && path.startsWith('/api/')) {
+      return proxyTo(request, url, v2Origin);
+    }
+
+    // Everything else goes to Go legacy (frontend, docs)
     return proxyTo(request, url, v1Origin);
   }
 }

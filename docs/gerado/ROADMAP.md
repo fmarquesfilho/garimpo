@@ -15,10 +15,6 @@ _Nenhuma tarefa em andamento._
 ## ⚪ Later (radar)
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
-- **T-0018** Migrar handlers de publicação para C# · migracao-arch · G
-- **T-0019** Migrar handlers de lojas/buscas para C# · migracao-arch · G
-- **T-0020** PostgreSQL como fonte primária + BigQuery analytics-only · migracao-arch · G
-- **T-0022** Descomissionar monólito Go · migracao-arch · M
 
 ## ✅ Concluídas
 
@@ -36,5 +32,10 @@ _Nenhuma tarefa em andamento._
 - **T-0015** Multi-tenant em C# (EF Core + PostgreSQL) · migracao-arch · G
 - **T-0016** Curadoria controller + scoring port em C# · migracao-arch · G
 - **T-0017** Routing split (Cloudflare Worker v1→v2) · migracao-arch · P
+- **T-0018** Migrar handlers de publicação para C# · migracao-arch · G
+- **T-0019** Migrar handlers de lojas/buscas para C# · migracao-arch · G
+- **T-0020** PostgreSQL como fonte primária + BigQuery analytics-only · migracao-arch · G
 - **T-0021** Cloud Run multi-container deploy (C# + sidecars Go) · migracao-arch · M
+- **T-0022** Descomissionar monólito Go · migracao-arch · M
 - **T-0023** Migrar WhatsApp sender de Maytapi para Meta Cloud API · migracao-arch · M
+- **T-0025** Serviço Analyzer Python (FastAPI + BigQuery) · migracao-arch · M

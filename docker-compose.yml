@@ -90,5 +90,18 @@ services:
   #     - publisher
   #     - alerter
 
+  # ── Analyzer (Python FastAPI) ────────────────────────────────────────────
+  analyzer:
+    build:
+      context: ./services/analyzer
+    ports:
+      - "8060:8060"
+    environment:
+      BQ_PROJECT: garimpei-dev
+      BQ_DATASET: garimpei
+      BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+    depends_on:
+      - bigquery-emulator
+
 volumes:
   pgdata:

@@ -2,6 +2,7 @@ using Garimpei.Domain.Interfaces;
 using Garimpei.Infrastructure.Persistence;
 using Garimpei.Infrastructure.Tenancy;
 using Collector.V1;
+using Publisher.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,12 @@ public static class DependencyInjection
         services.AddGrpcClient<CollectorService.CollectorServiceClient>(o =>
         {
             o.Address = new Uri(collectorAddr);
+        });
+
+        var publisherAddr = configuration["Grpc:PublisherAddress"] ?? "http://localhost:50052";
+        services.AddGrpcClient<PublisherService.PublisherServiceClient>(o =>
+        {
+            o.Address = new Uri(publisherAddr);
         });
 
         return services;

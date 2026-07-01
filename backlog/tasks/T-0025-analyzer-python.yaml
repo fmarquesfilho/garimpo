@@ -1,0 +1,21 @@
+id: T-0025
+titulo: "Serviço Analyzer Python (FastAPI + BigQuery)"
+epic: migracao-arch
+status: done
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  Serviço Python para queries analíticas no BigQuery (novidades, quedas,
+  evolução, estatísticas). Substitui a lógica analítica do monólito Go.
+  Prepara ecossistema para IA/ML (T-0007). ADR-0014.
+criterios:
+  - "FastAPI com endpoints: /novidades, /quedas, /evolucao, /estatisticas, /health"
+  - Queries BigQuery portadas do Go (snapshots, variações)
+  - C# chama analyzer via HTTP (HttpClient)
+  - Dockerfile pronto para deploy como sidecar
+  - Docker Compose inclui analyzer
+depende_de: [T-0009]
+tags: [backend, python, analytics, bigquery, fastapi]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"
