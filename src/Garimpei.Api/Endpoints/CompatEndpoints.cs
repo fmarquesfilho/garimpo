@@ -69,7 +69,32 @@ public static partial class EndpointExtensions
             return Results.Ok(new
             {
                 estrategia = "nicho",
-                candidatos = ranked,
+                candidatos = ranked.Select(s => new
+                {
+                    id = s.Id,
+                    nome = s.Name,
+                    categoria = s.Category ?? "",
+                    loja = s.ShopName ?? "",
+                    loja_id = s.ShopId ?? "",
+                    preco = s.Price,
+                    preco_max = s.OriginalPrice,
+                    desconto = s.DiscountPercent,
+                    comissao = s.Commission,
+                    vendas = s.Sales,
+                    avaliacao = s.Rating,
+                    link = s.Link ?? "",
+                    link_produto = s.ProductLink ?? "",
+                    imagem = s.ImageUrl ?? "",
+                    score = s.Score,
+                    componentes = new
+                    {
+                        comissao = s.Components.Commission,
+                        valor_esperado = s.Components.ExpectedValue,
+                        avaliacao = s.Components.Rating
+                    },
+                    suspeito = s.Suspicious,
+                    oferta_expira = s.OfferExpiresAt ?? ""
+                }),
                 total_bruto = response.TotalFound
             });
         });
