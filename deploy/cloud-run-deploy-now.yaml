@@ -37,6 +37,8 @@ spec:
               value: "http://localhost:50051"
             - name: Grpc__PublisherAddress
               value: "http://localhost:50052"
+            - name: AdminEmails
+              value: "fernando.marques.filho@gmail.com"
           resources:
             limits:
               cpu: "1"

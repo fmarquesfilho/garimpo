@@ -19,6 +19,21 @@ public static partial class EndpointExtensions
             backend = "csharp-v2"
         }));
 
+        // /api/admin/me — verifica se o usuário logado é admin
+        app.MapGet("/api/admin/me", (HttpContext context, IConfiguration config) =>
+        {
+            var email = context.User.FindFirst("email")?.Value
+                ?? context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? "";
+
+            var adminEmails = config["AdminEmails"] ?? "";
+            var isAdmin = !string.IsNullOrEmpty(email)
+                && adminEmails.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Any(e => e.Trim().Equals(email, StringComparison.OrdinalIgnoreCase));
+
+            return Results.Ok(new { admin = isAdmin, email });
+        }).RequireAuthorization();
+
         // /api/candidatos — public (same as Go legacy)
         app.MapGet("/api/candidatos", async (
             CollectorService.CollectorServiceClient collector,
