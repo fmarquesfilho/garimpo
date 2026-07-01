@@ -5,7 +5,7 @@ package publisher.v1;
 option go_package = "github.com/fmarquesfilho/garimpo/gen/go/publisher/v1;publisherv1";
 option csharp_namespace = "Garimpei.Protos.Publisher.V1";
 
-service Publisher {
+service PublisherService {
   // Publish a curated offer to one or more channels
   rpc Publish(PublishRequest) returns (PublishResponse);
   // List configured destination groups

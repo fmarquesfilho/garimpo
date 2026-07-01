@@ -5,7 +5,7 @@ package scheduler.v1;
 option go_package = "github.com/fmarquesfilho/garimpo/gen/go/scheduler/v1;schedulerv1";
 option csharp_namespace = "Garimpei.Protos.Scheduler.V1";
 
-service Scheduler {
+service SchedulerService {
   // Trigger a job manually (e.g., collect, export, alert-check)
   rpc TriggerJob(TriggerJobRequest) returns (TriggerJobResponse);
   // List all registered jobs and their status

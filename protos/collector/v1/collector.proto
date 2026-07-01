@@ -5,11 +5,11 @@ package collector.v1;
 option go_package = "github.com/fmarquesfilho/garimpo/gen/go/collector/v1;collectorv1";
 option csharp_namespace = "Garimpei.Protos.Collector.V1";
 
-service Collector {
+service CollectorService {
   // Fetch products from Shopee by search keyword
   rpc Fetch(FetchRequest) returns (FetchResponse);
   // Fetch all products from a specific shop
-  rpc FetchShop(FetchShopRequest) returns (FetchResponse);
+  rpc FetchShop(FetchShopRequest) returns (FetchShopResponse);
 }
 
 message FetchRequest {
@@ -26,6 +26,12 @@ message FetchShopRequest {
 }
 
 message FetchResponse {
+  repeated Product products = 1;
+  int32 total_found = 2;
+  string fetched_at = 3; // RFC3339
+}
+
+message FetchShopResponse {
   repeated Product products = 1;
   int32 total_found = 2;
   string fetched_at = 3; // RFC3339
