@@ -4,7 +4,7 @@
 
 | 📋 Backlog | ⏭️ Next | 🔨 Doing | 👀 Review | ✅ Done |
 |---|---|---|---|---|
-| T-0007 Recomendação personalizada baseada em histórico (G) | T-0002 Persistir conversões da Shopee no BigQuery (M) | | | T-0001 Docs: site Starlight + geradores + consolidação (G) |
+| T-0007 Recomendação personalizada baseada em histórico (G) | T-0002 Persistir conversões da Shopee no BigQuery (M) | T-0023 Migrar WhatsApp sender de Maytapi para Meta Cloud API (M) | | T-0001 Docs: site Starlight + geradores + consolidação (G) |
 | T-0017 Routing split (Cloudflare Worker v1→v2) (P) | T-0004 ScopedStore por owner_uid (multi-tenant) (G) | | | T-0003 Backlog como código (schema + gen-board) (M) |
 | T-0018 Migrar handlers de publicação para C# (G) | T-0005 Alertas configuráveis por usuário (M) | | | T-0006 Integrar docs-check e docs-board na CI (P) |
 | T-0019 Migrar handlers de lojas/buscas para C# (G) | T-0013 C# Web App — auth middleware + health + CI (M) | | | T-0008 Refactor: tratamento de erros idiomático + telemetria (G) |
@@ -18,6 +18,6 @@
 **Métricas:**
 - 📋 backlog: 6
 - ⏭️ next: 8
-- 🔨 doing: 0
+- 🔨 doing: 1
 - 👀 review: 0
 - ✅ done: 8

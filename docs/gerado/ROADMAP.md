@@ -4,7 +4,7 @@
 
 ## 🔵 Now (em andamento)
 
-_Nenhuma tarefa em andamento._
+- **T-0023** Migrar WhatsApp sender de Maytapi para Meta Cloud API · migracao-arch · M
 
 ## 🟡 Next (próximo sprint)
 

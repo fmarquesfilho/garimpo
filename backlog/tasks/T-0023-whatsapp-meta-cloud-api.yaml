@@ -1,0 +1,23 @@
+id: T-0023
+titulo: "Migrar WhatsApp sender de Maytapi para Meta Cloud API"
+epic: migracao-arch
+status: doing
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  Substituir intermediário Maytapi pela API oficial da Meta. Reduz custo,
+  remove dependência de terceiro, e habilita features oficiais (templates,
+  botões interativos). ADR-0013.
+criterios:
+  - WhatsAppSender usa Graph API da Meta (v25.0)
+  - "Variáveis de ambiente: WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID"
+  - Envio de texto e imagem funcionando
+  - Multi-grupo mantido (enviar para N destinatários)
+  - Factory atualizada (publish/novo.go e services/publisher)
+  - Variáveis Maytapi removidas do código
+  - Testes com mock do Graph API
+depende_de: []
+tags: [backend, whatsapp, meta, publish, go-microservice]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

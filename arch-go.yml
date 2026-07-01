@@ -11,6 +11,9 @@ threshold:
   compliance: 100    # 100% das regras devem passar
   coverage: 30       # Packages cobertos (cresce conforme adicionamos regras)
 
+excludedPackages:
+  - "github.com/fmarquesfilho/garimpo/gen/**"
+
 dependenciesRules:
   # ── domain: núcleo puro, sem dependências externas ────────────────────
   - package: "github.com/fmarquesfilho/garimpo/internal/domain"
@@ -27,9 +30,6 @@ dependenciesRules:
         - "github.com/fmarquesfilho/garimpo/internal/publish"
 
   # ── engine/strategy/scoring: lógica de negócio ─────────────────────────
-  # Nota: engine depende de strategy (Pipeline) mas NÃO de source diretamente.
-  # A dependência engine→source é apenas pelo tipo domain.Product que flui.
-  # Precisamos verificar se é import direto ou transitivo.
   - package: "github.com/fmarquesfilho/garimpo/internal/engine"
     shouldNotDependsOn:
       internal:
@@ -71,3 +71,33 @@ dependenciesRules:
       internal:
         - "github.com/fmarquesfilho/garimpo/internal/crypto"
         - "github.com/fmarquesfilho/garimpo/internal/apperr"
+
+  # ── services (microserviços gRPC): dependem de internal + gen ──────────
+  - package: "github.com/fmarquesfilho/garimpo/services/collector"
+    shouldNotDependsOn:
+      internal:
+        - "github.com/fmarquesfilho/garimpo/internal/httpapi"
+        - "github.com/fmarquesfilho/garimpo/internal/publish"
+        - "github.com/fmarquesfilho/garimpo/internal/scheduler"
+
+  - package: "github.com/fmarquesfilho/garimpo/services/publisher"
+    shouldNotDependsOn:
+      internal:
+        - "github.com/fmarquesfilho/garimpo/internal/httpapi"
+        - "github.com/fmarquesfilho/garimpo/internal/source"
+        - "github.com/fmarquesfilho/garimpo/internal/scheduler"
+
+  - package: "github.com/fmarquesfilho/garimpo/services/alerter"
+    shouldNotDependsOn:
+      internal:
+        - "github.com/fmarquesfilho/garimpo/internal/httpapi"
+        - "github.com/fmarquesfilho/garimpo/internal/source"
+        - "github.com/fmarquesfilho/garimpo/internal/publish"
+        - "github.com/fmarquesfilho/garimpo/internal/scheduler"
+
+  - package: "github.com/fmarquesfilho/garimpo/services/scheduler"
+    shouldNotDependsOn:
+      internal:
+        - "github.com/fmarquesfilho/garimpo/internal/httpapi"
+        - "github.com/fmarquesfilho/garimpo/internal/store"
+        - "github.com/fmarquesfilho/garimpo/internal/publish"

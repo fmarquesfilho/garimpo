@@ -15,15 +15,15 @@ func Novo() Publicador {
 //
 // Senders registrados:
 //   - Telegram: se TELEGRAM_BOT_TOKEN estiver definido
-//   - WhatsApp: se WHATSAPP_API_KEY estiver definido (WaSenderAPI)
+//   - WhatsApp: se WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID estiverem definidos (Meta Cloud API)
 func NovoComDestinos(destinos DestinoStore) Publicador {
 	token := os.Getenv("TELEGRAM_BOT_TOKEN")
 	chatPadrao := os.Getenv("TELEGRAM_CHAT_ID")
-	waKey := os.Getenv("WHATSAPP_API_KEY")
-	waProductID := os.Getenv("WHATSAPP_PRODUCT_ID")
+	waPhoneID := os.Getenv("WHATSAPP_PHONE_NUMBER_ID")
+	waToken := os.Getenv("WHATSAPP_ACCESS_TOKEN")
 
 	// Sem nenhum provedor configurado → mock
-	if token == "" && (waKey == "" || waProductID == "") {
+	if token == "" && (waPhoneID == "" || waToken == "") {
 		return NovoMock("telegram")
 	}
 	if destinos == nil {

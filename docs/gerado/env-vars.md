@@ -35,6 +35,8 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `TELEGRAM_BOT_TOKEN` | `internal/alerts/alerts.go` | 51 |
 | `TELEGRAM_CHAT_ID` | `internal/publish/novo.go` | 21 |
 | `WEB_DIR` | `internal/httpapi/httpapi.go` | 197 |
+| `WHATSAPP_ACCESS_TOKEN` | `internal/publish/novo.go` | 23 |
 | `WHATSAPP_API_KEY` | `internal/httpapi/whatsapp.go` | 19 |
 | `WHATSAPP_PHONE_ID` | `internal/httpapi/whatsapp.go` | 18 |
+| `WHATSAPP_PHONE_NUMBER_ID` | `internal/publish/novo.go` | 22 |
 | `WHATSAPP_PRODUCT_ID` | `internal/httpapi/whatsapp.go` | 17 |
