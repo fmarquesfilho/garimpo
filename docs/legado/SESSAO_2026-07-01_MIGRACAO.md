@@ -88,7 +88,7 @@ e routing split em produção.
 
 ```
 garimpo/
-├── protos/                          # Contratos gRPC (.proto + buf config)
+├── protos/                          # Contratos gRPC (.proto + buf)
 │   ├── collector/v1/
 │   ├── publisher/v1/
 │   ├── alerter/v1/
@@ -101,20 +101,28 @@ garimpo/
 │   ├── Garimpei.Infrastructure/     # EF Core, TenantContext, gRPC clients
 │   ├── Garimpei.Protos/             # Stubs C# pré-gerados (buf)
 │   └── Garimpei.Tests/              # xUnit (10 testes)
-├── services/                        # Microserviços Go (gRPC)
-│   ├── collector/                   # Shopee API (:50051)
-│   ├── publisher/                   # Telegram + WhatsApp Meta (:50052)
-│   ├── alerter/                     # Preço + Telegram (:50053)
-│   └── scheduler/                   # Cron + orquestração (:50054)
-├── internal/                        # Código Go existente (monólito legado)
+├── services/                        # Microserviços
+│   ├── collector/                   # Go gRPC — Shopee API (:50051)
+│   ├── publisher/                   # Go gRPC — Telegram + WhatsApp (:50052)
+│   ├── alerter/                     # Go gRPC — Alertas de preço (:50053)
+│   ├── scheduler/                   # Go gRPC — Cron + orquestração (:50054)
+│   └── analyzer/                    # Python FastAPI — Analytics/BigQuery (:8060)
+├── internal/                        # Código Go compartilhado (apenas o necessário)
+│   ├── source/                      # → collector
+│   ├── publish/                     # → publisher
+│   ├── alerts/                      # → alerter
+│   ├── store/                       # → alerter (SnapshotRepo)
+│   ├── domain/                      # → source (Product model)
+│   ├── apperr/                      # → todos (sentinel errors)
+│   └── crypto/                      # → store (criptografia)
+├── web/                             # Frontend SvelteKit (Cloudflare Pages)
+├── cloudflare-worker/               # Routing (/* → Pages, /api/* → Cloud Run)
 ├── deploy/
-│   ├── cloud-run-service.yaml       # Template multi-container (com placeholders)
-│   └── cloud-run-deploy-now.yaml    # Deploy real (garimpo-500114)
-├── cloudflare-worker/               # Routing split v1/v2
-├── docs/
-│   ├── guias/configurar-whatsapp-meta.md
-│   └── ...
+│   ├── cloud-run-service.yaml       # Template (placeholders)
+│   └── cloud-run-deploy-now.yaml    # Deploy produção (garimpo-500114)
+├── docs/                            # Documentação + ADRs + guias
 ├── docker-compose.yml               # Dev local
+├── .github/workflows/ci.yml         # CI unificado
 └── Makefile                         # Targets unificados
 ```
 
@@ -122,24 +130,43 @@ garimpo/
 
 ## Impacto na qualidade
 
+### Métricas antes vs depois
+
+| Métrica | Antes (monólito Go) | Depois (arquitetura final) |
+|---------|--------------------|-----------------------------|
+| Linhas de código Go | ~12.000 | ~10.300 (77 arquivos) |
+| Linhas removidas | — | **-10.268** (sessão inteira) |
+| Arquivos C# | 0 | 61 |
+| Arquivos Python | 0 | 8 |
+| Stacks | 1 (Go) | 3 (C# + Go + Python) |
+| Testes Go | 13 pacotes | 10 pacotes + 4 serviços (12 testes novos) |
+| Testes C# | 0 | 10 (xUnit) |
+| Multi-tenancy | Não | Sim (EF Core global filters) |
+| Persistência | BigQuery only | PostgreSQL + BigQuery |
+| Deploy | Monólito único | 6 containers + CDN |
+| Frontend hosting | Servido pelo backend | CDN global (Cloudflare Pages) |
+| WhatsApp | Maytapi (intermediário) | Meta Cloud API (direto) |
+| Código morto | Sim (httpapi, scheduler GCP, etc.) | Zero |
+
 ### Cobertura de testes
 
-| Stack | Testes | Notas |
-|-------|--------|-------|
-| Go (internal) | 13 pacotes, 85-90% nos pacotes de domínio | Sem alteração |
-| Go (services) | 12 testes novos, 11-33% cobertura | Validações + fluxos |
+| Stack | Testes | Cobertura |
+|-------|--------|-----------|
+| Go (internal) | source 87%, publish 62%, store 36% | Core paths cobertos |
+| Go (services) | 12 testes | 11-33% (validações + fluxos) |
 | C# (xUnit) | 10 testes | Multi-tenant, persistence, entities |
-| Frontend | 109 testes Vitest + E2E Playwright | Sem alteração |
+| Frontend | 109 Vitest + E2E Playwright | Sem alteração |
 
 ### Análise estática
 
 | Ferramenta | Resultado |
 |-----------|-----------|
 | golangci-lint | ✅ 0 issues |
-| arch-go | ✅ 100% compliance, 40% coverage (12 regras) |
+| arch-go | ✅ 100% compliance, 50% coverage (9 regras) |
 | buf lint | ✅ protos válidos |
 | dotnet build (warnings as errors) | ✅ 0 warnings |
-| check-file-size (400 linhas) | ✅ passa (gen/ excluído) |
+| check-file-size (400 linhas) | ✅ 0 violações |
+| ruff (Python) | ✅ 0 issues |
 
 ---
 
@@ -149,6 +176,7 @@ garimpo/
 |-----|--------|--------|
 | 0012 | Migração C# + Go microservices | aceite |
 | 0013 | WhatsApp Meta Cloud API | aceite |
+| 0014 | Analyzer Python (FastAPI + BigQuery) | aceite |
 
 ---
 
@@ -157,15 +185,18 @@ garimpo/
 | Problema | Solução |
 |----------|---------|
 | buf lint: service names sem sufixo "Service" | Renomear nos .proto |
-| Dockerfile C#: `COPY ../protos/` fora do context | Context = repo root, depois context = src/ com stubs pré-gerados |
-| Grpc.Tools não roda em Alpine (musl vs glibc) | Stubs C# pré-gerados e commitados |
-| Docker buildx cria OCI manifest index (Cloud Run rejeita) | `--provenance=false` no build |
+| Dockerfile C#: `COPY ../protos/` fora do context | Stubs pré-gerados, context = src/ |
+| Grpc.Tools não roda em Alpine (musl vs glibc) | Stubs C# pré-gerados via buf |
+| Docker buildx cria OCI manifest index | `--provenance=false` no build |
 | Imagens arm64 em Mac (Cloud Run requer amd64) | `--platform linux/amd64` |
-| Cloud Run exige startup probe em sidecars com deps | TCP probes adicionados |
-| Service account sem acesso a Secret Manager | IAM policy binding adicionado |
-| go.mod 1.26.4 vs Dockerfile golang:1.24 | Atualizar para golang:1.26-alpine |
-| arch-go coverage caiu com novos pacotes | Excluir gen/**, adicionar regras para services/ |
-| check-file-size falha em .pb.go gerados | Excluir ./gen/* do script |
+| Cloud Run exige startup probe em sidecars | TCP probes adicionados |
+| Service account sem acesso a Secret Manager | IAM policy binding |
+| Dockerfile golang:1.24 vs go.mod 1.26.4 | golang:1.26-alpine |
+| Proto não expunha commission (scoring zerava) | Adicionar campo commission ao proto |
+| Frontend espera campos em português | DTO de compatibilidade no compat endpoint |
+| /api/admin/me não existia (menu admin sumiu) | Endpoint compat com AdminEmails config |
+| Cloud Build trigger antigo (Dockerfile raiz) | Trigger deletado |
+| Cloud Run usa cache de imagem :latest | Deploy com digest SHA para forçar pull |
 
 ---
 
@@ -175,14 +206,14 @@ garimpo/
 |------|--------|--------|------|
 | T-0024 | Testar WhatsApp Meta Cloud API | next | Guia em docs/guias/ |
 | T-0005 | Alertas configuráveis por usuário | next | Desbloqueada |
-| T-0018 | Migrar publicação para C# | backlog | |
-| T-0019 | Migrar lojas/buscas para C# | backlog | |
-| T-0020 | PG fonte primária + BQ analytics-only | backlog | |
-| T-0022 | Descomissionar monólito Go | backlog | |
+| T-0002 | Persistir conversões no BigQuery | next | Depende do scheduler |
+| T-0007 | Recomendação IA personalizada | backlog | Analyzer Python pronto |
 
 ### Para testar o sistema
 
-1. **Frontend** → login no `garimpei.app.br` (Firebase Auth)
-2. **Curadoria C#** → com JWT, acessar `/api/v2/curadoria/ranking?keyword=serum`
-3. **WhatsApp** → seguir `docs/guias/configurar-whatsapp-meta.md`
-4. **Rollback** → `wrangler.toml` V2_ENABLED=false + redeploy
+1. **Frontend** → `garimpei.app.br` (login Firebase) — Cloudflare Pages
+2. **Busca** → keyword na barra → produtos com comissão e score
+3. **Admin** → links privilegiados aparecem para AdminEmails
+4. **API v2** → `garimpei.app.br/api/v2/curadoria/ranking?keyword=serum` (precisa JWT)
+5. **WhatsApp** → seguir `docs/guias/configurar-whatsapp-meta.md`
+6. **Rollback** → `wrangler.toml` V2_ENABLED=false + redeploy
