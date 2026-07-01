@@ -10,7 +10,6 @@
 
 - **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
 - **T-0005** Alertas configuráveis por usuário · produto · M
-- **T-0016** Curadoria controller + scoring port em C# · migracao-arch · G
 
 ## ⚪ Later (radar)
 
@@ -35,4 +34,5 @@
 - **T-0013** C# Web App — auth middleware + health + CI · migracao-arch · M
 - **T-0014** PostgreSQL schema + EF Core migrations (dados transacionais) · migracao-arch · M
 - **T-0015** Multi-tenant em C# (EF Core + PostgreSQL) · migracao-arch · G
+- **T-0016** Curadoria controller + scoring port em C# · migracao-arch · G
 - **T-0021** Cloud Run multi-container deploy (C# + sidecars Go) · migracao-arch · M

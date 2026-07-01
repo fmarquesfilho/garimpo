@@ -1,6 +1,7 @@
 using Garimpei.Domain.Interfaces;
 using Garimpei.Infrastructure.Persistence;
 using Garimpei.Infrastructure.Tenancy;
+using Collector.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,13 @@ public static class DependencyInjection
             options.UseNpgsql(
                 configuration.GetConnectionString("PostgreSQL"),
                 npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+
+        // gRPC clients (sidecars via localhost)
+        var collectorAddr = configuration["Grpc:CollectorAddress"] ?? "http://localhost:50051";
+        services.AddGrpcClient<CollectorService.CollectorServiceClient>(o =>
+        {
+            o.Address = new Uri(collectorAddr);
+        });
 
         return services;
     }

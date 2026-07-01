@@ -1,7 +1,7 @@
 id: T-0016
 titulo: Curadoria controller + scoring port em C#
 epic: migracao-arch
-status: next
+status: done
 prioridade: alta
 estimativa: G
 sprint: "2026-S29"
