@@ -2,41 +2,93 @@
 
 ## Visão geral
 
-O Garimpei está em transição de monólito Go para uma arquitetura híbrida:
-**Web App C# (ASP.NET Core 10)** como aplicação principal + **microserviços Go (gRPC)**
-para tarefas de I/O intensivo. Ambos coexistem durante a migração (ADR-0012).
+O Garimpei usa uma arquitetura poliglota orientada a serviços:
+- **C# (ASP.NET Core 10)** — API principal (CRUD, auth, orquestração)
+- **Go (gRPC)** — microserviços de I/O intensivo (coleta, publicação, alertas, scheduling)
+- **Python (FastAPI)** — analytics e IA (queries BigQuery, detecção de padrões)
+- **SvelteKit** — frontend SPA (Cloudflare Pages)
 
 ```
-                    ┌─────────────────────────────────────────────────┐
-                    │       Cloud Run (multi-container)                │
-                    │                                                 │
-navegador ─https──► │  garimpei-api (C# .NET 10) ← ingress :8080     │
-                    │    ├─ /api/v2/** (novas rotas)                  │
-                    │    ├─ /health, /health/ready                    │
-                    │    ├─ PostgreSQL (EF Core, multi-tenant)        │
-                    │    └─ gRPC clients → sidecars                   │
-                    │                                                 │
-                    │  garimpei-api-legacy (Go) ← legado :8081        │
-                    │    ├─ /api/** (rotas existentes)                │
-                    │    └─ BigQuery (analytics)                      │
-                    │                                                 │
-                    │  collector (Go gRPC :50051)                     │
-                    │    └─ Shopee Affiliate API                      │
-                    │  publisher (Go gRPC :50052)                     │
-                    │    └─ Telegram Bot API + Meta WhatsApp Cloud    │
-                    │  alerter (Go gRPC :50053)                       │
-                    │    └─ Verificação preço + Telegram              │
-                    │  scheduler (Go gRPC :50054)                     │
-                    │    └─ Cron nativo + orquestra via gRPC          │
-                    └─────────────────────────────────────────────────┘
-                              │                    │
-                    ┌─────────▼────────┐  ┌───────▼──────────┐
-                    │  Cloud SQL (PG)  │  │  BigQuery         │
-                    │  dados app       │  │  analytics/export │
-                    └──────────────────┘  └──────────────────┘
-
-Cloudflare Worker ──routing──► /api/v2/* → C#, /api/* → Go (legado)
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Cloudflare (Edge)                                  │
+│                                                                         │
+│  ┌─────────────────┐        ┌──────────────────────────────────┐       │
+│  │  Pages (CDN)    │        │  Worker (routing)                │       │
+│  │  Frontend SPA   │        │  /api/* → Cloud Run              │       │
+│  │  (SvelteKit)    │        │  /*     → Pages                  │       │
+│  └─────────────────┘        └──────────────┬───────────────────┘       │
+└─────────────────────────────────────────────┼───────────────────────────┘
+                                              │ HTTPS
+┌─────────────────────────────────────────────▼───────────────────────────┐
+│                  Cloud Run (multi-container, southamerica-east1)          │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │  garimpei-api (C# .NET 10) — ingress container :8080            │   │
+│  │                                                                 │   │
+│  │  ├── Auth (Firebase JWT)                                        │   │
+│  │  ├── Multi-tenant (EF Core global query filters)                │   │
+│  │  ├── Curadoria/Scoring (4 fontes: busca, quedas, novos, fav)    │   │
+│  │  ├── Publicação (orquestra → publisher gRPC)                    │   │
+│  │  ├── Buscas/Lojas CRUD (PostgreSQL)                             │   │
+│  │  ├── OpenTelemetry + Serilog                                    │   │
+│  │  └── Health checks (/health, /health/ready)                     │   │
+│  └────────────┬──────────────┬──────────────┬──────────┬──────────┘   │
+│               │gRPC          │gRPC          │gRPC      │HTTP          │
+│  ┌────────────▼──┐  ┌───────▼───┐  ┌───────▼──┐  ┌───▼──────────┐   │
+│  │  collector    │  │ publisher │  │  alerter │  │   analyzer   │   │
+│  │  (Go :50051)  │  │ (Go:50052)│  │ (Go:50053)│  │ (Py :8060)  │   │
+│  │               │  │           │  │          │  │              │   │
+│  │  Shopee API   │  │ Telegram  │  │ Telegram │  │  BigQuery    │   │
+│  │  HMAC-SHA256  │  │ WhatsApp  │  │ preço    │  │  novidades   │   │
+│  │  throttling   │  │ Meta API  │  │ alertas  │  │  quedas      │   │
+│  └───────────────┘  └───────────┘  └──────────┘  │  evolução    │   │
+│                                                   │  estatísticas│   │
+│  ┌───────────────┐                               └──────┬───────┘   │
+│  │  scheduler    │                                      │            │
+│  │  (Go :50054)  │──── orquestra collector/alerter      │            │
+│  │  cron nativo  │                                      │            │
+│  └───────────────┘                                      │            │
+└─────────────────────────────────────────────────────────┼────────────┘
+                          │                               │
+              ┌───────────▼──────────┐      ┌─────────────▼──────────┐
+              │  PostgreSQL (Neon)   │      │  BigQuery              │
+              │  dados transacionais │      │  analytics / snapshots │
+              │  produtos, buscas,   │      │  conversões, métricas  │
+              │  tenants, configs    │      │  séries temporais      │
+              └──────────────────────┘      └────────────────────────┘
 ```
+
+## Vantagens da arquitetura atual vs monólito Go
+
+| Aspecto | Monólito Go (antes) | Arquitetura atual |
+|---------|--------------------|--------------------|
+| **Produtividade** | Go verboso para CRUD/DI/patterns | C# com DI nativo, EF Core, MediatR, records |
+| **Multi-tenancy** | Manual (query por query) | Automático (EF Core global query filters) |
+| **Persistência** | BigQuery para tudo (analytics + CRUD) | PostgreSQL (transacional) + BigQuery (analytics) |
+| **Isolamento** | Tudo no mesmo processo | Microserviços independentes (deploy/scale separado) |
+| **Resiliência** | Falha na coleta derruba toda a API | Sidecar pode falhar sem afetar CRUD |
+| **Observabilidade** | slog manual | OpenTelemetry (traces + metrics) + Serilog estruturado |
+| **Auth** | Wrapper manual sobre Firebase | ASP.NET Core JWT middleware + claims nativo |
+| **Canais** | Maytapi (intermediário pago) | Meta Cloud API oficial (direto, sem markup) |
+| **Frontend** | Servido pelo backend (acoplado) | CDN global (Cloudflare Pages, <50ms TTFB) |
+| **Analytics** | Go consultando BigQuery (sem ecossistema) | Python + pandas (preparado para ML/IA) |
+| **Contratos** | JSON informal (pode quebrar silenciosamente) | Protocol Buffers tipados (breaking change no CI) |
+| **Deploy** | Monólito único (tudo ou nada) | 6 containers independentes (rolling update) |
+| **Scaling** | Um processo para tudo | Escala por responsabilidade (API vs coleta vs analytics) |
+| **Testes** | Integração pesada (httptest + BigQuery mock) | Unitários leves (InMemory DB, gRPC direto) |
+| **Código** | ~12000 linhas Go (tudo junto) | Separado por domínio e linguagem |
+| **Evolução IA** | Limitada (sem ecossistema ML em Go) | Python pronto para scikit-learn, pandas, LLMs |
+| **Custo** | Cloud Run único (~sempre ligado) | Multi-container scale-to-zero + CDN grátis |
+
+### Ganhos mensuráveis
+
+1. **-8247 linhas** de código morto removidas
+2. **~50ms TTFB** no frontend (CDN global vs Cloud Run cold start)
+3. **Zero custo** de intermediário WhatsApp (Maytapi → Meta direto)
+4. **Isolamento de falhas** — coleta Shopee com throttling não bloqueia API
+5. **Multi-tenant desde o dia 1** — novo afiliado não vê dados de outro
+6. **3 linguagens** cada uma no que faz melhor (C# CRUD, Go I/O, Python analytics)
+7. **CI unificado** validando Go + C# + Python + Proto + Frontend em cada push
 
 ## Stack
 
