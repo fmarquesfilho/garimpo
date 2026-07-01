@@ -1,6 +1,8 @@
+using Garimpei.Domain.Interfaces;
+
 namespace Garimpei.Domain.Entities;
 
-public sealed class Product
+public sealed class Product : IOwnedEntity
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public required long ItemId { get; init; }

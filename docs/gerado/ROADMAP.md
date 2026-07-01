@@ -9,9 +9,7 @@
 ## 🟡 Next (próximo sprint)
 
 - **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
-- **T-0004** ScopedStore por owner_uid (multi-tenant) · multi-tenant · G
 - **T-0005** Alertas configuráveis por usuário · produto · M
-- **T-0015** Multi-tenant em C# (EF Core + PostgreSQL) · migracao-arch · G
 - **T-0016** Curadoria controller + scoring port em C# · migracao-arch · G
 
 ## ⚪ Later (radar)
@@ -27,6 +25,7 @@
 
 - **T-0001** Docs: site Starlight + geradores + consolidação · docs-migration · G
 - **T-0003** Backlog como código (schema + gen-board) · docs-migration · M
+- **T-0004** ScopedStore por owner_uid (multi-tenant) · multi-tenant · G
 - **T-0006** Integrar docs-check e docs-board na CI · qualidade · P
 - **T-0008** Refactor: tratamento de erros idiomático + telemetria · qualidade · G
 - **T-0009** Setup mono-repo (Go + C# + protos) + Docker Compose · migracao-arch · M
@@ -35,4 +34,5 @@
 - **T-0012** Scheduler gRPC server (serviço Go separado) · migracao-arch · M
 - **T-0013** C# Web App — auth middleware + health + CI · migracao-arch · M
 - **T-0014** PostgreSQL schema + EF Core migrations (dados transacionais) · migracao-arch · M
+- **T-0015** Multi-tenant em C# (EF Core + PostgreSQL) · migracao-arch · G
 - **T-0021** Cloud Run multi-container deploy (C# + sidecars Go) · migracao-arch · M

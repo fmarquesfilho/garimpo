@@ -1,10 +1,10 @@
 id: T-0004
 titulo: ScopedStore por owner_uid (multi-tenant)
 epic: multi-tenant
-status: next
+status: done
 prioridade: alta
 estimativa: G
-sprint: "2026-S28"
+sprint: "2026-S27"
 valor: >
   Isolar dados por tenant (owner_uid). Pré-requisito para onboarding de novos
   afiliados. Após ADR-0012, será implementado em C# com EF Core + PostgreSQL

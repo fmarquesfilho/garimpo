@@ -1,10 +1,26 @@
 using Garimpei.Domain.Entities;
+using Garimpei.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Garimpei.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext : DbContext
 {
+    private readonly ITenantContext _tenantContext;
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, ITenantContext tenantContext)
+        : base(options)
+    {
+        _tenantContext = tenantContext;
+    }
+
+    // Design-time constructor (migrations — no tenant context needed)
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options)
+    {
+        _tenantContext = new NullTenantContext();
+    }
+
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Busca> Buscas => Set<Busca>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
@@ -16,13 +32,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.OwnerUid);
             entity.HasIndex(e => new { e.ItemId, e.ShopId }).IsUnique();
-            entity.HasQueryFilter(e => EF.Property<string>(e, "OwnerUid") != null);
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
         });
 
         modelBuilder.Entity<Busca>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.OwnerUid);
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
         });
 
         modelBuilder.Entity<Tenant>(entity =>
@@ -30,5 +47,42 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.OwnerUid).IsUnique();
         });
+    }
+
+    /// <summary>
+    /// Automatically sets OwnerUid on new IOwnedEntity entries before saving.
+    /// </summary>
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        SetOwnerUidOnNewEntities();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        SetOwnerUidOnNewEntities();
+        return base.SaveChanges();
+    }
+
+    private void SetOwnerUidOnNewEntities()
+    {
+        if (!_tenantContext.IsResolved) return;
+
+        var entries = ChangeTracker.Entries<IOwnedEntity>()
+            .Where(e => e.State == EntityState.Added && string.IsNullOrEmpty(e.Entity.OwnerUid));
+
+        foreach (var entry in entries)
+        {
+            entry.Entity.OwnerUid = _tenantContext.OwnerUid;
+        }
+    }
+
+    /// <summary>
+    /// Null object for design-time/migration scenarios.
+    /// </summary>
+    private sealed class NullTenantContext : ITenantContext
+    {
+        public string OwnerUid => string.Empty;
+        public bool IsResolved => false;
     }
 }

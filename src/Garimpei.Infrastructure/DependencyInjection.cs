@@ -1,4 +1,6 @@
+using Garimpei.Domain.Interfaces;
 using Garimpei.Infrastructure.Persistence;
+using Garimpei.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +13,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
+        // Tenancy (scoped — one per request)
+        services.AddScoped<TenantContext>();
+        services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+
+        // Persistence
+        services.AddDbContext<AppDbContext>((sp, options) =>
             options.UseNpgsql(
                 configuration.GetConnectionString("PostgreSQL"),
                 npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));

@@ -1,5 +1,7 @@
+using Garimpei.Api.Middleware;
 using Garimpei.Application;
 using Garimpei.Infrastructure;
+using Garimpei.Infrastructure.Tenancy;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
@@ -63,6 +65,7 @@ var app = builder.Build();
 app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<TenantMiddleware>();
 
 // Health checks
 app.MapHealthChecks("/health");
