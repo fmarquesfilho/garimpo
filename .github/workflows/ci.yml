@@ -1,0 +1,186 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/legado/**'
+      - 'docs/meta/**'
+      - 'README.md'
+  pull_request:
+
+jobs:
+  # ── Go (microserviços + ferramentas) ─────────────────────────────────────
+  go:
+    name: Go (build + test + lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run --timeout=3m ./...
+
+      - name: Architecture rules
+        run: |
+          go install github.com/arch-go/arch-go@latest
+          arch-go
+
+      - name: File size check
+        run: ./scripts/check-file-size.sh 400
+
+      - name: Docs check (generated files up to date)
+        run: make docs-check
+
+  # ── C# (Web App) ────────────────────────────────────────────────────────
+  csharp:
+    name: C# (build + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: garimpei
+          POSTGRES_PASSWORD: garimpei_dev
+          POSTGRES_DB: garimpei
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U garimpei"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+        env:
+          ConnectionStrings__PostgreSQL: "Host=localhost;Port=5432;Database=garimpei;Username=garimpei;Password=garimpei_dev"
+
+  # ── Python (analyzer) ───────────────────────────────────────────────────
+  python:
+    name: Python (lint + syntax)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/analyzer
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install deps
+        run: pip install -r requirements.txt ruff
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Syntax check
+        run: python -c "import main"
+
+  # ── Proto ───────────────────────────────────────────────────────────────
+  proto:
+    name: Proto (lint + sync check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bufbuild/buf-setup-action@v1
+
+      - name: Lint
+        run: buf lint
+        working-directory: protos
+
+      - name: Sync check (Go)
+        run: |
+          cd protos && buf generate
+          cd ..
+          if ! git diff --exit-code gen/go/; then
+            echo "❌ gen/go/ desatualizado"
+            exit 1
+          fi
+
+      - name: Sync check (C#)
+        run: |
+          cd protos && buf generate
+          cd ..
+          if ! git diff --exit-code src/Garimpei.Protos/Generated/; then
+            echo "❌ C# stubs desatualizados"
+            exit 1
+          fi
+
+  # ── Frontend ────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend (build + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint:css
+      - run: npm run lint:js
+      - run: npx vitest run
+
+  # ── Docker (build all images) ───────────────────────────────────────────
+  docker:
+    name: Docker builds
+    runs-on: ubuntu-latest
+    needs: [go, csharp, python, proto, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: C# API
+        run: docker build -f src/Garimpei.Api/Dockerfile src/
+
+      - name: Collector
+        run: docker build -f services/collector/Dockerfile .
+
+      - name: Publisher
+        run: docker build -f services/publisher/Dockerfile .
+
+      - name: Alerter
+        run: docker build -f services/alerter/Dockerfile .
+
+      - name: Scheduler
+        run: docker build -f services/scheduler/Dockerfile .
+
+      - name: Analyzer
+        run: docker build -f services/analyzer/Dockerfile services/analyzer/

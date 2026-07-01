@@ -13,7 +13,6 @@ func TestSentinelsAreDistinct(t *testing.T) {
 		apperr.ErrShopeeAPI,
 		apperr.ErrTelegram,
 		apperr.ErrWhatsApp,
-		apperr.ErrMaytapi,
 		apperr.ErrInvalidInput,
 		apperr.ErrNotFound,
 		apperr.ErrInactive,

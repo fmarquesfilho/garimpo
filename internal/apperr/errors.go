@@ -24,10 +24,6 @@ var ErrTelegram = errors.New("telegram")
 // ErrWhatsApp indica falha na comunicação com a Meta WhatsApp Cloud API.
 var ErrWhatsApp = errors.New("whatsapp")
 
-// ErrMaytapi indica falha na comunicação com a Maytapi (WhatsApp).
-// Deprecated: usar ErrWhatsApp. Mantido para compatibilidade com httpapi/whatsapp.go legado.
-var ErrMaytapi = errors.New("maytapi")
-
 // ── Validação / Input ────────────────────────────────────────────────────────
 
 // ErrInvalidInput indica dado inválido fornecido pelo usuário.
