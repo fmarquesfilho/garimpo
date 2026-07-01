@@ -3,14 +3,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
-# Restore (cacheable layer)
-COPY Garimpei.sln Directory.Build.props global.json ./
+# Restore (cacheable layer) — only production projects
+COPY Directory.Build.props global.json ./
 COPY Garimpei.Api/Garimpei.Api.csproj Garimpei.Api/
 COPY Garimpei.Application/Garimpei.Application.csproj Garimpei.Application/
 COPY Garimpei.Domain/Garimpei.Domain.csproj Garimpei.Domain/
 COPY Garimpei.Infrastructure/Garimpei.Infrastructure.csproj Garimpei.Infrastructure/
 COPY Garimpei.Protos/Garimpei.Protos.csproj Garimpei.Protos/
-RUN dotnet restore
+RUN dotnet restore Garimpei.Api/Garimpei.Api.csproj
 
 # Build (includes pre-generated proto stubs in Garimpei.Protos/Generated/)
 COPY . .
