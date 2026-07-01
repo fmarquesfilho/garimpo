@@ -1,7 +1,7 @@
 id: T-0017
 titulo: Routing split (Cloudflare Worker v1→v2)
 epic: migracao-arch
-status: backlog
+status: done
 prioridade: media
 estimativa: P
 sprint: ""

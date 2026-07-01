@@ -1,0 +1,21 @@
+id: T-0024
+titulo: Testar publicação WhatsApp via Meta Cloud API
+epic: produto
+status: next
+prioridade: alta
+estimativa: P
+sprint: "2026-S27"
+valor: >
+  Validar end-to-end que o novo WhatsAppSender (Meta Cloud API) funciona
+  em produção. Enviar mensagem de texto e imagem para grupo real.
+  Confirmar que substituição do Maytapi está completa.
+criterios:
+  - Enviar mensagem de texto para grupo WhatsApp real
+  - Enviar mensagem com imagem (foto de produto) para grupo
+  - Confirmar recebimento no WhatsApp do destinatário
+  - "Variáveis configuradas: WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID"
+  - Publicação via frontend (página publicar) funciona end-to-end
+depende_de: [T-0023]
+tags: [backend, whatsapp, meta, teste-manual]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"

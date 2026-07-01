@@ -10,11 +10,11 @@
 
 - **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
 - **T-0005** Alertas configuráveis por usuário · produto · M
+- **T-0024** Testar publicação WhatsApp via Meta Cloud API · produto · P
 
 ## ⚪ Later (radar)
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
-- **T-0017** Routing split (Cloudflare Worker v1→v2) · migracao-arch · P
 - **T-0018** Migrar handlers de publicação para C# · migracao-arch · G
 - **T-0019** Migrar handlers de lojas/buscas para C# · migracao-arch · G
 - **T-0020** PostgreSQL como fonte primária + BigQuery analytics-only · migracao-arch · G
@@ -35,4 +35,5 @@
 - **T-0014** PostgreSQL schema + EF Core migrations (dados transacionais) · migracao-arch · M
 - **T-0015** Multi-tenant em C# (EF Core + PostgreSQL) · migracao-arch · G
 - **T-0016** Curadoria controller + scoring port em C# · migracao-arch · G
+- **T-0017** Routing split (Cloudflare Worker v1→v2) · migracao-arch · P
 - **T-0021** Cloud Run multi-container deploy (C# + sidecars Go) · migracao-arch · M
