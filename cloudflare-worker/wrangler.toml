@@ -9,6 +9,6 @@ routes = [
 # Feature flags — controla routing v1/v2
 # Override via `wrangler secret put` ou Cloudflare dashboard (Settings > Variables)
 [vars]
-V2_ENABLED = "false"
+V2_ENABLED = "true"
 V1_ORIGIN = "https://garimpo-api-vj6afttbza-rj.a.run.app"
 # V2_ORIGIN = "https://garimpei-v2-xxxxxxx-rj.a.run.app"  # set after first deploy
