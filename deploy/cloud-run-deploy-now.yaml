@@ -1,0 +1,130 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: garimpei-v2
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "2"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler"]}'
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - name: garimpei-api
+          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/garimpei-api-v2:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: Auth__ProjectId
+              value: garimpo-500114
+            - name: ConnectionStrings__PostgreSQL
+              valueFrom:
+                secretKeyRef:
+                  name: GARIMPEI_PG_CONNECTION_STRING
+                  key: latest
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 3
+            failureThreshold: 10
+
+        - name: collector
+          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/collector:latest
+          env:
+            - name: PORT
+              value: "50051"
+            - name: SHOPEE_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: SHOPEE_APP_ID
+                  key: latest
+            - name: SHOPEE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: SHOPEE_SECRET
+                  key: latest
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 256Mi
+          startupProbe:
+            tcpSocket:
+              port: 50051
+            periodSeconds: 3
+            failureThreshold: 5
+
+        - name: publisher
+          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/publisher:latest
+          env:
+            - name: PORT
+              value: "50052"
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: TELEGRAM_BOT_TOKEN
+                  key: latest
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 128Mi
+          startupProbe:
+            tcpSocket:
+              port: 50052
+            periodSeconds: 3
+            failureThreshold: 5
+
+        - name: alerter
+          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/alerter:latest
+          env:
+            - name: PORT
+              value: "50053"
+            - name: ALERTAS_TELEGRAM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ALERTAS_TELEGRAM_TOKEN
+                  key: latest
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 128Mi
+          startupProbe:
+            tcpSocket:
+              port: 50053
+            periodSeconds: 3
+            failureThreshold: 5
+
+        - name: scheduler
+          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/scheduler:latest
+          env:
+            - name: PORT
+              value: "50054"
+            - name: COLLECTOR_ADDR
+              value: "localhost:50051"
+            - name: PUBLISHER_ADDR
+              value: "localhost:50052"
+            - name: ALERTER_ADDR
+              value: "localhost:50053"
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 128Mi
+          startupProbe:
+            tcpSocket:
+              port: 50054
+            periodSeconds: 3
+            failureThreshold: 5
