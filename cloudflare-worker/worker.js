@@ -34,11 +34,7 @@ export default {
 
     // Docs site → Cloudflare Pages (Starlight)
     if (path.startsWith('/docs')) {
-      // Strip /docs prefix — docs-site builds to root
-      const docsPath = path.replace(/^\/docs/, '') || '/';
-      const docsReqUrl = new URL(url);
-      docsReqUrl.pathname = docsPath;
-      return proxyTo(request, docsReqUrl, docsUrl, 'docs');
+      return proxyTo(request, url, docsUrl, 'docs');
     }
 
     // Everything else → Cloudflare Pages (frontend SPA)

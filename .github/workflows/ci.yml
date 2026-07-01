@@ -203,10 +203,11 @@ jobs:
       - name: Install & build docs-site
         run: |
           cd docs-site && npm ci && npm run build
+          mkdir -p deploy-dist/docs && cp -r dist/* deploy-dist/docs/
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: "641900c067ae51982debe5c2a98ff39b"
-          command: pages deploy docs-site/dist --project-name garimpei-docs
+          command: pages deploy docs-site/deploy-dist --project-name garimpei-docs

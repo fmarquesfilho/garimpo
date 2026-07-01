@@ -3,7 +3,7 @@ import starlight from '@astrojs/starlight';
 
 export default defineConfig({
   site: 'https://garimpei.app.br',
-  base: '/',
+  base: '/docs',
   integrations: [
     starlight({
       title: 'Garimpei — Documentação',
