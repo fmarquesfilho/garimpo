@@ -37,7 +37,6 @@ src/**/*.suo
 *.DotSettings.user
 
 # ─── Proto gerado ───────────────────────────────────────────────
-src/Garimpei.Protos/Generated/
 
 # ─── Docker ─────────────────────────────────────────────────────
 .env.local

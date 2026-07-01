@@ -6,12 +6,18 @@
 
   <ItemGroup>
     <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.71.0" PrivateAssets="All" />
     <PackageReference Include="Google.Protobuf" Version="3.29.3" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Protobuf Include="..\..\protos\**\*.proto" GrpcServices="Client" ProtoRoot="..\..\protos" />
-  </ItemGroup>
+  <!--
+    Proto stubs are pre-generated (via buf/protoc locally or in CI)
+    and committed to Generated/. This avoids needing protoc in the
+    Docker build (Alpine doesn't have the glibc-based protoc binary).
+    
+    To regenerate: dotnet build with Grpc.Tools locally, then copy
+    obj/Debug/net10.0/{service}/ to Generated/{service}/
+    Or use: cd protos && buf generate
+  -->
 
 </Project>

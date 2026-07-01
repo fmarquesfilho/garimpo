@@ -1,22 +1,19 @@
 # ── Build stage ──────────────────────────────────────────────────────────────
-# Context: repo root (docker build -f src/Garimpei.Api/Dockerfile .)
+# Context: src/ (docker build -f Garimpei.Api/Dockerfile .)
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
-# Copy protos (needed by Garimpei.Protos)
-COPY protos/ /protos/
-
 # Restore (cacheable layer)
-COPY src/Garimpei.sln src/Directory.Build.props src/global.json ./
-COPY src/Garimpei.Api/Garimpei.Api.csproj Garimpei.Api/
-COPY src/Garimpei.Application/Garimpei.Application.csproj Garimpei.Application/
-COPY src/Garimpei.Domain/Garimpei.Domain.csproj Garimpei.Domain/
-COPY src/Garimpei.Infrastructure/Garimpei.Infrastructure.csproj Garimpei.Infrastructure/
-COPY src/Garimpei.Protos/Garimpei.Protos.csproj Garimpei.Protos/
+COPY Garimpei.sln Directory.Build.props global.json ./
+COPY Garimpei.Api/Garimpei.Api.csproj Garimpei.Api/
+COPY Garimpei.Application/Garimpei.Application.csproj Garimpei.Application/
+COPY Garimpei.Domain/Garimpei.Domain.csproj Garimpei.Domain/
+COPY Garimpei.Infrastructure/Garimpei.Infrastructure.csproj Garimpei.Infrastructure/
+COPY Garimpei.Protos/Garimpei.Protos.csproj Garimpei.Protos/
 RUN dotnet restore
 
-# Build
-COPY src/ .
+# Build (includes pre-generated proto stubs in Garimpei.Protos/Generated/)
+COPY . .
 RUN dotnet publish Garimpei.Api/Garimpei.Api.csproj -c Release -o /app --no-restore
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
