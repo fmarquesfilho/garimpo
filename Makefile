@@ -21,6 +21,7 @@ docs-board: ## Gera quadro Kanban e roadmap do backlog
 
 docs-sync: ## Sincroniza docs canônicos para docs-site
 	./scripts/sync-docs-to-site.sh
+	cp api/openapi.yaml docs-site/public/openapi.yaml
 
 docs-site: docs-sync ## Build do site Starlight (sync + build)
 	cd docs-site && npm run build
@@ -29,7 +30,8 @@ docs-publish: docs docs-site ## Gera, sincroniza e builda — pronto para commit
 
 docs-check: ## CI: falha se docs geradas estiverem desatualizados
 	$(MAKE) docs-er docs-env docs-board
-	git diff --exit-code docs/gerado || (echo "❌ Docs geradas desatualizadas: rode 'make docs'"; exit 1)
+	cp api/openapi.yaml docs-site/public/openapi.yaml
+	git diff --exit-code docs/gerado docs-site/public/openapi.yaml || (echo "❌ Docs geradas desatualizadas: rode 'make docs'"; exit 1)
 
 # ─── Proto (gRPC) ──────────────────────────────────────────────
 
