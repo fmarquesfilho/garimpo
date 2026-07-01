@@ -35,22 +35,24 @@ namespace Collector.V1 {
             "Eh0KCmZldGNoZWRfYXQYAyABKAlSCWZldGNoZWRBdCKGAQoRRmV0Y2hTaG9w",
             "UmVzcG9uc2USMQoIcHJvZHVjdHMYASADKAsyFS5jb2xsZWN0b3IudjEuUHJv",
             "ZHVjdFIIcHJvZHVjdHMSHwoLdG90YWxfZm91bmQYAiABKAVSCnRvdGFsRm91",
-            "bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJZmV0Y2hlZEF0Ir4CCgdQcm9kdWN0",
+            "bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJZmV0Y2hlZEF0Io4DCgdQcm9kdWN0",
             "EhcKB2l0ZW1faWQYASABKANSBml0ZW1JZBIXCgdzaG9wX2lkGAIgASgDUgZz",
             "aG9wSWQSEgoEbmFtZRgDIAEoCVIEbmFtZRIUCgVwcmljZRgEIAEoAVIFcHJp",
             "Y2USJQoOb3JpZ2luYWxfcHJpY2UYBSABKAFSDW9yaWdpbmFsUHJpY2USEgoE",
             "c29sZBgGIAEoBVIEc29sZBIWCgZyYXRpbmcYByABKAFSBnJhdGluZxIbCglp",
             "bWFnZV91cmwYCCABKAlSCGltYWdlVXJsEh8KC3Byb2R1Y3RfdXJsGAkgASgJ",
             "Ugpwcm9kdWN0VXJsEhsKCXNob3BfbmFtZRgKIAEoCVIIc2hvcE5hbWUSKQoQ",
-            "ZGlzY291bnRfcGVyY2VudBgLIAEoAVIPZGlzY291bnRQZXJjZW50MqIBChBD",
-            "b2xsZWN0b3JTZXJ2aWNlEkAKBUZldGNoEhouY29sbGVjdG9yLnYxLkZldGNo",
-            "UmVxdWVzdBobLmNvbGxlY3Rvci52MS5GZXRjaFJlc3BvbnNlEkwKCUZldGNo",
-            "U2hvcBIeLmNvbGxlY3Rvci52MS5GZXRjaFNob3BSZXF1ZXN0Gh8uY29sbGVj",
-            "dG9yLnYxLkZldGNoU2hvcFJlc3BvbnNlQrUBChBjb20uY29sbGVjdG9yLnYx",
-            "Qg5Db2xsZWN0b3JQcm90b1ABWkBnaXRodWIuY29tL2ZtYXJxdWVzZmlsaG8v",
-            "Z2FyaW1wby9nZW4vZ28vY29sbGVjdG9yL3YxO2NvbGxlY3RvcnYxogIDQ1hY",
-            "qgIMQ29sbGVjdG9yLlYxygIMQ29sbGVjdG9yXFYx4gIYQ29sbGVjdG9yXFYx",
-            "XEdQQk1ldGFkYXRh6gINQ29sbGVjdG9yOjpWMWIGcHJvdG8z"));
+            "ZGlzY291bnRfcGVyY2VudBgLIAEoAVIPZGlzY291bnRQZXJjZW50Eh4KCmNv",
+            "bW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoIY2F0ZWdvcnkYDSABKAlS",
+            "CGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsyogEKEENvbGxlY3RvclNl",
+            "cnZpY2USQAoFRmV0Y2gSGi5jb2xsZWN0b3IudjEuRmV0Y2hSZXF1ZXN0Ghsu",
+            "Y29sbGVjdG9yLnYxLkZldGNoUmVzcG9uc2USTAoJRmV0Y2hTaG9wEh4uY29s",
+            "bGVjdG9yLnYxLkZldGNoU2hvcFJlcXVlc3QaHy5jb2xsZWN0b3IudjEuRmV0",
+            "Y2hTaG9wUmVzcG9uc2VCtQEKEGNvbS5jb2xsZWN0b3IudjFCDkNvbGxlY3Rv",
+            "clByb3RvUAFaQGdpdGh1Yi5jb20vZm1hcnF1ZXNmaWxoby9nYXJpbXBvL2dl",
+            "bi9nby9jb2xsZWN0b3IvdjE7Y29sbGVjdG9ydjGiAgNDWFiqAgxDb2xsZWN0",
+            "b3IuVjHKAgxDb2xsZWN0b3JcVjHiAhhDb2xsZWN0b3JcVjFcR1BCTWV0YWRh",
+            "dGHqAg1Db2xsZWN0b3I6OlYxYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
@@ -58,7 +60,7 @@ namespace Collector.V1 {
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopRequest), global::Collector.V1.FetchShopRequest.Parser, new[]{ "ShopId", "Limit", "OwnerUid" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchResponse), global::Collector.V1.FetchResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopResponse), global::Collector.V1.FetchShopResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link" }, null, null, null, null)
           }));
     }
     #endregion
@@ -1223,6 +1225,9 @@ namespace Collector.V1 {
       productUrl_ = other.productUrl_;
       shopName_ = other.shopName_;
       discountPercent_ = other.discountPercent_;
+      commission_ = other.commission_;
+      category_ = other.category_;
+      link_ = other.link_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1364,6 +1369,42 @@ namespace Collector.V1 {
       }
     }
 
+    /// <summary>Field number for the "commission" field.</summary>
+    public const int CommissionFieldNumber = 12;
+    private double commission_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double Commission {
+      get { return commission_; }
+      set {
+        commission_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "category" field.</summary>
+    public const int CategoryFieldNumber = 13;
+    private string category_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Category {
+      get { return category_; }
+      set {
+        category_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "link" field.</summary>
+    public const int LinkFieldNumber = 14;
+    private string link_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Link {
+      get { return link_; }
+      set {
+        link_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -1390,6 +1431,9 @@ namespace Collector.V1 {
       if (ProductUrl != other.ProductUrl) return false;
       if (ShopName != other.ShopName) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(DiscountPercent, other.DiscountPercent)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Commission, other.Commission)) return false;
+      if (Category != other.Category) return false;
+      if (Link != other.Link) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1408,6 +1452,9 @@ namespace Collector.V1 {
       if (ProductUrl.Length != 0) hash ^= ProductUrl.GetHashCode();
       if (ShopName.Length != 0) hash ^= ShopName.GetHashCode();
       if (DiscountPercent != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(DiscountPercent);
+      if (Commission != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Commission);
+      if (Category.Length != 0) hash ^= Category.GetHashCode();
+      if (Link.Length != 0) hash ^= Link.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1470,6 +1517,18 @@ namespace Collector.V1 {
         output.WriteRawTag(89);
         output.WriteDouble(DiscountPercent);
       }
+      if (Commission != 0D) {
+        output.WriteRawTag(97);
+        output.WriteDouble(Commission);
+      }
+      if (Category.Length != 0) {
+        output.WriteRawTag(106);
+        output.WriteString(Category);
+      }
+      if (Link.Length != 0) {
+        output.WriteRawTag(114);
+        output.WriteString(Link);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1524,6 +1583,18 @@ namespace Collector.V1 {
         output.WriteRawTag(89);
         output.WriteDouble(DiscountPercent);
       }
+      if (Commission != 0D) {
+        output.WriteRawTag(97);
+        output.WriteDouble(Commission);
+      }
+      if (Category.Length != 0) {
+        output.WriteRawTag(106);
+        output.WriteString(Category);
+      }
+      if (Link.Length != 0) {
+        output.WriteRawTag(114);
+        output.WriteString(Link);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1566,6 +1637,15 @@ namespace Collector.V1 {
       }
       if (DiscountPercent != 0D) {
         size += 1 + 8;
+      }
+      if (Commission != 0D) {
+        size += 1 + 8;
+      }
+      if (Category.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Category);
+      }
+      if (Link.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Link);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1611,6 +1691,15 @@ namespace Collector.V1 {
       }
       if (other.DiscountPercent != 0D) {
         DiscountPercent = other.DiscountPercent;
+      }
+      if (other.Commission != 0D) {
+        Commission = other.Commission;
+      }
+      if (other.Category.Length != 0) {
+        Category = other.Category;
+      }
+      if (other.Link.Length != 0) {
+        Link = other.Link;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1675,6 +1764,18 @@ namespace Collector.V1 {
             DiscountPercent = input.ReadDouble();
             break;
           }
+          case 97: {
+            Commission = input.ReadDouble();
+            break;
+          }
+          case 106: {
+            Category = input.ReadString();
+            break;
+          }
+          case 114: {
+            Link = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -1736,6 +1837,18 @@ namespace Collector.V1 {
           }
           case 89: {
             DiscountPercent = input.ReadDouble();
+            break;
+          }
+          case 97: {
+            Commission = input.ReadDouble();
+            break;
+          }
+          case 106: {
+            Category = input.ReadString();
+            break;
+          }
+          case 114: {
+            Link = input.ReadString();
             break;
           }
         }

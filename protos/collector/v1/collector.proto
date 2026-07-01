@@ -49,4 +49,7 @@ message Product {
   string product_url = 9;
   string shop_name = 10;
   double discount_percent = 11;
+  double commission = 12;
+  string category = 13;
+  string link = 14;
 }

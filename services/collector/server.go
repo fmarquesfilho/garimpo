@@ -53,9 +53,12 @@ func (s *CollectorServer) Fetch(ctx context.Context, req *collectorpb.FetchReque
 			Sold:            int32(min(p.Sales30d, int(^uint32(0)>>1))), //nolint:gosec // bounded
 			Rating:          p.Rating,
 			ImageUrl:        p.Image,
-			ProductUrl:      p.Link,
+			ProductUrl:      p.ProductLink,
 			ShopName:        p.ShopName,
 			DiscountPercent: p.DiscountRate,
+			Commission:      p.Commission,
+			Category:        p.Category,
+			Link:            p.Link,
 		})
 	}
 
@@ -93,9 +96,12 @@ func (s *CollectorServer) FetchShop(ctx context.Context, req *collectorpb.FetchS
 			Sold:            int32(min(p.Sales30d, int(^uint32(0)>>1))), //nolint:gosec // bounded
 			Rating:          p.Rating,
 			ImageUrl:        p.Image,
-			ProductUrl:      p.Link,
+			ProductUrl:      p.ProductLink,
 			ShopName:        p.ShopName,
 			DiscountPercent: p.DiscountRate,
+			Commission:      p.Commission,
+			Category:        p.Category,
+			Link:            p.Link,
 		})
 	}
 

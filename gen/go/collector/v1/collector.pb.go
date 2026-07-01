@@ -282,6 +282,9 @@ type Product struct {
 	ProductUrl      string                 `protobuf:"bytes,9,opt,name=product_url,json=productUrl,proto3" json:"product_url,omitempty"`
 	ShopName        string                 `protobuf:"bytes,10,opt,name=shop_name,json=shopName,proto3" json:"shop_name,omitempty"`
 	DiscountPercent float64                `protobuf:"fixed64,11,opt,name=discount_percent,json=discountPercent,proto3" json:"discount_percent,omitempty"`
+	Commission      float64                `protobuf:"fixed64,12,opt,name=commission,proto3" json:"commission,omitempty"`
+	Category        string                 `protobuf:"bytes,13,opt,name=category,proto3" json:"category,omitempty"`
+	Link            string                 `protobuf:"bytes,14,opt,name=link,proto3" json:"link,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -393,6 +396,27 @@ func (x *Product) GetDiscountPercent() float64 {
 	return 0
 }
 
+func (x *Product) GetCommission() float64 {
+	if x != nil {
+		return x.Commission
+	}
+	return 0
+}
+
+func (x *Product) GetCategory() string {
+	if x != nil {
+		return x.Category
+	}
+	return ""
+}
+
+func (x *Product) GetLink() string {
+	if x != nil {
+		return x.Link
+	}
+	return ""
+}
+
 var File_collector_v1_collector_proto protoreflect.FileDescriptor
 
 const file_collector_v1_collector_proto_rawDesc = "" +
@@ -418,7 +442,7 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\vtotal_found\x18\x02 \x01(\x05R\n" +
 	"totalFound\x12\x1d\n" +
 	"\n" +
-	"fetched_at\x18\x03 \x01(\tR\tfetchedAt\"\xbe\x02\n" +
+	"fetched_at\x18\x03 \x01(\tR\tfetchedAt\"\x8e\x03\n" +
 	"\aProduct\x12\x17\n" +
 	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x17\n" +
 	"\ashop_id\x18\x02 \x01(\x03R\x06shopId\x12\x12\n" +
@@ -432,7 +456,12 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"productUrl\x12\x1b\n" +
 	"\tshop_name\x18\n" +
 	" \x01(\tR\bshopName\x12)\n" +
-	"\x10discount_percent\x18\v \x01(\x01R\x0fdiscountPercent2\xa2\x01\n" +
+	"\x10discount_percent\x18\v \x01(\x01R\x0fdiscountPercent\x12\x1e\n" +
+	"\n" +
+	"commission\x18\f \x01(\x01R\n" +
+	"commission\x12\x1a\n" +
+	"\bcategory\x18\r \x01(\tR\bcategory\x12\x12\n" +
+	"\x04link\x18\x0e \x01(\tR\x04link2\xa2\x01\n" +
 	"\x10CollectorService\x12@\n" +
 	"\x05Fetch\x12\x1a.collector.v1.FetchRequest\x1a\x1b.collector.v1.FetchResponse\x12L\n" +
 	"\tFetchShop\x12\x1e.collector.v1.FetchShopRequest\x1a\x1f.collector.v1.FetchShopResponseB\xb5\x01\n" +

@@ -145,15 +145,17 @@ public static partial class EndpointExtensions
     {
         Id = p.ItemId.ToString(),
         Name = p.Name,
+        Category = p.Category,
         ShopName = p.ShopName,
         ShopId = p.ShopId.ToString(),
         Price = (decimal)p.Price,
         OriginalPrice = (decimal)p.OriginalPrice,
         DiscountPercent = p.DiscountPercent,
-        Commission = 0, // Shopee doesn't expose commission in this proto; will be enriched
+        Commission = p.Commission,
         Sales = p.Sold,
         Rating = p.Rating,
-        Link = p.ProductUrl,
+        Link = p.Link,
+        ProductLink = p.ProductUrl,
         ImageUrl = p.ImageUrl
     };
 }
