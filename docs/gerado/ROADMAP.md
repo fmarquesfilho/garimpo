@@ -11,6 +11,7 @@ _Nenhuma tarefa em andamento._
 - **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
 - **T-0005** Alertas configuráveis por usuário · produto · M
 - **T-0024** Testar publicação WhatsApp via Meta Cloud API · produto · P
+- **T-0026** Portar endpoints restantes do Go legado para C# · migracao-arch · G
 
 ## ⚪ Later (radar)
 

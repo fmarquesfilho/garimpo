@@ -1,0 +1,29 @@
+id: T-0026
+titulo: "Portar endpoints restantes do Go legado para C#"
+epic: migracao-arch
+status: next
+prioridade: alta
+estimativa: G
+sprint: ""
+valor: >
+  Endpoints do monólito Go que o frontend usa mas ainda não existem no C#.
+  Implementar no C# com PostgreSQL/gRPC e documentar no openapi.yaml.
+  Validar com check-api-spec-sync.sh (zero 404).
+criterios:
+  - "Buscas/Lojas: GET/POST /api/buscas, GET/POST/DELETE /api/lojas, GET /api/lojas/novidades, GET /api/lojas/evolucao"
+  - "Favoritos: GET/POST/DELETE /api/favoritos"
+  - "Alertas: GET /api/alertas, POST /api/alertas/testar, POST /api/alertas/configurar"
+  - "Publicação: POST /api/publicar, GET/POST /api/publicacoes, POST /api/publicar-pendentes"
+  - "Destinos: GET/POST/DELETE /api/destinos"
+  - "Templates: GET/POST/DELETE /api/templates, POST /api/templates/preview"
+  - "Coleta: POST /api/coletar, GET /api/coletas"
+  - "Conversões: GET /api/conversoes, GET /api/conversoes/reais, POST /api/conversoes/sync"
+  - "Onboarding: GET /api/onboarding/status, POST termos/shopee/telegram/validar/excluir-conta"
+  - "Admin: GET /api/admin/logs, POST /api/admin/log-level, GET /api/admin/shopee-introspect"
+  - "Produto: GET /api/produto/origem, POST /api/produto/origem/batch, POST /api/resolver-link"
+  - "Comparar: GET /api/comparar, POST /api/eventos"
+  - "scripts/check-api-spec-sync.sh passa com zero 404"
+depende_de: []
+tags: [backend, csharp, migração, endpoints]
+criada_em: "2026-07-01"
+atualizada_em: "2026-07-01"
