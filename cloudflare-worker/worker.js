@@ -21,6 +21,7 @@ export default {
     const v2Origin = env.V2_ORIGIN || '';
     const v1Origin = env.V1_ORIGIN || '';
     const pagesUrl = env.PAGES_URL || 'https://garimpei-web.pages.dev';
+    const docsUrl = env.DOCS_URL || 'https://garimpei-docs.pages.dev';
 
     // API routes → Cloud Run (C#)
     if (path.startsWith('/api/')) {
@@ -29,6 +30,15 @@ export default {
         return new Response('No backend configured', { status: 503 });
       }
       return proxyTo(request, url, origin, 'csharp');
+    }
+
+    // Docs site → Cloudflare Pages (Starlight)
+    if (path.startsWith('/docs')) {
+      // Strip /docs prefix — docs-site builds to root
+      const docsPath = path.replace(/^\/docs/, '') || '/';
+      const docsReqUrl = new URL(url);
+      docsReqUrl.pathname = docsPath;
+      return proxyTo(request, docsReqUrl, docsUrl, 'docs');
     }
 
     // Everything else → Cloudflare Pages (frontend SPA)

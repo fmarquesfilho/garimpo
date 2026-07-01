@@ -12,4 +12,5 @@ routes = [
 V2_ENABLED = "true"
 V1_ORIGIN = "https://garimpo-api-vj6afttbza-rj.a.run.app"
 PAGES_URL = "https://garimpei-web.pages.dev"
+DOCS_URL = "https://garimpei-docs.pages.dev"
 # V2_ORIGIN set via `wrangler secret put V2_ORIGIN`
