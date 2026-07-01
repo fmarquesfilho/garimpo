@@ -184,3 +184,28 @@ jobs:
 
       - name: Analyzer
         run: docker build -f services/analyzer/Dockerfile services/analyzer/
+
+  # ── Docs site deploy (Cloudflare Pages) ─────────────────────────────
+  docs-deploy:
+    name: Deploy docs site
+    runs-on: ubuntu-latest
+    needs: [go]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Install & build docs-site
+        run: |
+          cd docs-site && npm ci && npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: pages deploy docs-site/dist --project-name garimpei-docs
