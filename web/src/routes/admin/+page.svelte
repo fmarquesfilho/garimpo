@@ -1,241 +1,66 @@
 <script>
 	import { onMount } from 'svelte';
-	import { buscarLogs, alterarNivelLog } from '$lib/api.js';
 	import { usuario, getIdToken } from '$lib/firebase.js';
 
-	let logs = $state([]);
-	let stats = $state({});
-	let total = $state(0);
+	let health = $state(null);
 	let carregando = $state(true);
-	let erro = $state(null);
-	let filtroNivel = $state('');
-	let autoRefresh = $state(true);
-	let logLevel = $state('info');
-	let intervalo;
 
-	// Introspecção Shopee
-	let introResultado = $state(null);
-	let introCarregando = $state(false);
-	let introErro = $state(null);
-
-	onMount(() => {
-		carregar();
-		intervalo = setInterval(() => { if (autoRefresh) carregar(); }, 5000);
-		return () => clearInterval(intervalo);
-	});
-
-	async function carregar() {
+	onMount(async () => {
 		try {
-			const r = await buscarLogs({ n: 200, nivel: filtroNivel });
-			logs = r?.logs ?? [];
-			stats = r?.stats ?? {};
-			total = r?.total ?? 0;
-			erro = null;
+			const resp = await fetch('/api/health');
+			health = await resp.json();
 		} catch (e) {
-			erro = e.message;
+			health = { status: 'erro', detail: e.message };
 		} finally {
 			carregando = false;
 		}
-	}
-
-	$effect(() => {
-		filtroNivel;
-		carregar();
 	});
-
-	async function mudarNivel() {
-		try {
-			await alterarNivelLog(logLevel);
-		} catch (e) {
-			erro = e.message;
-		}
-	}
-
-	const nivelCor = { error: 'var(--erro-texto)', warn: 'var(--aviso-texto)', info: 'var(--sucesso-texto)', debug: '#6b7280' };
-	const nivelBg = { error: 'var(--erro-fundo)', warn: 'var(--aviso-fundo)', info: 'var(--sucesso-fundo)', debug: '#f9fafb' };
-
-	async function executarIntrospeccao() {
-		introCarregando = true;
-		introErro = null;
-		introResultado = null;
-		try {
-			const token = await getIdToken();
-			const resp = await fetch('/api/admin/shopee-introspect', {
-				headers: { 'Authorization': `Bearer ${token}` }
-			});
-			if (!resp.ok) {
-				const body = await resp.json().catch(() => ({}));
-				throw new Error(body.erro || `Erro ${resp.status}`);
-			}
-			introResultado = await resp.json();
-		} catch (e) {
-			introErro = e.message;
-		} finally {
-			introCarregando = false;
-		}
-	}
 </script>
 
 <svelte:head>
 	<title>Admin — Garimpei</title>
 </svelte:head>
 
-<section class="admin-page">
-	<div class="admin-header">
-		<h1>🛠 Admin — Logs</h1>
-		<div class="admin-controls">
-			<div class="log-level-control">
-				<label>Granularidade:</label>
-				<select bind:value={logLevel} onchange={mudarNivel}>
-					<option value="debug">Debug (tudo)</option>
-					<option value="info">Info</option>
-					<option value="warn">Warn</option>
-					<option value="error">Só erros</option>
-				</select>
-			</div>
-			<label class="auto-refresh">
-				<input type="checkbox" bind:checked={autoRefresh} />
-				Auto-refresh (5s)
-			</label>
-		</div>
-	</div>
+<main class="admin">
+	<h1>Painel Admin</h1>
 
-	{#if !$usuario}
-		<div class="aviso">Faça login para acessar o admin.</div>
-	{:else}
-		<!-- Stats -->
-		<div class="stats-row">
-			<div class="stat-card">
-				<span class="stat-num">{total}</span>
-				<span class="stat-label">Total</span>
-			</div>
-			<button class="stat-card" class:ativo={filtroNivel === ''} onclick={() => (filtroNivel = '')}>
-				<span class="stat-num">{(stats.info ?? 0) + (stats.warn ?? 0) + (stats.error ?? 0) + (stats.debug ?? 0)}</span>
-				<span class="stat-label">No buffer</span>
-			</button>
-			<button class="stat-card erro-card" class:ativo={filtroNivel === 'error'} onclick={() => (filtroNivel = filtroNivel === 'error' ? '' : 'error')}>
-				<span class="stat-num">{stats.error ?? 0}</span>
-				<span class="stat-label">Erros</span>
-			</button>
-			<button class="stat-card warn-card" class:ativo={filtroNivel === 'warn'} onclick={() => (filtroNivel = filtroNivel === 'warn' ? '' : 'warn')}>
-				<span class="stat-num">{stats.warn ?? 0}</span>
-				<span class="stat-label">Avisos</span>
-			</button>
-			<button class="stat-card info-card" class:ativo={filtroNivel === 'info'} onclick={() => (filtroNivel = filtroNivel === 'info' ? '' : 'info')}>
-				<span class="stat-num">{stats.info ?? 0}</span>
-				<span class="stat-label">Info</span>
-			</button>
-		</div>
+	{#if carregando}
+		<p>Carregando...</p>
+	{:else if health}
+		<section class="status-card">
+			<h2>Status do sistema</h2>
+			<table>
+				<tbody>
+				<tr><td>Backend</td><td><strong>{health.backend ?? 'unknown'}</strong></td></tr>
+				<tr><td>Status</td><td>{health.status}</td></tr>
+				<tr><td>Store</td><td>{health.store ?? '-'}</td></tr>
+				<tr><td>Fonte</td><td>{health.fonte ?? '-'}</td></tr>
+				</tbody>
+			</table>
+		</section>
 
-		{#if erro}
-			<div class="msg-erro">{erro}</div>
-		{/if}
-
-		<!-- Introspecção Shopee API -->
-		<div class="introspect-section">
-			<button class="btn-introspect" onclick={executarIntrospeccao} disabled={introCarregando}>
-				{introCarregando ? '⏳ Consultando API…' : '🔍 Introspecção Shopee API'}
-			</button>
-			<span class="intro-hint">Descobre campos disponíveis na API de afiliados (origem, etc.)</span>
-
-			{#if introErro}
-				<div class="msg-erro">{introErro}</div>
-			{/if}
-
-			{#if introResultado}
-				<div class="intro-resultado">
-					<p class="intro-conclusao"><strong>Conclusão:</strong> {introResultado.conclusao}</p>
-					{#if introResultado.campos_origem_global?.length > 0}
-						<p class="intro-campos">Termos encontrados: <code>{introResultado.campos_origem_global.join(', ')}</code></p>
-					{/if}
-					<details>
-						<summary>Ver resposta completa ({introResultado.resultados?.length} queries)</summary>
-						<pre class="intro-json">{JSON.stringify(introResultado, null, 2)}</pre>
-					</details>
-				</div>
-			{/if}
-		</div>
-
-		<!-- Lista de logs -->
-		{#if carregando}
-			<p class="loading">Carregando logs…</p>
-		{:else if logs.length === 0}
-			<p class="vazio">Nenhum log {filtroNivel ? `de nível "${filtroNivel}"` : ''} no buffer.</p>
-		{:else}
-			<div class="logs-list">
-				{#each logs as log, i (i)}
-					<div class="log-entry" style="border-left-color: {nivelCor[log.nivel] ?? '#ccc'}; background: {nivelBg[log.nivel] ?? 'white'}">
-						<div class="log-main">
-							<span class="log-nivel" style="color: {nivelCor[log.nivel]}">{log.nivel?.toUpperCase()}</span>
-							<span class="log-metodo">{log.metodo}</span>
-							<span class="log-rota">{log.rota}</span>
-							{#if log.status}
-								<span class="log-status" class:erro-status={log.status >= 400}>{log.status}</span>
-							{/if}
-							{#if log.dur_ms}
-								<span class="log-dur">{log.dur_ms.toFixed(1)}ms</span>
-							{/if}
-						</div>
-						<span class="log-hora">{new Date(log.em).toLocaleTimeString('pt-BR')}</span>
-					</div>
-				{/each}
-			</div>
-		{/if}
+		<section class="links">
+			<h2>Links úteis</h2>
+			<ul>
+				<li><a href="/docs/" target="_blank">Documentação (Starlight)</a></li>
+				<li><a href="/docs/api-reference.html" target="_blank">API Reference (Scalar)</a></li>
+				<li><a href="https://console.cloud.google.com/run?project=garimpo-500114" target="_blank">Cloud Run Console</a></li>
+				<li><a href="https://console.neon.tech" target="_blank">Neon (PostgreSQL)</a></li>
+				<li><a href="https://dash.cloudflare.com" target="_blank">Cloudflare Dashboard</a></li>
+			</ul>
+		</section>
 	{/if}
-</section>
+</main>
 
 <style>
-	.admin-page { max-width: 900px; }
-	.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r6); flex-wrap: wrap; gap: var(--r3); }
-	.admin-header h1 { font-size: 1.4rem; margin: 0; }
-	.admin-controls { display: flex; align-items: center; gap: var(--r4); flex-wrap: wrap; }
-	.log-level-control { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; }
-	.log-level-control select { padding: 4px 10px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.82rem; background: var(--porcelana); }
-	.auto-refresh { font-size: 0.82rem; color: var(--tinta-suave); display: flex; align-items: center; gap: 6px; cursor: pointer; }
-	.auto-refresh input { accent-color: var(--ouro); }
-
-	.aviso { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
-	.msg-erro { background: var(--erro-fundo); color: var(--erro-texto); padding: var(--r3) var(--r4); border-radius: 8px; margin-bottom: var(--r4); }
-	.loading, .vazio { color: var(--tinta-suave); font-size: 0.9rem; }
-
-	/* Stats */
-	.stats-row { display: flex; gap: var(--r3); margin-bottom: var(--r5); flex-wrap: wrap; }
-	.stat-card {
-		border: 1px solid var(--linha); background: var(--branco); border-radius: var(--raio-sm);
-		padding: var(--r3) var(--r4); text-align: center; cursor: pointer;
-		display: flex; flex-direction: column; gap: 2px; min-width: 70px;
-	}
-	.stat-card.ativo { border-color: var(--ouro); background: var(--ouro-fundo); }
-	.stat-card.erro-card.ativo { border-color: var(--erro-borda); background: var(--erro-fundo); }
-	.stat-card.warn-card.ativo { border-color: var(--aviso-borda); background: var(--aviso-fundo); }
-	.stat-card.info-card.ativo { border-color: var(--sucesso-borda); background: var(--sucesso-fundo); }
-	.stat-num { font-size: 1.3rem; font-weight: 700; font-family: var(--mono); }
-	.stat-label { font-size: 0.7rem; color: var(--tinta-suave); text-transform: uppercase; }
-
-	/* Logs list */
-	.logs-list { display: flex; flex-direction: column; gap: 2px; }
-	.log-entry {
-		display: flex; justify-content: space-between; align-items: center;
-		padding: 6px 12px; border-left: 3px solid; border-radius: 4px;
-		font-size: 0.82rem;
-	}
-	.log-main { display: flex; align-items: center; gap: var(--r3); }
-	.log-nivel { font-weight: 700; font-size: 0.7rem; width: 40px; }
-	.log-metodo { font-weight: 600; font-size: 0.75rem; color: var(--tinta-suave); }
-	.log-rota { font-family: var(--mono); font-size: 0.78rem; }
-	.log-status { font-family: var(--mono); font-weight: 600; font-size: 0.78rem; }
-	.log-status.erro-status { color: var(--erro-texto); }
-	.log-dur { font-family: var(--mono); font-size: 0.72rem; color: var(--tinta-suave); }
-	.log-hora { font-size: 0.72rem; color: var(--tinta-suave); font-family: var(--mono); }
-
-	/* Introspecção */
-	.introspect-section { margin-bottom: var(--r5); padding: var(--r4); border: 1px solid var(--linha); border-radius: var(--raio); background: var(--nevoa); }
-	.btn-introspect { padding: 8px 16px; background: var(--ouro); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
-	.btn-introspect:hover:not(:disabled) { opacity: 0.9; }
-	.btn-introspect:disabled { opacity: 0.5; cursor: not-allowed; }
-	.intro-hint { font-size: 0.78rem; color: var(--tinta-suave); margin-left: 8px; }
-	.intro-resultado { margin-top: var(--r3); }
-	.intro-conclusao { font-size: 0.9rem; margin-bottom: var(--r2); }
-	.intro-campos code { background: var(--porcelana); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
-	.intro-json { font-size: 0.72rem; max-height: 400px; overflow: auto; background: var(--porcelana); padding: var(--r3); border-radius: 8px; white-space: pre-wrap; word-break: break-all; }
+	.admin { max-width: 600px; margin: 0 auto; padding: var(--r5); }
+	h1 { margin-bottom: var(--r4); }
+	.status-card { background: var(--nevoa); padding: var(--r4); border-radius: var(--raio); margin-bottom: var(--r4); }
+	table { width: 100%; }
+	td { padding: 6px 0; }
+	td:first-child { font-weight: 500; color: var(--texto-secundario); }
+	.links ul { list-style: none; padding: 0; }
+	.links li { margin: 8px 0; }
+	.links a { color: var(--ouro); text-decoration: none; }
+	.links a:hover { text-decoration: underline; }
 </style>

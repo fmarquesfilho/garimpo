@@ -51,18 +51,6 @@ export function buscarCandidatos({
 	return pegar(`/api/candidatos?${p}`);
 }
 
-/** Registra uma decisão de curadoria (seleção) para análise. Best-effort. */
-export async function registrarSelecao(candidato) {
-	const headers = { 'Content-Type': 'application/json', ...(await authHeaders()) };
-	return fetch(`${BASE}/api/eventos`, {
-		method: 'POST',
-		headers,
-		body: JSON.stringify({ tipo: 'selecao', ...candidato })
-	}).catch(() => {
-		/* telemetria não pode atrapalhar o uso */
-	});
-}
-
 async function postar(caminho, corpo) {
 	const headers = { 'Content-Type': 'application/json', ...(await authHeaders()) };
 	const resp = await fetch(`${BASE}${caminho}`, {
@@ -131,11 +119,6 @@ export async function deletarDestino(id) {
 	return resp.json();
 }
 
-/** Lista os grupos de WhatsApp disponíveis na sessão da WaSenderAPI. */
-export function listarGruposWhatsApp() {
-	return pegar('/api/whatsapp/grupos');
-}
-
 /** Lista os templates de mensagem disponíveis. */
 export function listarTemplates() {
 	return pegar('/api/templates');
@@ -170,20 +153,9 @@ export function buscarConversoes({ dias = 30 } = {}) {
 }
 
 /** Logs recentes para o dashboard de admin. */
-export function buscarLogs({ n = 100, nivel = '' } = {}) {
-	const p = new URLSearchParams({ n: String(n) });
-	if (nivel) p.set('nivel', nivel);
-	return pegar(`/api/admin/logs?${p}`);
-}
-
 /** Verifica se o usuário logado é admin. */
 export function verificarAdmin() {
 	return pegar('/api/admin/me');
-}
-
-/** Altera o nível de log em runtime (admin). */
-export function alterarNivelLog(nivel) {
-	return postar('/api/admin/log-level', { nivel });
 }
 
 /** Lista publicações por status (agendada|enviada|erro; vazio = todas). */
@@ -207,11 +179,6 @@ export function buscarNovidades({ buscaId = '', dias = 7 } = {}) {
 	const p = new URLSearchParams({ dias: String(dias) });
 	if (buscaId) p.set('busca_id', buscaId);
 	return pegar(`/api/lojas/novidades?${p}`);
-}
-
-/** Sincroniza e retorna conversões reais da Shopee (conversionReport). */
-export function sincronizarConversoes({ dias = 30 } = {}) {
-	return postar('/api/conversoes/sync', { dias });
 }
 
 /** Evolução de preço das lojas monitoradas ao longo do tempo. */
@@ -342,25 +309,6 @@ export async function sincronizarBusca(busca, { remover = false } = {}) {
 	}).catch(() => {
 		/* sync não pode travar o uso local */
 	});
-}
-
-export function compararEstrategias({
-	top = 8,
-	keyword,
-	categoria,
-	cat,
-	comissaoMin,
-	vendasMin,
-	notaMin
-} = {}) {
-	const p = new URLSearchParams({ top: String(top) });
-	if (keyword) p.set('keyword', keyword);
-	if (categoria) p.set('categoria', categoria);
-	if (cat != null) p.set('cat', String(cat));
-	if (comissaoMin != null) p.set('comissao_min', String(comissaoMin));
-	if (vendasMin != null) p.set('vendas_min', String(vendasMin));
-	if (notaMin != null) p.set('nota_min', String(notaMin));
-	return pegar(`/api/comparar?${p}`);
 }
 
 // ── Favoritos ─────────────────────────────────────────────────────────────

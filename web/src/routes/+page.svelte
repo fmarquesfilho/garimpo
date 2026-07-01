@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { registrarSelecao } from '$lib/api.js';
 	import { goto } from '$app/navigation';
 	import { buscasSalvas } from '$lib/buscas.js';
 	import { favoritos } from '$lib/favoritos.js';
@@ -88,7 +87,6 @@
 
 	// ── Ações ─────────────────────────────────────────────────────────────────
 	function publicar(c) {
-		registrarSelecao(c);
 		goto(`/publicar?dados=${encodeURIComponent(JSON.stringify(c))}`);
 	}
 

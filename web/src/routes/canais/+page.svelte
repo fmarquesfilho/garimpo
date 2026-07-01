@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { listarDestinos, salvarDestino, deletarDestino, listarGruposWhatsApp } from '$lib/api.js';
+	import { listarDestinos, salvarDestino, deletarDestino } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 	import SeletorGrupo from '$lib/SeletorGrupo.svelte';
 
@@ -49,7 +49,7 @@
 		carregandoGrupos = true;
 		erroGrupos = null;
 		try {
-			const r = await listarGruposWhatsApp();
+			const r = { data: [] }; // TODO: usar listarDestinos com channel=whatsapp
 			gruposWA = r?.grupos ?? [];
 		} catch (e) {
 			erroGrupos = e.message;
