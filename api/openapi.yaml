@@ -3,15 +3,22 @@ info:
   title: Garimpei API
   description: |
     API do Garimpei — curadoria inteligente de produtos de afiliados Shopee.
-    Backend Go servindo JSON. Autenticação via Firebase Auth (Bearer token).
-  version: 1.0.0
+
+    **v1 (Go legado):** Rotas `/api/*` servidas pelo monólito Go. Documentadas abaixo.
+    **v2 (C# — em migração):** Rotas `/api/v2/*` servidas pelo Web App ASP.NET Core 10.
+    Autenticação via Firebase Auth (Bearer token) em ambas.
+
+    Arquitetura: ADR-0012 (C# + Go microserviços gRPC).
+  version: 1.1.0
   contact:
     name: Fernando Marques
 servers:
   - url: https://garimpo-api-vj6afttbza-rj.a.run.app
-    description: Produção (Cloud Run)
+    description: Produção — Go legado (Cloud Run)
   - url: http://localhost:8080
-    description: Desenvolvimento local
+    description: Desenvolvimento local (Go)
+  - url: http://localhost:8090
+    description: Desenvolvimento local (C# v2)
 
 security:
   - BearerAuth: []
@@ -789,7 +796,11 @@ paths:
   /api/whatsapp/grupos:
     get:
       tags: [Destinos]
-      summary: Lista grupos WhatsApp disponíveis (Maytapi)
+      summary: Lista grupos WhatsApp disponíveis
+      description: |
+        DEPRECATED: Este endpoint usava a API Maytapi. Após ADR-0013, o WhatsApp
+        usa a Meta Cloud API. Grupos são gerenciados via /api/destinos.
+      deprecated: true
       responses:
         '200':
           description: Lista de grupos

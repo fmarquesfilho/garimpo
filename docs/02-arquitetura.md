@@ -2,55 +2,130 @@
 
 ## Visão geral
 
-```
-navegador ──https──► Cloud Run (garimpo-api)
-                       ├─ /           → frontend estático (SPA, web/build)
-                       ├─ /api/**     → API JSON (curadoria, publicação, coleta)
-                       ├─ Secret Manager: SHOPEE_*, TELEGRAM_*, WHATSAPP_*
-                       └─ grava eventos → BigQuery
-                                             └─ Looker Studio / Python
+O Garimpei está em transição de monólito Go para uma arquitetura híbrida:
+**Web App C# (ASP.NET Core 10)** como aplicação principal + **microserviços Go (gRPC)**
+para tarefas de I/O intensivo. Ambos coexistem durante a migração (ADR-0012).
 
-Cloud Scheduler ──cron──► POST /api/coletar ──► BigQuery (snapshots)
+```
+                    ┌─────────────────────────────────────────────────┐
+                    │       Cloud Run (multi-container)                │
+                    │                                                 │
+navegador ─https──► │  garimpei-api (C# .NET 10) ← ingress :8080     │
+                    │    ├─ /api/v2/** (novas rotas)                  │
+                    │    ├─ /health, /health/ready                    │
+                    │    ├─ PostgreSQL (EF Core, multi-tenant)        │
+                    │    └─ gRPC clients → sidecars                   │
+                    │                                                 │
+                    │  garimpei-api-legacy (Go) ← legado :8081        │
+                    │    ├─ /api/** (rotas existentes)                │
+                    │    └─ BigQuery (analytics)                      │
+                    │                                                 │
+                    │  collector (Go gRPC :50051)                     │
+                    │    └─ Shopee Affiliate API                      │
+                    │  publisher (Go gRPC :50052)                     │
+                    │    └─ Telegram Bot API + Meta WhatsApp Cloud    │
+                    │  alerter (Go gRPC :50053)                       │
+                    │    └─ Verificação preço + Telegram              │
+                    │  scheduler (Go gRPC :50054)                     │
+                    │    └─ Cron nativo + orquestra via gRPC          │
+                    └─────────────────────────────────────────────────┘
+                              │                    │
+                    ┌─────────▼────────┐  ┌───────▼──────────┐
+                    │  Cloud SQL (PG)  │  │  BigQuery         │
+                    │  dados app       │  │  analytics/export │
+                    └──────────────────┘  └──────────────────┘
+
+Cloudflare Worker ──routing──► /api/v2/* → C#, /api/* → Go (legado)
 ```
 
 ## Stack
 
 | Camada | Tecnologia |
 |---|---|
-| Backend | Go 1.26, Cloud Run (southamerica-east1) |
+| Web App (novo) | C# / ASP.NET Core 10, Minimal API, EF Core, MediatR |
+| Backend legado | Go 1.26, Cloud Run |
+| Microserviços | Go, gRPC (collector, publisher, alerter, scheduler) |
 | Frontend | SvelteKit 2, Svelte 5, Vite 8 |
-| Persistência | BigQuery (analítico), localStorage (favoritos local) |
-| Autenticação | Firebase Auth (Bearer token) |
-| Canais | Telegram Bot API, WhatsApp via Maytapi |
-| CI/CD | GitHub Actions (`deploy-gcp.yml`) |
-| Infra | Artifact Registry, Secret Manager, Cloud Scheduler |
+| DB transacional | PostgreSQL 17 (Cloud SQL) |
+| DB analytics | BigQuery |
+| Autenticação | Firebase Auth (JWT, validado em ambos backends) |
+| Canais | Telegram Bot API, Meta WhatsApp Business Cloud API |
+| CI/CD | GitHub Actions (deploy-gcp.yml + ci-csharp.yml) |
+| Infra | Cloud Run multi-container, Artifact Registry, Secret Manager |
+| Observabilidade | OpenTelemetry + Serilog (C#), slog JSON (Go) |
+| Contratos | Protocol Buffers (buf) — Go + C# stubs pré-gerados |
 
-## Deploy (Cloud Run)
+## Persistência (dual)
 
-Deploy automático via GitHub Actions em push para `main`:
+| Store | Uso | Acesso |
+|-------|-----|--------|
+| PostgreSQL | Produtos, buscas, tenants, configs, publicações | Web App C# (EF Core) |
+| BigQuery | Conversões, snapshots, métricas históricas, export | Microserviços Go + Go legado |
 
-1. Testes Go (`go test ./...`) — gate
-2. Build Docker multi-stage (Node → frontend, Go → backend)
-3. Push para Artifact Registry
-4. Deploy no Cloud Run (região `southamerica-east1`)
-5. Atualiza Cloud Scheduler
+A separação segue a ADR-0012: PostgreSQL para dados transacionais (CRUD),
+BigQuery para analytics e séries temporais.
 
-Custo: Cloud Run escala a zero, BigQuery free tier (10 GB storage + 1 TB consulta/mês).
+## Multi-tenancy
 
-Runbook completo para setup do zero: ver `docs/DEPLOY_GCP.md` (legado, ainda válido para GCP).
+Isolamento por `owner_uid` (Firebase user_id):
 
-Ver [ADR 0003](/docs/decisoes/0003-deploy-gcp/).
+1. **JWT** → TenantMiddleware extrai `user_id` do claim
+2. **EF Core global query filter** → `WHERE owner_uid = @tenant` automático
+3. **SaveChanges** → novas entidades recebem `owner_uid` do contexto
+4. **Rejeição** → 401 se claim ausente em rotas autenticadas
+
+Ver ADR-0012, T-0015.
+
+## Microserviços gRPC
+
+| Serviço | Porta | Responsabilidade | Proto |
+|---------|-------|-----------------|-------|
+| collector | 50051 | Fetch de produtos Shopee (keyword/shop) | `collector/v1/collector.proto` |
+| publisher | 50052 | Publicação em Telegram/WhatsApp | `publisher/v1/publisher.proto` |
+| alerter | 50053 | Verificação de preço + notificação | `alerter/v1/alerter.proto` |
+| scheduler | 50054 | Cron jobs + orquestração dos outros serviços | `scheduler/v1/scheduler.proto` |
+
+Todos rodam como sidecars no Cloud Run multi-container. Comunicação via localhost.
+Health checks gRPC + graceful shutdown em todos.
+
+## Deploy
+
+### Cloud Run multi-container (novo — ADR-0012)
+
+```yaml
+# deploy/cloud-run-service.yaml
+containers:
+  - garimpei-api (C#, ingress :8080)
+  - collector (Go, gRPC :50051)
+  - publisher (Go, gRPC :50052)
+  - alerter (Go, gRPC :50053)
+  - scheduler (Go, gRPC :50054)
+```
+
+Container dependencies: C# espera sidecars ficarem healthy antes de receber tráfego.
+
+### CI/CD Pipeline
+
+```
+push main
+  ├─ deploy-gcp.yml (Go legado)
+  │    └─ test-go → build → deploy Cloud Run
+  └─ ci-csharp.yml (C# + protos)
+       └─ build → test → proto-lint → proto-sync-check → docker build
+```
+
+### Monólito Go (legado — coexistência)
+
+O monólito Go continua servindo tráfego nas rotas `/api/*` durante a migração.
+Rotas são migradas gradualmente para `/api/v2/*` (C#) com feature flags no
+Cloudflare Worker (T-0017).
 
 ## Coleta e scheduler
 
-O Cloud Scheduler dispara `POST /api/coletar` para cada busca ativa no horário do cron.
-
-Cada coleta:
-1. Consulta a API de afiliados Shopee (keyword/categoria ou loja)
-2. Aplica ranking (estratégia nicho)
-3. Grava snapshot no BigQuery (`snapshots`)
-4. Verifica alertas de preço (se configurados)
-5. Detecta novidades (produtos que não existiam na coleta anterior)
+O scheduler (microserviço Go) substitui o Cloud Scheduler:
+- Cron nativo com `robfig/cron` (timezone BRT)
+- Chama collector via gRPC para buscar produtos
+- Gerenciável via gRPC (SetSchedule, TriggerJob, ListJobs)
 
 ### Amostragem rotativa (lojas)
 
@@ -58,41 +133,36 @@ Para lojas monitoradas, a coleta usa paginação rotativa:
 - `rotation_cursor` armazena a próxima página por loja
 - Cada ciclo avança 2 páginas (100 produtos)
 - `full_scan_at` registra quando completou varredura do catálogo inteiro
-- Loja com 500 produtos é coberta em ~5 coletas
 
 ### Throttling
 
-- 200ms entre requisições de páginas da mesma loja
-- 60s entre lojas diferentes numa mesma execução
+- 200ms entre páginas da mesma loja
+- 60s entre lojas diferentes
 - HTTP 429 → espera 30s, retenta até 3×
 
 ## Análise estática
 
-- **golangci-lint** — estilo e bugs no Go (`.golangci.yml`)
-- **arch-go** — restrições arquiteturais (`arch-go.yml`)
+- **golangci-lint** — estilo e bugs no Go
+- **arch-go** — restrições arquiteturais (12 regras, 100% compliance)
+  - `services/*` não importam `internal/httpapi`
   - `internal/domain` não importa infra
-  - `internal/httpapi` não acessa BigQuery diretamente
-  - `cmd/` só importa `internal/`
+- **buf lint** — validação dos .proto (STANDARD rules)
+- **proto sync check** — CI verifica que stubs commitados estão atualizados
+- **dotnet build** — warnings as errors no C#
 - **eslint + stylelint** — frontend
-- **check-file-size** — máx 400 linhas por arquivo de produção
+- **check-file-size** — máx 400 linhas (exclui `gen/`)
 
-## CI/CD Pipeline
+## Logs e observabilidade
 
-```
-push main → test-go → test-web → lint → build → deploy
-              │          │         │
-              │          │         └─ golangci-lint, arch-go, eslint
-              │          └─ vitest (109 testes, <2s)
-              └─ go test (~200 testes)
-```
+| Stack | Ferramenta |
+|-------|-----------|
+| C# | Serilog (structured) + OpenTelemetry (traces + metrics via OTLP) |
+| Go (services) | `slog` JSON handler |
+| Go (legado) | `slog` com campos por request |
+| Cloud Run | → Cloud Logging (JSON) |
 
-Pushes que só tocam `docs/**` são ignorados via `paths-ignore`.
+## ADRs relevantes
 
-## Logs
-
-Logging estruturado via `slog`:
-- Requisições: INFO (health em DEBUG)
-- Erros 5xx: ERROR
-- Eventos coleta/publicação: INFO com campos (`rota`, `categoria`, `coletados`)
-- Cloud Run → JSON → Cloud Logging (filtro por `severity` e campos)
-- Ajuste via `LOG_LEVEL=debug|info|warn|error`
+- [ADR-0003](/docs/decisoes/0003-deploy-gcp/) — Deploy no GCP
+- [ADR-0012](/docs/decisoes/0012-migracao-csharp-go-microservices/) — Migração C# + Go
+- [ADR-0013](/docs/decisoes/0013-whatsapp-meta-cloud-api/) — WhatsApp Meta Cloud API
