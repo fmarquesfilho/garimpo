@@ -11,7 +11,7 @@ spec:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "2"
         run.googleapis.com/execution-environment: gen2
-        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler"]}'
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler","analyzer"]}'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -31,6 +31,12 @@ spec:
                 secretKeyRef:
                   name: GARIMPEI_PG_CONNECTION_STRING
                   key: latest
+            - name: Analyzer__BaseUrl
+              value: "http://localhost:8060"
+            - name: Grpc__CollectorAddress
+              value: "http://localhost:50051"
+            - name: Grpc__PublisherAddress
+              value: "http://localhost:50052"
           resources:
             limits:
               cpu: "1"
@@ -128,3 +134,23 @@ spec:
               port: 50054
             periodSeconds: 3
             failureThreshold: 5
+
+        - name: analyzer
+          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/analyzer:latest
+          env:
+            - name: BQ_PROJECT
+              value: garimpo-500114
+            - name: BQ_DATASET
+              value: garimpei
+            - name: PORT
+              value: "8060"
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 256Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8060
+            periodSeconds: 3
+            failureThreshold: 10
