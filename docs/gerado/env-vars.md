@@ -14,10 +14,12 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `ALERTAS_TELEGRAM_CHAT_ID` | `internal/alerts/alerts.go` | 56 |
 | `ALERTAS_TELEGRAM_TOKEN` | `internal/alerts/alerts.go` | 49 |
 | `ALERTAS_THRESHOLD` | `internal/alerts/alerts.go` | 40 |
+| `ALERTER_ADDR` | `services/scheduler/main.go` | 36 |
 | `BQ_DATASET` | `internal/store/novo_gcp.go` | 15 |
 | `BQ_TABELA_SNAP` | `internal/store/novo_gcp.go` | 20 |
 | `BQ_TABELA` | `internal/store/novo_gcp.go` | 16 |
 | `COLETA_TOKEN` | `internal/httpapi/middleware_auth.go` | 53 |
+| `COLLECTOR_ADDR` | `services/scheduler/main.go` | 28 |
 | `DOCS_DIR` | `internal/httpapi/docs.go` | 14 |
 | `ENCRYPTION_KEY` | `internal/crypto/crypto.go` | 26 |
 | `GCP_REGION` | `internal/scheduler/novo_gcp.go` | 19 |
@@ -26,6 +28,7 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 | `LOG_FORMAT` | `internal/httpapi/admin.go` | 69 |
 | `LOG_LEVEL` | `internal/logs/logs.go` | 22 |
 | `PORT` | `cmd/garimpo-api/main.go` | 38 |
+| `PUBLISHER_ADDR` | `services/scheduler/main.go` | 32 |
 | `SCHEDULER_API_URL` | `internal/scheduler/novo_gcp.go` | 24 |
 | `SHOPEE_APP_ID` | `cmd/garimpo/main.go` | 56 |
 | `SHOPEE_SECRET` | `cmd/garimpo/main.go` | 57 |

@@ -20,6 +20,10 @@ docs-site/src/content/docs/backlog/
 # Binários Go compilados
 /gen-er
 /gen-board
+/collector
+/publisher
+/alerter
+/scheduler
 
 # Chaves (nunca comitar)
 key.json
@@ -33,7 +37,6 @@ src/**/*.suo
 *.DotSettings.user
 
 # ─── Proto gerado ───────────────────────────────────────────────
-gen/
 src/Garimpei.Protos/Generated/
 
 # ─── Docker ─────────────────────────────────────────────────────

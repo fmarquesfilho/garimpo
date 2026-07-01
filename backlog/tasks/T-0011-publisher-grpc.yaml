@@ -1,7 +1,7 @@
 id: T-0011
 titulo: Publisher gRPC server (extract publish package)
 epic: migracao-arch
-status: next
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S27"
