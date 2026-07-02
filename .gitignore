@@ -40,3 +40,4 @@ src/**/*.suo
 
 # ─── Docker ─────────────────────────────────────────────────────
 .env.local
+firebase-debug.log
