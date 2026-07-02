@@ -3,7 +3,7 @@
 // SDK identificar o projeto no client. A segurança está na validação do token
 // no servidor (Firebase Admin SDK / verificação de ID token).
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, connectAuthEmulator, signInWithEmailAndPassword } from 'firebase/auth';
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
@@ -21,6 +21,17 @@ let auth;
 if (browser) {
 	app = initializeApp(firebaseConfig);
 	auth = getAuth(app);
+
+	// Conectar ao Auth Emulator em ambiente de teste (E2E)
+	if (window.__FIREBASE_AUTH_EMULATOR_HOST__) {
+		connectAuthEmulator(auth, `http://${window.__FIREBASE_AUTH_EMULATOR_HOST__}`, { disableWarnings: true });
+	}
+
+	// Expor auth para testes E2E (permite signIn via page.evaluate)
+	if (window.__FIREBASE_AUTH_EMULATOR_HOST__) {
+		window.__TEST_AUTH__ = auth;
+		window.__TEST_SIGN_IN__ = (email, password) => signInWithEmailAndPassword(auth, email, password);
+	}
 }
 
 // Store reativo do usuário logado (ou null)
