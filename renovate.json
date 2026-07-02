@@ -1,0 +1,85 @@
+{
+  "extends": [
+    "config:recommended",
+    "group:monorepos",
+    ":separateMajorReleases",
+    ":automergeMinor",
+    ":automergePatch",
+    "schedule:earlyMondays"
+  ],
+  "labels": ["dependencies"],
+  "platformAutomerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "rebaseWhen": "behind-base-branch",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "automerge": true
+  },
+  "packageRules": [
+    {
+      "description": "Auto-merge patch updates (all ecosystems)",
+      "matchUpdateTypes": ["patch", "pin", "digest"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Auto-merge minor updates (non-breaking)",
+      "matchUpdateTypes": ["minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Major updates - abrir como draft para revisao manual",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "draft": true,
+      "labels": ["dependencies", "breaking"]
+    },
+    {
+      "description": "Agrupar deps do frontend (web) em 1 PR semanal",
+      "matchFileNames": ["web/package.json"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "web dependencies (non-major)",
+      "groupSlug": "web-deps"
+    },
+    {
+      "description": "Agrupar deps do docs-site em 1 PR mensal",
+      "matchFileNames": ["docs-site/package.json"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "docs-site dependencies",
+      "groupSlug": "docs-deps",
+      "schedule": ["before 9am on the first day of the month"]
+    },
+    {
+      "description": "Agrupar Go dependencies em 1 PR semanal",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "go dependencies (non-major)",
+      "groupSlug": "go-deps"
+    },
+    {
+      "description": "Agrupar GitHub Actions em 1 PR semanal",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "github-actions (non-major)",
+      "groupSlug": "gha-deps"
+    },
+    {
+      "description": "Ignorar pacotes do Astro (migrado para Rspress)",
+      "matchPackagePatterns": ["^@astrojs/", "^astro$", "^sharp$"],
+      "matchFileNames": ["docs-site/package.json"],
+      "enabled": false
+    }
+  ],
+  "ignorePaths": [
+    "gen/**",
+    "web/node_modules/**",
+    "docs-site/node_modules/**"
+  ]
+}
