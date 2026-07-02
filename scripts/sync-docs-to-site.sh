@@ -89,14 +89,21 @@ EOF
 
 # ── Corrigir links internos ───────────────────────────────────────────────────
 # Links nos docs originais usam /docs/decisoes/XXXX/ — no Rspress é /decisoes/XXXX
+# sed -i portável (macOS BSD sed vs GNU sed)
+sedi() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
 for f in "$DEST"/*.md "$DEST"/decisoes/*.md; do
   [ -f "$f" ] || continue
-  # /docs/decisoes/XXXX/ → /decisoes/XXXX (com ou sem trailing slash)
-  sed -i '' 's|(/docs/decisoes/\([^/)]*\)/)|(/decisoes/\1)|g' "$f"
-  sed -i '' 's|(/docs/decisoes/\([^)]*\))|(/decisoes/\1)|g' "$f"
-  # /docs/XXXX/ → /XXXX (outros links internos com trailing slash)
-  sed -i '' 's|(/docs/\([^/)]*\)/)|(/\1)|g' "$f"
-  sed -i '' 's|(/docs/\([^)]*\))|(/\1)|g' "$f"
+  sedi 's|(/docs/decisoes/\([^/)]*\)/)|(/decisoes/\1)|g' "$f"
+  sedi 's|(/docs/decisoes/\([^)]*\))|(/decisoes/\1)|g' "$f"
+  sedi 's|(/docs/\([^/)]*\)/)|(/\1)|g' "$f"
+  sedi 's|(/docs/\([^)]*\))|(/\1)|g' "$f"
 done
 
 echo "✓ Docs sincronizados para $DEST ($(ls "$DEST"/decisoes/ | wc -l | tr -d ' ') ADRs)"
