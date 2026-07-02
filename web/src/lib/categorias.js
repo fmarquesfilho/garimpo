@@ -15,24 +15,30 @@ let cache = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 1000 * 60 * 60; // 1 hora
 
+function cacheValido() {
+	return cache && Date.now() - cacheTimestamp < CACHE_TTL;
+}
+
+function fallback() {
+	return cache ?? getFallback();
+}
+
 /**
  * Busca categorias da API com cache de 1h.
  * Retorna array de { id, nome, slug, marketplace }.
  */
 export async function buscarCategorias() {
-	if (cache && Date.now() - cacheTimestamp < CACHE_TTL) {
-		return cache;
-	}
+	if (cacheValido()) return cache;
 
 	try {
 		const resp = await fetch('/api/categorias');
-		if (!resp.ok) return cache ?? getFallback();
+		if (!resp.ok) return fallback();
 		const data = await resp.json();
 		cache = parsearCategorias(data);
 		cacheTimestamp = Date.now();
 		return cache;
 	} catch {
-		return cache ?? getFallback();
+		return fallback();
 	}
 }
 
