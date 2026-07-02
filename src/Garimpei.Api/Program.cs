@@ -66,6 +66,26 @@ var app = builder.Build();
 
 // Middleware pipeline
 app.UseSerilogRequestLogging();
+
+// In Development, bypass Firebase JWT auth with a fake user for local testing
+if (app.Environment.IsDevelopment())
+{
+    app.Use(async (context, next) =>
+    {
+        if (context.User.Identity?.IsAuthenticated != true)
+        {
+            var claims = new[]
+            {
+                new System.Security.Claims.Claim("user_id", "dev-user-001"),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, "dev@garimpei.local"),
+            };
+            var identity = new System.Security.Claims.ClaimsIdentity(claims, "DevBypass");
+            context.User = new System.Security.Claims.ClaimsPrincipal(identity);
+        }
+        await next();
+    });
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TenantMiddleware>();
