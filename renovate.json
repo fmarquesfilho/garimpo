@@ -73,9 +73,13 @@
     },
     {
       "description": "Ignorar pacotes do Astro (migrado para Rspress)",
-      "matchPackagePatterns": ["^@astrojs/", "^astro$", "^sharp$"],
       "matchFileNames": ["docs-site/package.json"],
-      "enabled": false
+      "enabled": false,
+      "matchPackageNames": [
+        "/^@astrojs//",
+        "/^astro$/",
+        "/^sharp$/"
+      ]
     }
   ],
   "ignorePaths": [
