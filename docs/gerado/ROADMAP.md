@@ -20,7 +20,6 @@ _Nenhuma tarefa em andamento._
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
-- **T-0032** Migrar docs-site de Astro Starlight para VitePress · docs-migration · P
 
 ## ✅ Concluídas
 
@@ -46,3 +45,4 @@ _Nenhuma tarefa em andamento._
 - **T-0023** Migrar WhatsApp sender de Maytapi para Meta Cloud API · migracao-arch · M
 - **T-0025** Serviço Analyzer Python (FastAPI + BigQuery) · migracao-arch · M
 - **T-0026** Portar endpoints restantes do Go legado para C# · migracao-arch · G
+- **T-0032** Migrar docs-site de Astro Starlight para Rspress · docs-migration · P

@@ -25,14 +25,12 @@ jobs:
 
       - name: Install & build docs-site
         run: |
-          cp api/openapi.yaml docs-site/public/openapi.yaml
           ./scripts/sync-docs-to-site.sh
           cd docs-site && npm ci && npm run build
-          mkdir -p deploy-dist/docs && cp -r dist/* deploy-dist/docs/
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: "641900c067ae51982debe5c2a98ff39b"
-          command: pages deploy docs-site/deploy-dist --project-name garimpei-docs
+          command: pages deploy docs-site/doc_build --project-name garimpei-docs

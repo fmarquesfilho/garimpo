@@ -1,10 +1,10 @@
 id: T-0032
-titulo: "Migrar docs-site de Astro Starlight para VitePress"
+titulo: "Migrar docs-site de Astro Starlight para Rspress"
 epic: docs-migration
-status: backlog
+status: done
 prioridade: baixa
 estimativa: P
-sprint: ""
+sprint: "2026-S27"
 valor: >
   Astro Starlight é pesado e desconectado da stack (Svelte/Vite). Migrar para
   VitePress que usa Vite nativo, é mais leve, tem search integrado, e deploy

@@ -1,8 +1,4 @@
-# Astro
-dist/
-.astro/
 node_modules/
-
-# OS
-.DS_Store
-deploy-dist/
+doc_build/
+.rspress/
+docs/
