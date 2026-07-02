@@ -64,6 +64,7 @@ export default defineConfig({
             { text: '0016: Multi-marketplace', link: '/decisoes/0016-multi-marketplace' },
             { text: '0017: Coupon Monitoring', link: '/decisoes/0017-coupon-monitoring' },
             { text: '0018: Collector Unificado', link: '/decisoes/0018-collector-unificado' },
+            { text: '0019: Categorias Marketplace', link: '/decisoes/0019-categorias-marketplace' },
           ],
         },
         {
