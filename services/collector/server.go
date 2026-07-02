@@ -12,108 +12,94 @@ import (
 )
 
 // CollectorServer implementa collector.v1.CollectorService.
+// Usa a interface ProductSource via Registry — é agnóstico de marketplace.
 type CollectorServer struct {
 	collectorpb.UnimplementedCollectorServiceServer
-	appID  string
-	secret string
+	source source.ProductSource
 }
 
-func NewCollectorServer(appID, secret string) *CollectorServer {
-	return &CollectorServer{appID: appID, secret: secret}
+func NewCollectorServer(src source.ProductSource) *CollectorServer {
+	return &CollectorServer{source: src}
 }
 
 func (s *CollectorServer) Fetch(ctx context.Context, req *collectorpb.FetchRequest) (*collectorpb.FetchResponse, error) {
 	if req.GetKeyword() == "" {
-		return nil, status.Error(codes.InvalidArgument, "keyword é obrigatório") //nolint:wrapcheck // gRPC status
+		return nil, status.Error(codes.InvalidArgument, "keyword é obrigatório")
 	}
 
-	src := source.NewShopeeAPISource(s.appID, s.secret)
-	src.Keyword = req.GetKeyword()
-	if req.GetLimit() > 0 {
-		src.Limit = int(req.GetLimit())
+	mkt := resolveMarketplace(req.GetMarketplace())
+	if source.ProtoToMarketplace(mkt) != s.source.Marketplace() {
+		return nil, status.Errorf(codes.Unimplemented,
+			"este collector serve %s, não %s", s.source.Marketplace(), mkt.String())
 	}
 
-	produtos, err := src.Fetch()
+	produtos, err := s.source.Search(source.SearchQuery{
+		Keyword: req.GetKeyword(),
+		Limit:   int(req.GetLimit()),
+		SortBy:  req.GetSortBy(),
+	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "falha ao buscar: %v", err)
 	}
 
-	resp := &collectorpb.FetchResponse{
-		TotalFound: int32(min(len(produtos), int(^uint32(0)>>1))), //nolint:gosec // bounded by Shopee API limits
+	return &collectorpb.FetchResponse{
+		Products:   source.ToProtoProducts(produtos),
+		TotalFound: source.SafeInt32(len(produtos)),
 		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
-	}
-
-	for _, p := range produtos {
-		resp.Products = append(resp.Products, &collectorpb.Product{
-			ItemId:          parseItemID(p.ID),
-			ShopId:          parseItemID(p.ShopID),
-			Name:            p.Name,
-			Price:           p.Price,
-			OriginalPrice:   p.PriceMax,
-			Sold:            int32(min(p.Sales30d, int(^uint32(0)>>1))), //nolint:gosec // bounded
-			Rating:          p.Rating,
-			ImageUrl:        p.Image,
-			ProductUrl:      p.ProductLink,
-			ShopName:        p.ShopName,
-			DiscountPercent: p.DiscountRate,
-			Commission:      p.Commission,
-			Category:        p.Category,
-			Link:            p.Link,
-		})
-	}
-
-	return resp, nil
+	}, nil
 }
 
 func (s *CollectorServer) FetchShop(ctx context.Context, req *collectorpb.FetchShopRequest) (*collectorpb.FetchShopResponse, error) {
 	if req.GetShopId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "shop_id é obrigatório") //nolint:wrapcheck // gRPC status
+		return nil, status.Error(codes.InvalidArgument, "shop_id é obrigatório")
 	}
 
-	src := source.NewShopeeShopSource(s.appID, s.secret, []int64{req.GetShopId()})
-	if req.GetLimit() > 0 {
-		src.Limit = int(req.GetLimit())
+	mkt := resolveMarketplace(req.GetMarketplace())
+	if source.ProtoToMarketplace(mkt) != s.source.Marketplace() {
+		return nil, status.Errorf(codes.Unimplemented,
+			"este collector serve %s, não %s", s.source.Marketplace(), mkt.String())
 	}
-	src.PageDelay = 200 * time.Millisecond
 
-	produtos, err := src.Fetch()
+	shopID := formatInt64(req.GetShopId())
+	produtos, err := s.source.FetchShop(shopID, int(req.GetLimit()))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "falha ao buscar shop: %v", err)
 	}
 
-	resp := &collectorpb.FetchShopResponse{
-		TotalFound: int32(min(len(produtos), int(^uint32(0)>>1))), //nolint:gosec // bounded
+	return &collectorpb.FetchShopResponse{
+		Products:   source.ToProtoProducts(produtos),
+		TotalFound: source.SafeInt32(len(produtos)),
 		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
-	}
-
-	for _, p := range produtos {
-		resp.Products = append(resp.Products, &collectorpb.Product{
-			ItemId:          parseItemID(p.ID),
-			ShopId:          parseItemID(p.ShopID),
-			Name:            p.Name,
-			Price:           p.Price,
-			OriginalPrice:   p.PriceMax,
-			Sold:            int32(min(p.Sales30d, int(^uint32(0)>>1))), //nolint:gosec // bounded
-			Rating:          p.Rating,
-			ImageUrl:        p.Image,
-			ProductUrl:      p.ProductLink,
-			ShopName:        p.ShopName,
-			DiscountPercent: p.DiscountRate,
-			Commission:      p.Commission,
-			Category:        p.Category,
-			Link:            p.Link,
-		})
-	}
-
-	return resp, nil
+	}, nil
 }
 
-func parseItemID(s string) int64 {
-	var id int64
-	for _, c := range s {
-		if c >= '0' && c <= '9' {
-			id = id*10 + int64(c-'0')
-		}
+// resolveMarketplace returns the proto marketplace, defaulting to SHOPEE when unspecified.
+func resolveMarketplace(m collectorpb.Marketplace) collectorpb.Marketplace {
+	if m == collectorpb.Marketplace_MARKETPLACE_UNSPECIFIED {
+		return collectorpb.Marketplace_MARKETPLACE_SHOPEE
 	}
-	return id
+	return m
+}
+
+func formatInt64(n int64) string {
+	if n == 0 {
+		return "0"
+	}
+	// Simple int-to-string without importing strconv
+	var buf [20]byte
+	i := len(buf)
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+	for n > 0 {
+		i--
+		buf[i] = byte(n%10) + '0'
+		n /= 10
+	}
+	if neg {
+		i--
+		buf[i] = '-'
+	}
+	return string(buf[i:])
 }

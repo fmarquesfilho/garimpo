@@ -21,12 +21,67 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Marketplace identifica a origem dos produtos.
+type Marketplace int32
+
+const (
+	Marketplace_MARKETPLACE_UNSPECIFIED  Marketplace = 0
+	Marketplace_MARKETPLACE_SHOPEE       Marketplace = 1
+	Marketplace_MARKETPLACE_AMAZON       Marketplace = 2
+	Marketplace_MARKETPLACE_MERCADOLIVRE Marketplace = 3
+)
+
+// Enum value maps for Marketplace.
+var (
+	Marketplace_name = map[int32]string{
+		0: "MARKETPLACE_UNSPECIFIED",
+		1: "MARKETPLACE_SHOPEE",
+		2: "MARKETPLACE_AMAZON",
+		3: "MARKETPLACE_MERCADOLIVRE",
+	}
+	Marketplace_value = map[string]int32{
+		"MARKETPLACE_UNSPECIFIED":  0,
+		"MARKETPLACE_SHOPEE":       1,
+		"MARKETPLACE_AMAZON":       2,
+		"MARKETPLACE_MERCADOLIVRE": 3,
+	}
+)
+
+func (x Marketplace) Enum() *Marketplace {
+	p := new(Marketplace)
+	*p = x
+	return p
+}
+
+func (x Marketplace) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Marketplace) Descriptor() protoreflect.EnumDescriptor {
+	return file_collector_v1_collector_proto_enumTypes[0].Descriptor()
+}
+
+func (Marketplace) Type() protoreflect.EnumType {
+	return &file_collector_v1_collector_proto_enumTypes[0]
+}
+
+func (x Marketplace) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Marketplace.Descriptor instead.
+func (Marketplace) EnumDescriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{0}
+}
+
 type FetchRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
-	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	SortBy        string                 `protobuf:"bytes,3,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"` // relevance, sales, price
-	OwnerUid      string                 `protobuf:"bytes,4,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Keyword  string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	Limit    int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	SortBy   string                 `protobuf:"bytes,3,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"` // relevance, sales, price
+	OwnerUid string                 `protobuf:"bytes,4,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
+	// Marketplace to search. Defaults to SHOPEE when unspecified.
+	Marketplace   Marketplace `protobuf:"varint,5,opt,name=marketplace,proto3,enum=collector.v1.Marketplace" json:"marketplace,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -89,11 +144,20 @@ func (x *FetchRequest) GetOwnerUid() string {
 	return ""
 }
 
+func (x *FetchRequest) GetMarketplace() Marketplace {
+	if x != nil {
+		return x.Marketplace
+	}
+	return Marketplace_MARKETPLACE_UNSPECIFIED
+}
+
 type FetchShopRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShopId        int64                  `protobuf:"varint,1,opt,name=shop_id,json=shopId,proto3" json:"shop_id,omitempty"`
-	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	OwnerUid      string                 `protobuf:"bytes,3,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	ShopId   int64                  `protobuf:"varint,1,opt,name=shop_id,json=shopId,proto3" json:"shop_id,omitempty"`
+	Limit    int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	OwnerUid string                 `protobuf:"bytes,3,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
+	// Marketplace of the shop. Defaults to SHOPEE when unspecified.
+	Marketplace   Marketplace `protobuf:"varint,4,opt,name=marketplace,proto3,enum=collector.v1.Marketplace" json:"marketplace,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -147,6 +211,13 @@ func (x *FetchShopRequest) GetOwnerUid() string {
 		return x.OwnerUid
 	}
 	return ""
+}
+
+func (x *FetchShopRequest) GetMarketplace() Marketplace {
+	if x != nil {
+		return x.Marketplace
+	}
+	return Marketplace_MARKETPLACE_UNSPECIFIED
 }
 
 type FetchResponse struct {
@@ -285,8 +356,10 @@ type Product struct {
 	Commission      float64                `protobuf:"fixed64,12,opt,name=commission,proto3" json:"commission,omitempty"`
 	Category        string                 `protobuf:"bytes,13,opt,name=category,proto3" json:"category,omitempty"`
 	Link            string                 `protobuf:"bytes,14,opt,name=link,proto3" json:"link,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Marketplace from which this product was collected.
+	Marketplace   Marketplace `protobuf:"varint,15,opt,name=marketplace,proto3,enum=collector.v1.Marketplace" json:"marketplace,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Product) Reset() {
@@ -417,20 +490,29 @@ func (x *Product) GetLink() string {
 	return ""
 }
 
+func (x *Product) GetMarketplace() Marketplace {
+	if x != nil {
+		return x.Marketplace
+	}
+	return Marketplace_MARKETPLACE_UNSPECIFIED
+}
+
 var File_collector_v1_collector_proto protoreflect.FileDescriptor
 
 const file_collector_v1_collector_proto_rawDesc = "" +
 	"\n" +
-	"\x1ccollector/v1/collector.proto\x12\fcollector.v1\"t\n" +
+	"\x1ccollector/v1/collector.proto\x12\fcollector.v1\"\xb1\x01\n" +
 	"\fFetchRequest\x12\x18\n" +
 	"\akeyword\x18\x01 \x01(\tR\akeyword\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x17\n" +
 	"\asort_by\x18\x03 \x01(\tR\x06sortBy\x12\x1b\n" +
-	"\towner_uid\x18\x04 \x01(\tR\bownerUid\"^\n" +
+	"\towner_uid\x18\x04 \x01(\tR\bownerUid\x12;\n" +
+	"\vmarketplace\x18\x05 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"\x9b\x01\n" +
 	"\x10FetchShopRequest\x12\x17\n" +
 	"\ashop_id\x18\x01 \x01(\x03R\x06shopId\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x1b\n" +
-	"\towner_uid\x18\x03 \x01(\tR\bownerUid\"\x82\x01\n" +
+	"\towner_uid\x18\x03 \x01(\tR\bownerUid\x12;\n" +
+	"\vmarketplace\x18\x04 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"\x82\x01\n" +
 	"\rFetchResponse\x121\n" +
 	"\bproducts\x18\x01 \x03(\v2\x15.collector.v1.ProductR\bproducts\x12\x1f\n" +
 	"\vtotal_found\x18\x02 \x01(\x05R\n" +
@@ -442,7 +524,7 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\vtotal_found\x18\x02 \x01(\x05R\n" +
 	"totalFound\x12\x1d\n" +
 	"\n" +
-	"fetched_at\x18\x03 \x01(\tR\tfetchedAt\"\x8e\x03\n" +
+	"fetched_at\x18\x03 \x01(\tR\tfetchedAt\"\xcb\x03\n" +
 	"\aProduct\x12\x17\n" +
 	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x17\n" +
 	"\ashop_id\x18\x02 \x01(\x03R\x06shopId\x12\x12\n" +
@@ -461,7 +543,13 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"commission\x18\f \x01(\x01R\n" +
 	"commission\x12\x1a\n" +
 	"\bcategory\x18\r \x01(\tR\bcategory\x12\x12\n" +
-	"\x04link\x18\x0e \x01(\tR\x04link2\xa2\x01\n" +
+	"\x04link\x18\x0e \x01(\tR\x04link\x12;\n" +
+	"\vmarketplace\x18\x0f \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace*x\n" +
+	"\vMarketplace\x12\x1b\n" +
+	"\x17MARKETPLACE_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12MARKETPLACE_SHOPEE\x10\x01\x12\x16\n" +
+	"\x12MARKETPLACE_AMAZON\x10\x02\x12\x1c\n" +
+	"\x18MARKETPLACE_MERCADOLIVRE\x10\x032\xa2\x01\n" +
 	"\x10CollectorService\x12@\n" +
 	"\x05Fetch\x12\x1a.collector.v1.FetchRequest\x1a\x1b.collector.v1.FetchResponse\x12L\n" +
 	"\tFetchShop\x12\x1e.collector.v1.FetchShopRequest\x1a\x1f.collector.v1.FetchShopResponseB\xb5\x01\n" +
@@ -479,26 +567,31 @@ func file_collector_v1_collector_proto_rawDescGZIP() []byte {
 	return file_collector_v1_collector_proto_rawDescData
 }
 
+var file_collector_v1_collector_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_collector_v1_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_collector_v1_collector_proto_goTypes = []any{
-	(*FetchRequest)(nil),      // 0: collector.v1.FetchRequest
-	(*FetchShopRequest)(nil),  // 1: collector.v1.FetchShopRequest
-	(*FetchResponse)(nil),     // 2: collector.v1.FetchResponse
-	(*FetchShopResponse)(nil), // 3: collector.v1.FetchShopResponse
-	(*Product)(nil),           // 4: collector.v1.Product
+	(Marketplace)(0),          // 0: collector.v1.Marketplace
+	(*FetchRequest)(nil),      // 1: collector.v1.FetchRequest
+	(*FetchShopRequest)(nil),  // 2: collector.v1.FetchShopRequest
+	(*FetchResponse)(nil),     // 3: collector.v1.FetchResponse
+	(*FetchShopResponse)(nil), // 4: collector.v1.FetchShopResponse
+	(*Product)(nil),           // 5: collector.v1.Product
 }
 var file_collector_v1_collector_proto_depIdxs = []int32{
-	4, // 0: collector.v1.FetchResponse.products:type_name -> collector.v1.Product
-	4, // 1: collector.v1.FetchShopResponse.products:type_name -> collector.v1.Product
-	0, // 2: collector.v1.CollectorService.Fetch:input_type -> collector.v1.FetchRequest
-	1, // 3: collector.v1.CollectorService.FetchShop:input_type -> collector.v1.FetchShopRequest
-	2, // 4: collector.v1.CollectorService.Fetch:output_type -> collector.v1.FetchResponse
-	3, // 5: collector.v1.CollectorService.FetchShop:output_type -> collector.v1.FetchShopResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0, // 0: collector.v1.FetchRequest.marketplace:type_name -> collector.v1.Marketplace
+	0, // 1: collector.v1.FetchShopRequest.marketplace:type_name -> collector.v1.Marketplace
+	5, // 2: collector.v1.FetchResponse.products:type_name -> collector.v1.Product
+	5, // 3: collector.v1.FetchShopResponse.products:type_name -> collector.v1.Product
+	0, // 4: collector.v1.Product.marketplace:type_name -> collector.v1.Marketplace
+	1, // 5: collector.v1.CollectorService.Fetch:input_type -> collector.v1.FetchRequest
+	2, // 6: collector.v1.CollectorService.FetchShop:input_type -> collector.v1.FetchShopRequest
+	3, // 7: collector.v1.CollectorService.Fetch:output_type -> collector.v1.FetchResponse
+	4, // 8: collector.v1.CollectorService.FetchShop:output_type -> collector.v1.FetchShopResponse
+	7, // [7:9] is the sub-list for method output_type
+	5, // [5:7] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_collector_v1_collector_proto_init() }
@@ -511,13 +604,14 @@ func file_collector_v1_collector_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_collector_v1_collector_proto_rawDesc), len(file_collector_v1_collector_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_collector_v1_collector_proto_goTypes,
 		DependencyIndexes: file_collector_v1_collector_proto_depIdxs,
+		EnumInfos:         file_collector_v1_collector_proto_enumTypes,
 		MessageInfos:      file_collector_v1_collector_proto_msgTypes,
 	}.Build()
 	File_collector_v1_collector_proto = out.File

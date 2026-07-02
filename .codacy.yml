@@ -1,0 +1,46 @@
+# Codacy configuration — Garimpei monorepo
+# Free tier: up to 5 users, private repos, Go + Python + C#
+# Dashboard: https://app.codacy.com
+# Docs: https://docs.codacy.com
+
+---
+engines:
+  # Go: uses golangci-lint rules (mirrors our .golangci.yml)
+  golangci-lint:
+    enabled: true
+
+  # Python: uses ruff (mirrors our ruff config)
+  ruff:
+    enabled: true
+
+  # C#: Roslyn analyzers
+  roslyn:
+    enabled: true
+
+  # Security scanning
+  trivy:
+    enabled: true
+
+  # Duplication detection (cross-language)
+  duplication:
+    enabled: true
+
+exclude_paths:
+  - "gen/**"
+  - "node_modules/**"
+  - "web/node_modules/**"
+  - "src/Garimpei.Protos/Generated/**"
+  - "docs-site/**"
+  - "**/*_test.go"
+  - "**/*.test.ts"
+
+languages:
+  go:
+    extensions:
+      - ".go"
+  python:
+    extensions:
+      - ".py"
+  csharp:
+    extensions:
+      - ".cs"

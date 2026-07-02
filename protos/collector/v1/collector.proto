@@ -5,10 +5,18 @@ package collector.v1;
 option go_package = "github.com/fmarquesfilho/garimpo/gen/go/collector/v1;collectorv1";
 option csharp_namespace = "Garimpei.Protos.Collector.V1";
 
+// Marketplace identifica a origem dos produtos.
+enum Marketplace {
+  MARKETPLACE_UNSPECIFIED = 0;
+  MARKETPLACE_SHOPEE = 1;
+  MARKETPLACE_AMAZON = 2;
+  MARKETPLACE_MERCADOLIVRE = 3;
+}
+
 service CollectorService {
-  // Fetch products from Shopee by search keyword
+  // Fetch products by search keyword from a given marketplace.
   rpc Fetch(FetchRequest) returns (FetchResponse);
-  // Fetch all products from a specific shop
+  // Fetch all products from a specific shop.
   rpc FetchShop(FetchShopRequest) returns (FetchShopResponse);
 }
 
@@ -17,12 +25,16 @@ message FetchRequest {
   int32 limit = 2;
   string sort_by = 3; // relevance, sales, price
   string owner_uid = 4;
+  // Marketplace to search. Defaults to SHOPEE when unspecified.
+  Marketplace marketplace = 5;
 }
 
 message FetchShopRequest {
   int64 shop_id = 1;
   int32 limit = 2;
   string owner_uid = 3;
+  // Marketplace of the shop. Defaults to SHOPEE when unspecified.
+  Marketplace marketplace = 4;
 }
 
 message FetchResponse {
@@ -52,4 +64,6 @@ message Product {
   double commission = 12;
   string category = 13;
   string link = 14;
+  // Marketplace from which this product was collected.
+  Marketplace marketplace = 15;
 }

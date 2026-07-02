@@ -25,47 +25,67 @@ namespace Collector.V1 {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Chxjb2xsZWN0b3IvdjEvY29sbGVjdG9yLnByb3RvEgxjb2xsZWN0b3IudjEi",
-            "dAoMRmV0Y2hSZXF1ZXN0EhgKB2tleXdvcmQYASABKAlSB2tleXdvcmQSFAoF",
-            "bGltaXQYAiABKAVSBWxpbWl0EhcKB3NvcnRfYnkYAyABKAlSBnNvcnRCeRIb",
-            "Cglvd25lcl91aWQYBCABKAlSCG93bmVyVWlkIl4KEEZldGNoU2hvcFJlcXVl",
-            "c3QSFwoHc2hvcF9pZBgBIAEoA1IGc2hvcElkEhQKBWxpbWl0GAIgASgFUgVs",
-            "aW1pdBIbCglvd25lcl91aWQYAyABKAlSCG93bmVyVWlkIoIBCg1GZXRjaFJl",
-            "c3BvbnNlEjEKCHByb2R1Y3RzGAEgAygLMhUuY29sbGVjdG9yLnYxLlByb2R1",
-            "Y3RSCHByb2R1Y3RzEh8KC3RvdGFsX2ZvdW5kGAIgASgFUgp0b3RhbEZvdW5k",
-            "Eh0KCmZldGNoZWRfYXQYAyABKAlSCWZldGNoZWRBdCKGAQoRRmV0Y2hTaG9w",
-            "UmVzcG9uc2USMQoIcHJvZHVjdHMYASADKAsyFS5jb2xsZWN0b3IudjEuUHJv",
-            "ZHVjdFIIcHJvZHVjdHMSHwoLdG90YWxfZm91bmQYAiABKAVSCnRvdGFsRm91",
-            "bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJZmV0Y2hlZEF0Io4DCgdQcm9kdWN0",
-            "EhcKB2l0ZW1faWQYASABKANSBml0ZW1JZBIXCgdzaG9wX2lkGAIgASgDUgZz",
-            "aG9wSWQSEgoEbmFtZRgDIAEoCVIEbmFtZRIUCgVwcmljZRgEIAEoAVIFcHJp",
-            "Y2USJQoOb3JpZ2luYWxfcHJpY2UYBSABKAFSDW9yaWdpbmFsUHJpY2USEgoE",
-            "c29sZBgGIAEoBVIEc29sZBIWCgZyYXRpbmcYByABKAFSBnJhdGluZxIbCglp",
-            "bWFnZV91cmwYCCABKAlSCGltYWdlVXJsEh8KC3Byb2R1Y3RfdXJsGAkgASgJ",
-            "Ugpwcm9kdWN0VXJsEhsKCXNob3BfbmFtZRgKIAEoCVIIc2hvcE5hbWUSKQoQ",
-            "ZGlzY291bnRfcGVyY2VudBgLIAEoAVIPZGlzY291bnRQZXJjZW50Eh4KCmNv",
-            "bW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoIY2F0ZWdvcnkYDSABKAlS",
-            "CGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsyogEKEENvbGxlY3RvclNl",
-            "cnZpY2USQAoFRmV0Y2gSGi5jb2xsZWN0b3IudjEuRmV0Y2hSZXF1ZXN0Ghsu",
-            "Y29sbGVjdG9yLnYxLkZldGNoUmVzcG9uc2USTAoJRmV0Y2hTaG9wEh4uY29s",
-            "bGVjdG9yLnYxLkZldGNoU2hvcFJlcXVlc3QaHy5jb2xsZWN0b3IudjEuRmV0",
-            "Y2hTaG9wUmVzcG9uc2VCtQEKEGNvbS5jb2xsZWN0b3IudjFCDkNvbGxlY3Rv",
-            "clByb3RvUAFaQGdpdGh1Yi5jb20vZm1hcnF1ZXNmaWxoby9nYXJpbXBvL2dl",
-            "bi9nby9jb2xsZWN0b3IvdjE7Y29sbGVjdG9ydjGiAgNDWFiqAgxDb2xsZWN0",
-            "b3IuVjHKAgxDb2xsZWN0b3JcVjHiAhhDb2xsZWN0b3JcVjFcR1BCTWV0YWRh",
-            "dGHqAg1Db2xsZWN0b3I6OlYxYgZwcm90bzM="));
+            "sQEKDEZldGNoUmVxdWVzdBIYCgdrZXl3b3JkGAEgASgJUgdrZXl3b3JkEhQK",
+            "BWxpbWl0GAIgASgFUgVsaW1pdBIXCgdzb3J0X2J5GAMgASgJUgZzb3J0QnkS",
+            "GwoJb3duZXJfdWlkGAQgASgJUghvd25lclVpZBI7CgttYXJrZXRwbGFjZRgF",
+            "IAEoDjIZLmNvbGxlY3Rvci52MS5NYXJrZXRwbGFjZVILbWFya2V0cGxhY2Ui",
+            "mwEKEEZldGNoU2hvcFJlcXVlc3QSFwoHc2hvcF9pZBgBIAEoA1IGc2hvcElk",
+            "EhQKBWxpbWl0GAIgASgFUgVsaW1pdBIbCglvd25lcl91aWQYAyABKAlSCG93",
+            "bmVyVWlkEjsKC21hcmtldHBsYWNlGAQgASgOMhkuY29sbGVjdG9yLnYxLk1h",
+            "cmtldHBsYWNlUgttYXJrZXRwbGFjZSKCAQoNRmV0Y2hSZXNwb25zZRIxCghw",
+            "cm9kdWN0cxgBIAMoCzIVLmNvbGxlY3Rvci52MS5Qcm9kdWN0Ughwcm9kdWN0",
+            "cxIfCgt0b3RhbF9mb3VuZBgCIAEoBVIKdG90YWxGb3VuZBIdCgpmZXRjaGVk",
+            "X2F0GAMgASgJUglmZXRjaGVkQXQihgEKEUZldGNoU2hvcFJlc3BvbnNlEjEK",
+            "CHByb2R1Y3RzGAEgAygLMhUuY29sbGVjdG9yLnYxLlByb2R1Y3RSCHByb2R1",
+            "Y3RzEh8KC3RvdGFsX2ZvdW5kGAIgASgFUgp0b3RhbEZvdW5kEh0KCmZldGNo",
+            "ZWRfYXQYAyABKAlSCWZldGNoZWRBdCLLAwoHUHJvZHVjdBIXCgdpdGVtX2lk",
+            "GAEgASgDUgZpdGVtSWQSFwoHc2hvcF9pZBgCIAEoA1IGc2hvcElkEhIKBG5h",
+            "bWUYAyABKAlSBG5hbWUSFAoFcHJpY2UYBCABKAFSBXByaWNlEiUKDm9yaWdp",
+            "bmFsX3ByaWNlGAUgASgBUg1vcmlnaW5hbFByaWNlEhIKBHNvbGQYBiABKAVS",
+            "BHNvbGQSFgoGcmF0aW5nGAcgASgBUgZyYXRpbmcSGwoJaW1hZ2VfdXJsGAgg",
+            "ASgJUghpbWFnZVVybBIfCgtwcm9kdWN0X3VybBgJIAEoCVIKcHJvZHVjdFVy",
+            "bBIbCglzaG9wX25hbWUYCiABKAlSCHNob3BOYW1lEikKEGRpc2NvdW50X3Bl",
+            "cmNlbnQYCyABKAFSD2Rpc2NvdW50UGVyY2VudBIeCgpjb21taXNzaW9uGAwg",
+            "ASgBUgpjb21taXNzaW9uEhoKCGNhdGVnb3J5GA0gASgJUghjYXRlZ29yeRIS",
+            "CgRsaW5rGA4gASgJUgRsaW5rEjsKC21hcmtldHBsYWNlGA8gASgOMhkuY29s",
+            "bGVjdG9yLnYxLk1hcmtldHBsYWNlUgttYXJrZXRwbGFjZSp4CgtNYXJrZXRw",
+            "bGFjZRIbChdNQVJLRVRQTEFDRV9VTlNQRUNJRklFRBAAEhYKEk1BUktFVFBM",
+            "QUNFX1NIT1BFRRABEhYKEk1BUktFVFBMQUNFX0FNQVpPThACEhwKGE1BUktF",
+            "VFBMQUNFX01FUkNBRE9MSVZSRRADMqIBChBDb2xsZWN0b3JTZXJ2aWNlEkAK",
+            "BUZldGNoEhouY29sbGVjdG9yLnYxLkZldGNoUmVxdWVzdBobLmNvbGxlY3Rv",
+            "ci52MS5GZXRjaFJlc3BvbnNlEkwKCUZldGNoU2hvcBIeLmNvbGxlY3Rvci52",
+            "MS5GZXRjaFNob3BSZXF1ZXN0Gh8uY29sbGVjdG9yLnYxLkZldGNoU2hvcFJl",
+            "c3BvbnNlQrUBChBjb20uY29sbGVjdG9yLnYxQg5Db2xsZWN0b3JQcm90b1AB",
+            "WkBnaXRodWIuY29tL2ZtYXJxdWVzZmlsaG8vZ2FyaW1wby9nZW4vZ28vY29s",
+            "bGVjdG9yL3YxO2NvbGxlY3RvcnYxogIDQ1hYqgIMQ29sbGVjdG9yLlYxygIM",
+            "Q29sbGVjdG9yXFYx4gIYQ29sbGVjdG9yXFYxXEdQQk1ldGFkYXRh6gINQ29s",
+            "bGVjdG9yOjpWMWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
-          new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchRequest), global::Collector.V1.FetchRequest.Parser, new[]{ "Keyword", "Limit", "SortBy", "OwnerUid" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopRequest), global::Collector.V1.FetchShopRequest.Parser, new[]{ "ShopId", "Limit", "OwnerUid" }, null, null, null, null),
+          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Collector.V1.Marketplace), }, null, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchRequest), global::Collector.V1.FetchRequest.Parser, new[]{ "Keyword", "Limit", "SortBy", "OwnerUid", "Marketplace" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopRequest), global::Collector.V1.FetchShopRequest.Parser, new[]{ "ShopId", "Limit", "OwnerUid", "Marketplace" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchResponse), global::Collector.V1.FetchResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopResponse), global::Collector.V1.FetchShopResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link", "Marketplace" }, null, null, null, null)
           }));
     }
     #endregion
 
   }
+  #region Enums
+  /// <summary>
+  /// Marketplace identifica a origem dos produtos.
+  /// </summary>
+  public enum Marketplace {
+    [pbr::OriginalName("MARKETPLACE_UNSPECIFIED")] Unspecified = 0,
+    [pbr::OriginalName("MARKETPLACE_SHOPEE")] Shopee = 1,
+    [pbr::OriginalName("MARKETPLACE_AMAZON")] Amazon = 2,
+    [pbr::OriginalName("MARKETPLACE_MERCADOLIVRE")] Mercadolivre = 3,
+  }
+
+  #endregion
+
   #region Messages
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class FetchRequest : pb::IMessage<FetchRequest>
@@ -106,6 +126,7 @@ namespace Collector.V1 {
       limit_ = other.limit_;
       sortBy_ = other.sortBy_;
       ownerUid_ = other.ownerUid_;
+      marketplace_ = other.marketplace_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -166,6 +187,21 @@ namespace Collector.V1 {
       }
     }
 
+    /// <summary>Field number for the "marketplace" field.</summary>
+    public const int MarketplaceFieldNumber = 5;
+    private global::Collector.V1.Marketplace marketplace_ = global::Collector.V1.Marketplace.Unspecified;
+    /// <summary>
+    /// Marketplace to search. Defaults to SHOPEE when unspecified.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Collector.V1.Marketplace Marketplace {
+      get { return marketplace_; }
+      set {
+        marketplace_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -185,6 +221,7 @@ namespace Collector.V1 {
       if (Limit != other.Limit) return false;
       if (SortBy != other.SortBy) return false;
       if (OwnerUid != other.OwnerUid) return false;
+      if (Marketplace != other.Marketplace) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -196,6 +233,7 @@ namespace Collector.V1 {
       if (Limit != 0) hash ^= Limit.GetHashCode();
       if (SortBy.Length != 0) hash ^= SortBy.GetHashCode();
       if (OwnerUid.Length != 0) hash ^= OwnerUid.GetHashCode();
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) hash ^= Marketplace.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -230,6 +268,10 @@ namespace Collector.V1 {
         output.WriteRawTag(34);
         output.WriteString(OwnerUid);
       }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(40);
+        output.WriteEnum((int) Marketplace);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -256,6 +298,10 @@ namespace Collector.V1 {
         output.WriteRawTag(34);
         output.WriteString(OwnerUid);
       }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(40);
+        output.WriteEnum((int) Marketplace);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -277,6 +323,9 @@ namespace Collector.V1 {
       }
       if (OwnerUid.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(OwnerUid);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Marketplace);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -301,6 +350,9 @@ namespace Collector.V1 {
       }
       if (other.OwnerUid.Length != 0) {
         OwnerUid = other.OwnerUid;
+      }
+      if (other.Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        Marketplace = other.Marketplace;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -337,6 +389,10 @@ namespace Collector.V1 {
             OwnerUid = input.ReadString();
             break;
           }
+          case 40: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
         }
       }
     #endif
@@ -370,6 +426,10 @@ namespace Collector.V1 {
           }
           case 34: {
             OwnerUid = input.ReadString();
+            break;
+          }
+          case 40: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
             break;
           }
         }
@@ -417,6 +477,7 @@ namespace Collector.V1 {
       shopId_ = other.shopId_;
       limit_ = other.limit_;
       ownerUid_ = other.ownerUid_;
+      marketplace_ = other.marketplace_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -462,6 +523,21 @@ namespace Collector.V1 {
       }
     }
 
+    /// <summary>Field number for the "marketplace" field.</summary>
+    public const int MarketplaceFieldNumber = 4;
+    private global::Collector.V1.Marketplace marketplace_ = global::Collector.V1.Marketplace.Unspecified;
+    /// <summary>
+    /// Marketplace of the shop. Defaults to SHOPEE when unspecified.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Collector.V1.Marketplace Marketplace {
+      get { return marketplace_; }
+      set {
+        marketplace_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -480,6 +556,7 @@ namespace Collector.V1 {
       if (ShopId != other.ShopId) return false;
       if (Limit != other.Limit) return false;
       if (OwnerUid != other.OwnerUid) return false;
+      if (Marketplace != other.Marketplace) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -490,6 +567,7 @@ namespace Collector.V1 {
       if (ShopId != 0L) hash ^= ShopId.GetHashCode();
       if (Limit != 0) hash ^= Limit.GetHashCode();
       if (OwnerUid.Length != 0) hash ^= OwnerUid.GetHashCode();
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) hash ^= Marketplace.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -520,6 +598,10 @@ namespace Collector.V1 {
         output.WriteRawTag(26);
         output.WriteString(OwnerUid);
       }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(32);
+        output.WriteEnum((int) Marketplace);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -542,6 +624,10 @@ namespace Collector.V1 {
         output.WriteRawTag(26);
         output.WriteString(OwnerUid);
       }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(32);
+        output.WriteEnum((int) Marketplace);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -560,6 +646,9 @@ namespace Collector.V1 {
       }
       if (OwnerUid.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(OwnerUid);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Marketplace);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -581,6 +670,9 @@ namespace Collector.V1 {
       }
       if (other.OwnerUid.Length != 0) {
         OwnerUid = other.OwnerUid;
+      }
+      if (other.Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        Marketplace = other.Marketplace;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -613,6 +705,10 @@ namespace Collector.V1 {
             OwnerUid = input.ReadString();
             break;
           }
+          case 32: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
         }
       }
     #endif
@@ -642,6 +738,10 @@ namespace Collector.V1 {
           }
           case 26: {
             OwnerUid = input.ReadString();
+            break;
+          }
+          case 32: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
             break;
           }
         }
@@ -1228,6 +1328,7 @@ namespace Collector.V1 {
       commission_ = other.commission_;
       category_ = other.category_;
       link_ = other.link_;
+      marketplace_ = other.marketplace_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1405,6 +1506,21 @@ namespace Collector.V1 {
       }
     }
 
+    /// <summary>Field number for the "marketplace" field.</summary>
+    public const int MarketplaceFieldNumber = 15;
+    private global::Collector.V1.Marketplace marketplace_ = global::Collector.V1.Marketplace.Unspecified;
+    /// <summary>
+    /// Marketplace from which this product was collected.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Collector.V1.Marketplace Marketplace {
+      get { return marketplace_; }
+      set {
+        marketplace_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -1434,6 +1550,7 @@ namespace Collector.V1 {
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Commission, other.Commission)) return false;
       if (Category != other.Category) return false;
       if (Link != other.Link) return false;
+      if (Marketplace != other.Marketplace) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1455,6 +1572,7 @@ namespace Collector.V1 {
       if (Commission != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Commission);
       if (Category.Length != 0) hash ^= Category.GetHashCode();
       if (Link.Length != 0) hash ^= Link.GetHashCode();
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) hash ^= Marketplace.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1529,6 +1647,10 @@ namespace Collector.V1 {
         output.WriteRawTag(114);
         output.WriteString(Link);
       }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(120);
+        output.WriteEnum((int) Marketplace);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1595,6 +1717,10 @@ namespace Collector.V1 {
         output.WriteRawTag(114);
         output.WriteString(Link);
       }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(120);
+        output.WriteEnum((int) Marketplace);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1646,6 +1772,9 @@ namespace Collector.V1 {
       }
       if (Link.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Link);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Marketplace);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1700,6 +1829,9 @@ namespace Collector.V1 {
       }
       if (other.Link.Length != 0) {
         Link = other.Link;
+      }
+      if (other.Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        Marketplace = other.Marketplace;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1776,6 +1908,10 @@ namespace Collector.V1 {
             Link = input.ReadString();
             break;
           }
+          case 120: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
         }
       }
     #endif
@@ -1849,6 +1985,10 @@ namespace Collector.V1 {
           }
           case 114: {
             Link = input.ReadString();
+            break;
+          }
+          case 120: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
             break;
           }
         }

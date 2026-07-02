@@ -48,9 +48,19 @@ run_check "Testes (38: persistence + architecture + integration)" dotnet test --
 
 # ── Go ────────────────────────────────────────────────────────────────────────
 echo ""
-echo "🔨 Go (build + testes):"
+echo "🔨 Go (build + testes + lint):"
 run_check "Build" go build ./...
 run_check "Testes" go test ./...
+run_check "Lint (golangci-lint)" golangci-lint run ./...
+
+# ── Python ────────────────────────────────────────────────────────────────────
+echo ""
+echo "🐍 Python (lint):"
+if command -v ruff &> /dev/null; then
+    run_check "Lint (ruff)" ruff check services/analyzer/
+else
+    echo "  [skip] ruff não instalado — instale com: pip install ruff"
+fi
 
 # ── Drift checks ─────────────────────────────────────────────────────────────
 echo ""

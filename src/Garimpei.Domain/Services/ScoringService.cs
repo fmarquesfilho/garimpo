@@ -73,7 +73,8 @@ public static class ScoringService
             Score = score,
             Components = components,
             Suspicious = suspicious,
-            OfferExpiresAt = p.OfferExpiresAt
+            OfferExpiresAt = p.OfferExpiresAt,
+            Marketplace = p.Marketplace
         };
     }
 

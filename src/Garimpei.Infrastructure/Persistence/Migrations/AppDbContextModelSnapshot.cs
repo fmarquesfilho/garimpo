@@ -41,6 +41,10 @@ namespace Garimpei.Infrastructure.Persistence.Migrations
                     b.Property<int>("Limit")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Marketplaces")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("OwnerUid")
                         .IsRequired()
                         .HasColumnType("text");
@@ -57,6 +61,86 @@ namespace Garimpei.Infrastructure.Persistence.Migrations
                     b.HasIndex("OwnerUid");
 
                     b.ToTable("Buscas");
+                });
+
+            modelBuilder.Entity("Garimpei.Domain.Entities.CouponAlertHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AlertRuleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AlertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("AlertedDiscountValue")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("CouponId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OwnerUid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUid");
+
+                    b.HasIndex("CouponId", "AlertRuleId", "AlertedAt");
+
+                    b.ToTable("CouponAlertHistories");
+                });
+
+            modelBuilder.Entity("Garimpei.Domain.Entities.CouponAlertRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Categories")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscountType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Marketplaces")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("MinDiscount")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("OwnerUid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUid");
+
+                    b.ToTable("CouponAlertRules");
                 });
 
             modelBuilder.Entity("Garimpei.Domain.Entities.Destino", b =>
@@ -367,6 +451,15 @@ namespace Garimpei.Infrastructure.Persistence.Migrations
 
                     b.Property<double>("AlertaThreshold")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("AmazonAccessKeyEnc")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AmazonPartnerTag")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AmazonSecretKeyEnc")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");

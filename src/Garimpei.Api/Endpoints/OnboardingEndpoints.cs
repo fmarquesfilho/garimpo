@@ -40,8 +40,10 @@ public static partial class EndpointExtensions
                 configurado = cfg.Configurado,
                 aceitou_termos = cfg.AceitouTermos,
                 tem_shopee = !string.IsNullOrEmpty(cfg.ShopeeAppId),
+                tem_amazon = !string.IsNullOrEmpty(cfg.AmazonPartnerTag),
                 tem_telegram = !string.IsNullOrEmpty(cfg.TelegramChatId),
-                tem_whatsapp = !string.IsNullOrEmpty(cfg.WhatsappPhoneNumberId)
+                tem_whatsapp = !string.IsNullOrEmpty(cfg.WhatsappPhoneNumberId),
+                marketplaces_ativos = GetActiveMarketplaces(cfg)
             });
         });
 
@@ -76,6 +78,40 @@ public static partial class EndpointExtensions
             await db.SaveChangesAsync(ct);
 
             return Results.Ok(new { step = cfg.OnboardingStep, status = "shopee_configurado" });
+        });
+
+        // POST /api/onboarding/amazon
+        onboarding.MapPost("/amazon", async (
+            AppDbContext db,
+            ITenantContext tenant,
+            OnboardingAmazonRequest req,
+            CancellationToken ct) =>
+        {
+            var cfg = await GetOrCreateTenantConfig(db, tenant.OwnerUid, ct);
+
+            if (req.Pular == true)
+            {
+                cfg.OnboardingStep = Math.Max(cfg.OnboardingStep, 2);
+                cfg.UpdatedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+                return Results.Ok(new { step = cfg.OnboardingStep, status = "amazon_pulado" });
+            }
+
+            if (string.IsNullOrWhiteSpace(req.AccessKey) ||
+                string.IsNullOrWhiteSpace(req.SecretKey) ||
+                string.IsNullOrWhiteSpace(req.PartnerTag))
+            {
+                return Results.BadRequest(new { error = "access_key, secret_key e partner_tag são obrigatórios" });
+            }
+
+            cfg.AmazonAccessKeyEnc = req.AccessKey; // TODO: encrypt
+            cfg.AmazonSecretKeyEnc = req.SecretKey; // TODO: encrypt
+            cfg.AmazonPartnerTag = req.PartnerTag;
+            cfg.OnboardingStep = Math.Max(cfg.OnboardingStep, 2);
+            cfg.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(new { step = cfg.OnboardingStep, status = "amazon_configurado" });
         });
 
         // POST /api/onboarding/telegram
@@ -183,6 +219,16 @@ public static partial class EndpointExtensions
 
         return cfg;
     }
+
+    private static string[] GetActiveMarketplaces(TenantConfig cfg)
+    {
+        var marketplaces = new List<string>();
+        if (!string.IsNullOrEmpty(cfg.ShopeeAppId))
+            marketplaces.Add("shopee");
+        if (!string.IsNullOrEmpty(cfg.AmazonPartnerTag))
+            marketplaces.Add("amazon");
+        return marketplaces.ToArray();
+    }
 }
 
 public sealed record OnboardingShopeeRequest
@@ -202,5 +248,13 @@ public sealed record OnboardingWhatsappRequest
 {
     public string? PhoneNumberId { get; init; }
     public string? AccessToken { get; init; }
+    public bool? Pular { get; init; }
+}
+
+public sealed record OnboardingAmazonRequest
+{
+    public string? AccessKey { get; init; }
+    public string? SecretKey { get; init; }
+    public string? PartnerTag { get; init; }
     public bool? Pular { get; init; }
 }

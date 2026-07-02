@@ -62,3 +62,9 @@ var ErrNoProvider = errors.New("provedor não registrado")
 
 // ErrCSV indica erro no parsing de arquivo CSV.
 var ErrCSV = errors.New("csv")
+
+// ErrAmazonAPI indica falha na comunicação com a Amazon Creators API.
+var ErrAmazonAPI = errors.New("amazon api")
+
+// ErrRateLimited indica que a API retornou HTTP 429 (rate limiting).
+var ErrRateLimited = errors.New("rate limited")

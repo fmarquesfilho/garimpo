@@ -65,6 +65,50 @@ services:
   #   environment:
   #     BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
   #
+  # amazon-collector:
+  #   build:
+  #     context: .
+  #     dockerfile: services/collector-amazon/Dockerfile
+  #   ports:
+  #     - "50055:50055"
+  #   environment:
+  #     AMAZON_PARTNER_TAG: ${AMAZON_PARTNER_TAG}
+  #     AMAZON_ACCESS_KEY: ${AMAZON_ACCESS_KEY}
+  #     AMAZON_SECRET_KEY: ${AMAZON_SECRET_KEY}
+  #
+  # coupon-collector-shopee:
+  #   build:
+  #     context: .
+  #     dockerfile: services/coupon-collector/Dockerfile
+  #   ports:
+  #     - "50061:50061"
+  #   environment:
+  #     MARKETPLACE: shopee
+  #     GRPC_PORT: "50061"
+  #     SHOPEE_APP_ID: ${SHOPEE_APP_ID}
+  #     SHOPEE_SECRET: ${SHOPEE_SECRET}
+  #     BQ_PROJECT: garimpei-dev
+  #     BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+  #   depends_on:
+  #     - bigquery-emulator
+  #
+  # coupon-collector-amazon:
+  #   build:
+  #     context: .
+  #     dockerfile: services/coupon-collector/Dockerfile
+  #   ports:
+  #     - "50062:50062"
+  #   environment:
+  #     MARKETPLACE: amazon
+  #     GRPC_PORT: "50062"
+  #     AMAZON_ACCESS_KEY: ${AMAZON_ACCESS_KEY}
+  #     AMAZON_SECRET_KEY: ${AMAZON_SECRET_KEY}
+  #     AMAZON_PARTNER_TAG: ${AMAZON_PARTNER_TAG}
+  #     BQ_PROJECT: garimpei-dev
+  #     BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+  #   depends_on:
+  #     - bigquery-emulator
+  #
   # publisher:
   #   build:
   #     context: .
@@ -85,8 +129,15 @@ services:
   #     dockerfile: services/scheduler/Dockerfile
   #   ports:
   #     - "50054:50054"
+  #   environment:
+  #     COUPON_COLLECTOR_SHOPEE_ADDR: coupon-collector-shopee:50061
+  #     COUPON_COLLECTOR_AMAZON_ADDR: coupon-collector-amazon:50062
+  #     ANALYZER_URL: http://analyzer:8060
   #   depends_on:
   #     - shopee-collector
+  #     - amazon-collector
+  #     - coupon-collector-shopee
+  #     - coupon-collector-amazon
   #     - publisher
   #     - alerter
 

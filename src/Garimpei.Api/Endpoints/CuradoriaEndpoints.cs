@@ -1,5 +1,6 @@
 using Garimpei.Domain.Services;
 using Garimpei.Domain.ValueObjects;
+using Garimpei.Infrastructure.Sources;
 using Collector.V1;
 using Microsoft.EntityFrameworkCore;
 
@@ -141,21 +142,5 @@ public static partial class EndpointExtensions
         return group;
     }
 
-    private static ProductCandidate ToCandida‌te(Product p) => new()
-    {
-        Id = p.ItemId.ToString(),
-        Name = p.Name,
-        Category = p.Category,
-        ShopName = p.ShopName,
-        ShopId = p.ShopId.ToString(),
-        Price = (decimal)p.Price,
-        OriginalPrice = (decimal)p.OriginalPrice,
-        DiscountPercent = p.DiscountPercent,
-        Commission = p.Commission,
-        Sales = p.Sold,
-        Rating = p.Rating,
-        Link = p.Link,
-        ProductLink = p.ProductUrl,
-        ImageUrl = p.ImageUrl
-    };
+    private static ProductCandidate ToCandida‌te(Product p) => ProductMappings.ToCandidate(p);
 }

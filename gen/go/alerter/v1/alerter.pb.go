@@ -277,6 +277,242 @@ func (x *AlertResult) GetNotifiedAt() string {
 	return ""
 }
 
+type SendCouponAlertRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OwnerUid      string                 `protobuf:"bytes,1,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
+	Channel       string                 `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`                // "telegram" or "whatsapp"
+	GroupId       string                 `protobuf:"bytes,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"` // chat_id or phone_number_id
+	Coupons       []*CouponAlertPayload  `protobuf:"bytes,4,rep,name=coupons,proto3" json:"coupons,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendCouponAlertRequest) Reset() {
+	*x = SendCouponAlertRequest{}
+	mi := &file_alerter_v1_alerter_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendCouponAlertRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendCouponAlertRequest) ProtoMessage() {}
+
+func (x *SendCouponAlertRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alerter_v1_alerter_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendCouponAlertRequest.ProtoReflect.Descriptor instead.
+func (*SendCouponAlertRequest) Descriptor() ([]byte, []int) {
+	return file_alerter_v1_alerter_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SendCouponAlertRequest) GetOwnerUid() string {
+	if x != nil {
+		return x.OwnerUid
+	}
+	return ""
+}
+
+func (x *SendCouponAlertRequest) GetChannel() string {
+	if x != nil {
+		return x.Channel
+	}
+	return ""
+}
+
+func (x *SendCouponAlertRequest) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *SendCouponAlertRequest) GetCoupons() []*CouponAlertPayload {
+	if x != nil {
+		return x.Coupons
+	}
+	return nil
+}
+
+type CouponAlertPayload struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	CouponId            string                 `protobuf:"bytes,1,opt,name=coupon_id,json=couponId,proto3" json:"coupon_id,omitempty"`
+	Marketplace         string                 `protobuf:"bytes,2,opt,name=marketplace,proto3" json:"marketplace,omitempty"`
+	DiscountDescription string                 `protobuf:"bytes,3,opt,name=discount_description,json=discountDescription,proto3" json:"discount_description,omitempty"` // "20% OFF" or "R$15 de desconto"
+	MinSpend            float64                `protobuf:"fixed64,4,opt,name=min_spend,json=minSpend,proto3" json:"min_spend,omitempty"`
+	StartTime           string                 `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime             string                 `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Categories          []string               `protobuf:"bytes,7,rep,name=categories,proto3" json:"categories,omitempty"`
+	LinkOrCode          string                 `protobuf:"bytes,8,opt,name=link_or_code,json=linkOrCode,proto3" json:"link_or_code,omitempty"`
+	ExpiresSoon         bool                   `protobuf:"varint,9,opt,name=expires_soon,json=expiresSoon,proto3" json:"expires_soon,omitempty"`       // end_time within 24h
+	AffiliateLink       string                 `protobuf:"bytes,10,opt,name=affiliate_link,json=affiliateLink,proto3" json:"affiliate_link,omitempty"` // tenant's affiliate-tagged URL
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *CouponAlertPayload) Reset() {
+	*x = CouponAlertPayload{}
+	mi := &file_alerter_v1_alerter_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CouponAlertPayload) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CouponAlertPayload) ProtoMessage() {}
+
+func (x *CouponAlertPayload) ProtoReflect() protoreflect.Message {
+	mi := &file_alerter_v1_alerter_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CouponAlertPayload.ProtoReflect.Descriptor instead.
+func (*CouponAlertPayload) Descriptor() ([]byte, []int) {
+	return file_alerter_v1_alerter_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CouponAlertPayload) GetCouponId() string {
+	if x != nil {
+		return x.CouponId
+	}
+	return ""
+}
+
+func (x *CouponAlertPayload) GetMarketplace() string {
+	if x != nil {
+		return x.Marketplace
+	}
+	return ""
+}
+
+func (x *CouponAlertPayload) GetDiscountDescription() string {
+	if x != nil {
+		return x.DiscountDescription
+	}
+	return ""
+}
+
+func (x *CouponAlertPayload) GetMinSpend() float64 {
+	if x != nil {
+		return x.MinSpend
+	}
+	return 0
+}
+
+func (x *CouponAlertPayload) GetStartTime() string {
+	if x != nil {
+		return x.StartTime
+	}
+	return ""
+}
+
+func (x *CouponAlertPayload) GetEndTime() string {
+	if x != nil {
+		return x.EndTime
+	}
+	return ""
+}
+
+func (x *CouponAlertPayload) GetCategories() []string {
+	if x != nil {
+		return x.Categories
+	}
+	return nil
+}
+
+func (x *CouponAlertPayload) GetLinkOrCode() string {
+	if x != nil {
+		return x.LinkOrCode
+	}
+	return ""
+}
+
+func (x *CouponAlertPayload) GetExpiresSoon() bool {
+	if x != nil {
+		return x.ExpiresSoon
+	}
+	return false
+}
+
+func (x *CouponAlertPayload) GetAffiliateLink() string {
+	if x != nil {
+		return x.AffiliateLink
+	}
+	return ""
+}
+
+type SendCouponAlertResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Delivered     bool                   `protobuf:"varint,1,opt,name=delivered,proto3" json:"delivered,omitempty"`
+	NotifiedAt    string                 `protobuf:"bytes,2,opt,name=notified_at,json=notifiedAt,proto3" json:"notified_at,omitempty"` // RFC3339
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendCouponAlertResponse) Reset() {
+	*x = SendCouponAlertResponse{}
+	mi := &file_alerter_v1_alerter_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendCouponAlertResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendCouponAlertResponse) ProtoMessage() {}
+
+func (x *SendCouponAlertResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_alerter_v1_alerter_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendCouponAlertResponse.ProtoReflect.Descriptor instead.
+func (*SendCouponAlertResponse) Descriptor() ([]byte, []int) {
+	return file_alerter_v1_alerter_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SendCouponAlertResponse) GetDelivered() bool {
+	if x != nil {
+		return x.Delivered
+	}
+	return false
+}
+
+func (x *SendCouponAlertResponse) GetNotifiedAt() string {
+	if x != nil {
+		return x.NotifiedAt
+	}
+	return ""
+}
+
 var File_alerter_v1_alerter_proto protoreflect.FileDescriptor
 
 const file_alerter_v1_alerter_proto_rawDesc = "" +
@@ -302,9 +538,35 @@ const file_alerter_v1_alerter_proto_rawDesc = "" +
 	"\ttriggered\x18\x02 \x01(\bR\ttriggered\x12)\n" +
 	"\x10products_matched\x18\x03 \x01(\x05R\x0fproductsMatched\x12\x1f\n" +
 	"\vnotified_at\x18\x04 \x01(\tR\n" +
-	"notifiedAt2i\n" +
+	"notifiedAt\"\xa4\x01\n" +
+	"\x16SendCouponAlertRequest\x12\x1b\n" +
+	"\towner_uid\x18\x01 \x01(\tR\bownerUid\x12\x18\n" +
+	"\achannel\x18\x02 \x01(\tR\achannel\x12\x19\n" +
+	"\bgroup_id\x18\x03 \x01(\tR\agroupId\x128\n" +
+	"\acoupons\x18\x04 \x03(\v2\x1e.alerter.v1.CouponAlertPayloadR\acoupons\"\xe9\x02\n" +
+	"\x12CouponAlertPayload\x12\x1b\n" +
+	"\tcoupon_id\x18\x01 \x01(\tR\bcouponId\x12 \n" +
+	"\vmarketplace\x18\x02 \x01(\tR\vmarketplace\x121\n" +
+	"\x14discount_description\x18\x03 \x01(\tR\x13discountDescription\x12\x1b\n" +
+	"\tmin_spend\x18\x04 \x01(\x01R\bminSpend\x12\x1d\n" +
+	"\n" +
+	"start_time\x18\x05 \x01(\tR\tstartTime\x12\x19\n" +
+	"\bend_time\x18\x06 \x01(\tR\aendTime\x12\x1e\n" +
+	"\n" +
+	"categories\x18\a \x03(\tR\n" +
+	"categories\x12 \n" +
+	"\flink_or_code\x18\b \x01(\tR\n" +
+	"linkOrCode\x12!\n" +
+	"\fexpires_soon\x18\t \x01(\bR\vexpiresSoon\x12%\n" +
+	"\x0eaffiliate_link\x18\n" +
+	" \x01(\tR\raffiliateLink\"X\n" +
+	"\x17SendCouponAlertResponse\x12\x1c\n" +
+	"\tdelivered\x18\x01 \x01(\bR\tdelivered\x12\x1f\n" +
+	"\vnotified_at\x18\x02 \x01(\tR\n" +
+	"notifiedAt2\xc5\x01\n" +
 	"\x0eAlerterService\x12W\n" +
-	"\x0eCheckAndNotify\x12!.alerter.v1.CheckAndNotifyRequest\x1a\".alerter.v1.CheckAndNotifyResponseB\xa5\x01\n" +
+	"\x0eCheckAndNotify\x12!.alerter.v1.CheckAndNotifyRequest\x1a\".alerter.v1.CheckAndNotifyResponse\x12Z\n" +
+	"\x0fSendCouponAlert\x12\".alerter.v1.SendCouponAlertRequest\x1a#.alerter.v1.SendCouponAlertResponseB\xa5\x01\n" +
 	"\x0ecom.alerter.v1B\fAlerterProtoP\x01Z<github.com/fmarquesfilho/garimpo/gen/go/alerter/v1;alerterv1\xa2\x02\x03AXX\xaa\x02\n" +
 	"Alerter.V1\xca\x02\n" +
 	"Alerter\\V1\xe2\x02\x16Alerter\\V1\\GPBMetadata\xea\x02\vAlerter::V1b\x06proto3"
@@ -321,23 +583,29 @@ func file_alerter_v1_alerter_proto_rawDescGZIP() []byte {
 	return file_alerter_v1_alerter_proto_rawDescData
 }
 
-var file_alerter_v1_alerter_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_alerter_v1_alerter_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_alerter_v1_alerter_proto_goTypes = []any{
-	(*CheckAndNotifyRequest)(nil),  // 0: alerter.v1.CheckAndNotifyRequest
-	(*AlertRule)(nil),              // 1: alerter.v1.AlertRule
-	(*CheckAndNotifyResponse)(nil), // 2: alerter.v1.CheckAndNotifyResponse
-	(*AlertResult)(nil),            // 3: alerter.v1.AlertResult
+	(*CheckAndNotifyRequest)(nil),   // 0: alerter.v1.CheckAndNotifyRequest
+	(*AlertRule)(nil),               // 1: alerter.v1.AlertRule
+	(*CheckAndNotifyResponse)(nil),  // 2: alerter.v1.CheckAndNotifyResponse
+	(*AlertResult)(nil),             // 3: alerter.v1.AlertResult
+	(*SendCouponAlertRequest)(nil),  // 4: alerter.v1.SendCouponAlertRequest
+	(*CouponAlertPayload)(nil),      // 5: alerter.v1.CouponAlertPayload
+	(*SendCouponAlertResponse)(nil), // 6: alerter.v1.SendCouponAlertResponse
 }
 var file_alerter_v1_alerter_proto_depIdxs = []int32{
 	1, // 0: alerter.v1.CheckAndNotifyRequest.rules:type_name -> alerter.v1.AlertRule
 	3, // 1: alerter.v1.CheckAndNotifyResponse.results:type_name -> alerter.v1.AlertResult
-	0, // 2: alerter.v1.AlerterService.CheckAndNotify:input_type -> alerter.v1.CheckAndNotifyRequest
-	2, // 3: alerter.v1.AlerterService.CheckAndNotify:output_type -> alerter.v1.CheckAndNotifyResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5, // 2: alerter.v1.SendCouponAlertRequest.coupons:type_name -> alerter.v1.CouponAlertPayload
+	0, // 3: alerter.v1.AlerterService.CheckAndNotify:input_type -> alerter.v1.CheckAndNotifyRequest
+	4, // 4: alerter.v1.AlerterService.SendCouponAlert:input_type -> alerter.v1.SendCouponAlertRequest
+	2, // 5: alerter.v1.AlerterService.CheckAndNotify:output_type -> alerter.v1.CheckAndNotifyResponse
+	6, // 6: alerter.v1.AlerterService.SendCouponAlert:output_type -> alerter.v1.SendCouponAlertResponse
+	5, // [5:7] is the sub-list for method output_type
+	3, // [3:5] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_alerter_v1_alerter_proto_init() }
@@ -351,7 +619,7 @@ func file_alerter_v1_alerter_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_alerter_v1_alerter_proto_rawDesc), len(file_alerter_v1_alerter_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

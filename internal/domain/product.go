@@ -21,7 +21,15 @@ type Product struct {
 	CatIDs       []int   // IDs de categorias Shopee (hierárquicos: nível 1, 2, 3)
 	Origin       string  // país de origem do produto (ex.: "Coreia", "Japão") — preenchido via fallback por loja
 	OfferEndsAt  int64   // timestamp Unix de quando a oferta de afiliado expira (0 = sem expiração conhecida)
+	Marketplace  string  // identificador do marketplace de origem: "shopee", "amazon", "mercadolivre"
 }
+
+// Constantes de marketplace para uso consistente em todo o sistema.
+const (
+	MarketplaceShopee       = "shopee"
+	MarketplaceAmazon       = "amazon"
+	MarketplaceMercadoLivre = "mercadolivre"
+)
 
 // Scored é um produto já pontuado por uma estratégia.
 // Reasons guarda a contribuição de cada componente do score — isso dá

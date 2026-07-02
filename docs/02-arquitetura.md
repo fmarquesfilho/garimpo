@@ -249,6 +249,8 @@ Tudo isso em pandas + scikit-learn + BigQuery, sem afetar a API principal.
 | Destinos | Canais de publicação (Telegram/WhatsApp) |
 | Templates | Templates de mensagem |
 | Publicacoes | Publicações agendadas/enviadas |
+| CouponAlertRules | Regras de alerta para cupons (marketplace, desconto mín, categorias) |
+| CouponAlertHistory | Histórico de alertas enviados (deduplicação 24h) |
 
 ### BigQuery (dados analíticos)
 
@@ -262,6 +264,7 @@ Tudo isso em pandas + scikit-learn + BigQuery, sem afetar a API principal.
 | Tabela | Quem escreve | Quem lê | Descrição |
 |--------|-------------|---------|-----------|
 | snapshots | collector (Go) | analyzer (Python) | Foto periódica do mercado |
+| coupon_snapshots | coupon-collector (Go) | analyzer (Python) | Cupons coletados (append-only, 90d TTL) |
 | eventos | C# API | analyzer (Python) | Eventos de curadoria |
 | buscas | C# API / scheduler | analyzer (Python) | Perfis de coleta (append-only) |
 | conversoes | webhook Shopee | analyzer (Python) | Conversões reais |
@@ -393,6 +396,7 @@ Request HTTP com JWT Firebase
 - `GET /estatisticas?dias=30`
 - `GET /coletas?dias=30`
 - `GET /conversoes?dias=30`
+- `POST /detect-coupons` (detecção de cupons novos/modificados via BigQuery diff)
 - `GET /health`
 
 ---
@@ -452,7 +456,8 @@ Feature flags:
 |-------|-----------|--------|-----------|
 | Go (internal) | go test | source 87%, publish 62%, store 36% | Paths críticos |
 | Go (services) | go test | 12 testes (validações + fluxos) | 11-33% |
-| C# | xUnit + NetArchTest | 23 testes (multi-tenant, persistence, arquitetura) | Isolamento + fitness functions |
+| Go (couponsource) | go test | 9 testes (adapters + registry) | Adapters + factory |
+| C# | xUnit + NetArchTest | 51 testes (multi-tenant, persistence, arquitetura, dedup) | Isolamento + fitness functions |
 | Frontend | Vitest + Playwright | 109 unitários + E2E | Componentes + fluxos |
 
 ### Fitness functions (testes de arquitetura)
@@ -517,3 +522,5 @@ Shopee) existem apenas no SQL schema.
 | [0012](/docs/decisoes/0012-migracao-csharp-go-microservices/) | Migração para C# + Go microservices | 2026-06 |
 | [0013](/docs/decisoes/0013-whatsapp-meta-cloud-api/) | WhatsApp: Maytapi → Meta Cloud API | 2026-07 |
 | [0014](/docs/decisoes/0014-analyzer-python-fastapi/) | Analyzer Python (FastAPI + BigQuery) | 2026-07 |
+| [0016](/docs/decisoes/0016-multi-marketplace/) | Suporte multi-marketplace (Shopee + Amazon + ML) | 2026-07 |
+| [0017](/docs/decisoes/0017-coupon-monitoring/) | Monitoramento de cupons cross-marketplace | 2026-07 |

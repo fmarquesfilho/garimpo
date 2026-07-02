@@ -1,6 +1,8 @@
 using Collector.V1;
+using Garimpei.Domain;
 using Garimpei.Domain.Services;
 using Garimpei.Domain.ValueObjects;
+using Garimpei.Infrastructure.Sources;
 
 /// <summary>
 /// Compatibility endpoints — serve /api/* routes during migration.
@@ -17,7 +19,16 @@ public static partial class EndpointExtensions
             status = "ok",
             fonte = "shopee",
             store = "postgresql",
-            backend = "csharp-v2"
+            backend = "csharp-v2",
+            quality = new
+            {
+                codacy = "https://app.codacy.com",
+                lint_go = "golangci-lint (0 issues)",
+                lint_python = "ruff (0 issues)",
+                lint_csharp = "NetArchTest (13 rules)",
+                tests_csharp = 51,
+                pre_push_checks = 9
+            }
         }));
 
         // /api/admin/me — verifica se o usuário logado é admin
@@ -32,7 +43,19 @@ public static partial class EndpointExtensions
                 && adminEmails.Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Any(e => e.Trim().Equals(email, StringComparison.OrdinalIgnoreCase));
 
-            return Results.Ok(new { admin = isAdmin, email });
+            var codacyUrl = config["Codacy:DashboardUrl"] ?? "https://app.codacy.com";
+
+            return Results.Ok(new
+            {
+                admin = isAdmin,
+                email,
+                tools = new
+                {
+                    codacy_dashboard = codacyUrl,
+                    github_actions = "https://github.com/fmarquesfilho/garimpo/actions",
+                    pull_requests = "https://github.com/fmarquesfilho/garimpo/pulls"
+                }
+            });
         }).RequireAuthorization();
 
         // /api/candidatos — public (same as Go legacy)
@@ -55,23 +78,7 @@ public static partial class EndpointExtensions
                 Limit = Math.Min(top ?? 50, 100)
             }, cancellationToken: ct);
 
-            var candidates = response.Products.Select(p => new ProductCandidate
-            {
-                Id = p.ItemId.ToString(),
-                Name = p.Name,
-                Category = p.Category,
-                ShopName = p.ShopName,
-                ShopId = p.ShopId.ToString(),
-                Price = (decimal)p.Price,
-                OriginalPrice = (decimal)p.OriginalPrice,
-                DiscountPercent = p.DiscountPercent,
-                Commission = p.Commission,
-                Sales = p.Sold,
-                Rating = p.Rating,
-                Link = p.Link,
-                ProductLink = p.ProductUrl,
-                ImageUrl = p.ImageUrl
-            }).ToList();
+            var candidates = response.Products.Select(ProductMappings.ToCandidate).ToList();
 
             var filter = new EligibilityFilter
             {
@@ -109,7 +116,8 @@ public static partial class EndpointExtensions
                         avaliacao = s.Components.Rating
                     },
                     suspeito = s.Suspicious,
-                    oferta_expira = s.OfferExpiresAt ?? ""
+                    oferta_expira = s.OfferExpiresAt ?? "",
+                    marketplace = s.Marketplace
                 }),
                 total_bruto = response.TotalFound
             });

@@ -21,4 +21,11 @@ public sealed record ProductCandidate
     public string? ProductLink { get; init; }
     public string? ImageUrl { get; init; }
     public string? OfferExpiresAt { get; init; }
+
+    /// <summary>
+    /// Marketplace from which this candidate was collected.
+    /// Defaults to "shopee" for backward compatibility.
+    /// Valid values: "shopee", "amazon", "mercadolivre".
+    /// </summary>
+    public string Marketplace { get; init; } = Domain.Marketplaces.Shopee;
 }

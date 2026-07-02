@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package coupon.v1;
+
+option go_package = "github.com/fmarquesfilho/garimpo/gen/go/coupon/v1;couponv1";
+option csharp_namespace = "Garimpei.Protos.Coupon.V1";
+
+import "collector/v1/collector.proto";
+
+service CouponCollectorService {
+  // Fetch available coupons from a marketplace for a given tenant.
+  rpc FetchCoupons(FetchCouponsRequest) returns (FetchCouponsResponse);
+}
+
+message FetchCouponsRequest {
+  string owner_uid = 1;
+  collector.v1.Marketplace marketplace = 2;
+  int32 page_size = 3; // max items per page (default 500 for Shopee)
+}
+
+message FetchCouponsResponse {
+  repeated CouponProto coupons = 1;
+  int32 total_found = 2;
+  string fetched_at = 3; // RFC3339
+}
+
+message CouponProto {
+  string coupon_id = 1;
+  collector.v1.Marketplace marketplace = 2;
+  string code = 3;
+  DiscountType discount_type = 4;
+  double discount_value = 5;
+  double min_spend = 6;
+  string start_time = 7;  // RFC3339
+  string end_time = 8;    // RFC3339
+  repeated string applicable_categories = 9;
+  string status = 10;     // active, expired
+}
+
+enum DiscountType {
+  DISCOUNT_TYPE_UNSPECIFIED = 0;
+  DISCOUNT_TYPE_PERCENTAGE = 1;
+  DISCOUNT_TYPE_FIXED = 2;
+}

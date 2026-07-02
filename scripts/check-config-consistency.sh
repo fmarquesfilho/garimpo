@@ -5,7 +5,7 @@
 # Detecta inconsistências entre configs que devem estar sincronizadas:
 #   - Nome do dataset BigQuery (deve ser "garimpo" em todos os lugares)
 #   - Nome do projeto GCP (deve ser "garimpo-500114" onde hardcoded)
-#   - Portas de serviços (collector=50051, publisher=50052, analyzer=8060)
+#   - Portas de serviços (collector=50051, collector-amazon=50055, publisher=50052, analyzer=8060)
 #   - Base URLs do analyzer
 #
 # Roda em CI e local. Exit 1 = inconsistência detectada.
@@ -48,7 +48,7 @@ else
 fi
 
 # ── 2. Portas dos serviços gRPC ───────────────────────────────────────────────
-# Padrão: collector=50051, publisher=50052, alerter=50053, scheduler=50054
+# Padrão: collector=50051, collector-amazon=50055, publisher=50052, alerter=50053, scheduler=50054
 
 echo ""
 echo "🔍 Verificando consistência de portas..."
@@ -56,6 +56,7 @@ echo "🔍 Verificando consistência de portas..."
 check_port() {
   local service=$1
   local expected_port=$2
+  local exclude_pattern=${3:-"XYZNOEXCLUDE"}
 
   # Only check actual port config (address definitions, port mappings)
   # Not source code, docs, or generated files that mention service names
@@ -64,6 +65,7 @@ check_port() {
     --include="*.json" --include="*.go" \
     . 2>/dev/null | \
     grep -v "node_modules\|\.git/\|bin/\|obj/\|gen/\|Protos/Generated\|docs-site\|backlog\|api/openapi" | \
+    grep -v "$exclude_pattern" | \
     grep "localhost\|ADDR\|Address" | \
     grep -v "$expected_port" || true)
 
@@ -74,7 +76,8 @@ check_port() {
   fi
 }
 
-check_port "Collector" "50051"
+check_port "Collector" "50051" "Amazon"
+check_port "CollectorAmazon" "50055"
 check_port "Publisher" "50052"
 echo -e "${GREEN}   ✓ Portas de serviços gRPC consistentes${NC}"
 

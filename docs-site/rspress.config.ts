@@ -8,7 +8,6 @@ export default defineConfig({
   icon: '/favicon.svg',
   markdown: {
     mdxRs: false,
-    checkDeadLinks: false,
   },
   themeConfig: {
     socialLinks: [
@@ -42,10 +41,22 @@ export default defineConfig({
         {
           text: 'Decisões (ADRs)',
           items: [
-            { text: 'ADR-0012: Migração C# + Go', link: '/decisoes/0012-migracao-csharp-go-microservices' },
-            { text: 'ADR-0013: WhatsApp Meta', link: '/decisoes/0013-whatsapp-meta-cloud-api' },
-            { text: 'ADR-0014: Analyzer Python', link: '/decisoes/0014-analyzer-python-fastapi' },
-            { text: 'ADR-0015: Multi-tenant', link: '/decisoes/0015-multi-tenant-credenciais' },
+            { text: '0001: Nome Garimpei', link: '/decisoes/0001-nome-garimpei' },
+            { text: '0002: Só Nicho', link: '/decisoes/0002-so-nicho' },
+            { text: '0003: Deploy GCP', link: '/decisoes/0003-deploy-gcp' },
+            { text: '0004: Página Descobrir', link: '/decisoes/0004-pagina-descobrir' },
+            { text: '0005: Canais Telegram/WhatsApp', link: '/decisoes/0005-canais-telegram-whatsapp' },
+            { text: '0006: Categorias Plural', link: '/decisoes/0006-categorias-plural' },
+            { text: '0007: Persistência Favoritos', link: '/decisoes/0007-persistencia-favoritos' },
+            { text: '0008: Alertas Desabilitados', link: '/decisoes/0008-alertas-desabilitados' },
+            { text: '0009: Adoção Chi Router', link: '/decisoes/0009-adocao-chi-router' },
+            { text: '0010: Error Handling', link: '/decisoes/0010-error-handling' },
+            { text: '0011: Repository Pattern', link: '/decisoes/0011-repository-pattern' },
+            { text: '0012: Migração C# + Go', link: '/decisoes/0012-migracao-csharp-go-microservices' },
+            { text: '0013: WhatsApp Meta', link: '/decisoes/0013-whatsapp-meta-cloud-api' },
+            { text: '0014: Analyzer Python', link: '/decisoes/0014-analyzer-python-fastapi' },
+            { text: '0015: Multi-tenant', link: '/decisoes/0015-multi-tenant-credenciais' },
+            { text: '0016: Multi-marketplace', link: '/decisoes/0016-multi-marketplace' },
           ],
         },
         {

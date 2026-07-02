@@ -24,6 +24,11 @@ public sealed record ScoredProduct
     public required ScoreComponents Components { get; init; }
     public bool Suspicious { get; init; }
     public string? OfferExpiresAt { get; init; }
+
+    /// <summary>
+    /// Marketplace from which this product was collected.
+    /// </summary>
+    public string Marketplace { get; init; } = Domain.Marketplaces.Shopee;
 }
 
 public sealed record ScoreComponents

@@ -30,6 +30,7 @@ docs-publish: docs docs-site ## Gera, sincroniza e builda — pronto para commit
 
 docs-check: ## CI: falha se docs geradas estiverem desatualizados
 	$(MAKE) docs-er docs-env docs-board
+	mkdir -p docs-site/public
 	cp api/openapi.yaml docs-site/public/openapi.yaml
 	git diff --exit-code docs/gerado docs-site/public/openapi.yaml || (echo "❌ Docs geradas desatualizadas: rode 'make docs'"; exit 1)
 

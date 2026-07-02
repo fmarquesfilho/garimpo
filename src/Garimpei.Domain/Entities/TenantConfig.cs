@@ -19,6 +19,12 @@ public sealed class TenantConfig : IOwnedEntity
     // WhatsApp (Meta Cloud API)
     public string? WhatsappPhoneNumberId { get; set; }
     public string? WhatsappTokenEnc { get; set; } // criptografado
+
+    // Amazon (Creators API — OAuth 2.0)
+    public string? AmazonAccessKeyEnc { get; set; } // criptografado
+    public string? AmazonSecretKeyEnc { get; set; } // criptografado
+    public string? AmazonPartnerTag { get; set; }
+
     public int OnboardingStep { get; set; } // 0=início, 4=completo
     public bool AceitouTermos { get; set; }
     public DateTime? AceitouTermosEm { get; set; }

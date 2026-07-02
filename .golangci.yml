@@ -61,6 +61,7 @@ linters-settings:
   wrapcheck:
     # Só exige wrap para erros de pacotes EXTERNOS ao módulo.
     # Erros internos do projeto já têm contexto suficiente.
+    # gRPC status errors são estruturados por design — wrappá-los quebra o protocolo.
     ignoreSigs:
       - .Errorf(
       - errors.New(
@@ -73,6 +74,7 @@ linters-settings:
       - .WithStack(
     ignorePackageGlobs:
       - github.com/fmarquesfilho/garimpo/*
+      - google.golang.org/grpc/status
 
   errorlint:
     # Exige errors.Is() em vez de == para comparar erros

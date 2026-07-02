@@ -49,6 +49,10 @@ namespace Alerter.V1 {
     static readonly grpc::Marshaller<global::Alerter.V1.CheckAndNotifyRequest> __Marshaller_alerter_v1_CheckAndNotifyRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Alerter.V1.CheckAndNotifyRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Alerter.V1.CheckAndNotifyResponse> __Marshaller_alerter_v1_CheckAndNotifyResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Alerter.V1.CheckAndNotifyResponse.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Alerter.V1.SendCouponAlertRequest> __Marshaller_alerter_v1_SendCouponAlertRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Alerter.V1.SendCouponAlertRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Alerter.V1.SendCouponAlertResponse> __Marshaller_alerter_v1_SendCouponAlertResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Alerter.V1.SendCouponAlertResponse.Parser));
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::Alerter.V1.CheckAndNotifyRequest, global::Alerter.V1.CheckAndNotifyResponse> __Method_CheckAndNotify = new grpc::Method<global::Alerter.V1.CheckAndNotifyRequest, global::Alerter.V1.CheckAndNotifyResponse>(
@@ -57,6 +61,14 @@ namespace Alerter.V1 {
         "CheckAndNotify",
         __Marshaller_alerter_v1_CheckAndNotifyRequest,
         __Marshaller_alerter_v1_CheckAndNotifyResponse);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Alerter.V1.SendCouponAlertRequest, global::Alerter.V1.SendCouponAlertResponse> __Method_SendCouponAlert = new grpc::Method<global::Alerter.V1.SendCouponAlertRequest, global::Alerter.V1.SendCouponAlertResponse>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "SendCouponAlert",
+        __Marshaller_alerter_v1_SendCouponAlertRequest,
+        __Marshaller_alerter_v1_SendCouponAlertResponse);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -76,6 +88,18 @@ namespace Alerter.V1 {
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       public virtual global::System.Threading.Tasks.Task<global::Alerter.V1.CheckAndNotifyResponse> CheckAndNotify(global::Alerter.V1.CheckAndNotifyRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// Send coupon-specific alerts to Telegram/WhatsApp
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Alerter.V1.SendCouponAlertResponse> SendCouponAlert(global::Alerter.V1.SendCouponAlertRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -157,6 +181,54 @@ namespace Alerter.V1 {
       {
         return CallInvoker.AsyncUnaryCall(__Method_CheckAndNotify, null, options, request);
       }
+      /// <summary>
+      /// Send coupon-specific alerts to Telegram/WhatsApp
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Alerter.V1.SendCouponAlertResponse SendCouponAlert(global::Alerter.V1.SendCouponAlertRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return SendCouponAlert(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Send coupon-specific alerts to Telegram/WhatsApp
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Alerter.V1.SendCouponAlertResponse SendCouponAlert(global::Alerter.V1.SendCouponAlertRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_SendCouponAlert, null, options, request);
+      }
+      /// <summary>
+      /// Send coupon-specific alerts to Telegram/WhatsApp
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Alerter.V1.SendCouponAlertResponse> SendCouponAlertAsync(global::Alerter.V1.SendCouponAlertRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return SendCouponAlertAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Send coupon-specific alerts to Telegram/WhatsApp
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Alerter.V1.SendCouponAlertResponse> SendCouponAlertAsync(global::Alerter.V1.SendCouponAlertRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_SendCouponAlert, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       protected override AlerterServiceClient NewInstance(ClientBaseConfiguration configuration)
@@ -171,7 +243,8 @@ namespace Alerter.V1 {
     public static grpc::ServerServiceDefinition BindService(AlerterServiceBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_CheckAndNotify, serviceImpl.CheckAndNotify).Build();
+          .AddMethod(__Method_CheckAndNotify, serviceImpl.CheckAndNotify)
+          .AddMethod(__Method_SendCouponAlert, serviceImpl.SendCouponAlert).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the service binding logic.
@@ -182,6 +255,7 @@ namespace Alerter.V1 {
     public static void BindService(grpc::ServiceBinderBase serviceBinder, AlerterServiceBase serviceImpl)
     {
       serviceBinder.AddMethod(__Method_CheckAndNotify, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Alerter.V1.CheckAndNotifyRequest, global::Alerter.V1.CheckAndNotifyResponse>(serviceImpl.CheckAndNotify));
+      serviceBinder.AddMethod(__Method_SendCouponAlert, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Alerter.V1.SendCouponAlertRequest, global::Alerter.V1.SendCouponAlertResponse>(serviceImpl.SendCouponAlert));
     }
 
   }

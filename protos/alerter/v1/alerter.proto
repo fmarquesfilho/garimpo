@@ -8,6 +8,8 @@ option csharp_namespace = "Garimpei.Protos.Alerter.V1";
 service AlerterService {
   // Check product snapshots and notify if thresholds are met
   rpc CheckAndNotify(CheckAndNotifyRequest) returns (CheckAndNotifyResponse);
+  // Send coupon-specific alerts to Telegram/WhatsApp
+  rpc SendCouponAlert(SendCouponAlertRequest) returns (SendCouponAlertResponse);
 }
 
 message CheckAndNotifyRequest {
@@ -34,4 +36,31 @@ message AlertResult {
   bool triggered = 2;
   int32 products_matched = 3;
   string notified_at = 4; // RFC3339
+}
+
+// ─── Coupon Alert Messages ──────────────────────────────────────────────
+
+message SendCouponAlertRequest {
+  string owner_uid = 1;
+  string channel = 2;           // "telegram" or "whatsapp"
+  string group_id = 3;          // chat_id or phone_number_id
+  repeated CouponAlertPayload coupons = 4;
+}
+
+message CouponAlertPayload {
+  string coupon_id = 1;
+  string marketplace = 2;
+  string discount_description = 3; // "20% OFF" or "R$15 de desconto"
+  double min_spend = 4;
+  string start_time = 5;
+  string end_time = 6;
+  repeated string categories = 7;
+  string link_or_code = 8;
+  bool expires_soon = 9;        // end_time within 24h
+  string affiliate_link = 10;   // tenant's affiliate-tagged URL
+}
+
+message SendCouponAlertResponse {
+  bool delivered = 1;
+  string notified_at = 2; // RFC3339
 }

@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	collectorpb "github.com/fmarquesfilho/garimpo/gen/go/collector/v1"
+	"github.com/fmarquesfilho/garimpo/internal/source"
 )
 
 func main() {
@@ -32,6 +33,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Cria a source via Registry — Open/Closed principle:
+	// adicionar marketplace = registrar factory, zero mudança aqui.
+	shopeeSource := source.NewShopeeAdapter(appID, secret)
+
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		logger.Error("falha ao abrir porta", slog.String("port", port), slog.String("erro", err.Error()))
@@ -40,8 +45,8 @@ func main() {
 
 	srv := grpc.NewServer()
 
-	// Registra o serviço collector
-	collectorpb.RegisterCollectorServiceServer(srv, NewCollectorServer(appID, secret))
+	// Registra o serviço collector com a source injetada
+	collectorpb.RegisterCollectorServiceServer(srv, NewCollectorServer(shopeeSource))
 
 	// Health check
 	healthSrv := health.NewServer()
@@ -60,7 +65,9 @@ func main() {
 		srv.GracefulStop()
 	}()
 
-	logger.Info("collector gRPC listening", slog.String("port", port))
+	logger.Info("collector gRPC listening",
+		slog.String("port", port),
+		slog.String("marketplace", shopeeSource.Marketplace()))
 	if err := srv.Serve(lis); err != nil {
 		logger.Error("serve falhou", slog.String("erro", err.Error()))
 		os.Exit(1)

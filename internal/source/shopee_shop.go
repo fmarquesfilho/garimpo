@@ -173,6 +173,7 @@ func (s *ShopeeShopSource) Fetch() ([]domain.Product, error) { //nolint:funlen /
 					ShopID:       string(n.ShopID),
 					CatIDs:       n.ProductCatIDs,
 					OfferEndsAt:  int64(n.PeriodEndTime),
+					Marketplace:  domain.MarketplaceShopee,
 				})
 			}
 

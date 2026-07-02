@@ -190,6 +190,12 @@ jobs:
       - name: Collector
         run: docker build -f services/collector/Dockerfile .
 
+      - name: Collector Amazon
+        run: docker build -f services/collector-amazon/Dockerfile .
+
+      - name: Coupon Collector
+        run: docker build -f services/coupon-collector/Dockerfile .
+
       - name: Publisher
         run: docker build -f services/publisher/Dockerfile .
 
@@ -201,4 +207,11 @@ jobs:
 
       - name: Analyzer
         run: docker build -f services/analyzer/Dockerfile services/analyzer/
+
+  # ── Code Quality (Codacy — free for ≤5 users) ────────────────────────────
+  # Codacy runs automatically via GitHub App integration (not a workflow step).
+  # It analyzes Go (golangci-lint), Python (ruff), C# (Roslyn), + security (Trivy).
+  # Dashboard: https://app.codacy.com
+  # Setup: install Codacy GitHub App → add repo → auto-analyzes on PRs.
+  # No YAML step needed — Codacy hooks into GitHub directly.
 
