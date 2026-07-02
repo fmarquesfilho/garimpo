@@ -228,9 +228,6 @@ public class ArchitectureTests
 
         foreach (var type in types)
         {
-            // Skip nested types (private records used internally by the service)
-            if (type.IsNestedPrivate || type.IsNestedAssembly) continue;
-
             Assert.True(type.IsAbstract && type.IsSealed,
                 $"Domain Service '{type.Name}' deveria ser static (stateless)");
         }

@@ -106,15 +106,4 @@ public static class ScoringService
         var idx = (int)Math.Ceiling(p * sorted.Count) - 1;
         return sorted[Math.Clamp(idx, 0, sorted.Count - 1)];
     }
-
-    private sealed record PoolStats
-    {
-        public double MinCommission { get; init; }
-        public double MaxCommission { get; init; }
-        public double MinEV { get; init; }
-        public double MaxEV { get; init; }
-        public double MinRating { get; init; }
-        public double MaxRating { get; init; }
-        public double CommissionP75 { get; init; }
-    }
 }
