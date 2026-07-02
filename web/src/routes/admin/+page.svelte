@@ -58,7 +58,7 @@
 			<ul>
 				<li><a href="/docs/" target="_blank">📚 Documentação (Starlight)</a></li>
 				<li><a href="/docs/api-reference.html" target="_blank">📋 API Reference (Scalar)</a></li>
-				<li><a href="https://qodana.cloud" target="_blank">🔍 Qodana (Code Quality)</a></li>
+				<li><a href="https://app.codacy.com" target="_blank">🔍 Codacy (Code Quality)</a></li>
 				<li><a href="https://github.com/fmarquesfilho/garimpo/actions" target="_blank">⚙️ GitHub Actions (CI)</a></li>
 				<li><a href="https://github.com/fmarquesfilho/garimpo/pulls" target="_blank">🔀 Pull Requests</a></li>
 				<li><a href="https://console.cloud.google.com/run?project=garimpo-500114" target="_blank">☁️ Cloud Run Console</a></li>

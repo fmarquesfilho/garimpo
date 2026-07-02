@@ -208,23 +208,10 @@ jobs:
       - name: Analyzer
         run: docker build -f services/analyzer/Dockerfile services/analyzer/
 
-  # ── Qodana (code quality — JetBrains inspections) ───────────────────────
-  # NOTE: Qodana Go requires a paid license. Python Community is free.
-  # We rely on golangci-lint (Go) + ruff (Python) + NetArchTest (C#) locally.
-  # Qodana adds deeper inspections if you configure QODANA_TOKEN.
-  qodana-python:
-    name: Qodana Python (Community)
-    runs-on: ubuntu-latest
-    needs: [python]
-    if: ${{ vars.QODANA_ENABLED == 'true' }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - uses: JetBrains/qodana-action@v2026.1
-        with:
-          args: "--config qodana-python.yaml"
-        env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+  # ── Code Quality (Codacy — free for ≤5 users) ────────────────────────────
+  # Codacy runs automatically via GitHub App integration (not a workflow step).
+  # It analyzes Go (golangci-lint), Python (ruff), C# (Roslyn), + security (Trivy).
+  # Dashboard: https://app.codacy.com
+  # Setup: install Codacy GitHub App → add repo → auto-analyzes on PRs.
+  # No YAML step needed — Codacy hooks into GitHub directly.
 

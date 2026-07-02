@@ -22,7 +22,7 @@ public static partial class EndpointExtensions
             backend = "csharp-v2",
             quality = new
             {
-                qodana = "https://qodana.cloud",
+                codacy = "https://app.codacy.com",
                 lint_go = "golangci-lint (0 issues)",
                 lint_python = "ruff (0 issues)",
                 lint_csharp = "NetArchTest (13 rules)",
@@ -43,7 +43,7 @@ public static partial class EndpointExtensions
                 && adminEmails.Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Any(e => e.Trim().Equals(email, StringComparison.OrdinalIgnoreCase));
 
-            var qodanaUrl = config["Qodana:DashboardUrl"] ?? "https://qodana.cloud";
+            var codacyUrl = config["Codacy:DashboardUrl"] ?? "https://app.codacy.com";
 
             return Results.Ok(new
             {
@@ -51,7 +51,7 @@ public static partial class EndpointExtensions
                 email,
                 tools = new
                 {
-                    qodana_dashboard = qodanaUrl,
+                    codacy_dashboard = codacyUrl,
                     github_actions = "https://github.com/fmarquesfilho/garimpo/actions",
                     pull_requests = "https://github.com/fmarquesfilho/garimpo/pulls"
                 }
