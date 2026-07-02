@@ -19,7 +19,7 @@ jobs:
     name: Go (build + test + lint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-go@v6
         with:
@@ -70,7 +70,7 @@ jobs:
           --health-timeout=3s
           --health-retries=5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v5
         with:
@@ -95,7 +95,7 @@ jobs:
       run:
         working-directory: services/analyzer
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v6
         with:
@@ -115,7 +115,7 @@ jobs:
     name: Proto (lint + sync check)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: bufbuild/buf-setup-action@v1
 
@@ -149,7 +149,7 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v5
         with:
@@ -201,7 +201,7 @@ jobs:
     name: API contract check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Check API drift
         run: ./scripts/check-api-contract.sh
       - name: Check config consistency
@@ -215,7 +215,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [go, csharp, python, proto, frontend, api-contract]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: C# API
         run: docker build -f src/Garimpei.Api/Dockerfile src/
