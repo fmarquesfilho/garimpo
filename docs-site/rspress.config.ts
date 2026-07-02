@@ -8,6 +8,10 @@ export default defineConfig({
   icon: '/favicon.svg',
   markdown: {
     mdxRs: false,
+    checkDeadLinks: true,
+  },
+  route: {
+    cleanUrls: true,
   },
   themeConfig: {
     socialLinks: [

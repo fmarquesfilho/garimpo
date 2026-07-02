@@ -68,6 +68,7 @@ echo "🔍 Drift checks (cross-stack):"
 run_check "API contract (frontend↔backend)" ./scripts/check-api-contract.sh
 run_check "Config consistency (dataset, portas)" ./scripts/check-config-consistency.sh
 run_check "Schema sync (BQ↔Go↔C#↔Analyzer)" ./scripts/check-schema-sync.sh
+run_check "Data ownership (PG↔BQ boundaries)" ./scripts/check-data-ownership.sh
 
 # ── Docs (generated files + dead links) ───────────────────────────────────────
 echo ""

@@ -287,6 +287,57 @@ Tudo isso em pandas + scikit-learn + BigQuery, sem afetar a API principal.
 > **Se o usuário cria/edita → PostgreSQL**
 > **Se o sistema coleta/calcula → BigQuery**
 
+### Data Ownership (fronteiras entre serviços)
+
+Os dois stores servem propósitos completamente diferentes e **não devem compartilhar
+schema nem cruzar fronteiras**:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        DATA OWNERSHIP MODEL                                   │
+│                                                                              │
+│  ┌─────────────┐                              ┌──────────────────┐          │
+│  │ PostgreSQL  │                              │    BigQuery       │          │
+│  │ (Estado)    │                              │    (Memória)      │          │
+│  │             │                              │                   │          │
+│  │ • O que o   │     NUNCA cruzam             │ • O que o sistema │          │
+│  │   sistema   │ ◄─────────────────────────►  │   observou ao     │          │
+│  │   SABE agora│     fronteiras               │   longo do tempo  │          │
+│  │             │                              │                   │          │
+│  │ Dono: C# API│                              │ Dono: Go + Python │          │
+│  └──────┬──────┘                              └────────┬─────────┘          │
+│         │                                              │                     │
+│         ▼                                              ▼                     │
+│  • TenantConfig        Ponto de contato:       • snapshots (produtos)       │
+│  • CouponAlertRules    owner_uid (tenant ID)   • coupon_snapshots           │
+│  • Buscas              passa via gRPC/HTTP     • eventos                    │
+│  • Favoritos                                   • conversoes                  │
+│  • Destinos                                    • publicacoes (histórico)     │
+│  • Templates                                                                 │
+│  • Publicacoes (estado)                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Regras de acesso (enforced no CI):**
+
+| Componente | PostgreSQL | BigQuery | Enforced por |
+|------------|-----------|----------|--------------|
+| C# API (`src/`) | ✅ Lê e escreve (EF Core) | ❌ Nunca | `check-data-ownership.sh` |
+| Go collectors (`services/collector*`) | ❌ Nunca | ✅ Escreve (append) | `check-data-ownership.sh` |
+| Go scheduler (`services/scheduler/`) | ❌ Nunca | ❌ (orquestra via gRPC) | `check-data-ownership.sh` |
+| Python analyzer (`services/analyzer/`) | ❌ Nunca | ✅ Lê (queries) | `check-data-ownership.sh` |
+
+**Comunicação cross-boundary:**
+
+Quando o Python analyzer detecta algo no BigQuery que precisa virar uma ação no
+PostgreSQL (ex: cupom novo → avaliar regras → enviar alerta), ele **não acessa o PG
+diretamente**. Ele faz HTTP POST para o C# API (`/internal/coupon-alerts/evaluate`),
+que é o dono do PostgreSQL. O dado nunca pula a fronteira.
+
+```
+BigQuery ──[Python lê]──► Detector ──[HTTP POST]──► C# API ──[EF Core]──► PostgreSQL
+```
+
 ---
 
 ## Multi-tenancy em detalhe
@@ -506,6 +557,7 @@ O CI executa 3 scripts de verificação que detectam inconsistências cross-stac
 | `scripts/check-api-contract.sh` | Rotas no frontend (`api.js`) sem endpoint no backend (ou vice-versa) |
 | `scripts/check-config-consistency.sh` | Nome errado do dataset BQ, portas divergentes, URLs hardcoded |
 | `scripts/check-schema-sync.sh` | Entidades C# sem DbSet, IOwnedEntity sem QueryFilter, tabelas BQ faltantes |
+| `scripts/check-data-ownership.sh` | Go/Python acessando PG, C# acessando BQ, collectors lendo PG |
 
 **Decisão de design:** O SQL schema (`deploy/bigquery_schema.sql`) é a **fonte de verdade**
 (superset). O Go `EnsureSchema` pode ser um **subset** — ele só cria as tabelas que os
