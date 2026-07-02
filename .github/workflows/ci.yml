@@ -159,11 +159,20 @@ jobs:
       - run: npm run lint:js
       - run: npx vitest run
 
+  # ── API Contract (drift frontend ↔ backend) ─────────────────────────────
+  api-contract:
+    name: API contract check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check API drift
+        run: ./scripts/check-api-contract.sh
+
   # ── Docker (build all images) ───────────────────────────────────────────
   docker:
     name: Docker builds
     runs-on: ubuntu-latest
-    needs: [go, csharp, python, proto, frontend]
+    needs: [go, csharp, python, proto, frontend, api-contract]
     steps:
       - uses: actions/checkout@v5
 
