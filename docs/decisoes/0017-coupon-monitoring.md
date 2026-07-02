@@ -92,6 +92,6 @@ Normalizado a partir de:
 
 ## Referências
 
-- [Spec: coupon-monitoring requirements](.kiro/specs/coupon-monitoring/requirements.md)
-- [Spec: coupon-monitoring design](.kiro/specs/coupon-monitoring/design.md)
+- [Spec: coupon-monitoring requirements](https://github.com/fmarquesfilho/garimpo/blob/main/.kiro/specs/coupon-monitoring/requirements.md)
+- [Spec: coupon-monitoring design](https://github.com/fmarquesfilho/garimpo/blob/main/.kiro/specs/coupon-monitoring/design.md)
 - ADR-0016: Multi-marketplace (base para esta decisão)
