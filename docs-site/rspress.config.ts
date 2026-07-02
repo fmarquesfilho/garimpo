@@ -3,6 +3,7 @@ import path from 'node:path';
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
+  base: '/docs/',
   title: 'Garimpei',
   description: 'Documentação do Garimpei — curadoria inteligente para afiliados Shopee',
   icon: '/favicon.svg',
