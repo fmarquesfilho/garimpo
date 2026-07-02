@@ -1,143 +1,119 @@
-# Próxima Sessão — Itens Prioritários
+# Próxima Sessão — Planejamento (Sprint 2026-S27)
 
-## Contexto
+## Status atual (pós-sessão 2026-07-01/02)
 
-A migração arquitetural (ADR-0012) está completa. O C# serve toda a API, os
-microserviços Go estão rodando como sidecars, o frontend está no Cloudflare Pages.
-O monólito Go foi decomissionado.
+### Concluído ✅
+- [x] T-0026: Endpoints portados para C# (todos que o frontend usa)
+- [x] BigQuery resetado (8 tabelas truncadas, 0 linhas)
+- [x] PostgreSQL produção: migration aplicada (9 tabelas, 0 linhas)
+- [x] Scheduler: in-memory, sem state persistido (reinicia vazio)
+- [x] CI: 3 scripts de drift (api-contract, config-consistency, schema-sync)
+- [x] CI: 13 fitness functions (NetArchTest) validando Clean Architecture
+- [x] Docs: arquitetura e qualidade atualizados
+- [x] READMEs: root, src, web atualizados
+- [x] Dataset BigQuery corrigido em todo codebase (garimpei → garimpo)
 
----
-
-## Status: Endpoints Portados ✅ (sessão anterior)
-
-Todos os endpoints que o frontend (`web/src/lib/api.js`) consome foram portados
-para o C# na camada de compatibilidade (`/api/*`):
-
-| Endpoint | Arquivo | Status |
-|----------|---------|--------|
-| `/api/candidatos` | CompatEndpoints.cs | ✅ já existia |
-| `/api/admin/me` | CompatEndpoints.cs | ✅ já existia |
-| `/api/health` | CompatEndpoints.cs | ✅ já existia |
-| `/api/buscas` (GET/POST) | BuscasCompatEndpoints.cs | ✅ portado |
-| `/api/lojas` (GET/POST/DELETE) | LojasCompatEndpoints.cs | ✅ portado |
-| `/api/lojas/novidades` | LojasCompatEndpoints.cs | ✅ portado (proxy → analyzer) |
-| `/api/lojas/evolucao` | LojasCompatEndpoints.cs | ✅ portado (proxy → analyzer) |
-| `/api/favoritos` (GET/POST/DELETE) | FavoritosEndpoints.cs | ✅ portado |
-| `/api/destinos` (GET/POST/DELETE) | DestinosEndpoints.cs | ✅ portado |
-| `/api/templates` (GET/POST/DELETE) | TemplatesEndpoints.cs | ✅ portado |
-| `/api/templates/preview` | TemplatesEndpoints.cs | ✅ portado |
-| `/api/publicar` (POST) | PublicacoesEndpoints.cs | ✅ portado |
-| `/api/publicacoes` (GET/POST) | PublicacoesEndpoints.cs | ✅ portado |
-| `/api/alertas` (GET) | AlertasEndpoints.cs | ✅ portado |
-| `/api/alertas/testar` (POST) | AlertasEndpoints.cs | ✅ portado (stub) |
-| `/api/alertas/configurar` (POST) | AlertasEndpoints.cs | ✅ portado |
-| `/api/onboarding/status` | OnboardingEndpoints.cs | ✅ portado |
-| `/api/onboarding/termos` | OnboardingEndpoints.cs | ✅ portado |
-| `/api/onboarding/shopee` | OnboardingEndpoints.cs | ✅ portado |
-| `/api/onboarding/telegram` | OnboardingEndpoints.cs | ✅ portado |
-| `/api/onboarding/validar` | OnboardingEndpoints.cs | ✅ portado |
-| `/api/onboarding/excluir-conta` | OnboardingEndpoints.cs | ✅ portado |
-| `/api/conversoes` | AnalyticsEndpoints.cs | ✅ portado |
-| `/api/conversoes/reais` | AnalyticsEndpoints.cs | ✅ portado (proxy → analyzer) |
-| `/api/estatisticas` | AnalyticsEndpoints.cs | ✅ portado (proxy → analyzer) |
-| `/api/coletas` | AnalyticsEndpoints.cs | ✅ portado (proxy → analyzer) |
-| `/api/resolver-link` | ResolverLinkEndpoints.cs | ✅ portado |
-
-### Entidades adicionadas ao domínio/PostgreSQL:
-- `TenantConfig` — credenciais + onboarding + alertas
-- `Publicacao` — publicações agendadas/enviadas
-- `Favorito` — produtos favoritos
-- `Template` — templates de mensagem
-- `Destino` — canais de publicação
-
-### Rotas do Analyzer Python adicionadas:
-- `/coletas` — histórico de coletas (BigQuery)
-- `/conversoes` — conversões reais da Shopee (BigQuery)
-
-### Migration EF Core criada:
-- `AddPortedEntities` — adiciona as novas tabelas ao PostgreSQL
+### Bloqueios para fase de testes
+1. **Publisher usa tokens globais** — não lê tokens do tenant (T-0027)
+2. **Scheduler sem crons** — após reset, precisa reconfigurar coletas (T-0028)
+3. **Deploy não feito** — imagem com endpoints novos ainda não está em produção (T-0029)
 
 ---
 
-## 1. Bug grave: detecção de variações de preço não funciona
+## Sprint S27 — Tasks
 
-**Sintoma:** O monólito Go executou milhares de coletas mas nunca detectou nenhuma
-variação de preço (quedas/altas). Os alertas nunca dispararam.
-
-**Impacto:** A funcionalidade core de "Quedas" na página publicar sempre retorna
-vazio. Alertas de preço (T-0005) nunca funcionaram.
-
-**Hipóteses a investigar:**
-1. Os snapshots estão gravando o mesmo produto com IDs diferentes a cada coleta (sem match para comparar)
-2. O campo `preco` não é populado corretamente (sempre 0 ou sempre o mesmo valor)
-3. A query de novidades/variações tem um bug no JOIN (nunca encontra o mesmo produto_id em dias diferentes)
-4. O throttling/rotação faz com que nunca colete a mesma loja duas vezes no período da janela
-
-**Ação proposta:**
-- Investigar os dados no BigQuery (`snapshots` table) — existem produto_ids repetidos em datas diferentes?
-- Se os dados estão corrompidos/inutilizáveis → **reset do BigQuery** (truncar tabelas de snapshots)
-- Reimplementar a coleta no novo analyzer Python com validação de que o mesmo produto aparece em múltiplos snapshots
+| Task | Título | Prioridade | Estimativa |
+|------|--------|-----------|------------|
+| T-0027 | Publisher multi-tenant: tokens do tenant | Alta | M |
+| T-0028 | Configurar coleta no scheduler | Alta | M |
+| T-0029 | Deploy nova API em produção | Alta | P |
 
 ---
 
-## 2. Reset do BigQuery
+## T-0027: Publisher multi-tenant tokens
 
-**Decisão:** Truncar as tabelas de snapshots no BigQuery e recomeçar coletas do zero com a nova arquitetura.
+### Problema
+O publisher Go lê `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` de env vars.
+Cada tenant configura seus tokens via onboarding (step 3), mas esses tokens
+ficam no PostgreSQL (`TenantConfig`) e nunca chegam ao publisher.
 
-**Justificativa:**
-- Dados coletados pelo monólito Go nunca produziram variações úteis
-- O bug pode estar nos dados em si (IDs inconsistentes, preços faltando)
-- Começar limpo permite validar que o pipeline novo (scheduler → collector → snapshots) funciona end-to-end
+### Solução proposta
 
-**Script (a executar no início da sessão):**
+1. **Expandir o proto `publisher.v1.PublishRequest`:**
+   ```protobuf
+   message PublishRequest {
+     string channel = 1;
+     string group_id = 2;
+     PublishContent content = 3;
+     // NEW: per-tenant credentials (optional, overrides env vars)
+     string bot_token = 4;
+     string chat_id = 5;
+   }
+   ```
+
+2. **C# API ao publicar:** ler `TenantConfig` do tenant e passar `bot_token` + `chat_id` no request gRPC
+
+3. **Publisher Go:** se `bot_token` vem no request → cria sender efêmero com esse token; se vazio → fallback para env var
+
+4. **Mesma abordagem para WhatsApp (Meta Cloud API):**
+   ```protobuf
+   string whatsapp_token = 6;       // Meta access token
+   string phone_number_id = 7;      // Meta phone number ID
+   ```
+
+### Frontend
+- Página `/canais` já permite cadastrar destinos (nome, tipo, config)
+- Adicionar campo de token no formulário quando tipo=telegram
+- Para WhatsApp: campo de phone_number_id e access_token Meta
+
+---
+
+## T-0028: Configurar coleta no scheduler
+
+### Problema
+BigQuery está vazio. Precisa popular snapshots com coletas regulares para
+que variações de preço sejam detectáveis (mesmo produto_id em 2+ dias).
+
+### Plano
+1. Usuário cria buscas via interface (/lojas ou /configurar)
+2. C# API chama `scheduler.SetSchedule` via gRPC para cada busca com cron
+3. Scheduler executa coleta no horário → collector busca → grava snapshot no BigQuery
+4. Após 2+ ciclos, analyzer detecta variações
+
+### Validação
 ```sql
--- BigQuery: truncar snapshots para recomeçar
-TRUNCATE TABLE `garimpo-500114.garimpei.snapshots`;
--- Manter conversoes (dados reais de vendas da Shopee)
--- Manter eventos (histórico, baixo volume)
+-- Rodar após 2 dias de coleta:
+SELECT produto_id, COUNT(*) AS aparicoes
+FROM `garimpo-500114.garimpo.snapshots`
+GROUP BY produto_id
+HAVING aparicoes > 1
+LIMIT 10;
+-- Se retorna linhas → pipeline funciona
 ```
 
 ---
 
-## 3. Itens pendentes (próxima sessão)
+## T-0029: Deploy em produção
 
-### Prioridade Alta
-- [ ] Investigar bug de variações (query BigQuery)
-- [ ] Reset BigQuery (truncar snapshots)
-- [ ] Aplicar migration `AddPortedEntities` no PostgreSQL de produção
-- [ ] Deploy do C# API com os novos endpoints
-- [ ] Configurar coleta no scheduler (crons para popular snapshots limpos)
-- [ ] Validar pipeline de variações (coleta → snapshot → analyzer → quedas funciona)
-
-### Prioridade Média
-- [ ] Implementar envio real de alerta de teste via Telegram Bot API (AlertasEndpoints — atualmente stub)
-- [ ] Implementar encriptação de credenciais no onboarding (ShopeeSecret, TelegramToken)
-- [ ] T-0024: Testar WhatsApp Meta Cloud API
-- [ ] T-0005: Alertas automáticos (disparar quando queda detectada)
-
-### Prioridade Baixa
-- [ ] Validar chamada real Shopee no onboarding/validar
-- [ ] T-0007: Recomendação IA personalizada
+1. Build imagem: `docker build -f src/Garimpei.Api/Dockerfile src/`
+2. Push para Artifact Registry
+3. `gcloud run services replace deploy/cloud-run-deploy-now.yaml`
+4. Smoke test: `curl https://garimpei.app.br/api/health`
 
 ---
 
-## 4. Tarefas pendentes no backlog
+## Ordem de execução
 
-| Task | Título | Prioridade |
-|------|--------|-----------|
-| T-0024 | Testar WhatsApp Meta Cloud API | Alta |
-| T-0026 | Portar endpoints restantes | ✅ Concluído |
-| T-0005 | Alertas configuráveis por usuário | Média |
-| T-0002 | Persistir conversões no BigQuery | Média |
-| T-0007 | Recomendação IA personalizada | Backlog |
+1. **T-0027** — Expandir proto + publisher + C# API (tokens multi-tenant)
+2. **T-0029** — Deploy em produção
+3. **T-0028** — Configurar coletas, validar pipeline
 
 ---
 
-## Ordem sugerida para a próxima sessão
+## Melhorias identificadas (pós-testes)
 
-1. **Aplicar migration** (PostgreSQL produção) + deploy
-2. **Reset BigQuery** (truncar snapshots)
-3. **Configurar coleta no scheduler** (recriar crons)
-4. **Validar pipeline de variações** (coleta → snapshot → analyzer → quedas)
-5. **Implementar alertas Telegram reais** (bot API)
-6. **T-0024** (testar WhatsApp se sobrar tempo)
+- [ ] Encriptação real de tokens no PostgreSQL (atualmente plain text nos campos `*Enc`)
+- [ ] Validação real de credenciais Shopee no onboarding/validar (atualmente stub)
+- [ ] Telegram Bot API: envio real de alertas de teste
+- [ ] WhatsApp Meta Cloud API: envio real (T-0024)
+- [ ] T-0005: Alertas automáticos (scheduler → alerter → Telegram quando queda detectada)

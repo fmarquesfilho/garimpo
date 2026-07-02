@@ -1,0 +1,21 @@
+id: T-0028
+titulo: "Configurar coleta no scheduler (popular snapshots do zero)"
+epic: produto
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  BigQuery foi resetado. O scheduler precisa ser configurado com cron jobs
+  para popular snapshots novamente. A coleta deve garantir que o mesmo
+  produto_id apareça em múltiplos snapshots (para que variações sejam detectáveis).
+criterios:
+  - "Scheduler recebe SetSchedule via gRPC com crons das buscas ativas"
+  - "Após primeira coleta, snapshots contêm produto_ids repetidos entre dias"
+  - "Analyzer /quedas retorna variações reais após 2+ coletas"
+  - "Endpoint /api/lojas/novidades mostra produtos novos detectados"
+  - "Validar via query: SELECT produto_id, COUNT(*) FROM snapshots GROUP BY 1 HAVING COUNT(*) > 1"
+depende_de: []
+tags: [backend, scheduler, collector, bigquery, validação]
+criada_em: "2026-07-02"
+atualizada_em: "2026-07-02"

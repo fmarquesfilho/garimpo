@@ -1,155 +1,117 @@
 # Garimpei
 
 Plataforma de curadoria e publicação automatizada para afiliados Shopee.
-Busca produtos, monitora lojas, rankeia por estratégia, e publica em canais
-(Telegram, WhatsApp) com templates, fotos e agendamento — tudo com rastreamento
-de conversão.
+Busca produtos, monitora lojas, rankeia por potencial de retorno, e publica em
+canais (Telegram, WhatsApp) — tudo multi-tenant com rastreamento de conversão.
 
-## Funcionalidades
+**URL:** https://garimpei.app.br
 
-- **Curadoria inteligente** — busca na Shopee por keyword, rankeia
-  por potencial de retorno (comissão × demanda × avaliação), filtra produto-fantasma.
-  Interface simplificada com busca proeminente e filtros colapsáveis.
-- **Monitoramento de lojas** — acompanha lojas específicas via `productOfferV2`,
-  detecta novos produtos e variações de preço. Aceita links curtos, slugs e IDs.
-- **Oportunidades** — feed unificado de todas as lojas com quedas de preço,
-  produtos novos e altas, filtráveis por período.
-- **Alertas automáticos** — notificações de preço via Telegram quando variações
-  significativas são detectadas (bot @AlertaGarimpeiBot).
-- **Publicação rica** — templates customizáveis, editor WYSIWYG, foto do produto,
-  botão inline "Comprar", envio para múltiplos destinos (Telegram, WhatsApp).
-  WhatsApp suporta até 5 grupos por destino.
-- **Agendamento** — publica no horário configurado via Cloud Scheduler.
-- **Rastreamento** — cada publicação gera um `sub_id` que identifica canal +
-  estratégia + data, cruzável com o `validatedReport` da Shopee.
-- **Pipeline de filtros modular** — Chain of Responsibility extensível; modo
-  "sem filtro" para exploração de lojas, modo curadoria com pisos configuráveis.
-- **Landing page** — protege a aplicação; exige login Google para acessar.
+## Arquitetura
 
-## Rodar localmente
+Arquitetura poliglota orientada a serviços (ADR-0012):
 
-```bash
-# API (fonte CSV para teste rápido)
-go run ./cmd/garimpo-api
+| Stack | Responsabilidade |
+|-------|-----------------|
+| **C# (ASP.NET Core 10)** | API principal: CRUD, auth, multi-tenant, orquestração |
+| **Go (gRPC)** | Microserviços I/O: coleta Shopee, publicação, alertas, scheduling |
+| **Python (FastAPI)** | Analytics: queries BigQuery, variações preço, séries temporais |
+| **SvelteKit** | Frontend SPA via CDN (Cloudflare Pages) |
 
-# API com Shopee ao vivo
-export SHOPEE_APP_ID=... SHOPEE_SECRET=...
-go run ./cmd/garimpo-api -fonte shopee -keyword "skincare"
+Deploy: **Cloud Run multi-container** (6 containers, scale-to-zero).
 
-# Frontend (em outro terminal)
-cd web && npm install && npm run dev
+```
+                Cloudflare (Edge)
+                      │
+        ┌─────────────┼─────────────┐
+        │ Pages (CDN)  │ Worker       │
+        │ Frontend     │ /api → C#    │
+        └──────────────┴──────┬──────┘
+                              │
+        Cloud Run multi-container
+        ┌─────────────────────┴────────────────────┐
+        │ garimpei-api (C#)  ← ingress :8080       │
+        │ collector (Go)     ← gRPC :50051         │
+        │ publisher (Go)     ← gRPC :50052         │
+        │ alerter (Go)       ← gRPC :50053         │
+        │ scheduler (Go)     ← gRPC :50054         │
+        │ analyzer (Python)  ← REST :8060          │
+        └───────────┬────────────────┬─────────────┘
+                    │                │
+            PostgreSQL (Neon)   BigQuery (GCP)
 ```
 
-A API escuta na porta 8080; o front aponta para ela automaticamente em dev.
+## Desenvolvimento local
+
+```bash
+# 1. Subir dependências
+docker compose up -d postgres
+
+# 2. Aplicar migrations
+cd src && dotnet ef database update --project Garimpei.Infrastructure --startup-project Garimpei.Api
+
+# 3. Rodar API (porta 5000 em dev)
+cd src && dotnet run --project Garimpei.Api
+
+# 4. Rodar frontend (porta 5173)
+cd web && npm install && npm run dev
+# Apontar frontend para API C#:
+# VITE_API_BASE=http://localhost:5000 npm run dev
+```
 
 ## Testes
 
 ```bash
-go test ./...                    # todos os pacotes Go
-cd web && npx vitest run         # testes de componente Svelte (Vitest)
-cd web && npm test               # testes E2E (Playwright)
-cd web && npm run lint           # ESLint + Stylelint
-cd web && npm run lint:dead      # knip (dead code)
+# C# (23 testes: persistence + arquitetura)
+cd src && dotnet test
+
+# Go (microserviços + internal)
+go test ./...
+
+# Frontend (unit + E2E)
+cd web && npx vitest run        # unit
+cd web && npm test              # E2E (Playwright)
+
+# Drift checks (cross-stack consistency)
+./scripts/check-api-contract.sh
+./scripts/check-config-consistency.sh
+./scripts/check-schema-sync.sh
 ```
 
-- **Go**: cobertura ~57% no httpapi, ~100% nos pacotes core (scoring, source, strategy)
-- **Vitest**: testa componentes Svelte reais (SeletorGrupo, etc.) com jsdom
-- **Playwright**: 43 testes E2E (smoke, rotas, features novas)
-- **ESLint**: 0 erros (12 warnings menores)
-- **Stylelint**: 0 erros (impede cores hex nas páginas)
-- **knip**: detecta código morto (arquivos e exports não referenciados)
-
-## Deploy (GCP)
-
-Push para `main` dispara o workflow `deploy-gcp.yml`:
-1. Testes Go (gate de qualidade)
-2. Build da imagem Docker multi-stage (Node + Go, com `-tags gcp`)
-3. Deploy no Cloud Run (API + frontend numa única imagem)
-4. Testes frontend rodam em paralelo (Vitest + Playwright)
-
-O frontend é servido pelo próprio Go no Cloud Run (SPA handler com fallback).
-Não usa Firebase Hosting.
-
-URL de produção: `https://garimpei.app.br`
-
-Detalhes em `docs/DEPLOY_GCP.md`.
-
-## Estrutura
+## Estrutura do repositório
 
 ```
-cmd/garimpo          CLI (composição: fonte + estratégia)
-cmd/garimpo-api      servidor HTTP (API JSON para o frontend)
-internal/
-  alerts/            alertas de preço via Telegram
-  auth/              Firebase Auth (verifica tokens)
-  coleta/            service layer: orquestra coleta ponta a ponta
-  domain/            núcleo: Product, Scored
-  engine/            orquestra: fonte → filtros → scoring → ranking
-  httpapi/           handlers HTTP (rotas com método explícito, Go 1.22+)
-  logs/              logging estruturado (slog)
-  publish/           saída: Dispatcher, Sender (Telegram, WhatsApp), Templates
-  scheduler/         Cloud Scheduler (cria jobs de coleta)
-  scoring/           matemática: valor esperado, normalização, suspeito
-  source/            adaptadores de entrada (CSV, Shopee keyword, Shopee shop)
-  store/             persistência (NopStore / BigQueryStore com -tags gcp)
-  strategy/          estratégias de ranking (Niche — ativa; Diversified — legacy)
-web/                 frontend SvelteKit 5 + Vite 8
-  src/lib/components/  componentes reutilizáveis
-  src/routes/          páginas: /, /oportunidades, /lojas, /publicar,
-                       /publicacoes, /coletas, /canais, /estatisticas
-deploy/              systemd/nginx (VPS), schema BigQuery, scheduler
-docs/                documentação + specs + diagrama ER + OpenAPI
-cloudflare-worker/   proxy para domínio garimpei.app.br
+src/                    C# Web App (ASP.NET Core 10, Clean Architecture)
+services/
+  collector/            Shopee API collector (Go, gRPC)
+  publisher/            Telegram/WhatsApp publisher (Go, gRPC)
+  alerter/              Alertas de preço (Go, gRPC)
+  scheduler/            Orquestrador cron (Go, gRPC)
+  analyzer/             Analytics BigQuery (Python, FastAPI)
+web/                    Frontend SvelteKit 5
+cloudflare-worker/      Routing inteligente (domínio garimpei.app.br)
+protos/                 Contratos gRPC (Protocol Buffers)
+deploy/                 Cloud Run YAMLs + BigQuery schema
+docs/                   Documentação (arquitetura, fluxos, ADRs)
+backlog/                Product backlog (tasks-as-code)
+scripts/                CI scripts (drift checks, docs, validação)
 ```
-
-## API — endpoints
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/api/health` | Status da API |
-| GET | `/api/candidatos` | Busca + ranking (aceita `fonte`, `sem_filtro`, `shop_ids`) |
-| GET | `/api/comparar` | Nicho vs. diversificada lado a lado |
-| POST | `/api/eventos` | Registra decisão de curadoria |
-| POST | `/api/publicar` | Publica oferta (destino + template + imagem) |
-| POST | `/api/coletar` | Coleta agendada (Cloud Scheduler) |
-| GET | `/api/estatisticas` | Resumo descritivo dos snapshots |
-| GET | `/api/coletas` | Histórico de coletas executadas |
-| GET | `/api/conversoes` | Relatório de publicações por canal |
-| GET | `/api/lojas/novidades` | Novos produtos + variações de preço |
-| GET/POST/DELETE | `/api/buscas` | Perfis de busca (keywords + shop_ids + cron) |
-| GET/POST/DELETE | `/api/destinos` | Canais de publicação (Telegram, WhatsApp) |
-| GET/POST/DELETE | `/api/templates` | Modelos de mensagem |
-| POST | `/api/templates/preview` | Renderiza preview de template |
-| GET/POST | `/api/publicacoes` | Publicações agendadas/enviadas/erros |
-| POST | `/api/publicar-pendentes` | Executa publicações agendadas vencidas |
-| GET | `/api/whatsapp/grupos` | Lista grupos WhatsApp disponíveis (Maytapi) |
-| POST | `/api/resolver-link` | Resolve link curto da Shopee |
-
-## Variáveis de ambiente
-
-| Variável | Onde | Para quê |
-|----------|------|----------|
-| `SHOPEE_APP_ID` | Secret Manager | Credencial da API de afiliados |
-| `SHOPEE_SECRET` | Secret Manager | Assinatura HMAC-SHA256 |
-| `TELEGRAM_BOT_TOKEN` | Secret Manager | Bot do Telegram (@BotFather) |
-| `WHATSAPP_PRODUCT_ID` | Secret Manager | Maytapi Product ID |
-| `WHATSAPP_PHONE_ID` | Secret Manager | Maytapi Phone ID |
-| `WHATSAPP_API_KEY` | Secret Manager | Maytapi API Token |
-| `COLETA_TOKEN` | Secret Manager | Protege endpoints de coleta/scheduler |
-| `GOOGLE_CLOUD_PROJECT` | Cloud Run env | Projeto GCP |
-| `BQ_DATASET` | Cloud Run env | Dataset BigQuery (default: `garimpo`) |
-| `WEB_DIR` | Cloud Run env | Diretório do frontend (default: `/web`) |
 
 ## Documentação
 
-- `docs/BACKLOG.md` — product backlog priorizado
-- `docs/ENTIDADES.md` — diagrama ER (Mermaid) + regras de negócio
-- `docs/BDD_STRATEGY.md` — estratégia de testes e rastreabilidade
-- `docs/DEPLOY_GCP.md` — runbook completo de deploy na GCP
-- `docs/COLETA.md` — o que é coletado, onde fica, como ligar
-- `docs/APIS.md` — referência das APIs Shopee e Instagram
-- `docs/MODELO.md` — modelo de negócio e roadmap
-- `docs/MANUAL.md` — manual de uso (teor, selos, fluxo)
-- `docs/JORNADA.md` — jornada do usuário e pontos de decisão
-- `docs/openapi.yaml` — spec OpenAPI 3.1 (servida em /api/docs)
-- `.kiro/specs/` — specs de features (entity-model, conversions, statistics)
+- `docs/01-visao-e-negocio.md` — Visão do produto
+- `docs/02-arquitetura.md` — Arquitetura detalhada
+- `docs/03-fluxos-e-modelo.md` — Entidades e regras de negócio
+- `docs/06-qualidade-e-testes.md` — CI, testes, fitness functions
+- `docs/decisoes/` — ADRs (Architecture Decision Records)
+- `api/openapi.yaml` — OpenAPI 3.1 spec
+
+## CI
+
+Push para `main` executa:
+- Go: build + test + lint + arch-go
+- C#: build + test (com PostgreSQL)
+- Python: ruff lint + syntax check
+- Proto: buf lint + sync check
+- Frontend: build + lint + vitest
+- API contract: drift frontend↔backend + config consistency + schema sync
+- Docker: build de todas as 6 imagens
