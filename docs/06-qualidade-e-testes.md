@@ -11,7 +11,7 @@ push main → GitHub Actions (ci.yml)
   ├─ csharp: restore + build + test (com PostgreSQL service)
   ├─ python: ruff lint + syntax check
   ├─ proto: buf lint + sync check (Go + C# stubs atualizados?)
-  ├─ frontend: npm ci + build + lint:css + lint:js + vitest
+  ├─ frontend: npm ci + build + lint:css + lint:js + vitest + playwright (Firebase Emulator)
   ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
   ├─ docker: build all 6 images (validação de Dockerfiles)
   └─ docs-deploy: sync + build + deploy Cloudflare Pages (apenas push main)
@@ -32,8 +32,8 @@ Pushes que só tocam `docs/legado/**`, `docs/meta/**` ou `README.md` são ignora
 | C# (Domain + Infra) | xUnit | 10 | Multi-tenant, persistence, isolation |
 | C# (Arquitetura) | xUnit + NetArchTest | 13 | Fitness functions (regras Clean Architecture) |
 | C# (Integração) | xUnit | 15 | Onboarding multi-tenant end-to-end |
-| Frontend (unit) | Vitest | 109 | Componentes, stores, utils |
-| Frontend (E2E) | Playwright | ~10 | Fluxos críticos do usuário |
+| Frontend (unit) | Vitest | 108 | Componentes, stores, utils, lógica filtros |
+| Frontend (E2E) | Playwright | 24 | Smoke + Descobrir (filtros, fontes, badges) |
 | Cross-stack (drift) | Shell scripts | 3 | API contract, config, schema sync |
 
 ### BDD (Behaviour-Driven Development)
