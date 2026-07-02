@@ -31,6 +31,7 @@ Pushes que só tocam `docs/legado/**`, `docs/meta/**` ou `README.md` são ignora
 | Go (services) | go test | 12 | Validações + fluxos gRPC |
 | C# (Domain + Infra) | xUnit | 10 | Multi-tenant, persistence, isolation |
 | C# (Arquitetura) | xUnit + NetArchTest | 13 | Fitness functions (regras Clean Architecture) |
+| C# (Integração) | xUnit | 15 | Onboarding multi-tenant end-to-end |
 | Frontend (unit) | Vitest | 109 | Componentes, stores, utils |
 | Frontend (E2E) | Playwright | ~10 | Fluxos críticos do usuário |
 | Cross-stack (drift) | Shell scripts | 3 | API contract, config, schema sync |
@@ -141,11 +142,12 @@ Verifica sincronização de schemas entre os 3 datastores e os componentes:
 | Métrica | Alvo | Validação |
 |---------|------|-----------|
 | Testes Go | ~200 | `go test ./...` |
-| Testes C# | 23 (10 persistence + 13 arch) | `dotnet test` |
+| Testes C# | 38 (10 persistence + 13 arch + 15 integration) | `dotnet test` |
 | Testes frontend | 109 | `vitest --run` (<2s) |
 | Drift API | 0 rotas faltantes | `check-api-contract.sh` |
 | Drift config | 0 inconsistências | `check-config-consistency.sh` |
 | Drift schema | 0 desincronizações | `check-schema-sync.sh` |
+| Pre-push | 7/7 checks | `pre-push-check.sh` |
 | Arquivos > 400 linhas | 0 | CI bloqueia |
 | Warnings C# | 0 | TreatWarningsAsErrors |
 
@@ -167,6 +169,69 @@ cd web && npx vitest run
 ./scripts/check-api-contract.sh
 ./scripts/check-config-consistency.sh
 ./scripts/check-schema-sync.sh
+
+# TUDO de uma vez (mesmo script usado pelo pre-push hook)
+./scripts/pre-push-check.sh
+```
+
+---
+
+## Pre-push hook (gate local obrigatório)
+
+O projeto inclui um **git pre-push hook** que bloqueia push se qualquer check falhar.
+Roda automaticamente antes de cada `git push`:
+
+```
+═══════════════════════════════════════════════════════════════
+  Pre-push: verificação completa antes de enviar
+═══════════════════════════════════════════════════════════════
+
+🔨 C# (build + testes + arquitetura):
+  [1] Build... ✓
+  [2] Testes (38: persistence + architecture + integration)... ✓
+
+🔨 Go (build + testes):
+  [3] Build... ✓
+  [4] Testes... ✓
+
+🔍 Drift checks (cross-stack):
+  [5] API contract (frontend↔backend)... ✓
+  [6] Config consistency (dataset, portas)... ✓
+  [7] Schema sync (BQ↔Go↔C#↔Analyzer)... ✓
+
+═══════════════════════════════════════════════════════════════
+✅ 7/7 checks passaram. Push liberado.
+```
+
+### Instalar
+
+```bash
+ln -sf ../../scripts/pre-push-check.sh .git/hooks/pre-push
+```
+
+### Quando roda
+
+- **Automaticamente** antes de cada `git push` (bloqueia se falhar)
+- **Manualmente** via `./scripts/pre-push-check.sh` (pra validar antes de commitar)
+
+### Estado da arte
+
+Esta abordagem combina 3 técnicas complementares:
+
+| Técnica | Quando roda | O que garante |
+|---------|-------------|--------------|
+| **Pre-push hook** (local) | Antes do push | Feedback rápido, bloqueia código quebrado |
+| **CI (GitHub Actions)** | Após push/PR | Validação em ambiente limpo, Docker builds |
+| **Fitness functions** (in-code) | `dotnet test` | Regras arquiteturais como testes |
+
+O pre-push hook é a **primeira linha de defesa**: impede que código quebrado chegue
+ao remote. O CI é a segunda (valida em ambiente reprodutível). As fitness functions
+são a terceira (regras vivas dentro do código).
+
+### Bypassar (emergência)
+
+```bash
+git push --no-verify   # Pula o hook (use com responsabilidade)
 ```
 
 ---

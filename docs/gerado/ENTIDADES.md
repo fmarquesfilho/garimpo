@@ -60,11 +60,68 @@ erDiagram
     CONVERSOES {
         STRING conversion_id
         STRING produto_id
+        STRING nome
+        STRING canal
         STRING estrategia
         FLOAT64 comissao_total
+        FLOAT64 preco
         STRING status
         TIMESTAMP clique_em
         TIMESTAMP compra_em
+        TIMESTAMP convertido_em
+    }
+
+    DESTINOS {
+        STRING id
+        STRING nome
+        STRING tipo
+        STRING config
+        BOOL ativo
+        TIMESTAMP salvo_em
+    }
+
+    TEMPLATES {
+        STRING id
+        STRING nome
+        STRING corpo
+        BOOL com_foto
+        BOOL ativo
+        TIMESTAMP salvo_em
+    }
+
+    PUBLICACOES {
+        STRING id
+        STRING produto_id
+        STRING nome
+        STRING categoria
+        FLOAT64 preco
+        FLOAT64 comissao
+        STRING link
+        STRING imagem
+        STRING estrategia
+        STRING destino_id
+        STRING template_id
+        STRING agendada_em
+        STRING status
+        STRING detalhe
+        TIMESTAMP criada_em
+        STRING enviada_em
+        STRING owner_uid
+    }
+
+    FAVORITOS {
+        STRING produto_id
+        STRING nome
+        FLOAT64 preco
+        FLOAT64 comissao
+        STRING link
+        STRING imagem
+        STRING loja
+        STRING categoria
+        STRING origem
+        BOOL ativo
+        STRING owner_uid
+        TIMESTAMP salvo_em
     }
 
     BUSCAS ||--o{ SNAPSHOTS : "gera coletas"

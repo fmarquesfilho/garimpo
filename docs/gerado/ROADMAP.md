@@ -11,11 +11,15 @@ _Nenhuma tarefa em andamento._
 - **T-0002** Persistir conversões da Shopee no BigQuery · conversoes · M
 - **T-0005** Alertas configuráveis por usuário · produto · M
 - **T-0024** Testar publicação WhatsApp via Meta Cloud API · produto · P
-- **T-0026** Portar endpoints restantes do Go legado para C# · migracao-arch · G
+- **T-0027** Publisher multi-tenant: tokens do tenant em vez de env vars globais · multi-tenant · M
+- **T-0028** Configurar coleta no scheduler (popular snapshots do zero) · produto · M
+- **T-0029** Deploy da nova API C# em produção (com endpoints portados) · migracao-arch · P
+- **T-0030** Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo · multi-tenant · M
 
 ## ⚪ Later (radar)
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
+- **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
 
 ## ✅ Concluídas
 
@@ -40,3 +44,4 @@ _Nenhuma tarefa em andamento._
 - **T-0022** Descomissionar monólito Go · migracao-arch · M
 - **T-0023** Migrar WhatsApp sender de Maytapi para Meta Cloud API · migracao-arch · M
 - **T-0025** Serviço Analyzer Python (FastAPI + BigQuery) · migracao-arch · M
+- **T-0026** Portar endpoints restantes do Go legado para C# · migracao-arch · G
