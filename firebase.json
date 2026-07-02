@@ -1,12 +1,4 @@
 {
-  "hosting": {
-    "target": "garimpei-101",
-    "public": "web/build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      { "source": "**", "destination": "/200.html" }
-    ]
-  },
   "emulators": {
     "auth": {
       "port": 9099
