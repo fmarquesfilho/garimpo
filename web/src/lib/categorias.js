@@ -28,20 +28,25 @@ export async function buscarCategorias() {
 		const resp = await fetch('/api/categorias');
 		if (!resp.ok) return cache ?? getFallback();
 		const data = await resp.json();
-
-		const todas = [];
-		for (const mp of data.marketplaces ?? []) {
-			for (const cat of mp.categorias ?? []) {
-				todas.push({ ...cat, marketplace: mp.marketplace });
-			}
-		}
-
-		cache = todas;
+		cache = parsearCategorias(data);
 		cacheTimestamp = Date.now();
-		return todas;
+		return cache;
 	} catch {
 		return cache ?? getFallback();
 	}
+}
+
+/** Transforma a resposta da API em lista flat de categorias. */
+function parsearCategorias(data) {
+	const todas = [];
+	const marketplaces = data.marketplaces ?? [];
+	for (const mp of marketplaces) {
+		const cats = mp.categorias ?? [];
+		for (const cat of cats) {
+			todas.push({ ...cat, marketplace: mp.marketplace });
+		}
+	}
+	return todas;
 }
 
 /**
