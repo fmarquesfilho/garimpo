@@ -2,7 +2,6 @@
   "extends": [
     "config:recommended",
     "group:monorepos",
-    ":separateMajorReleases",
     ":automergeMinor",
     ":automergePatch",
     "schedule:earlyMondays"
@@ -11,9 +10,10 @@
   "platformAutomerge": true,
   "automergeType": "pr",
   "automergeStrategy": "squash",
-  "prConcurrentLimit": 5,
-  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 4,
   "rebaseWhen": "behind-base-branch",
+  "separateMajorMinor": false,
   "vulnerabilityAlerts": {
     "enabled": true,
     "labels": ["security"],
@@ -21,65 +21,65 @@
   },
   "packageRules": [
     {
-      "description": "Auto-merge patch updates (all ecosystems)",
-      "matchUpdateTypes": ["patch", "pin", "digest"],
+      "description": "Auto-merge all updates if CI passes",
+      "matchUpdateTypes": ["patch", "pin", "digest", "minor", "major"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true
     },
     {
-      "description": "Auto-merge minor updates (non-breaking)",
-      "matchUpdateTypes": ["minor"],
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
-    },
-    {
-      "description": "Major updates - auto-merge se CI passa, label para visibilidade",
+      "description": "Label major updates for visibility",
       "matchUpdateTypes": ["major"],
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true,
       "labels": ["dependencies", "major"]
     },
     {
-      "description": "Agrupar deps do frontend (web) em 1 PR semanal",
+      "description": "Agrupar deps do frontend (web)",
       "matchFileNames": ["web/package.json"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "web dependencies (non-major)",
+      "groupName": "web dependencies",
       "groupSlug": "web-deps"
     },
     {
-      "description": "Agrupar deps do docs-site em 1 PR mensal",
+      "description": "Agrupar deps do docs-site",
       "matchFileNames": ["docs-site/package.json"],
-      "matchUpdateTypes": ["minor", "patch"],
       "groupName": "docs-site dependencies",
       "groupSlug": "docs-deps",
       "schedule": ["before 9am on the first day of the month"]
     },
     {
-      "description": "Agrupar Go dependencies em 1 PR semanal",
+      "description": "Agrupar deps Python (analyzer)",
+      "matchManagers": ["pip_requirements"],
+      "groupName": "python dependencies",
+      "groupSlug": "python-deps"
+    },
+    {
+      "description": "Agrupar Go dependencies",
       "matchManagers": ["gomod"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "go dependencies (non-major)",
+      "groupName": "go dependencies",
       "groupSlug": "go-deps"
     },
     {
-      "description": "Agrupar GitHub Actions em 1 PR semanal",
+      "description": "Agrupar GitHub Actions",
       "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "github-actions (non-major)",
+      "groupName": "github-actions",
       "groupSlug": "gha-deps"
+    },
+    {
+      "description": "Agrupar NuGet (C#)",
+      "matchManagers": ["nuget"],
+      "groupName": "dotnet dependencies",
+      "groupSlug": "dotnet-deps"
+    },
+    {
+      "description": "Agrupar Docker images",
+      "matchManagers": ["dockerfile"],
+      "groupName": "docker images",
+      "groupSlug": "docker-deps"
     },
     {
       "description": "Ignorar pacotes do Astro (migrado para Rspress)",
       "matchFileNames": ["docs-site/package.json"],
-      "enabled": false,
-      "matchPackageNames": [
-        "/^@astrojs//",
-        "/^astro$/",
-        "/^sharp$/"
-      ]
+      "matchPackageNames": ["/^@astrojs//", "/^astro$/", "/^sharp$/"],
+      "enabled": false
     }
   ],
   "ignorePaths": [
