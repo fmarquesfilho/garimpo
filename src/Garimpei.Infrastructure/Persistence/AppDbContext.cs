@@ -29,6 +29,8 @@ public class AppDbContext : DbContext
     public DbSet<Template> Templates => Set<Template>();
     public DbSet<Publicacao> Publicacoes => Set<Publicacao>();
     public DbSet<TenantConfig> TenantConfigs => Set<TenantConfig>();
+    public DbSet<CouponAlertRule> CouponAlertRules => Set<CouponAlertRule>();
+    public DbSet<CouponAlertHistory> CouponAlertHistories => Set<CouponAlertHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +89,21 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.OwnerUid).IsUnique();
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
+        });
+
+        modelBuilder.Entity<CouponAlertRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OwnerUid);
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
+        });
+
+        modelBuilder.Entity<CouponAlertHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OwnerUid);
+            entity.HasIndex(e => new { e.CouponId, e.AlertRuleId, e.AlertedAt });
             entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
         });
     }

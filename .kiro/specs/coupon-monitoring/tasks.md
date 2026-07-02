@@ -6,7 +6,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
 
 ## Tasks
 
-- [ ] 1. Create coupon proto definition and domain models (Go + C#)
+- [x] 1. Create coupon proto definition and domain models (Go + C#)
   - Create `protos/coupon/v1/coupon.proto` with CouponCollectorService, FetchCouponsRequest/Response, CouponProto, DiscountType enum
   - Run `buf generate` to produce Go and C# code
   - Create `internal/domain/coupon.go` with Coupon struct, DetectionStatus constants, CouponDetection struct
@@ -14,14 +14,14 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `go build ./...` and `dotnet build` pass
   - **Implements:** R1-AC3, R2-AC3, R8-AC1
 
-- [ ] 2. Create Go CouponSource interface and registry
+- [x] 2. Create Go CouponSource interface and registry
   - Create `internal/couponsource/source.go` with CouponSource interface, FetchConfig, CouponSourceFactory, SourceConfig
   - Create `internal/couponsource/registry.go` with thread-safe Registry and DefaultRegistry
   - Register Shopee, Amazon, ML factory stubs in init()
   - Verify: `go build ./...` passes
   - **Implements:** R1-AC1, R2-AC1, R3-AC1
 
-- [ ] 3. Implement Shopee coupon adapter (Go)
+- [x] 3. Implement Shopee coupon adapter (Go)
   - Create `internal/couponsource/shopee_adapter.go` implementing CouponSource
   - Fetch via Shopee productOfferV2 with coupon fields, paginate at 500/page with 200ms delay
   - HMAC-SHA256 auth, 30s timeout, 2 retries with 5s backoff
@@ -30,7 +30,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `go test ./internal/couponsource/...` passes
   - **Implements:** R1-AC1, R1-AC2, R1-AC4, R1-AC5, R1-AC6, R1-AC7
 
-- [ ] 4. Implement Amazon coupon adapter (Go)
+- [x] 4. Implement Amazon coupon adapter (Go)
   - Create `internal/couponsource/amazon_adapter.go` implementing CouponSource
   - Normalize Amazon offer fields to unified Coupon model
   - Rate limit 1 req/s, HTTP 429 → 60s wait + 2 retries, HTTP 5xx → 5s backoff + 2 retries
@@ -39,14 +39,14 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `go test ./internal/couponsource/...` passes
   - **Implements:** R2-AC1, R2-AC2, R2-AC3, R2-AC4, R2-AC5, R2-AC6, R2-AC7, R2-AC8, R2-AC9
 
-- [ ] 5. Create BigQuery coupon schema and Go writer
+- [x] 5. Create BigQuery coupon schema and Go writer
   - Create `deploy/bigquery_coupon_schema.sql` (coupon_snapshots partitioned by collected_at, 90-day expiration)
   - Create `internal/couponsource/bqwriter.go` for append-only BigQuery inserts
   - Write integration test using BigQuery emulator
   - Verify: `go test ./internal/couponsource/...` passes
   - **Implements:** R8-AC1, R8-AC2, R8-AC3, R8-AC5
 
-- [ ] 6. Create coupon-collector gRPC server
+- [x] 6. Create coupon-collector gRPC server
   - Create `services/coupon-collector/main.go` (reads MARKETPLACE env, creates adapter from registry)
   - Create `services/coupon-collector/server.go` implementing FetchCoupons RPC (delegates to CouponSource, writes BigQuery)
   - Create `services/coupon-collector/Dockerfile`
@@ -63,7 +63,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `go test ./services/scheduler/` passes
   - **Implements:** R4-AC1, R4-AC2, R4-AC3, R4-AC4, R4-AC5
 
-- [ ] 8. Create C# domain entities and EF Core migration
+- [x] 8. Create C# domain entities and EF Core migration
   - Create CouponAlertRule entity (IOwnedEntity: DiscountType, MinDiscount, Marketplaces, Categories, Channel, IsActive)
   - Create CouponAlertHistory entity (IOwnedEntity: CouponId, AlertRuleId, AlertedDiscountValue, AlertedAt, ExpiresAt)
   - Add DbSets and entity configs with multi-tenant query filter to AppDbContext
@@ -71,7 +71,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `dotnet build` and `dotnet test` pass
   - **Implements:** R6-AC2, R9-AC3
 
-- [ ] 9. Implement coupon alert rules CRUD endpoints (C# API)
+- [x] 9. Implement coupon alert rules CRUD endpoints (C# API)
   - Create CouponRulesEndpoints.cs with POST/GET/PUT/DELETE/PATCH for /api/v2/cupons/regras
   - Validate: max 20 active rules, max 10 categories, valid discount range, at least one marketplace
   - Return HTTP 409 on max rules exceeded

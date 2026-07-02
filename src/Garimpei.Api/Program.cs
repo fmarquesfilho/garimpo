@@ -1,3 +1,4 @@
+using Garimpei.Api.Endpoints.Coupons;
 using Garimpei.Api.Middleware;
 using Garimpei.Application;
 using Garimpei.Infrastructure;
@@ -126,7 +127,8 @@ app.MapGroup("/api/v2")
     .MapBuscasEndpoints()
     .MapCuradoriaEndpoints()
     .MapLojasEndpoints()
-    .MapPublicacaoEndpoints();
+    .MapPublicacaoEndpoints()
+    .MapCouponRulesEndpoints();
 
 app.Run();
 
