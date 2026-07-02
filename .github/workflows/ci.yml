@@ -269,3 +269,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
           channelId: live
           projectId: garimpo-500114
+          target: garimpei-101

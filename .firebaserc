@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "garimpo-500114"
+  },
+  "targets": {
+    "garimpo-500114": {
+      "hosting": {
+        "garimpei-101": ["garimpei-101"]
+      }
+    }
   }
 }

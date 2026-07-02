@@ -1,10 +1,9 @@
 {
   "hosting": {
-    "site": "garimpei-101",
+    "target": "garimpei-101",
     "public": "web/build",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      { "source": "/docs/**", "destination": "/docs/index.html" },
       { "source": "**", "destination": "/200.html" }
     ]
   },
