@@ -185,6 +185,9 @@ jobs:
         run: npx playwright test
         env:
           FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+          FIREBASE_API_KEY: AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A
+          E2E_TEST_EMAIL: teste-e2e@garimpo.dev
+          E2E_TEST_PASSWORD: senha-teste-123
 
       - name: Upload E2E results
         if: failure()

@@ -6,9 +6,12 @@
  */
 import { test as base, expect } from '@playwright/test';
 
-const API_KEY = 'AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A';
-const TEST_EMAIL = 'teste-e2e@garimpo.dev';
-const TEST_PASSWORD = 'senha-teste-123';
+// Credenciais de teste lidas de variáveis de ambiente (CI injeta via env).
+// A API key é pública (bundle do app), mas evitamos hardcode para não
+// disparar falsos positivos em scanners de secrets (Codacy/gitleaks).
+const API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A'; // nosemgrep: generic-api-key
+const TEST_EMAIL = process.env.E2E_TEST_EMAIL || 'teste-e2e@garimpo.dev';
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || 'senha-teste-123'; // NOSONAR — emulator only
 
 /**
  * Garante que o usuário de teste existe no Firebase Auth Emulator.

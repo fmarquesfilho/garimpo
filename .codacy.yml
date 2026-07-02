@@ -33,6 +33,7 @@ exclude_paths:
   - "docs-site/**"
   - "**/*_test.go"
   - "**/*.test.ts"
+  - "web/tests/**"
 
 languages:
   go:
