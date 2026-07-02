@@ -1,10 +1,12 @@
-# Qodana for Go (Community — free)
-# Runs JetBrains GoLand inspections in CI.
-# Docs: https://www.jetbrains.com/help/qodana/golang.html
+# Qodana for Go (requires Ultimate license — $6/contributor/month)
+# The Go linter does NOT have a community (free) edition.
+# For free Go analysis, we rely on golangci-lint (50+ linters, 0 issues).
+#
+# To enable: set QODANA_TOKEN in GitHub Secrets and QODANA_ENABLED=true in vars.
 
 version: "1.0"
 
-linter: jetbrains/qodana-go:2026.1-community
+linter: jetbrains/qodana-go:2026.1
 
 projectJDK: "go1.26"
 
