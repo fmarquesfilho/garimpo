@@ -167,6 +167,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: Check API drift
         run: ./scripts/check-api-contract.sh
+      - name: Check config consistency
+        run: ./scripts/check-config-consistency.sh
 
   # ── Docker (build all images) ───────────────────────────────────────────
   docker:
