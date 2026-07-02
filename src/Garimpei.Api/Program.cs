@@ -130,6 +130,9 @@ app.MapGroup("/api/v2")
     .MapPublicacaoEndpoints()
     .MapCouponRulesEndpoints();
 
+// Internal endpoints (no auth — internal network only)
+app.MapCouponAlertEvaluationEndpoints();
+
 app.Run();
 
 // Endpoint groups — each in its own file

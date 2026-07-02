@@ -90,7 +90,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: pytest passes
   - **Implements:** R5-AC1, R5-AC2, R5-AC3, R5-AC4, R5-AC5, R5-AC6, R5-AC7
 
-- [ ] 11. Implement alert matcher and deduplication service (C# API)
+- [x] 11. Implement alert matcher and deduplication service (C# API)
   - Create POST /internal/coupon-alerts/evaluate endpoint
   - Create CouponDeduplicationService with ShouldAlertAsync (24h window, discount increase bypass)
   - Match: discount_type match, discount_value >= threshold, marketplace match, category intersection
