@@ -79,12 +79,17 @@ conforme documentado na ADR-0012.
               │  PostgreSQL (Neon)   │      │  BigQuery (GCP)        │
               │                      │      │                        │
               │  • Products          │      │  • snapshots           │
-              │  • Buscas            │      │  • conversões          │
-              │  • Tenants           │      │  • métricas históricas │
-              │  • Configs           │      │  • séries temporais    │
+              │  • Buscas            │      │  • eventos             │
+              │  • Tenants           │      │  • buscas              │
+              │  • TenantConfigs     │      │  • conversões          │
+              │  • Favoritos         │      │  • publicacoes         │
+              │  • Destinos          │      │  • destinos            │
+              │  • Templates         │      │  • templates           │
+              │  • Publicacoes       │      │  • favoritos           │
               │                      │      │                        │
-              │  Multi-tenant:       │      │  Read-only pelo        │
-              │  owner_uid filter    │      │  analyzer Python       │
+              │  Multi-tenant:       │      │  Fonte de verdade:     │
+              │  owner_uid filter    │      │  deploy/bigquery_      │
+              │                      │      │  schema.sql (superset) │
               └──────────────────────┘      └────────────────────────┘
 ```
 
@@ -229,17 +234,50 @@ Tudo isso em pandas + scikit-learn + BigQuery, sem afetar a API principal.
 - **Quando usar**: CRUD, dados que o usuário cria/edita, multi-tenant
 - **Schema**: EF Core code-first migrations
 - **Acesso**: C# (EF Core) — nunca acessado diretamente pelos sidecars Go
-- **Tabelas**: Products, Buscas, Tenants (+ futuras: Publicacoes, Favoritos, AlertConfigs)
 - **Multi-tenant**: global query filter automático por `owner_uid`
 - **Hosting**: Neon (serverless, free tier, sa-east-1)
+
+**Tabelas:**
+
+| Tabela | Responsabilidade |
+|--------|-----------------|
+| Products | Produtos salvos/favoritos (cache local) |
+| Buscas | Perfis de busca/monitoramento de lojas |
+| Tenants | Registro de tenants |
+| TenantConfigs | Credenciais + onboarding + alertas |
+| Favoritos | Produtos favoritos do usuário |
+| Destinos | Canais de publicação (Telegram/WhatsApp) |
+| Templates | Templates de mensagem |
+| Publicacoes | Publicações agendadas/enviadas |
 
 ### BigQuery (dados analíticos)
 
 - **Quando usar**: séries temporais, histórico, queries analíticas pesadas
-- **Acesso**: Python (analyzer) para leitura, Go (scheduler/collector) para escrita
-- **Tabelas**: snapshots, conversoes, eventos
+- **Acesso escrita**: Go (scheduler/collector) grava snapshots
+- **Acesso leitura**: Python (analyzer) faz queries analíticas
 - **Retenção**: ilimitada (BigQuery free tier: 10GB storage)
-- **Queries**: analyzer Python faz as queries complexas (joins, window functions)
+
+**Tabelas:**
+
+| Tabela | Quem escreve | Quem lê | Descrição |
+|--------|-------------|---------|-----------|
+| snapshots | collector (Go) | analyzer (Python) | Foto periódica do mercado |
+| eventos | C# API | analyzer (Python) | Eventos de curadoria |
+| buscas | C# API / scheduler | analyzer (Python) | Perfis de coleta (append-only) |
+| conversoes | webhook Shopee | analyzer (Python) | Conversões reais |
+| destinos | C# API | — | Histórico (append-only) |
+| templates | C# API | — | Histórico (append-only) |
+| publicacoes | C# API | analyzer (Python) | Histórico de publicações |
+| favoritos | C# API | — | Histórico (append-only) |
+
+**Decisão de schema (superset/subset):**
+
+> O SQL schema (`deploy/bigquery_schema.sql`) é a **fonte de verdade** e documenta
+> **todas** as tabelas. O Go `EnsureSchema` é um **subset** — ele só cria tabelas que
+> os microserviços Go gerenciam diretamente. Tabelas preenchidas por fontes externas
+> (ex.: `conversoes` via webhook Shopee) existem apenas no SQL schema.
+>
+> O script `check-schema-sync.sh` valida essa invariante no CI.
 
 ### Regra de ouro
 
@@ -345,12 +383,16 @@ Request HTTP com JWT Firebase
 - Quedas: variação negativa de preço acima do threshold
 - Evolução: série temporal de preço por loja
 - Estatísticas: resumo por categoria (médias, medianas)
+- Coletas: histórico de coletas executadas
+- Conversões: conversões reais da Shopee
 
 **Endpoints:**
 - `GET /novidades?busca_id=X&dias=7`
 - `GET /quedas?dias=7&threshold=0.15&limit=50`
 - `GET /evolucao?dias=30`
 - `GET /estatisticas?dias=30`
+- `GET /coletas?dias=30`
+- `GET /conversoes?dias=30`
 - `GET /health`
 
 ---
@@ -382,6 +424,7 @@ push main → GitHub Actions (ci.yml)
   ├─ python: ruff lint + syntax check
   ├─ proto: buf lint + sync check (Go + C# stubs atualizados?)
   ├─ frontend: npm ci + build + lint:css + lint:js + vitest
+  ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
   ├─ docker: build all 6 images (validação)
   └─ docs-deploy: sync + build + deploy Cloudflare Pages
 ```
@@ -409,8 +452,29 @@ Feature flags:
 |-------|-----------|--------|-----------|
 | Go (internal) | go test | source 87%, publish 62%, store 36% | Paths críticos |
 | Go (services) | go test | 12 testes (validações + fluxos) | 11-33% |
-| C# | xUnit | 10 testes (multi-tenant, persistence) | Isolamento garantido |
+| C# | xUnit + NetArchTest | 23 testes (multi-tenant, persistence, arquitetura) | Isolamento + fitness functions |
 | Frontend | Vitest + Playwright | 109 unitários + E2E | Componentes + fluxos |
+
+### Fitness functions (testes de arquitetura)
+
+O projeto usa **NetArchTest.Rules** para validar regras arquiteturais em tempo de compilação.
+Estas regras rodam como parte do `dotnet test` e quebram o CI se violadas:
+
+| Regra | O que valida |
+|-------|-------------|
+| Domain → sem deps em Application | Inversão de dependência respeitada |
+| Domain → sem deps em Infrastructure | Domain puro, sem framework leak |
+| Domain → sem deps em Api | Domain não conhece a apresentação |
+| Domain → sem deps em EF Core | Persistence ignorance |
+| Application → sem deps em Infrastructure | Use cases não conhecem detalhes de infra |
+| Application → sem deps em Api | Application não conhece HTTP |
+| Infrastructure → sem deps em Api | Infra não conhece apresentação |
+| Entities devem ser sealed | Previne herança acidental |
+| Entities devem implementar IOwnedEntity | Garante multi-tenancy |
+| Interfaces começam com "I" | Naming convention |
+| Interfaces residem em Domain.Interfaces | Organização |
+| ValueObjects são records | Imutabilidade garantida |
+| Domain Services são static | Stateless (sem efeitos colaterais) |
 
 ### Análise estática
 
@@ -422,19 +486,26 @@ Feature flags:
 | buf breaking | Detecta breaking changes nos contratos |
 | proto sync check | Stubs commitados == protos atuais |
 | dotnet build (warnings=errors) | Zero warnings no C# |
+| NetArchTest | 13 regras de Clean Architecture (fitness functions) |
 | ruff | Lint Python (fast, compatible com flake8) |
 | eslint + stylelint | Lint JS/CSS frontend |
 | Knip | Dead code/exports no frontend |
 | check-file-size | Máx 400 linhas por arquivo (exceto gen/) |
-| check-api-spec-sync | OpenAPI spec == endpoints implementados |
 
-### Validação de drift
+### Validação de drift (scripts CI)
 
-O CI garante que:
-1. Docs gerados estão atualizados (`make docs-check`)
-2. Proto stubs estão sincronizados com `.proto` files
-3. OpenAPI spec reflete endpoints reais (zero 404)
-4. Zero código morto (Knip, golangci-lint unused)
+O CI executa 3 scripts de verificação que detectam inconsistências cross-stack:
+
+| Script | O que detecta |
+|--------|--------------|
+| `scripts/check-api-contract.sh` | Rotas no frontend (`api.js`) sem endpoint no backend (ou vice-versa) |
+| `scripts/check-config-consistency.sh` | Nome errado do dataset BQ, portas divergentes, URLs hardcoded |
+| `scripts/check-schema-sync.sh` | Entidades C# sem DbSet, IOwnedEntity sem QueryFilter, tabelas BQ faltantes |
+
+**Decisão de design:** O SQL schema (`deploy/bigquery_schema.sql`) é a **fonte de verdade**
+(superset). O Go `EnsureSchema` pode ser um **subset** — ele só cria as tabelas que os
+microserviços Go gerenciam. Tabelas preenchidas externamente (ex.: `conversoes` via webhook
+Shopee) existem apenas no SQL schema.
 
 ---
 
