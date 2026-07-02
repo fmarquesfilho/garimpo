@@ -25,7 +25,7 @@ conforme documentado na ADR-0012.
 │  │  Pages (CDN)    │        │  Worker (routing inteligente)    │       │
 │  │  Frontend SPA   │        │                                  │       │
 │  │  SvelteKit      │        │  /api/*  → Cloud Run (C#)        │       │
-│  │  ~50ms TTFB     │        │  /docs/* → Pages (Starlight)     │       │
+│  │  ~50ms TTFB     │        │  /docs/* → Pages (Rspress)       │       │
 │  │                 │        │  /*      → Pages (Frontend)      │       │
 │  └─────────────────┘        └──────────────┬───────────────────┘       │
 └─────────────────────────────────────────────┼───────────────────────────┘
@@ -454,6 +454,36 @@ Request HTTP com JWT Firebase
 
 ## Deploy e operação
 
+### Serviços externos e seus papéis
+
+| Serviço | Uso | O que NÃO faz |
+|---------|-----|---------------|
+| **Firebase** | Autenticação (Auth SDK + JWT validation) | NÃO hospeda o frontend |
+| **Cloudflare Pages** | Hospeda frontend SPA + docs site (CDN global) | — |
+| **Cloudflare Worker** | Routing inteligente (proxy /api, /docs, /*) | — |
+| **Cloud Run (GCP)** | Backend C# + sidecars Go + Python | NÃO serve frontend |
+| **BigQuery (GCP)** | Analytics, snapshots, séries temporais | NÃO é CRUD |
+| **PostgreSQL (Neon)** | CRUD transacional (buscas, favoritos, tenants) | — |
+
+### Deploy automático (CI)
+
+```
+push main → GitHub Actions (ci.yml)
+  │
+  ├─ go: build + test + lint + arch-go
+  ├─ csharp: restore + build + test (PostgreSQL service)
+  ├─ python: ruff lint + syntax check
+  ├─ proto: buf lint + sync check (Go + C# stubs)
+  ├─ frontend: npm ci + build + lint + vitest + playwright (Firebase Emulator)
+  ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
+  ├─ docker: build all 6 images (validação Dockerfiles)
+  ├─ deploy-web: wrangler pages deploy → Cloudflare Pages (garimpei-web)
+  └─ deploy-docs: sync + build + deploy → Cloudflare Pages (garimpei-docs)
+```
+
+**deploy-web** roda apenas em push para main, após frontend + docker passarem.
+**deploy-docs** roda apenas quando docs/, docs-site/ ou api/openapi.yaml mudam.
+
 ### Cloud Run multi-container
 
 6 containers na mesma instância, comunicação via localhost:
@@ -469,33 +499,18 @@ Request HTTP com JWT Firebase
 
 **Total:** 2.75 vCPU, 1408Mi RAM (quando ativo). **Zero quando idle** (scale-to-zero).
 
-### CI Pipeline
-
-```
-push main → GitHub Actions (ci.yml)
-  │
-  ├─ go: build + test + lint + arch-go + docs-check + file-size
-  ├─ csharp: restore + build + test (com PostgreSQL service)
-  ├─ python: ruff lint + syntax check
-  ├─ proto: buf lint + sync check (Go + C# stubs atualizados?)
-  ├─ frontend: npm ci + build + lint:css + lint:js + vitest
-  ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
-  ├─ docker: build all 6 images (validação)
-  └─ docs-deploy: sync + build + deploy Cloudflare Pages
-```
-
 ### Routing (Cloudflare Worker)
 
 ```javascript
 /api/*   → Cloud Run (C# garimpei-v2)    // Backend
-/docs/*  → Cloudflare Pages (Starlight)  // Documentação
+/docs/*  → Cloudflare Pages (Rspress)    // Documentação
 /*       → Cloudflare Pages (SvelteKit)  // Frontend
 ```
 
-Feature flags:
+Feature flags (env vars no Worker):
 - `V2_ENABLED`: ativa/desativa routing para C# (rollback instantâneo)
-- `PAGES_URL`: URL do frontend Pages
-- `DOCS_URL`: URL do docs Pages
+- `PAGES_URL`: `https://garimpei-web.pages.dev`
+- `DOCS_URL`: `https://garimpei-docs.pages.dev`
 
 ---
 

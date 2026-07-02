@@ -14,7 +14,8 @@ push main → GitHub Actions (ci.yml)
   ├─ frontend: npm ci + build + lint:css + lint:js + vitest + playwright (Firebase Emulator)
   ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
   ├─ docker: build all 6 images (validação de Dockerfiles)
-  └─ docs-deploy: sync + build + deploy Cloudflare Pages (apenas push main)
+  ├─ deploy-web: wrangler pages deploy → Cloudflare Pages (só push main)
+  └─ deploy-docs: sync + build + deploy → Cloudflare Pages (só push main, se docs mudam)
 ```
 
 Pushes que só tocam `docs/legado/**`, `docs/meta/**` ou `README.md` são ignorados.
