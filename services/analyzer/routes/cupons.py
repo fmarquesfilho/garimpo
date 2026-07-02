@@ -1,11 +1,10 @@
 """Cupons: detection of new, modified, and expired coupons via BigQuery snapshot diff."""
 
 import logging
-from datetime import datetime
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from config import settings

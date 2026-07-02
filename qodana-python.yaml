@@ -1,0 +1,23 @@
+# Qodana for Python (Community — free)
+# Runs JetBrains PyCharm inspections in CI.
+# Docs: https://www.jetbrains.com/help/qodana/python.html
+
+version: "1.0"
+
+linter: jetbrains/qodana-python:2026.1-community
+
+include:
+  - name: All
+
+exclude:
+  - name: All
+    paths:
+      - web/
+      - node_modules/
+      - gen/
+
+# Only analyze the Python analyzer service
+bootstrap: |
+  cd services/analyzer
+
+failThreshold: 0

@@ -190,6 +190,12 @@ jobs:
       - name: Collector
         run: docker build -f services/collector/Dockerfile .
 
+      - name: Collector Amazon
+        run: docker build -f services/collector-amazon/Dockerfile .
+
+      - name: Coupon Collector
+        run: docker build -f services/coupon-collector/Dockerfile .
+
       - name: Publisher
         run: docker build -f services/publisher/Dockerfile .
 
@@ -201,4 +207,35 @@ jobs:
 
       - name: Analyzer
         run: docker build -f services/analyzer/Dockerfile services/analyzer/
+
+  # ── Qodana (code quality — JetBrains inspections) ───────────────────────
+  qodana-go:
+    name: Qodana Go (Community)
+    runs-on: ubuntu-latest
+    needs: [go]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: JetBrains/qodana-action@v2026.1
+        with:
+          args: --config,qodana-go.yaml
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+
+  qodana-python:
+    name: Qodana Python (Community)
+    runs-on: ubuntu-latest
+    needs: [python]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: JetBrains/qodana-action@v2026.1
+        with:
+          args: --config,qodana-python.yaml
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
 
