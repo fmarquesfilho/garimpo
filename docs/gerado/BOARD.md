@@ -16,7 +16,7 @@ T-0030
 | | T-0029 Deploy da nova API C# em produção (com endpoints portados) (P) | | | T-0009 Setup mono-repo (Go + C# + protos) + Docker Compose (M) |
 | | T-0030 Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo (M) | | | T-0010 Proto definitions + shopee-collector gRPC server (M) |
 | | T-0033 Validar multi-marketplace + coupon monitoring com banco limpo (M) | | | T-0011 Publisher gRPC server (extract publish package) (M) |
-| | | | | T-0012 Scheduler gRPC server (serviço Go separado) (M) |
+| | T-0034 Descobrir: corrigir filtros + badge drift + remover nota mínima (M) | | | T-0012 Scheduler gRPC server (serviço Go separado) (M) |
 | | | | | T-0013 C# Web App — auth middleware + health + CI (M) |
 | | | | | T-0014 PostgreSQL schema + EF Core migrations (dados transacionais) (M) |
 | | | | | T-0015 Multi-tenant em C# (EF Core + PostgreSQL) (G) |
@@ -36,7 +36,7 @@ T-0030
 
 **Métricas:**
 - 📋 backlog: 2
-- ⏭️ next: 8
+- ⏭️ next: 9
 - 🔨 doing: 0
 - 👀 review: 0
 - ✅ done: 23

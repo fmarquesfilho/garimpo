@@ -1,0 +1,74 @@
+id: T-0034
+titulo: "Descobrir: corrigir filtros + badge drift + remover nota mínima"
+epic: E-001
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S28"
+criado_em: "2026-07-02"
+valor: |
+  A página Descobrir é o core do produto. Filtros quebrados = usuário não confia
+  nos resultados. Precisa funcionar de forma intuitiva e previsível.
+descricao: |
+  Bugs e melhorias reportados em teste manual (02/07 com Mileny):
+
+  ## Bugs
+
+  1. **Badge "Busca" mostra 20 mas lista mostra 4 produtos**
+     - Drift cognitivo: o badge indica total_found da API (ex: 20),
+       mas o front filtra client-side e exibe menos.
+     - Fix: badge deve refletir a contagem exibida, não o total da API.
+
+  2. **Filtro vendas_min zera os resultados em vez de filtrar**
+     - Comportamento: busca "shampoo" → 20 resultados → alterar vendas_min
+       para 400 → resultados somem.
+     - Hipótese: o filtro dispara nova busca na API (passando vendas_min
+       como parâmetro) em vez de filtrar client-side os resultados já
+       carregados. Ou a API não suporta esse parâmetro corretamente.
+     - Investigar: é filtro client-side ou server-side? Se server-side,
+       o endpoint /api/candidatos suporta vendas_min?
+
+  3. **Categoria sem keyword não retorna resultados**
+     - Comportamento: selecionar "casa" no dropdown sem keyword → 0 resultados.
+     - Deveria buscar produtos da categoria independente de keyword.
+     - Investigar: a API exige keyword? O front envia categoria corretamente?
+
+  ## Melhorias
+
+  4. **Remover filtro "nota mínima"**
+     - UX confusa ("todas" como label). Pouco útil na prática.
+     - Simplificar a FilterBar removendo esse controle.
+
+  5. **Documentar lazy load / feed infinito**
+     - Existe no código mas não está documentado.
+     - Registrar comportamento esperado para testes.
+
+  6. **Origem das categorias no dropdown**
+     - Não está claro de onde vêm (hardcoded? API? BigQuery?).
+     - Documentar e considerar se faz sentido para o usuário.
+
+  ## Testes E2E necessários
+
+  A página Descobrir tem muitas combinações de filtros e merece uma suite
+  própria de testes. Casos mínimos:
+
+  - Busca por keyword → resultados aparecem
+  - Busca vazia → feed genérico (curadoria)
+  - Keyword + vendas_min → filtra corretamente (sem zerar)
+  - Keyword + comissão_min → filtra corretamente
+  - Categoria sem keyword → retorna produtos da categoria
+  - Categoria + keyword → intersecção
+  - Badge de contagem = número de cards visíveis
+  - Alterar filtro com resultados carregados → filtra sem re-fetch
+  - Scroll infinito carrega mais resultados
+  - Toggle fontes (curadoria/quedas/novos/favoritos) → filtra
+
+criterios_aceite:
+  - Badge reflete contagem exibida (não total_found da API)
+  - vendas_min filtra resultados sem zerá-los
+  - Categoria funciona sem keyword
+  - Filtro nota mínima removido
+  - Suite de testes E2E cobre os 10 cenários listados
+  - Testes passam no CI
+
+dependencias: []
