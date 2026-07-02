@@ -156,7 +156,7 @@ test.describe('Descobrir — Filtros e resultados', () => {
 
 		// Abrir filtros avançados e preencher categoria
 		await page.locator('.btn-avancado').click();
-		const catInput = page.locator('input[list="categorias-sugeridas"]');
+		const catInput = page.locator('input[placeholder="todas (digite para filtrar)"]');
 		await catInput.fill('cosméticos');
 		await page.waitForTimeout(600);
 
@@ -172,7 +172,7 @@ test.describe('Descobrir — Filtros e resultados', () => {
 		const input = page.locator('input[type="search"]');
 		await input.fill('sérum');
 		await page.locator('.btn-avancado').click();
-		const catInput = page.locator('input[list="categorias-sugeridas"]');
+		const catInput = page.locator('input[placeholder="todas (digite para filtrar)"]');
 		await catInput.fill('Cuidados com a Pele');
 		await page.waitForTimeout(600);
 
