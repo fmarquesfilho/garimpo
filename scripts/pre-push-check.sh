@@ -75,7 +75,13 @@ echo ""
 echo "📚 Docs (geração + build site):"
 run_check "Docs check (generated up to date)" make docs-check
 if [ -d "docs-site" ] && [ -f "docs-site/package.json" ]; then
-    run_check "Docs sync + site build (dead links)" bash -c "./scripts/sync-docs-to-site.sh && cd docs-site && npm ci --silent && npm run build"
+    # Só roda sync + build se houve mudanças em docs, docs-site, backlog ou sync script
+    if git diff --cached --name-only HEAD 2>/dev/null | grep -qE "^(docs/|docs-site/|backlog/|scripts/sync-docs-to-site\.sh)" || \
+       git diff --name-only HEAD~1..HEAD 2>/dev/null | grep -qE "^(docs/|docs-site/|backlog/|scripts/sync-docs-to-site\.sh)"; then
+        run_check "Docs sync + site build (dead links)" bash -c "./scripts/sync-docs-to-site.sh && cd docs-site && npm ci --silent && npm run build"
+    else
+        echo "  [skip] docs-site build — sem mudanças em docs/, docs-site/, backlog/"
+    fi
 fi
 
 # ── Frontend (opcional — só se houve mudanças) ────────────────────────────────

@@ -1,0 +1,52 @@
+# Garimpei Unified Collector Configuration
+# Modelo: OpenTelemetry Collector (receivers → pipelines → exporters)
+# Docs: docs/decisoes/0018-collector-unificado.md
+version: "1"
+
+receivers:
+  - id: shopee-products
+    type: product
+    marketplace: shopee
+    schedule: "*/30 * * * *"
+    credentials:
+      app_id_env: SHOPEE_APP_ID
+      secret_env: SHOPEE_SECRET
+
+  - id: amazon-products
+    type: product
+    marketplace: amazon
+    schedule: "0 * * * *"
+    credentials:
+      access_key_env: AMAZON_ACCESS_KEY
+      secret_key_env: AMAZON_SECRET_KEY
+      partner_tag_env: AMAZON_PARTNER_TAG
+
+  - id: shopee-coupons
+    type: coupon
+    marketplace: shopee
+    schedule: "0 */2 * * *"
+    credentials:
+      app_id_env: SHOPEE_APP_ID
+      secret_env: SHOPEE_SECRET
+
+  - id: amazon-coupons
+    type: coupon
+    marketplace: amazon
+    schedule: "0 */2 * * *"
+    credentials:
+      access_key_env: AMAZON_ACCESS_KEY
+      secret_key_env: AMAZON_SECRET_KEY
+      partner_tag_env: AMAZON_PARTNER_TAG
+
+exporters:
+  bigquery:
+    project_env: BQ_PROJECT
+    dataset: garimpo
+    products_table: snapshots
+    coupons_table: coupon_snapshots
+
+settings:
+  grpc_port: 50051
+  health_port: 8081
+  log_level: info
+  max_concurrent_receivers: 3

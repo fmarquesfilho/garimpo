@@ -103,7 +103,7 @@ echo "🔍 Collectors → escrita BQ apenas (sem leitura de PG)..."
 
 PG_CONN_IN_COLLECTORS=$(grep -rn "PostgreSQL\|ConnectionString\|5432\|POSTGRES" \
   --include="*.go" \
-  services/collector/ services/collector-amazon/ services/coupon-collector/ 2>/dev/null | \
+  services/collector/ 2>/dev/null | \
   grep -v "_test.go" || true)
 
 if [ -n "$PG_CONN_IN_COLLECTORS" ]; then

@@ -187,14 +187,8 @@ jobs:
       - name: C# API
         run: docker build -f src/Garimpei.Api/Dockerfile src/
 
-      - name: Collector
+      - name: Collector (unified)
         run: docker build -f services/collector/Dockerfile .
-
-      - name: Collector Amazon
-        run: docker build -f services/collector-amazon/Dockerfile .
-
-      - name: Coupon Collector
-        run: docker build -f services/coupon-collector/Dockerfile .
 
       - name: Publisher
         run: docker build -f services/publisher/Dockerfile .
