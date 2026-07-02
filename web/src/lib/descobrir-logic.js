@@ -18,7 +18,7 @@ export function encontrarLojaPorNome(termo, buscasComLojas) {
 /**
  * Monta a lista final de resultados aplicando todos os filtros client-side.
  */
-export function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias, comissaoMin, vendasMin, notaMin }) {
+export function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias, comissaoMin, vendasMin }) {
 	let todos = [];
 	if (fontes.curadoria) todos.push(...dadosCuradoria);
 	if (fontes.quedas) todos.push(...dadosQuedas);
@@ -48,9 +48,6 @@ export function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNov
 	}
 	if (vendasMin > 0) {
 		todos = todos.filter(r => !r.vendas || r.vendas >= vendasMin);
-	}
-	if (notaMin > 0) {
-		todos = todos.filter(r => !r.avaliacao || r.avaliacao >= notaMin);
 	}
 
 	return todos;

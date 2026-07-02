@@ -8,7 +8,6 @@
 		categoria = $bindable(''),
 		comissaoMin = $bindable(0.07),
 		vendasMin = $bindable(0),
-		notaMin = $bindable(0),
 		quantos = $bindable(9),
 		explorar = $bindable(false),
 		mostrarBusca = true
@@ -20,7 +19,6 @@
 	let filtrosAtivos = $derived(
 		(comissaoMin > 0.07 ? 1 : 0) +
 		(vendasMin > 0 ? 1 : 0) +
-		(notaMin > 0 ? 1 : 0) +
 		(categoria !== '' ? 1 : 0)
 	);
 </script>
@@ -84,14 +82,6 @@
 			<label class="campo">
 				<span class="rotulo">vendas mín.</span>
 				<input type="number" min="0" step="1" bind:value={vendasMin} class="entrada num" />
-			</label>
-			<label class="campo">
-				<span class="rotulo">nota mín.</span>
-				<select bind:value={notaMin} class="dado">
-					<option value={0}>todas</option>
-					<option value={4}>4,0+</option>
-					<option value={4.5}>4,5+</option>
-				</select>
 			</label>
 		</div>
 	{/if}
