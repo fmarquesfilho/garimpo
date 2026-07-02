@@ -15,6 +15,7 @@ _Nenhuma tarefa em andamento._
 - **T-0028** Configurar coleta no scheduler (popular snapshots do zero) · produto · M
 - **T-0029** Deploy da nova API C# em produção (com endpoints portados) · migracao-arch · P
 - **T-0030** Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo · multi-tenant · M
+- **T-0033** Validar multi-marketplace + coupon monitoring com banco limpo · E-003 · M
 
 ## ⚪ Later (radar)
 

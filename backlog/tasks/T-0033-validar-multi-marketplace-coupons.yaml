@@ -1,0 +1,150 @@
+id: T-0033
+titulo: "Validar multi-marketplace + coupon monitoring com banco limpo"
+epic: E-003
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S28"
+criado_em: "2026-07-02"
+valor: |
+  Garantir que toda a implementação de multi-marketplace e coupon monitoring
+  funciona end-to-end com banco limpo antes de ir para produção.
+descricao: |
+  Validar toda a implementação da sessão feat/multi-marketplace-coupons (#11)
+  com banco limpo (PostgreSQL fresh + BigQuery emulator). Garantir que
+  migrations rodam, onboarding funciona, e endpoints novos respondem.
+
+checklist:
+  # ── Infra / Setup ──────────────────────────────────────────────────────
+  - id: setup-1
+    descricao: "docker compose up (postgres + bigquery-emulator)"
+    feito: false
+
+  - id: setup-2
+    descricao: "dotnet ef database update (rodar todas as migrations no PG limpo)"
+    feito: false
+
+  - id: setup-3
+    descricao: "Verificar que tabelas CouponAlertRules e CouponAlertHistory existem no PG"
+    feito: false
+
+  - id: setup-4
+    descricao: "Verificar que coupon_snapshots existe no BigQuery (via emulator)"
+    feito: false
+
+  # ── Onboarding Amazon ──────────────────────────────────────────────────
+  - id: onboard-1
+    descricao: "POST /api/onboarding/amazon com credenciais fake → status 200"
+    feito: false
+
+  - id: onboard-2
+    descricao: "POST /api/onboarding/amazon com pular:true → status 200, amazon_pulado"
+    feito: false
+
+  - id: onboard-3
+    descricao: "GET /api/onboarding/status → tem_amazon:true, marketplaces_ativos inclui 'amazon'"
+    feito: false
+
+  # ── Coupon Alert Rules CRUD ────────────────────────────────────────────
+  - id: rules-1
+    descricao: "POST /api/v2/cupons/regras → criar regra (shopee, 10%, telegram)"
+    feito: false
+
+  - id: rules-2
+    descricao: "GET /api/v2/cupons/regras → lista regras do tenant"
+    feito: false
+
+  - id: rules-3
+    descricao: "PUT /api/v2/cupons/regras/{id} → alterar min_discount"
+    feito: false
+
+  - id: rules-4
+    descricao: "PATCH /api/v2/cupons/regras/{id}/toggle → desativar/ativar"
+    feito: false
+
+  - id: rules-5
+    descricao: "DELETE /api/v2/cupons/regras/{id} → deletar"
+    feito: false
+
+  - id: rules-6
+    descricao: "Tentar criar 21ª regra → HTTP 409 (max 20)"
+    feito: false
+
+  # ── Alert Evaluation (internal endpoint) ───────────────────────────────
+  - id: eval-1
+    descricao: "POST /internal/coupon-alerts/evaluate com detections mock → alerts_sent > 0"
+    feito: false
+
+  - id: eval-2
+    descricao: "POST novamente com mesmo coupon_id → alerts_sent = 0 (dedup 24h)"
+    feito: false
+
+  - id: eval-3
+    descricao: "POST com discount_value aumentado → alerts_sent > 0 (bypass dedup)"
+    feito: false
+
+  # ── Coupon Collector (gRPC local) ──────────────────────────────────────
+  - id: collector-1
+    descricao: "Subir coupon-collector com MARKETPLACE=shopee + credenciais Shopee reais"
+    feito: false
+
+  - id: collector-2
+    descricao: "grpcurl FetchCoupons → verificar que retorna cupons (ou erro de API se credentials inválidas)"
+    feito: false
+
+  # ── Listing Endpoints ──────────────────────────────────────────────────
+  - id: listing-1
+    descricao: "GET /api/v2/cupons → retorna resposta (mesmo vazio se analyzer off)"
+    feito: false
+
+  - id: listing-2
+    descricao: "GET /api/v2/cupons/historico → retorna resposta"
+    feito: false
+
+  # ── Admin / Health ─────────────────────────────────────────────────────
+  - id: admin-1
+    descricao: "GET /api/health → campo 'quality' com codacy, lint_go, tests_csharp"
+    feito: false
+
+  - id: admin-2
+    descricao: "GET /api/admin/me → campo 'tools' com codacy_dashboard, github_actions"
+    feito: false
+
+  # ── Codacy ─────────────────────────────────────────────────────────────
+  - id: codacy-1
+    descricao: "Instalar Codacy GitHub App em https://github.com/apps/codacy-production"
+    feito: false
+
+  - id: codacy-2
+    descricao: "Adicionar repo garimpo no Codacy dashboard"
+    feito: false
+
+  - id: codacy-3
+    descricao: "Verificar que análise roda automaticamente (abrir PR de teste)"
+    feito: false
+
+  # ── Multi-marketplace (Busca com marketplace) ──────────────────────────
+  - id: mkt-1
+    descricao: "POST /api/buscas com campo marketplaces:'shopee,amazon' → criada com sucesso"
+    feito: false
+
+  - id: mkt-2
+    descricao: "GET /api/candidatos?keyword=X → campo marketplace:'shopee' nos resultados"
+    feito: false
+
+  # ── Smoke: pipeline completo (se possível) ─────────────────────────────
+  - id: smoke-1
+    descricao: "Scheduler TriggerJob coupon_collection → verifica logs (coleta + detection)"
+    feito: false
+
+notas: |
+  Comandos úteis:
+    docker compose up -d postgres bigquery-emulator
+    cd src && dotnet ef database update --project Garimpei.Infrastructure --startup-project Garimpei.Api
+    dotnet run --project src/Garimpei.Api
+    grpcurl -plaintext localhost:50061 coupon.v1.CouponCollectorService/FetchCoupons
+
+  Para testar alert evaluation manualmente:
+    curl -X POST http://localhost:8090/internal/coupon-alerts/evaluate \
+      -H "Content-Type: application/json" \
+      -d '{"ownerUid":"SEU_UID","marketplace":"shopee","detections":[{"couponId":"TEST1","detectionStatus":"newly_discovered","discountType":"percentage","discountValue":25.0,"applicableCategories":["electronics"]}]}'

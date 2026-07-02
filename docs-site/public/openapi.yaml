@@ -1,0 +1,426 @@
+openapi: 3.1.0
+info:
+  title: Garimpei API
+  description: |
+    API do Garimpei — curadoria inteligente de produtos de afiliados Shopee.
+
+    Servida pelo Web App C# (ASP.NET Core 10) via Cloud Run multi-container.
+    Autenticação via Firebase Auth (Bearer token).
+
+    Endpoints de compatibilidade (`/api/*`) mantêm o formato legado para o frontend.
+    Endpoints novos (`/api/v2/*`) usam formato nativo C#.
+  version: 2.0.0
+  contact:
+    name: Fernando Marques
+servers:
+  - url: https://garimpei.app.br
+    description: Produção (Cloudflare Worker → Cloud Run)
+  - url: https://garimpei-v2-879269475961.southamerica-east1.run.app
+    description: Produção (Cloud Run direto)
+  - url: http://localhost:8090
+    description: Desenvolvimento local
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Curadoria
+    description: "Busca, ranking e scoring de produtos (4 fontes: busca, quedas, novos, favoritos)"
+  - name: Publicação
+    description: Publicar ofertas em canais (Telegram, WhatsApp) via gRPC
+  - name: Buscas
+    description: CRUD de buscas/lojas monitoradas
+  - name: Admin
+    description: Verificação de admin e status
+
+paths:
+  /api/health:
+    get:
+      tags: [Admin]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: API ativa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  fonte: { type: string, example: "shopee" }
+                  store: { type: string, example: "postgresql" }
+                  backend: { type: string, example: "csharp-v2" }
+
+  /api/admin/me:
+    get:
+      tags: [Admin]
+      summary: Verifica se o usuário logado é admin
+      responses:
+        '200':
+          description: Status de admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admin: { type: boolean }
+                  email: { type: string }
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/candidatos:
+    get:
+      tags: [Curadoria]
+      summary: Lista candidatos ranqueados (formato compatível com frontend)
+      description: |
+        Endpoint de compatibilidade — retorna produtos ranqueados pelo scoring engine
+        no formato esperado pelo frontend (campos em português).
+        Usa o collector gRPC para fetch e aplica scoring Niche.
+      security: []
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema: { type: string }
+          example: "sérum vitamina c"
+        - name: top
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: comissao_min
+          in: query
+          schema: { type: number, default: 0.07 }
+        - name: vendas_min
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: nota_min
+          in: query
+          schema: { type: number, default: 0 }
+      responses:
+        '200':
+          description: Lista ranqueada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estrategia: { type: string, example: "nicho" }
+                  total_bruto: { type: integer }
+                  candidatos:
+                    type: array
+                    items: { $ref: '#/components/schemas/CandidatoCompat' }
+
+  /api/v2/curadoria/ranking:
+    get:
+      tags: [Curadoria]
+      summary: Ranking de produtos por scoring (busca por keyword)
+      description: |
+        Fetch via collector gRPC → scoring engine (comissão 45%, EV 35%, avaliação 20%).
+        Fonte "Busca" na página publicar.
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: comissao_min
+          in: query
+          schema: { type: number, default: 0.07 }
+        - name: vendas_min
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: nota_min
+          in: query
+          schema: { type: number, default: 0 }
+      responses:
+        '200':
+          description: Produtos rankeados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fonte: { type: string, example: "collector-grpc" }
+                  total_bruto: { type: integer }
+                  candidatos:
+                    type: array
+                    items: { $ref: '#/components/schemas/ScoredProduct' }
+        '400':
+          description: keyword ausente
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/ranking/shop:
+    get:
+      tags: [Curadoria]
+      summary: Ranking de produtos de uma loja específica
+      parameters:
+        - name: shop_id
+          in: query
+          required: true
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: comissao_min
+          in: query
+          schema: { type: number, default: 0.07 }
+        - name: vendas_min
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: nota_min
+          in: query
+          schema: { type: number, default: 0 }
+      responses:
+        '200':
+          description: Produtos da loja rankeados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fonte: { type: string, example: "collector-grpc-shop" }
+                  total_bruto: { type: integer }
+                  candidatos:
+                    type: array
+                    items: { $ref: '#/components/schemas/ScoredProduct' }
+        '400':
+          description: shop_id ausente
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/quedas:
+    get:
+      tags: [Curadoria]
+      summary: Produtos com queda de preço
+      description: |
+        Fonte "Quedas" na página publicar. Consulta o analyzer Python (BigQuery).
+      parameters:
+        - name: dias
+          in: query
+          schema: { type: integer, default: 7 }
+        - name: threshold
+          in: query
+          schema: { type: number, default: 0.15 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: Produtos com queda de preço
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/novos:
+    get:
+      tags: [Curadoria]
+      summary: Produtos recém-detectados
+      description: |
+        Fonte "Novos" na página publicar. Consulta o analyzer Python (BigQuery).
+      parameters:
+        - name: busca_id
+          in: query
+          required: true
+          schema: { type: string }
+        - name: dias
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        '200':
+          description: Produtos novos detectados
+        '400':
+          description: busca_id ausente
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/curadoria/favoritos:
+    get:
+      tags: [Curadoria]
+      summary: Produtos favoritos do usuário
+      description: Fonte "Favoritos" na página publicar. Lê do PostgreSQL (multi-tenant).
+      responses:
+        '200':
+          description: Favoritos do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fonte: { type: string, example: "favoritos" }
+                  candidatos: { type: array, items: { type: object } }
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/buscas:
+    get:
+      tags: [Buscas]
+      summary: Lista buscas ativas do usuário
+      responses:
+        '200':
+          description: Buscas do tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  buscas: { type: array, items: { type: object } }
+                  total: { type: integer }
+        '401':
+          description: JWT ausente ou inválido
+    post:
+      tags: [Buscas]
+      summary: Criar nova busca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [keyword]
+              properties:
+                keyword: { type: string }
+                sort_by: { type: string, default: "relevance" }
+                limit: { type: integer, default: 50 }
+      responses:
+        '201':
+          description: Busca criada
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/buscas/{id}:
+    delete:
+      tags: [Buscas]
+      summary: Desativar busca (tombstone)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Busca desativada
+        '404':
+          description: Busca não encontrada
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/publicar:
+    post:
+      tags: [Publicação]
+      summary: Publicar oferta em canal (Telegram/WhatsApp)
+      description: Envia via publisher gRPC sidecar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublishOfferRequest' }
+      responses:
+        '200':
+          description: Publicação enviada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message_id: { type: string }
+                  published_at: { type: string, format: date-time }
+                  channel: { type: string }
+        '401':
+          description: JWT ausente ou inválido
+
+  /api/v2/publicar/destinos:
+    get:
+      tags: [Publicação]
+      summary: Lista destinos de publicação disponíveis
+      parameters:
+        - name: channel
+          in: query
+          schema: { type: string, enum: [telegram, whatsapp, ""] }
+      responses:
+        '200':
+          description: Destinos disponíveis
+        '401':
+          description: JWT ausente ou inválido
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase Auth token (obtido via Firebase SDK no frontend)
+
+  schemas:
+    CandidatoCompat:
+      type: object
+      description: Produto rankeado (formato compatível com frontend — campos em português)
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        categoria: { type: string }
+        loja: { type: string }
+        loja_id: { type: string }
+        preco: { type: number }
+        preco_max: { type: number }
+        desconto: { type: number }
+        comissao: { type: number }
+        vendas: { type: integer }
+        avaliacao: { type: number }
+        link: { type: string, format: uri }
+        link_produto: { type: string, format: uri }
+        imagem: { type: string, format: uri }
+        score: { type: number }
+        componentes:
+          type: object
+          properties:
+            comissao: { type: number }
+            valor_esperado: { type: number }
+            avaliacao: { type: number }
+        suspeito: { type: boolean }
+        oferta_expira: { type: string }
+
+    ScoredProduct:
+      type: object
+      description: Produto pontuado pelo scoring engine (formato C# nativo)
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        shopName: { type: string }
+        shopId: { type: string }
+        origin: { type: string }
+        price: { type: number }
+        originalPrice: { type: number }
+        discountPercent: { type: number }
+        commission: { type: number }
+        sales: { type: integer }
+        rating: { type: number }
+        link: { type: string, format: uri }
+        productLink: { type: string, format: uri }
+        imageUrl: { type: string, format: uri }
+        score: { type: number }
+        components:
+          type: object
+          properties:
+            commission: { type: number }
+            expectedValue: { type: number }
+            rating: { type: number }
+        suspicious: { type: boolean }
+        offerExpiresAt: { type: string, format: date-time }
+
+    PublishOfferRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        imageUrl: { type: string, format: uri }
+        productUrl: { type: string, format: uri }
+        price: { type: number }
+        originalPrice: { type: number }
+        discountPercent: { type: number }
+        channel: { type: string, enum: [telegram, whatsapp], default: telegram }
+        groupId: { type: string }
