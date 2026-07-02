@@ -342,7 +342,7 @@
 	/* Canal tabs */
 	.canal-tabs { display: flex; gap: var(--r2); margin-bottom: var(--r4); }
 	.tab { padding: 8px 16px; border: 1px solid var(--linha); border-radius: 8px; background: var(--branco); font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--tinta-suave); }
-	.tab.ativo { background: var(--ouro-fundo, #fff8e1); border-color: var(--ouro); color: var(--ouro-escuro, #f59e0b); }
+	.tab.ativo { background: var(--ouro-fundo); border-color: var(--ouro); color: var(--ouro-escuro); }
 	.tab:hover:not(.ativo) { border-color: var(--tinta-suave); }
 	.instrucoes-intro { font-size: 0.9rem; color: var(--tinta-suave); margin-bottom: var(--r3); }
 	.dica { font-size: 0.82rem; color: var(--tinta-suave); background: var(--porcelana); padding: var(--r2) var(--r3); border-radius: 6px; margin-top: var(--r2); }

@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Query
 
-from config import settings
 import bq_client
 
 router = APIRouter(tags=["Conversões"])

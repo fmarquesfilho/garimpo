@@ -65,7 +65,7 @@ if git diff --cached --name-only HEAD 2>/dev/null | grep -q "^web/" || \
     echo ""
     echo "🔨 Frontend (lint + unit tests):"
     run_check "Lint JS" npm run lint:js --prefix web
-    run_check "Vitest" npx vitest run --prefix web
+    run_check "Vitest" npm run test:unit --prefix web
 fi
 
 # ── Resultado ─────────────────────────────────────────────────────────────────
