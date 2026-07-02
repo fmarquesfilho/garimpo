@@ -5,6 +5,7 @@
 ## 🔵 Now (em andamento)
 
 - **T-0034** Descobrir: corrigir filtros + badge drift + remover nota mínima · E-001 · M
+- **T-0035** Pós-migração: resolver bugs de deploy e garantir funcionalidade completa · E-001 · M
 
 ## 🟡 Next (próximo sprint)
 

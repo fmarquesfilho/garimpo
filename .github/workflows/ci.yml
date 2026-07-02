@@ -243,6 +243,87 @@ jobs:
   # No YAML step needed — Codacy hooks into GitHub directly.
 
 
+  # ── Deploy Backend (Cloud Run) ────────────────────────────────────────────
+  deploy-backend:
+    name: Deploy backend (Cloud Run)
+    runs-on: ubuntu-latest
+    needs: [docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      REGION: southamerica-east1
+      PROJECT_ID: garimpo-500114
+      REGISTRY: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build & push garimpei-api
+        run: |
+          docker build --platform linux/amd64 --provenance=false \
+            -f src/Garimpei.Api/Dockerfile src/ \
+            -t ${{ env.REGISTRY }}/garimpei-api-v2:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/garimpei-api-v2:latest
+          docker push ${{ env.REGISTRY }}/garimpei-api-v2 --all-tags
+
+      - name: Build & push collector
+        run: |
+          docker build --platform linux/amd64 --provenance=false \
+            -f services/collector/Dockerfile . \
+            -t ${{ env.REGISTRY }}/collector:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/collector:latest
+          docker push ${{ env.REGISTRY }}/collector --all-tags
+
+      - name: Build & push publisher
+        run: |
+          docker build --platform linux/amd64 --provenance=false \
+            -f services/publisher/Dockerfile . \
+            -t ${{ env.REGISTRY }}/publisher:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/publisher:latest
+          docker push ${{ env.REGISTRY }}/publisher --all-tags
+
+      - name: Build & push alerter
+        run: |
+          docker build --platform linux/amd64 --provenance=false \
+            -f services/alerter/Dockerfile . \
+            -t ${{ env.REGISTRY }}/alerter:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/alerter:latest
+          docker push ${{ env.REGISTRY }}/alerter --all-tags
+
+      - name: Build & push scheduler
+        run: |
+          docker build --platform linux/amd64 --provenance=false \
+            -f services/scheduler/Dockerfile . \
+            -t ${{ env.REGISTRY }}/scheduler:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/scheduler:latest
+          docker push ${{ env.REGISTRY }}/scheduler --all-tags
+
+      - name: Build & push analyzer
+        run: |
+          docker build --platform linux/amd64 --provenance=false \
+            -f services/analyzer/Dockerfile services/analyzer/ \
+            -t ${{ env.REGISTRY }}/analyzer:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/analyzer:latest
+          docker push ${{ env.REGISTRY }}/analyzer --all-tags
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run services replace deploy/cloud-run-deploy-now.yaml \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }}
+
   # ── Deploy Frontend (Cloudflare Pages) ───────────────────────────────────
   deploy-web:
     name: Deploy frontend
