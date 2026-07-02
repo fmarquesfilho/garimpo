@@ -10,23 +10,52 @@ const API_KEY = 'AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A';
 const TEST_EMAIL = 'teste-e2e@garimpo.dev';
 const TEST_PASSWORD = 'senha-teste-123';
 
+/**
+ * Garante que o usuário de teste existe no Firebase Auth Emulator.
+ * Tenta criar; se já existe, ignora o erro.
+ */
+async function garantirUsuarioNoEmulator(emulatorHost) {
+	const url = `http://${emulatorHost}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
+	const resp = await fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			email: TEST_EMAIL,
+			password: TEST_PASSWORD,
+			displayName: 'Teste E2E',
+			returnSecureToken: true
+		})
+	});
+	if (!resp.ok) {
+		const body = await resp.json().catch(() => ({}));
+		// EMAIL_EXISTS é esperado (usuário já criado por outro teste)
+		if (!body?.error?.message?.includes('EMAIL_EXISTS')) {
+			throw new Error(`Falha ao criar usuário no emulator: ${JSON.stringify(body)}`);
+		}
+	}
+}
+
 export const test = base.extend({
 	/** Page já autenticada via emulator. */
 	authedPage: async ({ page }, use) => {
 		const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
 
 		if (emulatorHost) {
-			// Injetar variável para firebase.js conectar ao emulator
+			// 1. Criar usuário no emulator (server-side, antes do browser)
+			await garantirUsuarioNoEmulator(emulatorHost);
+
+			// 2. Injetar variável para firebase.js conectar ao emulator
 			await page.addInitScript(({ host }) => {
 				window.__FIREBASE_AUTH_EMULATOR_HOST__ = host;
 			}, { host: emulatorHost });
 		}
 
+		// 3. Navegar para a app
 		await page.goto('/');
 		await page.waitForLoadState('networkidle');
 
 		if (emulatorHost) {
-			// Esperar __TEST_SIGN_IN__ ficar disponível e logar
+			// 4. Esperar __TEST_SIGN_IN__ ficar disponível e logar
 			await page.waitForFunction(
 				() => typeof window.__TEST_SIGN_IN__ === 'function',
 				{},
@@ -37,7 +66,7 @@ export const test = base.extend({
 			}, { email: TEST_EMAIL, password: TEST_PASSWORD });
 		}
 
-		// Esperar o conteúdo autenticado
+		// 5. Esperar o conteúdo autenticado
 		await expect(page.locator('h1')).toContainText('O que publicar hoje', { timeout: 15000 });
 
 		await use(page);
