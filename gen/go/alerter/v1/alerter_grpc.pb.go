@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AlerterService_CheckAndNotify_FullMethodName = "/alerter.v1.AlerterService/CheckAndNotify"
+	AlerterService_CheckAndNotify_FullMethodName  = "/alerter.v1.AlerterService/CheckAndNotify"
+	AlerterService_SendCouponAlert_FullMethodName = "/alerter.v1.AlerterService/SendCouponAlert"
 )
 
 // AlerterServiceClient is the client API for AlerterService service.
@@ -28,6 +29,8 @@ const (
 type AlerterServiceClient interface {
 	// Check product snapshots and notify if thresholds are met
 	CheckAndNotify(ctx context.Context, in *CheckAndNotifyRequest, opts ...grpc.CallOption) (*CheckAndNotifyResponse, error)
+	// Send coupon-specific alerts to Telegram/WhatsApp
+	SendCouponAlert(ctx context.Context, in *SendCouponAlertRequest, opts ...grpc.CallOption) (*SendCouponAlertResponse, error)
 }
 
 type alerterServiceClient struct {
@@ -48,12 +51,24 @@ func (c *alerterServiceClient) CheckAndNotify(ctx context.Context, in *CheckAndN
 	return out, nil
 }
 
+func (c *alerterServiceClient) SendCouponAlert(ctx context.Context, in *SendCouponAlertRequest, opts ...grpc.CallOption) (*SendCouponAlertResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendCouponAlertResponse)
+	err := c.cc.Invoke(ctx, AlerterService_SendCouponAlert_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AlerterServiceServer is the server API for AlerterService service.
 // All implementations must embed UnimplementedAlerterServiceServer
 // for forward compatibility.
 type AlerterServiceServer interface {
 	// Check product snapshots and notify if thresholds are met
 	CheckAndNotify(context.Context, *CheckAndNotifyRequest) (*CheckAndNotifyResponse, error)
+	// Send coupon-specific alerts to Telegram/WhatsApp
+	SendCouponAlert(context.Context, *SendCouponAlertRequest) (*SendCouponAlertResponse, error)
 	mustEmbedUnimplementedAlerterServiceServer()
 }
 
@@ -66,6 +81,9 @@ type UnimplementedAlerterServiceServer struct{}
 
 func (UnimplementedAlerterServiceServer) CheckAndNotify(context.Context, *CheckAndNotifyRequest) (*CheckAndNotifyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CheckAndNotify not implemented")
+}
+func (UnimplementedAlerterServiceServer) SendCouponAlert(context.Context, *SendCouponAlertRequest) (*SendCouponAlertResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendCouponAlert not implemented")
 }
 func (UnimplementedAlerterServiceServer) mustEmbedUnimplementedAlerterServiceServer() {}
 func (UnimplementedAlerterServiceServer) testEmbeddedByValue()                        {}
@@ -106,6 +124,24 @@ func _AlerterService_CheckAndNotify_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AlerterService_SendCouponAlert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendCouponAlertRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AlerterServiceServer).SendCouponAlert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AlerterService_SendCouponAlert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AlerterServiceServer).SendCouponAlert(ctx, req.(*SendCouponAlertRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AlerterService_ServiceDesc is the grpc.ServiceDesc for AlerterService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +152,10 @@ var AlerterService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckAndNotify",
 			Handler:    _AlerterService_CheckAndNotify_Handler,
+		},
+		{
+			MethodName: "SendCouponAlert",
+			Handler:    _AlerterService_SendCouponAlert_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

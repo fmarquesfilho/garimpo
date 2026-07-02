@@ -54,7 +54,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `go build ./services/coupon-collector/` and `go test` pass
   - **Implements:** R1-AC1, R1-AC3, R2-AC1, R3-AC1
 
-- [ ] 7. Extend scheduler with coupon collection jobs
+- [x] 7. Extend scheduler with coupon collection jobs
   - Add CouponCollectorService gRPC client to SchedulerServer (3 marketplace addresses from env)
   - Add executeCouponCollectionJob: sequential Shopee→Amazon→ML, 3min timeout, POST to analyzer on success
   - Support job type "coupon_collection" with default cron "0 */2 * * *"
@@ -80,7 +80,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `dotnet build` and `dotnet test` pass
   - **Implements:** R6-AC1, R6-AC5, R6-AC6, R6-AC9
 
-- [ ] 10. Implement coupon detection in Python analyzer
+- [x] 10. Implement coupon detection in Python analyzer
   - Add POST /detect-coupons endpoint to services/analyzer/ (FastAPI)
   - BigQuery diff query: compare current vs previous snapshot, classify newly_discovered/modified/expired_or_removed
   - Safety: skip if current snapshot has 0 rows, log warning
@@ -101,7 +101,7 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `dotnet build` and `dotnet test` pass
   - **Implements:** R6-AC3, R6-AC4, R6-AC7, R6-AC8, R6-AC10, R9-AC1, R9-AC2, R9-AC4, R9-AC5
 
-- [ ] 12. Extend alerter with coupon notification formatting
+- [x] 12. Extend alerter with coupon notification formatting
   - Add SendCouponAlert RPC to protos/alerter/v1/alerter.proto, run buf generate
   - Implement: Telegram Markdown (bold discount, categories, link), WhatsApp plain text (emojis)
   - Prepend "⚡ Expira em breve!" when end_time < 24h
@@ -111,14 +111,14 @@ This plan implements the coupon monitoring feature across 14 tasks, progressing 
   - Verify: `go test ./services/alerter/` passes
   - **Implements:** R7-AC1, R7-AC2, R7-AC3, R7-AC4, R7-AC5, R7-AC6
 
-- [ ] 13. Docker Compose and integration wiring
+- [x] 13. Docker Compose and integration wiring
   - Add coupon-collector-shopee/amazon/ml services to docker-compose.yml (ports 50061-50063)
   - Add scheduler env vars for coupon collector addresses and analyzer URL
   - Verify: `docker compose config` validates
   - Smoke test: scheduler triggers → collection → BigQuery → detection → alert evaluation
   - **Implements:** R4-AC2, R4-AC3
 
-- [ ] 14. Coupon listing and analytics endpoints (C# API)
+- [x] 14. Coupon listing and analytics endpoints (C# API)
   - GET /api/v2/cupons — list active coupons from latest BigQuery snapshot (marketplace/category filter)
   - GET /api/v2/cupons/historico — query coupon history (time range, marketplace, discount range)
   - Register endpoints in Program.cs

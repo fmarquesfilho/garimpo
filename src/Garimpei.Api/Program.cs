@@ -128,7 +128,8 @@ app.MapGroup("/api/v2")
     .MapCuradoriaEndpoints()
     .MapLojasEndpoints()
     .MapPublicacaoEndpoints()
-    .MapCouponRulesEndpoints();
+    .MapCouponRulesEndpoints()
+    .MapCouponListingEndpoints();
 
 // Internal endpoints (no auth — internal network only)
 app.MapCouponAlertEvaluationEndpoints();
