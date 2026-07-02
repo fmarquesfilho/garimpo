@@ -58,7 +58,7 @@ func NewAmazonCreatorsSource(accessKey, secretKey, partnerTag string) *AmazonCre
 
 func (s *AmazonCreatorsSource) Name() string { return "amazon-creators" }
 
-func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) { //nolint:funlen // sequential API flow
+func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) {
 	if s.AccessKey == "" || s.SecretKey == "" {
 		return nil, fmt.Errorf("amazon product: %w", apperr.ErrNoConfig)
 	}
@@ -75,9 +75,18 @@ func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) { //nolint:funl
 		endpoint = amazonEndpoint
 	}
 
+	raw, err := s.doSearchRequest(client, endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.parseSearchResponse(raw)
+}
+
+func (s *AmazonCreatorsSource) doSearchRequest(client *http.Client, endpoint string) ([]byte, error) {
 	limit := s.Limit
 	if limit <= 0 || limit > 10 {
-		limit = 10 // Creators API max is 10 per request
+		limit = 10
 	}
 
 	payload := searchItemsRequest{
@@ -107,7 +116,6 @@ func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) { //nolint:funl
 		return nil, fmt.Errorf("amazon criar request: %w", err)
 	}
 
-	// AWS Signature V4 headers
 	now := time.Now().UTC()
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Set("X-Amz-Date", now.Format("20060102T150405Z"))
@@ -130,6 +138,10 @@ func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) { //nolint:funl
 		return nil, fmt.Errorf("amazon api status %d: %w", resp.StatusCode, apperr.ErrAmazonAPI)
 	}
 
+	return raw, nil
+}
+
+func (s *AmazonCreatorsSource) parseSearchResponse(raw []byte) ([]domain.Product, error) {
 	var result searchItemsResponse
 	if err := json.Unmarshal(raw, &result); err != nil {
 		return nil, fmt.Errorf("amazon api: resposta inválida: %w", err)
@@ -144,7 +156,6 @@ func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) { //nolint:funl
 			Marketplace: domain.MarketplaceAmazon,
 		}
 
-		// Price
 		if len(item.Offers.Listings) > 0 {
 			listing := item.Offers.Listings[0]
 			p.Price = listing.Price.Amount
@@ -156,19 +167,12 @@ func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) { //nolint:funl
 			}
 		}
 
-		// Rating (não disponível diretamente no SearchItems; seria necessário GetItems com CustomerReviews resource)
-		// Deixamos 0 e o scoring trata isso gracefully.
-
-		// Image
 		if item.Images.Primary.Large.URL != "" {
 			p.Image = item.Images.Primary.Large.URL
 		}
 
-		// Link de afiliado: URL do produto + ?tag=PARTNER_TAG
 		p.ProductLink = fmt.Sprintf("https://www.amazon.com.br/dp/%s", item.ASIN)
 		p.Link = fmt.Sprintf("https://www.amazon.com.br/dp/%s?tag=%s", item.ASIN, s.PartnerTag)
-
-		// Comissão por categoria (tabela fixa Amazon Associates Brasil)
 		p.Commission = commissionForCategory(p.Category)
 
 		produtos = append(produtos, p)
@@ -310,26 +314,36 @@ func extractCategory(item amazonItem) string {
 
 // commissionForCategory retorna a comissão fixa do programa Amazon Associates Brasil
 // por categoria. Valores aproximados baseados na tabela pública (pode variar).
-func commissionForCategory(category string) float64 { //nolint:cyclop // lookup table by design
+func commissionForCategory(category string) float64 {
 	cat := strings.ToLower(category)
-	switch {
-	case strings.Contains(cat, "moda") || strings.Contains(cat, "roupa") || strings.Contains(cat, "vestuário"):
-		return 0.15
-	case strings.Contains(cat, "beleza") || strings.Contains(cat, "saúde") || strings.Contains(cat, "cuidados"):
-		return 0.10
-	case strings.Contains(cat, "livro") || strings.Contains(cat, "kindle"):
-		return 0.08
-	case strings.Contains(cat, "eletrônico") || strings.Contains(cat, "celular") || strings.Contains(cat, "computador"):
-		return 0.03
-	case strings.Contains(cat, "casa") || strings.Contains(cat, "cozinha") || strings.Contains(cat, "jardim"):
-		return 0.08
-	case strings.Contains(cat, "brinquedo") || strings.Contains(cat, "jogo"):
-		return 0.06
-	case strings.Contains(cat, "esporte") || strings.Contains(cat, "fitness"):
-		return 0.06
-	case strings.Contains(cat, "alimento") || strings.Contains(cat, "mercado"):
-		return 0.05
-	default:
-		return 0.05 // fallback: 5% genérico
+	for keyword, rate := range amazonCommissionTable {
+		if strings.Contains(cat, keyword) {
+			return rate
+		}
 	}
+	return 0.05 // fallback: 5% genérico
+}
+
+// amazonCommissionTable maps category keywords to commission rates.
+var amazonCommissionTable = map[string]float64{
+	"moda":       0.15,
+	"roupa":      0.15,
+	"vestuário":  0.15,
+	"beleza":     0.10,
+	"saúde":      0.10,
+	"cuidados":   0.10,
+	"livro":      0.08,
+	"kindle":     0.08,
+	"eletrônico": 0.03,
+	"celular":    0.03,
+	"computador": 0.03,
+	"casa":       0.08,
+	"cozinha":    0.08,
+	"jardim":     0.08,
+	"brinquedo":  0.06,
+	"jogo":       0.06,
+	"esporte":    0.06,
+	"fitness":    0.06,
+	"alimento":   0.05,
+	"mercado":    0.05,
 }

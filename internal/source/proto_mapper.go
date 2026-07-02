@@ -14,7 +14,7 @@ func ToProtoProduct(p domain.Product) *collectorpb.Product {
 		Name:            p.Name,
 		Price:           p.Price,
 		OriginalPrice:   p.PriceMax,
-		Sold:            int32(min(p.Sales30d, int(^uint32(0)>>1))), //nolint:gosec // bounded
+		Sold:            SafeInt32(p.Sales30d),
 		Rating:          p.Rating,
 		ImageUrl:        p.Image,
 		ProductUrl:      p.ProductLink,

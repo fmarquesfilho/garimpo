@@ -57,7 +57,7 @@ func (s *CouponCollectorServer) FetchCoupons(ctx context.Context, req *couponpb.
 
 	return &couponpb.FetchCouponsResponse{
 		Coupons:    toProtoCoupons(coupons),
-		TotalFound: int32(len(coupons)), //nolint:gosec // bounded by API page limits
+		TotalFound: source.SafeInt32(len(coupons)),
 		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
 	}, nil
 }

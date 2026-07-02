@@ -39,7 +39,7 @@ func (s *AmazonCollectorServer) Fetch(ctx context.Context, req *collectorpb.Fetc
 
 	return &collectorpb.FetchResponse{
 		Products:   source.ToProtoProducts(produtos),
-		TotalFound: int32(min(len(produtos), int(^uint32(0)>>1))),
+		TotalFound: source.SafeInt32(len(produtos)),
 		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
 	}, nil
 }

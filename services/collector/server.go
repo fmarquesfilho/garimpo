@@ -24,7 +24,7 @@ func NewCollectorServer(src source.ProductSource) *CollectorServer {
 
 func (s *CollectorServer) Fetch(ctx context.Context, req *collectorpb.FetchRequest) (*collectorpb.FetchResponse, error) {
 	if req.GetKeyword() == "" {
-		return nil, status.Error(codes.InvalidArgument, "keyword é obrigatório") //nolint:wrapcheck // gRPC status
+		return nil, status.Error(codes.InvalidArgument, "keyword é obrigatório")
 	}
 
 	mkt := resolveMarketplace(req.GetMarketplace())
@@ -44,14 +44,14 @@ func (s *CollectorServer) Fetch(ctx context.Context, req *collectorpb.FetchReque
 
 	return &collectorpb.FetchResponse{
 		Products:   source.ToProtoProducts(produtos),
-		TotalFound: int32(min(len(produtos), int(^uint32(0)>>1))), //nolint:gosec // bounded
+		TotalFound: source.SafeInt32(len(produtos)),
 		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
 	}, nil
 }
 
 func (s *CollectorServer) FetchShop(ctx context.Context, req *collectorpb.FetchShopRequest) (*collectorpb.FetchShopResponse, error) {
 	if req.GetShopId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "shop_id é obrigatório") //nolint:wrapcheck // gRPC status
+		return nil, status.Error(codes.InvalidArgument, "shop_id é obrigatório")
 	}
 
 	mkt := resolveMarketplace(req.GetMarketplace())
@@ -68,7 +68,7 @@ func (s *CollectorServer) FetchShop(ctx context.Context, req *collectorpb.FetchS
 
 	return &collectorpb.FetchShopResponse{
 		Products:   source.ToProtoProducts(produtos),
-		TotalFound: int32(min(len(produtos), int(^uint32(0)>>1))), //nolint:gosec // bounded
+		TotalFound: source.SafeInt32(len(produtos)),
 		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
 	}, nil
 }
