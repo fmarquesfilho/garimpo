@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 )
 
@@ -57,12 +58,12 @@ func NewAmazonCreatorsSource(accessKey, secretKey, partnerTag string) *AmazonCre
 
 func (s *AmazonCreatorsSource) Name() string { return "amazon-creators" }
 
-func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) {
+func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) { //nolint:funlen // sequential API flow
 	if s.AccessKey == "" || s.SecretKey == "" {
-		return nil, fmt.Errorf("amazon AccessKey/SecretKey não configurados")
+		return nil, fmt.Errorf("amazon product: %w", apperr.ErrNoConfig)
 	}
 	if s.Keyword == "" {
-		return nil, fmt.Errorf("amazon keyword é obrigatório")
+		return nil, fmt.Errorf("amazon keyword: %w", apperr.ErrInvalidInput)
 	}
 
 	client := s.HTTPClient
@@ -126,7 +127,7 @@ func (s *AmazonCreatorsSource) Fetch() ([]domain.Product, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("amazon api: status %d: %.500s", resp.StatusCode, string(raw))
+		return nil, fmt.Errorf("amazon api status %d: %w", resp.StatusCode, apperr.ErrAmazonAPI)
 	}
 
 	var result searchItemsResponse
@@ -309,7 +310,7 @@ func extractCategory(item amazonItem) string {
 
 // commissionForCategory retorna a comissão fixa do programa Amazon Associates Brasil
 // por categoria. Valores aproximados baseados na tabela pública (pode variar).
-func commissionForCategory(category string) float64 {
+func commissionForCategory(category string) float64 { //nolint:cyclop // lookup table by design
 	cat := strings.ToLower(category)
 	switch {
 	case strings.Contains(cat, "moda") || strings.Contains(cat, "roupa") || strings.Contains(cat, "vestuário"):

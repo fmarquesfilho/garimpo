@@ -23,7 +23,7 @@ func NewAmazonAdapter(accessKey, secretKey, partnerTag string) *AmazonAdapter {
 }
 
 func (a *AmazonAdapter) Marketplace() string { return domain.MarketplaceAmazon }
-func (a *AmazonAdapter) Name() string         { return "amazon-adapter" }
+func (a *AmazonAdapter) Name() string        { return "amazon-adapter" }
 
 func (a *AmazonAdapter) Search(q SearchQuery) ([]domain.Product, error) {
 	src := NewAmazonCreatorsSource(a.accessKey, a.secretKey, a.partnerTag)

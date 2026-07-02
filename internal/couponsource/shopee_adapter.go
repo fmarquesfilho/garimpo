@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 )
 
@@ -32,7 +33,7 @@ func NewShopeeCouponAdapter(appID, secret string) *ShopeeCouponAdapter {
 }
 
 func (a *ShopeeCouponAdapter) Marketplace() string { return domain.MarketplaceShopee }
-func (a *ShopeeCouponAdapter) Name() string         { return "shopee-coupon-adapter" }
+func (a *ShopeeCouponAdapter) Name() string        { return "shopee-coupon-adapter" }
 
 // SetEndpoint allows overriding the endpoint for testing.
 func (a *ShopeeCouponAdapter) SetEndpoint(url string) { a.endpoint = url }
@@ -42,7 +43,7 @@ func (a *ShopeeCouponAdapter) SetHTTPClient(c *http.Client) { a.client = c }
 
 func (a *ShopeeCouponAdapter) FetchCoupons(cfg FetchConfig) ([]domain.Coupon, error) {
 	if a.appID == "" || a.secret == "" {
-		return nil, fmt.Errorf("shopee coupon: AppID/Secret não configurados")
+		return nil, fmt.Errorf("shopee coupon: %w", apperr.ErrNoConfig)
 	}
 
 	client := a.client
@@ -164,7 +165,7 @@ func (a *ShopeeCouponAdapter) fetchPage(client *http.Client, endpoint string, pa
 		return nil, false, fmt.Errorf("parse resposta: %w", err)
 	}
 	if len(gql.Errors) > 0 {
-		return nil, false, fmt.Errorf("shopee api error: %s", gql.Errors[0].Message)
+		return nil, false, fmt.Errorf("shopee coupon %s: %w", gql.Errors[0].Message, apperr.ErrShopeeAPI)
 	}
 
 	var coupons []domain.Coupon

@@ -3,12 +3,14 @@ package couponsource
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 )
 
@@ -32,7 +34,7 @@ func NewAmazonCouponAdapter(accessKey, secretKey, partnerTag string) *AmazonCoup
 }
 
 func (a *AmazonCouponAdapter) Marketplace() string { return domain.MarketplaceAmazon }
-func (a *AmazonCouponAdapter) Name() string         { return "amazon-coupon-adapter" }
+func (a *AmazonCouponAdapter) Name() string        { return "amazon-coupon-adapter" }
 
 // SetEndpoint allows overriding for testing.
 func (a *AmazonCouponAdapter) SetEndpoint(url string) { a.endpoint = url }
@@ -93,7 +95,7 @@ func (a *AmazonCouponAdapter) FetchCoupons(cfg FetchConfig) ([]domain.Coupon, er
 	return coupons, nil
 }
 
-func (a *AmazonCouponAdapter) fetchOffers(client *http.Client, endpoint string) ([]domain.Coupon, error) {
+func (a *AmazonCouponAdapter) fetchOffers(client *http.Client, endpoint string) ([]domain.Coupon, error) { //nolint:funlen // HTTP response parsing requires sequential steps
 	payload := map[string]interface{}{
 		"Keywords":    "coupon deal",
 		"PartnerTag":  a.partnerTag,
@@ -114,7 +116,7 @@ func (a *AmazonCouponAdapter) fetchOffers(client *http.Client, endpoint string) 
 
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, endpoint, strings.NewReader(string(body)))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("amazon coupon request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -125,18 +127,18 @@ func (a *AmazonCouponAdapter) fetchOffers(client *http.Client, endpoint string) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusTooManyRequests {
-		return nil, &rateLimitError{}
+		return nil, fmt.Errorf("amazon coupon: %w", apperr.ErrRateLimited)
 	}
 	if resp.StatusCode >= 500 {
-		return nil, fmt.Errorf("amazon coupon api: server error %d", resp.StatusCode)
+		return nil, fmt.Errorf("amazon coupon status %d: %w", resp.StatusCode, apperr.ErrAmazonAPI)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("amazon coupon api: status %d", resp.StatusCode)
+		return nil, fmt.Errorf("amazon coupon status %d: %w", resp.StatusCode, apperr.ErrAmazonAPI)
 	}
 
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("amazon coupon read body: %w", err)
 	}
 
 	var result struct {
@@ -223,11 +225,6 @@ func (a *AmazonCouponAdapter) fetchOffers(client *http.Client, endpoint string) 
 	return coupons, nil
 }
 
-type rateLimitError struct{}
-
-func (e *rateLimitError) Error() string { return "rate limited (HTTP 429)" }
-
 func isRateLimit(err error) bool {
-	_, ok := err.(*rateLimitError)
-	return ok
+	return errors.Is(err, apperr.ErrRateLimited)
 }

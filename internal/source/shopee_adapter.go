@@ -3,6 +3,7 @@ package source
 import (
 	"fmt"
 
+	"github.com/fmarquesfilho/garimpo/internal/apperr"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 )
 
@@ -18,7 +19,7 @@ func NewShopeeAdapter(appID, secret string) *ShopeeAdapter {
 }
 
 func (a *ShopeeAdapter) Marketplace() string { return domain.MarketplaceShopee }
-func (a *ShopeeAdapter) Name() string         { return "shopee-adapter" }
+func (a *ShopeeAdapter) Name() string        { return "shopee-adapter" }
 
 func (a *ShopeeAdapter) Search(q SearchQuery) ([]domain.Product, error) {
 	src := NewShopeeAPISource(a.appID, a.secret)
@@ -32,7 +33,7 @@ func (a *ShopeeAdapter) Search(q SearchQuery) ([]domain.Product, error) {
 func (a *ShopeeAdapter) FetchShop(shopID string, limit int) ([]domain.Product, error) {
 	id := parseShopID(shopID)
 	if id == 0 {
-		return nil, fmt.Errorf("shopID inválido: %q", shopID)
+		return nil, fmt.Errorf("shopID %q: %w", shopID, apperr.ErrInvalidInput)
 	}
 	src := NewShopeeShopSource(a.appID, a.secret, []int64{id})
 	if limit > 0 {
