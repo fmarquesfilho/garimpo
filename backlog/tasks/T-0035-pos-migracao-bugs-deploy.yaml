@@ -1,0 +1,65 @@
+id: T-0035
+titulo: "Pós-migração: resolver bugs de deploy e garantir funcionalidade completa"
+epic: E-001
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S28"
+criado_em: "2026-07-02"
+valor: |
+  Após a migração para C# + Cloudflare, vários endpoints não estão acessíveis
+  em produção. O frontend está atualizado mas o backend no Cloud Run pode estar
+  numa versão anterior. Precisa garantir que tudo funciona end-to-end.
+descricao: |
+  ## Bugs confirmados
+
+  1. **`/api/destinos` retorna 404 em produção**
+     - Endpoint existe no código (DestinosEndpoints.cs, mapeado no Program.cs)
+     - Cloud Run responde (header x-garimpei-backend: csharp confirmado)
+     - Hipótese: container no Cloud Run está numa versão anterior
+     - Verificar: qual imagem está deployada vs. o que está no main
+
+  2. **Deploy do backend não é automático**
+     - CI builda as Docker images mas não faz push para Artifact Registry
+       nem deploy para Cloud Run
+     - Frontend deploy já é automático (Cloudflare Pages via CI)
+     - Backend precisa do mesmo tratamento
+
+  ## Verificações necessárias
+
+  - [ ] Identificar versão da imagem no Cloud Run (gcloud run describe)
+  - [ ] Comparar com HEAD do main
+  - [ ] Fazer deploy manual para desbloquear
+  - [ ] Adicionar deploy automático do backend ao CI (push para AR + deploy Cloud Run)
+  - [ ] Testar cada endpoint acessível pelo frontend:
+    - /api/destinos (CRUD canais)
+    - /api/templates (CRUD templates)
+    - /api/publicacoes (listar/agendar)
+    - /api/buscas (sync perfis)
+    - /api/lojas (adicionar/remover)
+    - /api/favoritos (listar/salvar/remover)
+    - /api/candidatos (busca curadoria)
+    - /api/categorias (novo endpoint)
+    - /api/conversoes (relatório)
+    - /api/estatisticas (resumo por categoria)
+    - /api/coletas (histórico)
+    - /api/alertas (config)
+    - /api/onboarding/* (multi-tenant)
+  - [ ] Verificar se categorias reais aparecem no autocomplete em produção
+  - [ ] Confirmar que filtro por categoria funciona end-to-end
+  - [ ] Verificar docs site em /docs/ (CSS OK após fix de base path)
+
+  ## Melhorias a aplicar
+
+  - Deploy automático do backend (CI → Artifact Registry → Cloud Run)
+  - Validar que Renovate está agrupando PRs corretamente
+  - T-0034 status → done (se filtros funcionarem end-to-end)
+
+criterios_aceite:
+  - Todos os endpoints retornam resposta válida (não 404) com auth
+  - Deploy do backend é automático no CI (push main → Cloud Run)
+  - Página Canais (/canais) funciona sem erro
+  - Página Descobrir com filtro de categoria retorna resultados
+  - Docs site acessível com CSS em /docs/
+
+dependencias: []
