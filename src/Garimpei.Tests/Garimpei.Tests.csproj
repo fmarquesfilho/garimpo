@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="NetArchTest.Rules" Version="1.3.2" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
@@ -19,6 +20,7 @@
     <ProjectReference Include="..\Garimpei.Domain\Garimpei.Domain.csproj" />
     <ProjectReference Include="..\Garimpei.Infrastructure\Garimpei.Infrastructure.csproj" />
     <ProjectReference Include="..\Garimpei.Application\Garimpei.Application.csproj" />
+    <ProjectReference Include="..\Garimpei.Api\Garimpei.Api.csproj" />
   </ItemGroup>
 
 </Project>

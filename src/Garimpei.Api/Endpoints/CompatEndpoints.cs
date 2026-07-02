@@ -1,5 +1,6 @@
 using Collector.V1;
 using Garimpei.Domain.Services;
+using Garimpei.Domain.ValueObjects;
 
 /// <summary>
 /// Compatibility endpoints — serve /api/* routes during migration.
