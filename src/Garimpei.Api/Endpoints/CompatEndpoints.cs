@@ -1,6 +1,8 @@
 using Collector.V1;
+using Garimpei.Domain;
 using Garimpei.Domain.Services;
 using Garimpei.Domain.ValueObjects;
+using Garimpei.Infrastructure.Sources;
 
 /// <summary>
 /// Compatibility endpoints — serve /api/* routes during migration.
@@ -55,23 +57,7 @@ public static partial class EndpointExtensions
                 Limit = Math.Min(top ?? 50, 100)
             }, cancellationToken: ct);
 
-            var candidates = response.Products.Select(p => new ProductCandidate
-            {
-                Id = p.ItemId.ToString(),
-                Name = p.Name,
-                Category = p.Category,
-                ShopName = p.ShopName,
-                ShopId = p.ShopId.ToString(),
-                Price = (decimal)p.Price,
-                OriginalPrice = (decimal)p.OriginalPrice,
-                DiscountPercent = p.DiscountPercent,
-                Commission = p.Commission,
-                Sales = p.Sold,
-                Rating = p.Rating,
-                Link = p.Link,
-                ProductLink = p.ProductUrl,
-                ImageUrl = p.ImageUrl
-            }).ToList();
+            var candidates = response.Products.Select(ProductMappings.ToCandidate).ToList();
 
             var filter = new EligibilityFilter
             {
@@ -109,7 +95,8 @@ public static partial class EndpointExtensions
                         avaliacao = s.Components.Rating
                     },
                     suspeito = s.Suspicious,
-                    oferta_expira = s.OfferExpiresAt ?? ""
+                    oferta_expira = s.OfferExpiresAt ?? "",
+                    marketplace = s.Marketplace
                 }),
                 total_bruto = response.TotalFound
             });

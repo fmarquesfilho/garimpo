@@ -65,6 +65,17 @@ services:
   #   environment:
   #     BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
   #
+  # amazon-collector:
+  #   build:
+  #     context: .
+  #     dockerfile: services/collector-amazon/Dockerfile
+  #   ports:
+  #     - "50055:50055"
+  #   environment:
+  #     AMAZON_PARTNER_TAG: ${AMAZON_PARTNER_TAG}
+  #     AMAZON_ACCESS_KEY: ${AMAZON_ACCESS_KEY}
+  #     AMAZON_SECRET_KEY: ${AMAZON_SECRET_KEY}
+  #
   # publisher:
   #   build:
   #     context: .
@@ -87,6 +98,7 @@ services:
   #     - "50054:50054"
   #   depends_on:
   #     - shopee-collector
+  #     - amazon-collector
   #     - publisher
   #     - alerter
 

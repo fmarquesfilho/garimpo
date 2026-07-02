@@ -8,10 +8,18 @@ import (
 	"google.golang.org/grpc/status"
 
 	collectorpb "github.com/fmarquesfilho/garimpo/gen/go/collector/v1"
+	"github.com/fmarquesfilho/garimpo/internal/source"
 )
 
+func newTestServer() *CollectorServer {
+	// Usa o ShopeeAdapter com credenciais fake — vai falhar na API real,
+	// mas permite testar validação e lógica do server.
+	src := source.NewShopeeAdapter("fake-app-id", "fake-secret")
+	return NewCollectorServer(src)
+}
+
 func TestFetch_EmptyKeyword_ReturnsInvalidArgument(t *testing.T) {
-	srv := NewCollectorServer("fake-app-id", "fake-secret")
+	srv := newTestServer()
 
 	_, err := srv.Fetch(context.Background(), &collectorpb.FetchRequest{
 		Keyword: "",
@@ -32,9 +40,7 @@ func TestFetch_EmptyKeyword_ReturnsInvalidArgument(t *testing.T) {
 }
 
 func TestFetch_ValidKeyword_ReturnsNoError_OrInternalIfNoAPI(t *testing.T) {
-	// With fake credentials, a real API call would fail with Internal error.
-	// We only verify the validation passes (no InvalidArgument).
-	srv := NewCollectorServer("fake-app-id", "fake-secret")
+	srv := newTestServer()
 
 	_, err := srv.Fetch(context.Background(), &collectorpb.FetchRequest{
 		Keyword: "perfume",
@@ -42,7 +48,6 @@ func TestFetch_ValidKeyword_ReturnsNoError_OrInternalIfNoAPI(t *testing.T) {
 	})
 
 	if err == nil {
-		// If somehow the API responded, that's fine.
 		return
 	}
 
@@ -50,14 +55,13 @@ func TestFetch_ValidKeyword_ReturnsNoError_OrInternalIfNoAPI(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected gRPC status error, got: %v", err)
 	}
-	// Should NOT be InvalidArgument — it passed validation.
 	if st.Code() == codes.InvalidArgument {
 		t.Errorf("keyword 'perfume' should pass validation, got InvalidArgument: %v", st.Message())
 	}
 }
 
 func TestFetchShop_ZeroShopId_ReturnsInvalidArgument(t *testing.T) {
-	srv := NewCollectorServer("fake-app-id", "fake-secret")
+	srv := newTestServer()
 
 	_, err := srv.FetchShop(context.Background(), &collectorpb.FetchShopRequest{
 		ShopId: 0,
@@ -77,7 +81,29 @@ func TestFetchShop_ZeroShopId_ReturnsInvalidArgument(t *testing.T) {
 	}
 }
 
-func TestParseItemID(t *testing.T) {
+func TestFetch_WrongMarketplace_ReturnsUnimplemented(t *testing.T) {
+	srv := newTestServer()
+
+	_, err := srv.Fetch(context.Background(), &collectorpb.FetchRequest{
+		Keyword:     "perfume",
+		Limit:       5,
+		Marketplace: collectorpb.Marketplace_MARKETPLACE_AMAZON,
+	})
+
+	if err == nil {
+		t.Fatal("expected error for wrong marketplace, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got: %v", err)
+	}
+	if st.Code() != codes.Unimplemented {
+		t.Errorf("expected Unimplemented, got %v", st.Code())
+	}
+}
+
+func TestParseNumericID(t *testing.T) {
 	tests := []struct {
 		input string
 		want  int64
@@ -93,9 +119,9 @@ func TestParseItemID(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.input, func(t *testing.T) {
-			got := parseItemID(tc.input)
+			got := source.ParseNumericID(tc.input)
 			if got != tc.want {
-				t.Errorf("parseItemID(%q) = %d, want %d", tc.input, got, tc.want)
+				t.Errorf("ParseNumericID(%q) = %d, want %d", tc.input, got, tc.want)
 			}
 		})
 	}

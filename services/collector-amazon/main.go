@@ -1,4 +1,5 @@
-// Package main é o entrypoint do microserviço shopee-collector (gRPC).
+// Package main é o entrypoint do microserviço collector-amazon (gRPC).
+// Usa a Amazon Creators API (substituta da PA-API 5.0) com AWS Sig V4.
 package main
 
 import (
@@ -23,19 +24,18 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "50051"
+		port = "50055"
 	}
 
-	appID := os.Getenv("SHOPEE_APP_ID")
-	secret := os.Getenv("SHOPEE_SECRET")
-	if appID == "" || secret == "" {
-		logger.Error("SHOPEE_APP_ID e SHOPEE_SECRET são obrigatórios")
+	partnerTag := os.Getenv("AMAZON_PARTNER_TAG")
+	accessKey := os.Getenv("AMAZON_ACCESS_KEY")
+	secretKey := os.Getenv("AMAZON_SECRET_KEY")
+	if partnerTag == "" || accessKey == "" || secretKey == "" {
+		logger.Error("AMAZON_PARTNER_TAG, AMAZON_ACCESS_KEY e AMAZON_SECRET_KEY são obrigatórios")
 		os.Exit(1)
 	}
 
-	// Cria a source via Registry — Open/Closed principle:
-	// adicionar marketplace = registrar factory, zero mudança aqui.
-	shopeeSource := source.NewShopeeAdapter(appID, secret)
+	amazonSource := source.NewAmazonAdapter(accessKey, secretKey, partnerTag)
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -45,29 +45,25 @@ func main() {
 
 	srv := grpc.NewServer()
 
-	// Registra o serviço collector com a source injetada
-	collectorpb.RegisterCollectorServiceServer(srv, NewCollectorServer(shopeeSource))
+	collectorpb.RegisterCollectorServiceServer(srv, NewAmazonCollectorServer(amazonSource))
 
-	// Health check
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthSrv)
 	healthSrv.SetServingStatus("collector.v1.CollectorService", healthpb.HealthCheckResponse_SERVING)
 
-	// Reflection (dev)
 	reflection.Register(srv)
 
-	// Graceful shutdown
 	go func() {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 		<-sigCh
-		logger.Info("shutting down collector")
+		logger.Info("shutting down collector-amazon")
 		srv.GracefulStop()
 	}()
 
-	logger.Info("collector gRPC listening",
+	logger.Info("collector-amazon gRPC listening",
 		slog.String("port", port),
-		slog.String("marketplace", shopeeSource.Marketplace()))
+		slog.String("marketplace", amazonSource.Marketplace()))
 	if err := srv.Serve(lis); err != nil {
 		logger.Error("serve falhou", slog.String("erro", err.Error()))
 		os.Exit(1)
