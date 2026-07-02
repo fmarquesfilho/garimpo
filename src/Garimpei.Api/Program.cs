@@ -74,10 +74,14 @@ if (app.Environment.IsDevelopment())
     {
         if (context.User.Identity?.IsAuthenticated != true)
         {
+            // Allow overriding tenant via X-Dev-User header for multi-tenant testing
+            var devUser = context.Request.Headers["X-Dev-User"].FirstOrDefault() ?? "dev-user-001";
+            var devEmail = context.Request.Headers["X-Dev-Email"].FirstOrDefault() ?? "dev@garimpei.local";
+
             var claims = new[]
             {
-                new System.Security.Claims.Claim("user_id", "dev-user-001"),
-                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, "dev@garimpei.local"),
+                new System.Security.Claims.Claim("user_id", devUser),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, devEmail),
             };
             var identity = new System.Security.Claims.ClaimsIdentity(claims, "DevBypass");
             context.User = new System.Security.Claims.ClaimsPrincipal(identity);
