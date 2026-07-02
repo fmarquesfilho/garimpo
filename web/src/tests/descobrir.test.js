@@ -276,13 +276,6 @@ describe('Descobrir — Filtros numéricos', () => {
 		expect(r.find(p => p.id === 'B')).toBeUndefined();
 	});
 
-	it('notaMin=4.5 filtra produtos com nota baixa', () => {
-		const r = montarResultados({ ...base, notaMin: 4.5 });
-		// A (4.9), C (4.5) passam; B (3.8) não; D (0, sem nota) passa
-		expect(r).toHaveLength(3);
-		expect(r.find(p => p.id === 'B')).toBeUndefined();
-	});
-
 	it('filtros combinam com keyword (AND)', () => {
 		const r = montarResultados({ ...base, busca: 'Sérum', comissaoMin: 0.10 });
 		expect(r).toHaveLength(1);
@@ -290,13 +283,13 @@ describe('Descobrir — Filtros numéricos', () => {
 	});
 
 	it('sem filtros numéricos mostra tudo', () => {
-		const r = montarResultados({ ...base, comissaoMin: 0, vendasMin: 0, notaMin: 0 });
+		const r = montarResultados({ ...base, comissaoMin: 0, vendasMin: 0 });
 		expect(r).toHaveLength(4);
 	});
 
 	it('produto sem dados numéricos não é filtrado (graceful)', () => {
-		const r = montarResultados({ ...base, comissaoMin: 0.10, vendasMin: 50, notaMin: 4.0 });
-		// D tem comissao=0, vendas=0, avaliacao=0 — não tem dados, não é filtrado
+		const r = montarResultados({ ...base, comissaoMin: 0.10, vendasMin: 50 });
+		// D tem comissao=0, vendas=0 — não tem dados, não é filtrado
 		expect(r.find(p => p.id === 'D')).toBeDefined();
 	});
 });
@@ -326,8 +319,7 @@ describe('Descobrir — Todos os filtros combinados', () => {
 			busca: opts.busca ?? '',
 			categorias: opts.categorias ?? [],
 			comissaoMin: opts.comissaoMin ?? 0,
-			vendasMin: opts.vendasMin ?? 0,
-			notaMin: opts.notaMin ?? 0
+			vendasMin: opts.vendasMin ?? 0
 		});
 	}
 
@@ -369,9 +361,9 @@ describe('Descobrir — Todos os filtros combinados', () => {
 		expect(r.map(p => p.id).sort()).toEqual(['A', 'D', 'E']);
 	});
 
-	it('notaMin=4.5 + categoria "Cuidados com a Pele"', () => {
-		const r = filtrar({ notaMin: 4.5, categorias: ['Cuidados com a Pele'] });
-		// Categoria: A, D, E; nota >= 4.5: A (4.9), D (4.7), E (0 passa)
+	it('notaMin removed — vendasMin=100 + categoria "Cuidados com a Pele"', () => {
+		const r = filtrar({ vendasMin: 100, categorias: ['Cuidados com a Pele'] });
+		// Categoria: A, D, E; vendas >= 100: A (200), D (150), E (0 sem dados, passa)
 		expect(r).toHaveLength(3);
 	});
 
@@ -380,14 +372,12 @@ describe('Descobrir — Todos os filtros combinados', () => {
 			busca: 'SKIN1004',
 			categorias: ['Cuidados com a Pele'],
 			comissaoMin: 0.10,
-			vendasMin: 50,
-			notaMin: 4.0
+			vendasMin: 50
 		});
 		// busca SKIN1004: A, E
 		// categoria Cuidados Pele: A, E
 		// comissao >= 10%: A (15%), E (10%)
 		// vendas >= 50: A (200); E (0 sem dados, passa)
-		// nota >= 4.0: A (4.9); E (0 sem dados, passa)
 		expect(r).toHaveLength(2);
 	});
 

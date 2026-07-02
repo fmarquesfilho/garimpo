@@ -4,7 +4,7 @@
 
 ## 🔵 Now (em andamento)
 
-_Nenhuma tarefa em andamento._
+- **T-0034** Descobrir: corrigir filtros + badge drift + remover nota mínima · E-001 · M
 
 ## 🟡 Next (próximo sprint)
 
@@ -16,7 +16,6 @@ _Nenhuma tarefa em andamento._
 - **T-0029** Deploy da nova API C# em produção (com endpoints portados) · migracao-arch · P
 - **T-0030** Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo · multi-tenant · M
 - **T-0033** Validar multi-marketplace + coupon monitoring com banco limpo · E-003 · M
-- **T-0034** Descobrir: corrigir filtros + badge drift + remover nota mínima · E-001 · M
 
 ## ⚪ Later (radar)
 

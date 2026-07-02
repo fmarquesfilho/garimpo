@@ -33,6 +33,8 @@ exclude_paths:
   - "docs-site/**"
   - "**/*_test.go"
   - "**/*.test.ts"
+  - "web/tests/**"
+  - ".github/workflows/**"
 
 languages:
   go:

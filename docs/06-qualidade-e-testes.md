@@ -11,7 +11,7 @@ push main → GitHub Actions (ci.yml)
   ├─ csharp: restore + build + test (com PostgreSQL service)
   ├─ python: ruff lint + syntax check
   ├─ proto: buf lint + sync check (Go + C# stubs atualizados?)
-  ├─ frontend: npm ci + build + lint:css + lint:js + vitest
+  ├─ frontend: npm ci + build + lint:css + lint:js + vitest + playwright (Firebase Emulator)
   ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
   ├─ docker: build all 6 images (validação de Dockerfiles)
   └─ docs-deploy: sync + build + deploy Cloudflare Pages (apenas push main)
@@ -32,8 +32,8 @@ Pushes que só tocam `docs/legado/**`, `docs/meta/**` ou `README.md` são ignora
 | C# (Domain + Infra) | xUnit | 10 | Multi-tenant, persistence, isolation |
 | C# (Arquitetura) | xUnit + NetArchTest | 13 | Fitness functions (regras Clean Architecture) |
 | C# (Integração) | xUnit | 15 | Onboarding multi-tenant end-to-end |
-| Frontend (unit) | Vitest | 109 | Componentes, stores, utils |
-| Frontend (E2E) | Playwright | ~10 | Fluxos críticos do usuário |
+| Frontend (unit) | Vitest | 108 | Componentes, stores, utils, lógica filtros |
+| Frontend (E2E) | Playwright | 24 | Smoke + Descobrir (filtros, fontes, badges) |
 | Cross-stack (drift) | Shell scripts | 3 | API contract, config, schema sync |
 
 ### BDD (Behaviour-Driven Development)
@@ -257,3 +257,67 @@ Se a entidade também precisa de tabela no BigQuery:
 12. ☐ Se Go gerencia: adicionada em `internal/store/bigquery_schema.go`
 13. ☐ Se analyzer consulta: rota adicionada em `services/analyzer/routes/`
 14. ☐ `check-schema-sync.sh` passa
+
+---
+
+## Gerenciamento de dependências
+
+### Política
+
+Dependências devem ser mantidas sempre atualizadas. Ferramentas com versões
+defasadas representam risco de segurança e acumulam dívida técnica que cresce
+exponencialmente com o tempo.
+
+**Princípios:**
+- Atualizações (patch, minor, major) são auto-merged se o CI passa
+- O CI rigoroso (13+ checks, fitness functions, drift checks) é a barreira de segurança
+- Se um bump major quebra o CI, o PR fica aberto para intervenção manual
+- Vulnerabilidades são priorizadas e auto-merged imediatamente
+
+### Renovate (automação)
+
+O repositório usa [Renovate](https://docs.renovatebot.com/) para monitoramento
+automático de dependências. Configuração em `renovate.json`.
+
+| Tipo de update | Ação | Frequência |
+|---|---|---|
+| Patch (4.1.9→4.1.10) | Auto-merge se CI verde | Semanal (segundas) |
+| Minor (4.1→4.2) | Auto-merge se CI verde | Semanal (segundas) |
+| Major (4→5) | Auto-merge se CI verde | Semanal (segundas) |
+| Vulnerabilidade (CVE) | Auto-merge + label `security` | Imediato |
+
+**Agrupamento por workspace:**
+
+| Workspace | PR | Schedule |
+|---|---|---|
+| `web/` (frontend) | 1 PR agrupado | Semanal |
+| `docs-site/` | 1 PR agrupado | Mensal |
+| Go (`go.mod`) | 1 PR agrupado | Semanal |
+| GitHub Actions | 1 PR agrupado | Semanal |
+
+**Pacotes ignorados:** `@astrojs/*`, `astro`, `sharp` no docs-site (migrado para Rspress).
+
+### Segurança complementar
+
+| Ferramenta | Função | Ação |
+|---|---|---|
+| **Renovate** | Detecta + corrige (abre PR com fix) | Auto-merge |
+| **Codacy/Trivy** | Detecta + reporta (scan sem fix) | Alerta |
+| **npm audit** | Reporta vulnerabilidades JS | Manual |
+| **go vuln** | Reporta vulnerabilidades Go | Manual |
+
+Renovate corrige, Codacy/Trivy detecta — camadas complementares.
+
+### Como atualizar manualmente
+
+```bash
+# Frontend
+cd web && npm update && npm run build && npx vitest run
+
+# Go
+go get -u ./... && go mod tidy && go test ./...
+
+# Verificar outdated
+cd web && npm outdated
+go list -m -u all | grep '\['
+```

@@ -12,9 +12,20 @@ export default defineConfig({
 		command: 'npm run preview',
 		port: 4173,
 		reuseExistingServer: true,
-		timeout: 60000
+		timeout: 120000
 	},
 	projects: [
-		{ name: 'chromium', use: { browserName: 'chromium' } }
+		// Testes autenticados (usam fixture authedPage com emulator)
+		{
+			name: 'autenticado',
+			use: { browserName: 'chromium' },
+			testIgnore: [/auth\.setup\.js/, /smoke\.spec\.js/]
+		},
+		// Testes de smoke: sem autenticação
+		{
+			name: 'smoke',
+			use: { browserName: 'chromium' },
+			testMatch: /smoke\.spec\.js/
+		}
 	]
 });

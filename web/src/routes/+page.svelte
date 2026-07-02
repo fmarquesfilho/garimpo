@@ -14,7 +14,6 @@
 	let categoria = $state('');
 	let comissaoMin = $state(0.07);
 	let vendasMin = $state(0);
-	let notaMin = $state(0);
 	let categorias = $state([]);
 	let fontes = $state({ curadoria: true, quedas: true, novos: true, favoritos: false });
 
@@ -34,6 +33,11 @@
 	let nomesLojas = $derived(Object.fromEntries(buscasComLojas.map(b => [b.id, b.nome || b.id])));
 	let buscasSalvasKw = $derived(($buscasSalvas ?? []).filter(b => !b.shop_ids?.length));
 
+	// Contagens por fonte nos resultados filtrados (para badges)
+	let contagemCuradoria = $derived(resultados.filter(r => r._fonte === 'curadoria').length);
+	let contagemQuedas = $derived(resultados.filter(r => r._fonte === 'queda').length);
+	let contagemNovos = $derived(resultados.filter(r => r._fonte === 'novo').length);
+
 	// ── Carregamento ──────────────────────────────────────────────────────────
 	onMount(async () => {
 		await buscasSalvas.sincronizarDoServidor();
@@ -47,7 +51,7 @@
 		const promises = [];
 
 		if (fontes.curadoria && (busca.trim() || categoriasEfetivas.length > 0)) {
-			promises.push(carregarCuradoria({ busca, comissaoMin, vendasMin, notaMin, categorias: categoriasEfetivas, buscasComLojas }).then(r => { dadosCuradoria = r; }));
+			promises.push(carregarCuradoria({ busca, comissaoMin, categorias: categoriasEfetivas, buscasComLojas }).then(r => { dadosCuradoria = r; }));
 		} else {
 			dadosCuradoria = [];
 		}
@@ -71,14 +75,14 @@
 		} finally {
 			clearTimeout(timeoutId);
 			carregando = false;
-			resultados = montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos: $favoritos, busca, categorias: categoriasEfetivas, comissaoMin, vendasMin, notaMin });
+			resultados = montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos: $favoritos, busca, categorias: categoriasEfetivas, comissaoMin, vendasMin });
 		}
 	}
 
 	// Debounce
 	let timer;
 	$effect(() => {
-		busca; categoria; categorias; comissaoMin; vendasMin; notaMin;
+		busca; categoria; categorias; comissaoMin; vendasMin;
 		fontes.curadoria; fontes.quedas; fontes.novos; fontes.favoritos;
 		clearTimeout(timer);
 		timer = setTimeout(carregar, 400);
@@ -113,18 +117,18 @@
 	<h1>O que publicar hoje?</h1>
 	<p class="sub">Encontre produtos para divulgar — por busca, oportunidades ou favoritos.</p>
 
-	<FilterBar bind:busca={busca} bind:categoria={categoria} bind:comissaoMin={comissaoMin} bind:vendasMin={vendasMin} bind:notaMin={notaMin} mostrarBusca={true} />
+	<FilterBar bind:busca={busca} bind:categoria={categoria} bind:comissaoMin={comissaoMin} bind:vendasMin={vendasMin} mostrarBusca={true} />
 
 	<!-- Fontes -->
 	<div class="fontes">
 		<button class="fonte-btn" class:ativa={fontes.curadoria} onclick={() => { fontes.curadoria = !fontes.curadoria; }} type="button" title="Busca por palavra-chave na API de afiliados Shopee">
-			🔍 Busca {#if fontes.curadoria && dadosCuradoria.length > 0}<span class="fonte-badge">{dadosCuradoria.length}</span>{/if}
+			🔍 Busca {#if fontes.curadoria && contagemCuradoria > 0}<span class="fonte-badge">{contagemCuradoria}</span>{/if}
 		</button>
 		<button class="fonte-btn" class:ativa={fontes.quedas} onclick={() => { fontes.quedas = !fontes.quedas; }} type="button" title="Produtos que caíram de preço nas lojas monitoradas">
-			📉 Quedas {#if dadosQuedas.length > 0}<span class="fonte-badge queda">{dadosQuedas.length}</span>{/if}
+			📉 Quedas {#if contagemQuedas > 0}<span class="fonte-badge queda">{contagemQuedas}</span>{/if}
 		</button>
 		<button class="fonte-btn" class:ativa={fontes.novos} onclick={() => { fontes.novos = !fontes.novos; }} type="button" title="Produtos novos detectados nas lojas monitoradas">
-			🆕 Novos {#if dadosNovos.length > 0}<span class="fonte-badge novo">{dadosNovos.length}</span>{/if}
+			🆕 Novos {#if contagemNovos > 0}<span class="fonte-badge novo">{contagemNovos}</span>{/if}
 		</button>
 		<button class="fonte-btn" class:ativa={fontes.favoritos} onclick={() => { fontes.favoritos = !fontes.favoritos; }} type="button" title="Produtos que você salvou como favorito">
 			⭐ Favoritos {#if $favoritos.length > 0}<span class="fonte-badge">{$favoritos.length}</span>{/if}

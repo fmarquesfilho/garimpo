@@ -11,7 +11,7 @@ import { encontrarLojaPorNome } from './descobrir-logic.js';
  * Carrega produtos da curadoria (Shopee API).
  * Se o termo bate com uma loja monitorada, busca via shop_ids.
  */
-export async function carregarCuradoria({ busca, comissaoMin, vendasMin, notaMin, categorias, buscasComLojas }) {
+export async function carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas }) {
 	try {
 		const termo = (busca ?? '').trim();
 		const lojaMatch = encontrarLojaPorNome(termo, buscasComLojas);
@@ -25,12 +25,12 @@ export async function carregarCuradoria({ busca, comissaoMin, vendasMin, notaMin
 				semFiltro: true
 			};
 		} else {
+			// Se não há keyword mas há categoria, usa a categoria como keyword
+			const keywordEfetiva = termo || (categorias?.length > 0 ? categorias[0] : '');
 			params = {
 				estrategia: 'nicho', top: 20,
-				keyword: termo,
-				comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
-				vendasMin: vendasMin > 0 ? vendasMin : undefined,
-				notaMin: notaMin > 0 ? notaMin : undefined
+				keyword: keywordEfetiva || undefined,
+				comissaoMin: comissaoMin > 0 ? comissaoMin : undefined
 			};
 		}
 		if (categorias?.length > 0) params.categoria = categorias[0];
