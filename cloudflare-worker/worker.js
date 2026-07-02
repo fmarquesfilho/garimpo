@@ -32,9 +32,21 @@ export default {
       return proxyTo(request, url, origin, 'csharp');
     }
 
-    // Docs site → Cloudflare Pages (Starlight)
+    // Docs site → Cloudflare Pages (Rspress)
     if (path.startsWith('/docs')) {
-      return proxyTo(request, url, docsUrl, 'docs');
+      // Strip /docs prefix — Rspress serves from root
+      const docsPath = path.replace(/^\/docs/, '') || '/';
+      const docsUrlObj = new URL(docsUrl);
+      const targetUrl = new URL(docsPath + url.search, docsUrlObj);
+      const docsRequest = new Request(targetUrl, {
+        method: request.method,
+        headers: request.headers,
+      });
+      docsRequest.headers.set('Host', docsUrlObj.hostname);
+      const response = await fetch(docsRequest);
+      const modifiedResponse = new Response(response.body, response);
+      modifiedResponse.headers.set('X-Garimpei-Backend', 'docs');
+      return modifiedResponse;
     }
 
     // Everything else → Cloudflare Pages (frontend SPA)
