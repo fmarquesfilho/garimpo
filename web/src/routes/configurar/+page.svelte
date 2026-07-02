@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { usuario } from '$lib/firebase.js';
-	import { onboardingStatus, onboardingTermos, onboardingShopee, onboardingTelegram, onboardingValidar, excluirConta } from '$lib/api.js';
+	import { onboardingStatus, onboardingTermos, onboardingShopee, onboardingTelegram, onboardingWhatsapp, onboardingValidar, excluirConta } from '$lib/api.js';
 
 	let step = $state(0);
 	let carregando = $state(true);
@@ -14,10 +14,13 @@
 	let secret = $state('');
 	let salvandoShopee = $state(false);
 
-	// Step 3 — Telegram
+	// Step 3 — Canal de publicação (Telegram ou WhatsApp)
+	let canalEscolhido = $state('telegram'); // 'telegram' | 'whatsapp'
 	let telegramToken = $state('');
 	let telegramChatId = $state('');
-	let salvandoTelegram = $state(false);
+	let whatsappPhoneId = $state('');
+	let whatsappToken = $state('');
+	let salvandoCanal = $state(false);
 
 	// Step 4 — Validação
 	let validando = $state(false);
@@ -33,7 +36,7 @@
 		erro = null;
 		try {
 			const r = await onboardingStatus();
-			step = r.step ?? 0;
+			step = r.onboarding_step ?? r.step ?? 0;
 			configurado = r.configurado ?? false;
 			if (r.shopee_app_id) appId = r.shopee_app_id;
 		} catch (e) {
@@ -67,16 +70,23 @@
 		finally { salvandoShopee = false; }
 	}
 
-	async function salvarTelegram(pular = false) {
-		salvandoTelegram = true;
+	async function salvarCanal(pular = false) {
+		salvandoCanal = true;
 		erro = null;
 		try {
-			const r = await onboardingTelegram(pular ? { pular: true } : { token: telegramToken.trim(), chatId: telegramChatId.trim() });
+			let r;
+			if (pular) {
+				r = await onboardingTelegram({ pular: true });
+			} else if (canalEscolhido === 'telegram') {
+				r = await onboardingTelegram({ token: telegramToken.trim(), chatId: telegramChatId.trim() });
+			} else {
+				r = await onboardingWhatsapp({ phoneNumberId: whatsappPhoneId.trim(), accessToken: whatsappToken.trim() });
+			}
 			step = r.step;
-			sucesso = pular ? 'Telegram pulado (pode configurar depois).' : 'Telegram configurado!';
+			sucesso = pular ? 'Canais pulados (pode configurar depois).' : `${canalEscolhido === 'telegram' ? 'Telegram' : 'WhatsApp'} configurado!`;
 			setTimeout(() => sucesso = null, 2000);
 		} catch (e) { erro = e.message; }
-		finally { salvandoTelegram = false; }
+		finally { salvandoCanal = false; }
 	}
 
 	async function validar() {
@@ -190,34 +200,72 @@
 			</div>
 		{/if}
 
-		<!-- Step 3: Telegram -->
+		<!-- Step 3: Canal de publicação (Telegram ou WhatsApp) -->
 		{#if step >= 2 && step < 3}
 			<div class="step-card">
-				<h2>3. Bot Telegram (opcional)</h2>
-				<div class="instrucoes">
-					<p>Configure um bot para receber alertas de preço no Telegram:</p>
-					<ol>
-						<li>Abra o Telegram e converse com <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a></li>
-						<li>Envie <code>/newbot</code> e siga as instruções para criar um bot</li>
-						<li>Copie o <strong>Token</strong> fornecido</li>
-						<li>Crie um grupo, adicione o bot, e pegue o <strong>Chat ID</strong> (use @getmyid_bot)</li>
-					</ol>
-				</div>
-				<div class="form-campos">
-					<label>
-						Token do Bot
-						<input type="password" bind:value={telegramToken} placeholder="Ex: 123456:ABC-DEF..." />
-					</label>
-					<label>
-						Chat ID do grupo
-						<input type="text" bind:value={telegramChatId} placeholder="Ex: -1001234567890" />
-					</label>
-				</div>
-				<div class="acoes-dupla">
-					<button class="btn-primario" onclick={() => salvarTelegram(false)} disabled={salvandoTelegram}>
-						{salvandoTelegram ? '⏳' : '💾'} Salvar Telegram
+				<h2>3. Canal de Publicação</h2>
+				<p class="instrucoes-intro">Configure pelo menos um canal para publicar ofertas.</p>
+
+				<!-- Seletor de canal -->
+				<div class="canal-tabs">
+					<button class="tab" class:ativo={canalEscolhido === 'telegram'} onclick={() => canalEscolhido = 'telegram'}>
+						✈️ Telegram
 					</button>
-					<button class="btn-secundario" onclick={() => salvarTelegram(true)} disabled={salvandoTelegram}>
+					<button class="tab" class:ativo={canalEscolhido === 'whatsapp'} onclick={() => canalEscolhido = 'whatsapp'}>
+						💬 WhatsApp
+					</button>
+				</div>
+
+				{#if canalEscolhido === 'telegram'}
+					<div class="instrucoes">
+						<p>Configure um bot para publicar ofertas no Telegram:</p>
+						<ol>
+							<li>Abra o Telegram e converse com <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a></li>
+							<li>Envie <code>/newbot</code> e siga as instruções para criar um bot</li>
+							<li>Copie o <strong>Token</strong> fornecido</li>
+							<li>Crie um grupo/canal, adicione o bot como admin</li>
+							<li>Pegue o <strong>Chat ID</strong> (use <a href="https://t.me/getmyid_bot" target="_blank" rel="noopener">@getmyid_bot</a>)</li>
+						</ol>
+					</div>
+					<div class="form-campos">
+						<label>
+							Token do Bot
+							<input type="password" bind:value={telegramToken} placeholder="Ex: 123456:ABC-DEF..." />
+						</label>
+						<label>
+							Chat ID do grupo/canal
+							<input type="text" bind:value={telegramChatId} placeholder="Ex: -1001234567890" />
+						</label>
+					</div>
+				{:else}
+					<div class="instrucoes">
+						<p>Configure o WhatsApp Business via Meta Cloud API:</p>
+						<ol>
+							<li>Acesse <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">Meta for Developers</a></li>
+							<li>Crie um app do tipo "Business" → selecione "WhatsApp"</li>
+							<li>Em WhatsApp → Configuração da API, copie o <strong>Phone Number ID</strong></li>
+							<li>Gere um <strong>Access Token</strong> permanente (System User no Business Settings)</li>
+							<li>Registre o número de telefone e configure os templates de mensagem</li>
+						</ol>
+						<p class="dica">💡 O token temporário (24h) serve para teste. Para produção, use um System User token permanente.</p>
+					</div>
+					<div class="form-campos">
+						<label>
+							Phone Number ID
+							<input type="text" bind:value={whatsappPhoneId} placeholder="Ex: 1234567890123456" />
+						</label>
+						<label>
+							Access Token (Meta)
+							<input type="password" bind:value={whatsappToken} placeholder="Ex: EAAG..." />
+						</label>
+					</div>
+				{/if}
+
+				<div class="acoes-dupla">
+					<button class="btn-primario" onclick={() => salvarCanal(false)} disabled={salvandoCanal}>
+						{salvandoCanal ? '⏳' : '💾'} Salvar {canalEscolhido === 'telegram' ? 'Telegram' : 'WhatsApp'}
+					</button>
+					<button class="btn-secundario" onclick={() => salvarCanal(true)} disabled={salvandoCanal}>
 						Pular →
 					</button>
 				</div>
@@ -290,6 +338,14 @@
 	.btn-secundario { padding: 10px 20px; background: var(--branco); border: 1px solid var(--linha); border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
 	.btn-secundario:hover { border-color: var(--ouro); }
 	.acoes-dupla { display: flex; gap: var(--r3); }
+
+	/* Canal tabs */
+	.canal-tabs { display: flex; gap: var(--r2); margin-bottom: var(--r4); }
+	.tab { padding: 8px 16px; border: 1px solid var(--linha); border-radius: 8px; background: var(--branco); font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--tinta-suave); }
+	.tab.ativo { background: var(--ouro-fundo, #fff8e1); border-color: var(--ouro); color: var(--ouro-escuro, #f59e0b); }
+	.tab:hover:not(.ativo) { border-color: var(--tinta-suave); }
+	.instrucoes-intro { font-size: 0.9rem; color: var(--tinta-suave); margin-bottom: var(--r3); }
+	.dica { font-size: 0.82rem; color: var(--tinta-suave); background: var(--porcelana); padding: var(--r2) var(--r3); border-radius: 6px; margin-top: var(--r2); }
 
 	/* OK panel */
 	.painel-ok { background: var(--sucesso-fundo); border: 1px solid var(--sucesso-borda, var(--sucesso-texto)); border-radius: var(--raio); padding: var(--r5); margin-bottom: var(--r5); }

@@ -260,6 +260,12 @@ export function onboardingTelegram({ token, chatId, pular = false } = {}) {
 	return postar('/api/onboarding/telegram', { token, chat_id: chatId });
 }
 
+/** Step 3 (alternativo): Configurar WhatsApp Meta (ou pular). */
+export function onboardingWhatsapp({ phoneNumberId, accessToken, pular = false } = {}) {
+	if (pular) return postar('/api/onboarding/whatsapp', { pular: true });
+	return postar('/api/onboarding/whatsapp', { phone_number_id: phoneNumberId, access_token: accessToken });
+}
+
 /** Step 4: Validar credenciais Shopee com chamada de teste. */
 export function onboardingValidar() {
 	return postar('/api/onboarding/validar', {});

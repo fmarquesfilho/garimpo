@@ -40,7 +40,8 @@ public static partial class EndpointExtensions
                 configurado = cfg.Configurado,
                 aceitou_termos = cfg.AceitouTermos,
                 tem_shopee = !string.IsNullOrEmpty(cfg.ShopeeAppId),
-                tem_telegram = !string.IsNullOrEmpty(cfg.TelegramChatId)
+                tem_telegram = !string.IsNullOrEmpty(cfg.TelegramChatId),
+                tem_whatsapp = !string.IsNullOrEmpty(cfg.WhatsappPhoneNumberId)
             });
         });
 
@@ -97,6 +98,28 @@ public static partial class EndpointExtensions
             await db.SaveChangesAsync(ct);
 
             return Results.Ok(new { step = cfg.OnboardingStep, status = req.Pular == true ? "telegram_pulado" : "telegram_configurado" });
+        });
+
+        // POST /api/onboarding/whatsapp
+        onboarding.MapPost("/whatsapp", async (
+            AppDbContext db,
+            ITenantContext tenant,
+            OnboardingWhatsappRequest req,
+            CancellationToken ct) =>
+        {
+            var cfg = await GetOrCreateTenantConfig(db, tenant.OwnerUid, ct);
+
+            if (req.Pular != true)
+            {
+                cfg.WhatsappPhoneNumberId = req.PhoneNumberId;
+                cfg.WhatsappTokenEnc = req.AccessToken; // TODO: encrypt
+            }
+
+            cfg.OnboardingStep = Math.Max(cfg.OnboardingStep, 3);
+            cfg.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(new { step = cfg.OnboardingStep, status = req.Pular == true ? "whatsapp_pulado" : "whatsapp_configurado" });
         });
 
         // POST /api/onboarding/validar
@@ -172,5 +195,12 @@ public sealed record OnboardingTelegramRequest
 {
     public string? Token { get; init; }
     public string? ChatId { get; init; }
+    public bool? Pular { get; init; }
+}
+
+public sealed record OnboardingWhatsappRequest
+{
+    public string? PhoneNumberId { get; init; }
+    public string? AccessToken { get; init; }
     public bool? Pular { get; init; }
 }

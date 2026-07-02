@@ -1,0 +1,24 @@
+id: T-0030
+titulo: "Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo"
+epic: multi-tenant
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+valor: >
+  O onboarding (step 3) só oferece Telegram. Para multi-tenant completo,
+  cada tenant precisa poder configurar WhatsApp (Meta Cloud API) pela interface.
+  Também precisa fechar o gap: tokens salvos no onboarding devem ser usados
+  na publicação (depende de T-0027 no backend, mas o frontend pode já estar pronto).
+criterios:
+  - "Step 3 do onboarding oferece Telegram OU WhatsApp (radio/tabs)"
+  - "WhatsApp pede: Phone Number ID + Access Token Meta (com instruções)"
+  - "Campos salvos no TenantConfig (WhatsappPhoneNumberId, WhatsappTokenEnc)"
+  - "Página /canais: tipo WhatsApp usa phone_number_id como config (sem Maytapi)"
+  - "Validação de teste: enviar mensagem template via Meta Cloud API"
+  - "Frontend funciona com banco zerado (onboarding do zero)"
+depende_de:
+  - T-0027
+tags: [frontend, onboarding, whatsapp, multi-tenant]
+criada_em: "2026-07-02"
+atualizada_em: "2026-07-02"

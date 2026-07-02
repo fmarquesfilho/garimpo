@@ -15,6 +15,10 @@ public sealed class TenantConfig : IOwnedEntity
     public string? ShopeeSecretEnc { get; set; } // criptografado
     public string? TelegramTokenEnc { get; set; } // criptografado
     public string? TelegramChatId { get; set; }
+
+    // WhatsApp (Meta Cloud API)
+    public string? WhatsappPhoneNumberId { get; set; }
+    public string? WhatsappTokenEnc { get; set; } // criptografado
     public int OnboardingStep { get; set; } // 0=início, 4=completo
     public bool AceitouTermos { get; set; }
     public DateTime? AceitouTermosEm { get; set; }
