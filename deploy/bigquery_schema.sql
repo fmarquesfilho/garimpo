@@ -69,13 +69,78 @@ PARTITION BY DATE(salvo_em);
 CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.conversoes` (
   conversion_id   STRING,
   produto_id      STRING,
+  nome            STRING,
+  canal           STRING,
   estrategia      STRING,   -- recuperada do subId/utmContent
   comissao_total  FLOAT64,
+  preco           FLOAT64,
   status          STRING,   -- PENDING | COMPLETED | CANCELLED
   clique_em       TIMESTAMP,
-  compra_em       TIMESTAMP
+  compra_em       TIMESTAMP,
+  convertido_em   TIMESTAMP
 )
 PARTITION BY DATE(compra_em);
+
+-- 4) Destinos de publicação (append-only, versionado por salvo_em).
+CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.destinos` (
+  id        STRING,
+  nome      STRING,
+  tipo      STRING,       -- "telegram" | "whatsapp"
+  config    STRING,       -- chat_id, telefone, etc.
+  ativo     BOOL,
+  salvo_em  TIMESTAMP
+)
+PARTITION BY DATE(salvo_em);
+
+-- 5) Templates de mensagem (append-only).
+CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.templates` (
+  id        STRING,
+  nome      STRING,
+  corpo     STRING,       -- corpo com placeholders {{nome}}, {{preco}}, etc.
+  com_foto  BOOL,
+  ativo     BOOL,
+  salvo_em  TIMESTAMP
+)
+PARTITION BY DATE(salvo_em);
+
+-- 6) Publicações agendadas/enviadas.
+CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.publicacoes` (
+  id           STRING,
+  produto_id   STRING,
+  nome         STRING,
+  categoria    STRING,
+  preco        FLOAT64,
+  comissao     FLOAT64,
+  link         STRING,
+  imagem       STRING,
+  estrategia   STRING,
+  destino_id   STRING,
+  template_id  STRING,
+  agendada_em  STRING,
+  status       STRING,      -- "pendente" | "enviada" | "erro"
+  detalhe      STRING,
+  criada_em    TIMESTAMP,
+  enviada_em   STRING,
+  owner_uid    STRING
+)
+PARTITION BY DATE(criada_em);
+
+-- 7) Favoritos (append-only).
+CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.favoritos` (
+  produto_id  STRING,
+  nome        STRING,
+  preco       FLOAT64,
+  comissao    FLOAT64,
+  link        STRING,
+  imagem      STRING,
+  loja        STRING,
+  categoria   STRING,
+  origem      STRING,
+  ativo       BOOL,
+  owner_uid   STRING,
+  salvo_em    TIMESTAMP
+)
+PARTITION BY DATE(salvo_em);
 
 -- Exemplo de análise: seleções por estratégia na última semana.
 --   SELECT estrategia, COUNT(*) selecoes, AVG(comissao) comissao_media, AVG(score) teor_medio

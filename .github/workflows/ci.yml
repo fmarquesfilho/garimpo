@@ -169,6 +169,8 @@ jobs:
         run: ./scripts/check-api-contract.sh
       - name: Check config consistency
         run: ./scripts/check-config-consistency.sh
+      - name: Check schema sync
+        run: ./scripts/check-schema-sync.sh
 
   # ── Docker (build all images) ───────────────────────────────────────────
   docker:

@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+# =============================================================================
+# check-schema-sync.sh — Verifica sincronização do schema BigQuery
+# =============================================================================
+# Garante que as tabelas referenciadas em:
+#   1. deploy/bigquery_schema.sql (schema de referência)
+#   2. internal/store/bigquery_schema.go (Go EnsureSchema)
+#   3. services/analyzer/routes/*.py (queries Python)
+# estão todas alinhadas. Se alguém adiciona uma tabela num lugar e esquece
+# no outro, o CI falha.
+#
+# Também verifica que as entidades do PostgreSQL (C# Domain) e os DbSets
+# do AppDbContext estão sincronizados.
+# =============================================================================
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+ERRORS=0
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Schema Sync Check"
+echo "═══════════════════════════════════════════════════════════════"
+echo ""
+
+# ── 1. BigQuery: SQL schema vs Go EnsureSchema ───────────────────────────────
+
+echo "🔍 BigQuery: schema SQL vs Go EnsureSchema..."
+
+# Tabelas no SQL schema (CREATE TABLE statements)
+# Format: CREATE TABLE IF NOT EXISTS `PROJECT.DATASET.TABLE_NAME`
+SQL_TABLES=$(grep -oE 'CREATE TABLE[^(]+' deploy/bigquery_schema.sql 2>/dev/null | \
+  grep -oE '\.[a-z_]+`' | tr -d '.`' | sort -u)
+
+# Tabelas no Go EnsureSchema (criarSeNaoExistir calls)
+GO_TABLES=$(grep -oE 'criarSeNaoExistir\(ctx, ds, [^,]+,' internal/store/bigquery_schema.go 2>/dev/null | \
+  grep -oE '"[^"]*"' | tr -d '"' | sort -u)
+
+# Também pega s.tabela e s.tabelaSnap (variáveis que apontam para tabelas)
+GO_TABLES_VARS=$(grep -oE 's\.tabela\w*' internal/store/bigquery_schema.go 2>/dev/null | sort -u)
+
+for table in $SQL_TABLES; do
+  if ! echo "$GO_TABLES" | grep -qw "$table"; then
+    # Pode ser referenciado via variável (s.tabela = "eventos", s.tabelaSnap = "snapshots")
+    # Ou pode be a table managed externally (conversoes — filled by Shopee webhook)
+    case "$table" in
+      eventos|snapshots) ;; # OK — mapped via s.tabela / s.tabelaSnap variables
+      conversoes) ;; # OK — managed externally (Shopee webhook), not by Go monolith
+      *)
+        echo -e "${RED}   ✗ Tabela '$table' existe no SQL schema mas não no Go EnsureSchema${NC}"
+        ERRORS=$((ERRORS + 1))
+        ;;
+    esac
+  fi
+done
+
+for table in $GO_TABLES; do
+  if ! echo "$SQL_TABLES" | grep -qw "$table"; then
+    echo -e "${RED}   ✗ Tabela '$table' existe no Go EnsureSchema mas não no SQL schema${NC}"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
+
+if [ "$ERRORS" -eq 0 ]; then
+  echo -e "${GREEN}   ✓ SQL schema e Go EnsureSchema estão sincronizados${NC}"
+fi
+
+# ── 2. BigQuery: tabelas consultadas pelo Analyzer Python ─────────────────────
+
+echo ""
+echo "🔍 BigQuery: tabelas usadas pelo Analyzer Python..."
+
+# Tabelas referenciadas nas queries do analyzer (FROM/JOIN {ds}.TABLE_NAME)
+ANALYZER_TABLES=$(grep -ohE '\{ds\}\.[a-z_]+' services/analyzer/routes/*.py 2>/dev/null | \
+  grep -oE '\.[a-z_]+' | tr -d '.' | sort -u)
+
+if [ -z "$ANALYZER_TABLES" ]; then
+  echo -e "${GREEN}   ✓ Nenhuma tabela referenciada (analyzer pode estar vazio)${NC}"
+else
+  # Tabelas que existem no BigQuery (do SQL schema — fonte de verdade)
+  ALL_BQ_TABLES=$(echo "$SQL_TABLES"$'\n'"$GO_TABLES" | sort -u)
+
+  ANALYZER_ERRORS=0
+  for table in $ANALYZER_TABLES; do
+    if ! echo "$ALL_BQ_TABLES" | grep -qw "$table"; then
+      echo -e "${RED}   ✗ Analyzer consulta '$table' mas não existe no schema BigQuery${NC}"
+      ERRORS=$((ERRORS + 1))
+      ANALYZER_ERRORS=$((ANALYZER_ERRORS + 1))
+    fi
+  done
+
+  if [ "$ANALYZER_ERRORS" -eq 0 ]; then
+    echo -e "${GREEN}   ✓ Analyzer consulta apenas tabelas que existem no schema ($ANALYZER_TABLES)${NC}"
+  fi
+fi
+
+# ── 3. PostgreSQL: Entities C# vs DbSets no AppDbContext ──────────────────────
+
+echo ""
+echo "🔍 PostgreSQL: Entities C# vs DbSets no AppDbContext..."
+
+# Entidades no Domain (arquivos .cs em Entities/)
+ENTITY_FILES=$(ls src/Garimpei.Domain/Entities/*.cs 2>/dev/null | xargs -I{} basename {} .cs | sort)
+
+# DbSets declarados no AppDbContext
+DBSETS=$(grep -oE 'DbSet<[^>]+>' src/Garimpei.Infrastructure/Persistence/AppDbContext.cs 2>/dev/null | \
+  grep -oE '<[^>]+>' | tr -d '<>' | sort)
+
+PG_ERRORS=0
+for entity in $ENTITY_FILES; do
+  if ! echo "$DBSETS" | grep -qw "$entity"; then
+    echo -e "${RED}   ✗ Entidade '$entity' existe em Domain/Entities mas não tem DbSet no AppDbContext${NC}"
+    ERRORS=$((ERRORS + 1))
+    PG_ERRORS=$((PG_ERRORS + 1))
+  fi
+done
+
+for dbset in $DBSETS; do
+  if ! echo "$ENTITY_FILES" | grep -qw "$dbset"; then
+    echo -e "${RED}   ✗ DbSet<$dbset> existe no AppDbContext mas não tem Entidade em Domain/Entities${NC}"
+    ERRORS=$((ERRORS + 1))
+    PG_ERRORS=$((PG_ERRORS + 1))
+  fi
+done
+
+if [ "$PG_ERRORS" -eq 0 ]; then
+  echo -e "${GREEN}   ✓ Entities e DbSets estão sincronizados${NC}"
+fi
+
+# ── 4. PostgreSQL: QueryFilters (multi-tenancy) para IOwnedEntity ─────────────
+
+echo ""
+echo "🔍 PostgreSQL: Entities com IOwnedEntity têm QueryFilter?..."
+
+# Entidades que implementam IOwnedEntity
+OWNED_ENTITIES=$(grep -rl "IOwnedEntity" src/Garimpei.Domain/Entities/ 2>/dev/null | \
+  xargs -I{} basename {} .cs | sort)
+
+# Entidades com HasQueryFilter no AppDbContext
+# The entity config and HasQueryFilter are on different lines, so we search
+# for Entity<X> blocks that contain HasQueryFilter
+FILTERED_ENTITIES=$(awk '/modelBuilder\.Entity</{name=$0} /HasQueryFilter/{print name}' \
+  src/Garimpei.Infrastructure/Persistence/AppDbContext.cs 2>/dev/null | \
+  grep -oE 'Entity<[^>]+>' | grep -oE '<[^>]+>' | tr -d '<>' | sort -u)
+
+QF_ERRORS=0
+for entity in $OWNED_ENTITIES; do
+  if ! echo "$FILTERED_ENTITIES" | grep -qw "$entity"; then
+    echo -e "${RED}   ✗ '$entity' implementa IOwnedEntity mas não tem QueryFilter no AppDbContext${NC}"
+    ERRORS=$((ERRORS + 1))
+    QF_ERRORS=$((QF_ERRORS + 1))
+  fi
+done
+
+if [ "$QF_ERRORS" -eq 0 ]; then
+  echo -e "${GREEN}   ✓ Todas as IOwnedEntity têm QueryFilter (multi-tenancy)${NC}"
+fi
+
+# ── Resultado ─────────────────────────────────────────────────────────────────
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+if [ "$ERRORS" -eq 0 ]; then
+  echo -e "${GREEN}✅ Schemas sincronizados! BigQuery, PostgreSQL e Analyzer alinhados.${NC}"
+  exit 0
+else
+  echo -e "${RED}❌ $ERRORS problema(s) de sincronização detectado(s)!${NC}"
+  exit 1
+fi
