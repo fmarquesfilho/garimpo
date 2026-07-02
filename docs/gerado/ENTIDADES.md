@@ -124,6 +124,22 @@ erDiagram
         TIMESTAMP salvo_em
     }
 
+    COUPON_SNAPSHOTS {
+        STRING coupon_id
+        STRING marketplace
+        STRING code
+        STRING discount_type
+        FLOAT64 discount_value
+        FLOAT64 min_spend
+        TIMESTAMP start_time
+        TIMESTAMP end_time
+        STRING applicable_categories
+        STRING status
+        STRING detection_status
+        STRING owner_uid
+        TIMESTAMP collected_at
+    }
+
     BUSCAS ||--o{ SNAPSHOTS : "gera coletas"
     SNAPSHOTS ||--o{ EVENTOS : "produto selecionado"
     EVENTOS ||--o{ CONVERSOES : "gera conversão"

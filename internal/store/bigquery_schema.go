@@ -147,7 +147,27 @@ func (s *BigQueryStore) EnsureSchema(ctx context.Context) error {
 		{Name: "owner_uid", Type: bigquery.StringFieldType},
 		{Name: "salvo_em", Type: bigquery.TimestampFieldType},
 	}
-	return criarSeNaoExistir(ctx, ds, "favoritos", fSchema, "salvo_em")
+	if err := criarSeNaoExistir(ctx, ds, "favoritos", fSchema, "salvo_em"); err != nil {
+		return err
+	}
+
+	// --- tabela coupon_snapshots (append-only, 90d TTL via BQ partition expiry) ---
+	csSchema := bigquery.Schema{
+		{Name: "coupon_id", Type: bigquery.StringFieldType},
+		{Name: "marketplace", Type: bigquery.StringFieldType},
+		{Name: "code", Type: bigquery.StringFieldType},
+		{Name: "discount_type", Type: bigquery.StringFieldType},
+		{Name: "discount_value", Type: bigquery.FloatFieldType},
+		{Name: "min_spend", Type: bigquery.FloatFieldType},
+		{Name: "start_time", Type: bigquery.TimestampFieldType},
+		{Name: "end_time", Type: bigquery.TimestampFieldType},
+		{Name: "applicable_categories", Type: bigquery.StringFieldType},
+		{Name: "status", Type: bigquery.StringFieldType},
+		{Name: "detection_status", Type: bigquery.StringFieldType},
+		{Name: "owner_uid", Type: bigquery.StringFieldType},
+		{Name: "collected_at", Type: bigquery.TimestampFieldType},
+	}
+	return criarSeNaoExistir(ctx, ds, "coupon_snapshots", csSchema, "collected_at")
 }
 
 // criarSeNaoExistir cria a tabela particionada por dia se ainda não existir.
