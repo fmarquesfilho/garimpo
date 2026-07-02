@@ -7,7 +7,7 @@ namespace Garimpei.Infrastructure.Sources;
 
 /// <summary>
 /// Implementação de IProductSource para Shopee.
-/// Delega para o collector-shopee via gRPC.
+/// Delega para o collector unificado via gRPC (marketplace=SHOPEE).
 /// </summary>
 public sealed class ShopeeProductSource : IProductSource
 {

@@ -69,6 +69,7 @@ run_check "API contract (frontend↔backend)" ./scripts/check-api-contract.sh
 run_check "Config consistency (dataset, portas)" ./scripts/check-config-consistency.sh
 run_check "Schema sync (BQ↔Go↔C#↔Analyzer)" ./scripts/check-schema-sync.sh
 run_check "Data ownership (PG↔BQ boundaries)" ./scripts/check-data-ownership.sh
+run_check "Stale refs (dead code, serviços removidos)" ./scripts/check-stale-refs.sh
 
 # ── Docs (generated files + dead links) ───────────────────────────────────────
 echo ""

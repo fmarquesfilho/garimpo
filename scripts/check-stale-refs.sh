@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+# =============================================================================
+# check-stale-refs.sh — Detecta referências a código/serviços que não existem mais
+# =============================================================================
+# Pega o tipo de dead code que linters normais não pegam:
+#   - Paths de services/ referenciados em configs/scripts que não existem
+#   - Dockerfiles referenciados que não existem
+#   - Env vars de endereço (_ADDR) apontando para serviços inexistentes
+#   - gRPC clients registrados no C# sem consumer correspondente
+#   - Config keys em appsettings sem uso no código
+#
+# Roda em CI e local. Exit 1 = referência stale detectada.
+# =============================================================================
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+ERRORS=0
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Stale References Check"
+echo "═══════════════════════════════════════════════════════════════"
+
+# ── 1. Dockerfiles referenciados mas inexistentes ─────────────────────────────
+echo ""
+echo "🔍 Dockerfiles referenciados em configs/CI..."
+
+# Busca referências a Dockerfiles em YAML, compose, scripts
+DOCKERFILE_REFS=$(grep -rhn "dockerfile:.*services/\|Dockerfile.*services/" \
+  --include="*.yml" --include="*.yaml" --include="*.sh" \
+  . 2>/dev/null | \
+  grep -v "node_modules\|\.git/\|bin/\|obj/" | \
+  grep -oE "services/[a-zA-Z0-9_-]+/Dockerfile" | \
+  sort -u || true)
+
+STALE_DOCKERFILES=""
+for df in $DOCKERFILE_REFS; do
+  if [ ! -f "$df" ]; then
+    STALE_DOCKERFILES="${STALE_DOCKERFILES}\n     $df"
+  fi
+done
+
+if [ -n "$STALE_DOCKERFILES" ]; then
+  echo -e "${RED}   ✗ Dockerfiles referenciados mas inexistentes:${NC}"
+  echo -e "$STALE_DOCKERFILES"
+  ERRORS=$((ERRORS + 1))
+else
+  echo -e "${GREEN}   ✓ Todos os Dockerfiles referenciados existem${NC}"
+fi
+
+# ── 2. Diretórios services/ referenciados em scripts mas inexistentes ─────────
+echo ""
+echo "🔍 Paths de services/ referenciados em scripts/configs..."
+
+SERVICE_REFS=$(grep -rhoE "services/[a-zA-Z0-9_-]+/" \
+  --include="*.sh" --include="*.yml" --include="*.yaml" --include="*.go" \
+  scripts/ deploy/ .github/ docker-compose.yml 2>/dev/null | \
+  sort -u || true)
+
+STALE_SERVICES=""
+for svc in $SERVICE_REFS; do
+  if [ ! -d "$svc" ]; then
+    STALE_SERVICES="${STALE_SERVICES}\n     $svc"
+  fi
+done
+
+if [ -n "$STALE_SERVICES" ]; then
+  echo -e "${RED}   ✗ Diretórios de serviço referenciados mas inexistentes:${NC}"
+  echo -e "$STALE_SERVICES"
+  ERRORS=$((ERRORS + 1))
+else
+  echo -e "${GREEN}   ✓ Todos os diretórios de serviço referenciados existem${NC}"
+fi
+
+# ── 3. Env vars _ADDR apontando para serviços que não existem ─────────────────
+echo ""
+echo "🔍 Env vars de endereço (_ADDR) para serviços inexistentes..."
+
+# Extrai env vars que terminam em _ADDR de código Go (não testes)
+ADDR_VARS=$(grep -rhoE '[A-Z_]+_ADDR' \
+  --include="*.go" \
+  services/ 2>/dev/null | \
+  grep -v "_test.go" | \
+  sort -u || true)
+
+# Mapa: nome do serviço → diretório esperado
+# COLLECTOR_ADDR → services/collector, PUBLISHER_ADDR → services/publisher, etc.
+STALE_ADDRS=""
+for var in $ADDR_VARS; do
+  # Extrai o nome do serviço: COUPON_COLLECTOR_SHOPEE_ADDR → coupon-collector
+  # Heurística: pega tudo antes do último _ADDR, converte _ para -
+  svc_name=$(echo "$var" | sed 's/_ADDR$//' | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+
+  # Tenta match direto primeiro
+  if [ -d "services/$svc_name" ]; then
+    continue
+  fi
+
+  # Tenta prefixo (COLLECTOR_ADDR → services/collector)
+  svc_prefix=$(echo "$svc_name" | grep -oE '^[a-z]+' || true)
+  if [ -n "$svc_prefix" ] && [ -d "services/$svc_prefix" ]; then
+    continue
+  fi
+
+  # Serviços externos conhecidos (analyzer via HTTP, não gRPC)
+  case "$var" in
+    ANALYZER_URL|ANALYZER_ADDR) continue ;;
+  esac
+
+  STALE_ADDRS="${STALE_ADDRS}\n     $var (esperado: services/$svc_name/ ou services/$svc_prefix/)"
+done
+
+if [ -n "$STALE_ADDRS" ]; then
+  echo -e "${RED}   ✗ Env vars _ADDR referenciando serviços inexistentes:${NC}"
+  echo -e "$STALE_ADDRS"
+  ERRORS=$((ERRORS + 1))
+else
+  echo -e "${GREEN}   ✓ Todas as env vars _ADDR apontam para serviços existentes${NC}"
+fi
+
+# ── 4. Named gRPC clients no C# sem resolução por nome ───────────────────────
+echo ""
+echo "🔍 Named gRPC clients registrados no C# sem consumer..."
+
+# Extrai nomes de clients registrados com AddGrpcClient<T>("name", ...)
+NAMED_CLIENTS=$(grep -r 'AddGrpcClient<' --include="*.cs" src/ 2>/dev/null | \
+  grep -oE '"[a-zA-Z0-9_-]+"' | tr -d '"' | sort -u || true)
+
+UNUSED_CLIENTS=""
+for client_name in $NAMED_CLIENTS; do
+  # Verifica se o nome é usado em algum CreateClient, GetRequiredService, ou inject
+  USAGES=$(grep -rn "\"$client_name\"" --include="*.cs" src/ 2>/dev/null | \
+    grep -v "AddGrpcClient" || true)
+  if [ -z "$USAGES" ]; then
+    UNUSED_CLIENTS="${UNUSED_CLIENTS}\n     \"$client_name\" (registrado mas nunca resolvido)"
+  fi
+done
+
+if [ -n "$UNUSED_CLIENTS" ]; then
+  echo -e "${RED}   ✗ Named gRPC clients sem consumer:${NC}"
+  echo -e "$UNUSED_CLIENTS"
+  ERRORS=$((ERRORS + 1))
+else
+  echo -e "${GREEN}   ✓ Todos os named gRPC clients têm consumer${NC}"
+fi
+
+# ── 5. Config keys em appsettings não usadas no código ────────────────────────
+echo ""
+echo "🔍 Config keys de Grpc: em appsettings sem uso no código C#..."
+
+# Extrai keys do bloco Grpc nos appsettings (formato: "KeyName": "value")
+GRPC_KEYS=$(grep -A20 '"Grpc"' src/Garimpei.Api/appsettings*.json 2>/dev/null | \
+  grep -oE '"[A-Za-z]+Address"' | tr -d '"' | sort -u || true)
+
+UNUSED_KEYS=""
+for key in $GRPC_KEYS; do
+  # Verifica se a key aparece no código C# (DI, config reads)
+  USAGES=$(grep -rn "$key" --include="*.cs" src/ 2>/dev/null || true)
+  if [ -z "$USAGES" ]; then
+    UNUSED_KEYS="${UNUSED_KEYS}\n     Grpc:$key (em appsettings mas não lida no código)"
+  fi
+done
+
+if [ -n "$UNUSED_KEYS" ]; then
+  echo -e "${RED}   ✗ Config keys não utilizadas:${NC}"
+  echo -e "$UNUSED_KEYS"
+  ERRORS=$((ERRORS + 1))
+else
+  echo -e "${GREEN}   ✓ Todas as config keys de Grpc estão em uso${NC}"
+fi
+
+# ── Resultado ─────────────────────────────────────────────────────────────────
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+if [ "$ERRORS" -eq 0 ]; then
+  echo -e "${GREEN}✅ Sem referências stale! Código limpo.${NC}"
+  exit 0
+else
+  echo -e "${RED}❌ $ERRORS tipo(s) de referência stale detectado(s)!${NC}"
+  echo -e "${RED}   Remova o código morto antes de fazer push.${NC}"
+  exit 1
+fi

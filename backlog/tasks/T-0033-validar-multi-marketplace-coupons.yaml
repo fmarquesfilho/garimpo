@@ -142,7 +142,7 @@ notas: |
     docker compose up -d postgres bigquery-emulator
     cd src && dotnet ef database update --project Garimpei.Infrastructure --startup-project Garimpei.Api
     dotnet run --project src/Garimpei.Api
-    grpcurl -plaintext localhost:50061 coupon.v1.CouponCollectorService/FetchCoupons
+    grpcurl -plaintext localhost:50051 coupon.v1.CouponCollectorService/FetchCoupons
 
   Para testar alert evaluation manualmente:
     curl -X POST http://localhost:8090/internal/coupon-alerts/evaluate \

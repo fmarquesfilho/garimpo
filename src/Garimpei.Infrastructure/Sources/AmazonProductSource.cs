@@ -7,7 +7,7 @@ namespace Garimpei.Infrastructure.Sources;
 
 /// <summary>
 /// Implementação de IProductSource para Amazon.
-/// Delega para o collector-amazon via gRPC.
+/// Delega para o collector unificado via gRPC (marketplace=AMAZON).
 /// </summary>
 public sealed class AmazonProductSource : IProductSource
 {

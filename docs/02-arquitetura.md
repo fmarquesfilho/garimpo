@@ -264,7 +264,7 @@ Tudo isso em pandas + scikit-learn + BigQuery, sem afetar a API principal.
 | Tabela | Quem escreve | Quem lê | Descrição |
 |--------|-------------|---------|-----------|
 | snapshots | collector (Go) | analyzer (Python) | Foto periódica do mercado |
-| coupon_snapshots | coupon-collector (Go) | analyzer (Python) | Cupons coletados (append-only, 90d TTL) |
+| coupon_snapshots | collector (Go) | analyzer (Python) | Cupons coletados (append-only, 90d TTL) |
 | eventos | C# API | analyzer (Python) | Eventos de curadoria |
 | buscas | C# API / scheduler | analyzer (Python) | Perfis de coleta (append-only) |
 | conversoes | webhook Shopee | analyzer (Python) | Conversões reais |

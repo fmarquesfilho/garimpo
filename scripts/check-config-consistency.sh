@@ -5,7 +5,7 @@
 # Detecta inconsistências entre configs que devem estar sincronizadas:
 #   - Nome do dataset BigQuery (deve ser "garimpo" em todos os lugares)
 #   - Nome do projeto GCP (deve ser "garimpo-500114" onde hardcoded)
-#   - Portas de serviços (collector=50051, collector-amazon=50055, publisher=50052, analyzer=8060)
+#   - Portas de serviços (collector=50051, publisher=50052, analyzer=8060)
 #   - Base URLs do analyzer
 #
 # Roda em CI e local. Exit 1 = inconsistência detectada.
@@ -48,7 +48,7 @@ else
 fi
 
 # ── 2. Portas dos serviços gRPC ───────────────────────────────────────────────
-# Padrão: collector=50051, collector-amazon=50055, publisher=50052, alerter=50053, scheduler=50054
+# Padrão: collector=50051, publisher=50052, alerter=50053, scheduler=50054
 
 echo ""
 echo "🔍 Verificando consistência de portas..."
@@ -76,8 +76,7 @@ check_port() {
   fi
 }
 
-check_port "Collector" "50051" "Amazon"
-check_port "CollectorAmazon" "50055"
+check_port "Collector" "50051"
 check_port "Publisher" "50052"
 echo -e "${GREEN}   ✓ Portas de serviços gRPC consistentes${NC}"
 
