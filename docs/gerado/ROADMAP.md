@@ -20,6 +20,7 @@ _Nenhuma tarefa em andamento._
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
+- **T-0032** Migrar docs-site de Astro Starlight para VitePress · docs-migration · P
 
 ## ✅ Concluídas
 

@@ -1,0 +1,29 @@
+id: T-0032
+titulo: "Migrar docs-site de Astro Starlight para VitePress"
+epic: docs-migration
+status: backlog
+prioridade: baixa
+estimativa: P
+sprint: ""
+valor: >
+  Astro Starlight é pesado e desconectado da stack (Svelte/Vite). Migrar para
+  VitePress que usa Vite nativo, é mais leve, tem search integrado, e deploy
+  trivial no Cloudflare Pages. Alternativa: KitDocs (SvelteKit-native) se quiser
+  manter 100% da stack em Svelte.
+criterios:
+  - "docs-site funciona com VitePress (ou KitDocs)"
+  - "Markdown existente em docs/ é consumido sem reescrita"
+  - "Build <10s (VitePress é ~2-3s para sites pequenos)"
+  - "Deploy no Cloudflare Pages via workflow docs.yml"
+  - "OpenAPI spec renderizada (swagger-ui ou plugin VitePress)"
+  - "Search integrado funcionando"
+depende_de: []
+tags: [docs, frontend, dx]
+criada_em: "2026-07-02"
+atualizada_em: "2026-07-02"
+notas: >
+  Alternativas avaliadas:
+  - VitePress: Vite + Vue, Markdown, search embutido, SSG rapido. RECOMENDADO.
+  - KitDocs: SvelteKit-native, mesma stack, mas menos maduro.
+  - Mintlify: SaaS, bonito, mas vendor lock-in e pago.
+  - Docusaurus: React, pesado, overkill para o tamanho do projeto.
