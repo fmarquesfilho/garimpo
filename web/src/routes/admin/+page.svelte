@@ -38,14 +38,32 @@
 			</table>
 		</section>
 
+		{#if health.quality}
+		<section class="status-card">
+			<h2>Qualidade de código</h2>
+			<table>
+				<tbody>
+				<tr><td>Go lint</td><td>{health.quality.lint_go}</td></tr>
+				<tr><td>Python lint</td><td>{health.quality.lint_python}</td></tr>
+				<tr><td>C# lint</td><td>{health.quality.lint_csharp}</td></tr>
+				<tr><td>Testes C#</td><td>{health.quality.tests_csharp} testes</td></tr>
+				<tr><td>Pre-push checks</td><td>{health.quality.pre_push_checks} checks</td></tr>
+				</tbody>
+			</table>
+		</section>
+		{/if}
+
 		<section class="links">
 			<h2>Links úteis</h2>
 			<ul>
-				<li><a href="/docs/" target="_blank">Documentação (Starlight)</a></li>
-				<li><a href="/docs/api-reference.html" target="_blank">API Reference (Scalar)</a></li>
-				<li><a href="https://console.cloud.google.com/run?project=garimpo-500114" target="_blank">Cloud Run Console</a></li>
-				<li><a href="https://console.neon.tech" target="_blank">Neon (PostgreSQL)</a></li>
-				<li><a href="https://dash.cloudflare.com" target="_blank">Cloudflare Dashboard</a></li>
+				<li><a href="/docs/" target="_blank">📚 Documentação (Starlight)</a></li>
+				<li><a href="/docs/api-reference.html" target="_blank">📋 API Reference (Scalar)</a></li>
+				<li><a href="https://qodana.cloud" target="_blank">🔍 Qodana (Code Quality)</a></li>
+				<li><a href="https://github.com/fmarquesfilho/garimpo/actions" target="_blank">⚙️ GitHub Actions (CI)</a></li>
+				<li><a href="https://github.com/fmarquesfilho/garimpo/pulls" target="_blank">🔀 Pull Requests</a></li>
+				<li><a href="https://console.cloud.google.com/run?project=garimpo-500114" target="_blank">☁️ Cloud Run Console</a></li>
+				<li><a href="https://console.neon.tech" target="_blank">🐘 Neon (PostgreSQL)</a></li>
+				<li><a href="https://dash.cloudflare.com" target="_blank">🌐 Cloudflare Dashboard</a></li>
 			</ul>
 		</section>
 	{/if}

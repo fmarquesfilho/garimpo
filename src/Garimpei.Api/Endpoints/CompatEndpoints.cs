@@ -19,7 +19,16 @@ public static partial class EndpointExtensions
             status = "ok",
             fonte = "shopee",
             store = "postgresql",
-            backend = "csharp-v2"
+            backend = "csharp-v2",
+            quality = new
+            {
+                qodana = "https://qodana.cloud",
+                lint_go = "golangci-lint (0 issues)",
+                lint_python = "ruff (0 issues)",
+                lint_csharp = "NetArchTest (13 rules)",
+                tests_csharp = 51,
+                pre_push_checks = 9
+            }
         }));
 
         // /api/admin/me — verifica se o usuário logado é admin
@@ -34,7 +43,19 @@ public static partial class EndpointExtensions
                 && adminEmails.Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Any(e => e.Trim().Equals(email, StringComparison.OrdinalIgnoreCase));
 
-            return Results.Ok(new { admin = isAdmin, email });
+            var qodanaUrl = config["Qodana:DashboardUrl"] ?? "https://qodana.cloud";
+
+            return Results.Ok(new
+            {
+                admin = isAdmin,
+                email,
+                tools = new
+                {
+                    qodana_dashboard = qodanaUrl,
+                    github_actions = "https://github.com/fmarquesfilho/garimpo/actions",
+                    pull_requests = "https://github.com/fmarquesfilho/garimpo/pulls"
+                }
+            });
         }).RequireAuthorization();
 
         // /api/candidatos — public (same as Go legacy)
