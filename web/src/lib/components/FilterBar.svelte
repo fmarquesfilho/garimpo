@@ -2,7 +2,11 @@
 	/**
 	 * FilterBar: barra de filtros com busca principal visível
 	 * e filtros avançados colapsáveis.
+	 * Categorias carregadas dinamicamente da API (com fallback).
 	 */
+	import { onMount } from 'svelte';
+	import { buscarCategorias, filtrarCategorias } from '$lib/categorias.js';
+
 	let {
 		busca = $bindable(''),
 		categoria = $bindable(''),
@@ -14,6 +18,9 @@
 	} = $props();
 
 	let avancadoAberto = $state(false);
+	let todasCategorias = $state([]);
+	let catInput = $state('');
+	let sugestoes = $derived(filtrarCategorias(todasCategorias, catInput));
 
 	// Conta filtros ativos (para badge)
 	let filtrosAtivos = $derived(
@@ -21,6 +28,30 @@
 		(vendasMin > 0 ? 1 : 0) +
 		(categoria !== '' ? 1 : 0)
 	);
+
+	onMount(async () => {
+		todasCategorias = await buscarCategorias();
+	});
+
+	function selecionarCategoria(nome) {
+		categoria = nome;
+		catInput = nome;
+	}
+
+	function limparCategoria() {
+		categoria = '';
+		catInput = '';
+	}
+
+	// Sync catInput → categoria quando o usuário digita (e o valor bate com uma sugestão)
+	$effect(() => {
+		const match = todasCategorias.find(c => c.nome.toLowerCase() === catInput.trim().toLowerCase());
+		if (match) {
+			categoria = match.nome;
+		} else if (!catInput.trim()) {
+			categoria = '';
+		}
+	});
 </script>
 
 <div class="filtros">
@@ -58,17 +89,30 @@
 		<div class="avancados">
 			<label class="campo">
 				<span class="rotulo">categoria</span>
-				<input type="text" list="categorias-sugeridas" bind:value={categoria} placeholder="todas (opcional)" class="entrada" />
-				<datalist id="categorias-sugeridas">
-					<option value="cosméticos" />
-					<option value="perfumaria" />
-					<option value="skincare" />
-					<option value="maquiagem" />
-					<option value="bem-estar" />
-					<option value="eletrônicos" />
-					<option value="casa" />
-					<option value="moda" />
-				</datalist>
+				<div class="cat-wrapper">
+					<input
+						type="text"
+						bind:value={catInput}
+						placeholder="todas (digite para filtrar)"
+						class="entrada"
+						autocomplete="off"
+					/>
+					{#if categoria}
+						<button class="btn-limpar-cat" onclick={limparCategoria} type="button" aria-label="Limpar categoria">✕</button>
+					{/if}
+				</div>
+				{#if catInput && sugestoes.length > 0 && catInput.toLowerCase() !== categoria.toLowerCase()}
+					<ul class="cat-sugestoes" role="listbox">
+						{#each sugestoes.slice(0, 8) as cat (cat.id)}
+							<li role="option">
+								<button type="button" class="cat-opcao" onclick={() => selecionarCategoria(cat.nome)}>
+									{cat.nome}
+									<span class="cat-mp">{cat.marketplace}</span>
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
 			</label>
 			<label class="campo">
 				<span class="rotulo">comissão mín.</span>
@@ -177,7 +221,7 @@
 		border: 1px solid var(--linha);
 		border-radius: var(--raio-sm);
 	}
-	.campo { display: flex; flex-direction: column; gap: 4px; }
+	.campo { display: flex; flex-direction: column; gap: 4px; position: relative; }
 	.campo-check {
 		display: flex; align-items: center; gap: 6px;
 		align-self: flex-end; padding-bottom: 8px; cursor: pointer;
@@ -190,6 +234,28 @@
 	}
 	.entrada::placeholder { color: var(--tinta-suave); opacity: 0.7; }
 	.entrada.num { font-family: var(--mono); width: 5.5rem; }
+	.cat-wrapper { position: relative; }
+	.btn-limpar-cat {
+		position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+		border: none; background: var(--porcelana); color: var(--tinta-suave);
+		width: 20px; height: 20px; border-radius: 50%; font-size: 0.65rem;
+		cursor: pointer; display: flex; align-items: center; justify-content: center;
+	}
+	.btn-limpar-cat:hover { background: var(--linha); color: var(--tinta); }
+	.cat-sugestoes {
+		position: absolute; z-index: 20; top: 100%; left: 0; right: 0;
+		margin: 4px 0 0; padding: 4px; list-style: none;
+		background: var(--branco); border: 1px solid var(--linha);
+		border-radius: var(--raio-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+		max-height: 200px; overflow-y: auto;
+	}
+	.cat-opcao {
+		width: 100%; padding: 8px 10px; border: none; background: none;
+		text-align: left; font-size: var(--text-sm); color: var(--tinta);
+		cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
+	}
+	.cat-opcao:hover { background: var(--ouro-fundo); color: var(--ouro-escuro); }
+	.cat-mp { font-size: 0.65rem; color: var(--tinta-suave); text-transform: uppercase; }
 	select {
 		font-family: var(--mono); font-size: var(--text-sm); padding: 8px 12px;
 		border-radius: var(--raio-sm); border: 1px solid var(--linha);

@@ -123,6 +123,42 @@ public static partial class EndpointExtensions
             });
         });
 
+        // /api/categorias — lista de categorias por marketplace (público)
+        app.MapGet("/api/categorias", () =>
+        {
+            var shopee = new[]
+            {
+                new { id = 100001, nome = "Alimentos", slug = "alimentos" },
+                new { id = 100009, nome = "Celulares", slug = "celulares" },
+                new { id = 100011, nome = "Roupas Femininas", slug = "roupas-femininas" },
+                new { id = 100012, nome = "Calçados", slug = "calcados" },
+                new { id = 100013, nome = "Acessórios Celular", slug = "acessorios-celular" },
+                new { id = 100017, nome = "Roupas Masculinas", slug = "roupas-masculinas" },
+                new { id = 100535, nome = "Celulares & Tablets", slug = "celulares-tablets" },
+                new { id = 100630, nome = "Beleza", slug = "beleza" },
+                new { id = 100631, nome = "Saúde & Bem-estar", slug = "saude-bem-estar" },
+                new { id = 100632, nome = "Brinquedos & Bebês", slug = "brinquedos-bebes" },
+                new { id = 100633, nome = "Acessórios & Bolsas", slug = "acessorios-bolsas" },
+                new { id = 100636, nome = "Casa & Decoração", slug = "casa-decoracao" },
+                new { id = 100637, nome = "Moda", slug = "moda" },
+                new { id = 100640, nome = "Perfumaria", slug = "perfumaria" },
+                new { id = 100643, nome = "Papelaria & Livros", slug = "papelaria-livros" },
+                new { id = 100644, nome = "Áudio & Eletrônicos", slug = "audio-eletronicos" },
+                new { id = 100658, nome = "Manicure & Pedicure", slug = "manicure-pedicure" },
+                new { id = 100659, nome = "Cuidados com o Cabelo", slug = "cuidados-cabelo" },
+                new { id = 100663, nome = "Maquiagem", slug = "maquiagem" },
+                new { id = 100664, nome = "Cuidados com a Pele", slug = "cuidados-pele" }
+            };
+
+            return Results.Ok(new
+            {
+                marketplaces = new[]
+                {
+                    new { marketplace = "shopee", categorias = shopee }
+                }
+            });
+        });
+
         return app;
     }
 }
