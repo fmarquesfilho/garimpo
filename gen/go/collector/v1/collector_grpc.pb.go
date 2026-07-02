@@ -27,9 +27,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CollectorServiceClient interface {
-	// Fetch products from Shopee by search keyword
+	// Fetch products by search keyword from a given marketplace.
 	Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error)
-	// Fetch all products from a specific shop
+	// Fetch all products from a specific shop.
 	FetchShop(ctx context.Context, in *FetchShopRequest, opts ...grpc.CallOption) (*FetchShopResponse, error)
 }
 
@@ -65,9 +65,9 @@ func (c *collectorServiceClient) FetchShop(ctx context.Context, in *FetchShopReq
 // All implementations must embed UnimplementedCollectorServiceServer
 // for forward compatibility.
 type CollectorServiceServer interface {
-	// Fetch products from Shopee by search keyword
+	// Fetch products by search keyword from a given marketplace.
 	Fetch(context.Context, *FetchRequest) (*FetchResponse, error)
-	// Fetch all products from a specific shop
+	// Fetch all products from a specific shop.
 	FetchShop(context.Context, *FetchShopRequest) (*FetchShopResponse, error)
 	mustEmbedUnimplementedCollectorServiceServer()
 }

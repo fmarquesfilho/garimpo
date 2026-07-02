@@ -200,8 +200,9 @@ func (s *SchedulerServer) executeJob(job *registeredJob, params map[string]strin
 	defer cancel()
 
 	resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-		Keyword: keyword,
-		Limit:   50,
+		Keyword:     keyword,
+		Limit:       50,
+		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 	})
 	if err != nil {
 		s.logger.Error("job falhou", slog.String("job", job.name), slog.String("erro", err.Error()))

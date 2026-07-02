@@ -81,7 +81,7 @@ namespace Collector.V1 {
     public abstract partial class CollectorServiceBase
     {
       /// <summary>
-      /// Fetch products from Shopee by search keyword
+      /// Fetch products by search keyword from a given marketplace.
       /// </summary>
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
@@ -93,7 +93,7 @@ namespace Collector.V1 {
       }
 
       /// <summary>
-      /// Fetch all products from a specific shop
+      /// Fetch all products from a specific shop.
       /// </summary>
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
@@ -134,7 +134,7 @@ namespace Collector.V1 {
       }
 
       /// <summary>
-      /// Fetch products from Shopee by search keyword
+      /// Fetch products by search keyword from a given marketplace.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -147,7 +147,7 @@ namespace Collector.V1 {
         return Fetch(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch products from Shopee by search keyword
+      /// Fetch products by search keyword from a given marketplace.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -158,7 +158,7 @@ namespace Collector.V1 {
         return CallInvoker.BlockingUnaryCall(__Method_Fetch, null, options, request);
       }
       /// <summary>
-      /// Fetch products from Shopee by search keyword
+      /// Fetch products by search keyword from a given marketplace.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -171,7 +171,7 @@ namespace Collector.V1 {
         return FetchAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch products from Shopee by search keyword
+      /// Fetch products by search keyword from a given marketplace.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -182,7 +182,7 @@ namespace Collector.V1 {
         return CallInvoker.AsyncUnaryCall(__Method_Fetch, null, options, request);
       }
       /// <summary>
-      /// Fetch all products from a specific shop
+      /// Fetch all products from a specific shop.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -195,7 +195,7 @@ namespace Collector.V1 {
         return FetchShop(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch all products from a specific shop
+      /// Fetch all products from a specific shop.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -206,7 +206,7 @@ namespace Collector.V1 {
         return CallInvoker.BlockingUnaryCall(__Method_FetchShop, null, options, request);
       }
       /// <summary>
-      /// Fetch all products from a specific shop
+      /// Fetch all products from a specific shop.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -219,7 +219,7 @@ namespace Collector.V1 {
         return FetchShopAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch all products from a specific shop
+      /// Fetch all products from a specific shop.
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>

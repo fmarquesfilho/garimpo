@@ -206,6 +206,7 @@ func (s *ShopeeAPISource) Fetch() ([]domain.Product, error) {
 				ShopID:       string(n.ShopID),
 				CatIDs:       n.ProductCatIDs,
 				OfferEndsAt:  int64(n.PeriodEndTime),
+				Marketplace:  domain.MarketplaceShopee,
 			})
 		}
 
