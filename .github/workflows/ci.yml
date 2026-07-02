@@ -143,7 +143,7 @@ jobs:
 
   # ── Frontend ────────────────────────────────────────────────────────────
   frontend:
-    name: Frontend (build + test)
+    name: Frontend (build + test + e2e)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -162,6 +162,37 @@ jobs:
       - run: npm run lint:css
       - run: npm run lint:js
       - run: npx vitest run
+
+      # ── E2E (Playwright + Firebase Auth Emulator) ──────────────────────
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Start Firebase Auth Emulator
+        run: firebase emulators:start --only auth --project garimpo-500114 &
+        working-directory: ${{ github.workspace }}
+
+      - name: Wait for emulator
+        run: |
+          for i in $(seq 1 15); do
+            curl -s http://127.0.0.1:9099/ > /dev/null 2>&1 && break
+            sleep 1
+          done
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+
+      - name: Upload E2E results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/test-results/
+          retention-days: 7
 
   # ── API Contract (drift frontend ↔ backend) ─────────────────────────────
   api-contract:
