@@ -35,11 +35,12 @@
       "platformAutomerge": true
     },
     {
-      "description": "Major updates - abrir como draft para revisao manual",
+      "description": "Major updates - auto-merge se CI passa, label para visibilidade",
       "matchUpdateTypes": ["major"],
-      "automerge": false,
-      "draft": true,
-      "labels": ["dependencies", "breaking"]
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "labels": ["dependencies", "major"]
     },
     {
       "description": "Agrupar deps do frontend (web) em 1 PR semanal",

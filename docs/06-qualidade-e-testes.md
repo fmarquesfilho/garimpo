@@ -257,3 +257,67 @@ Se a entidade também precisa de tabela no BigQuery:
 12. ☐ Se Go gerencia: adicionada em `internal/store/bigquery_schema.go`
 13. ☐ Se analyzer consulta: rota adicionada em `services/analyzer/routes/`
 14. ☐ `check-schema-sync.sh` passa
+
+---
+
+## Gerenciamento de dependências
+
+### Política
+
+Dependências devem ser mantidas sempre atualizadas. Ferramentas com versões
+defasadas representam risco de segurança e acumulam dívida técnica que cresce
+exponencialmente com o tempo.
+
+**Princípios:**
+- Atualizações (patch, minor, major) são auto-merged se o CI passa
+- O CI rigoroso (13+ checks, fitness functions, drift checks) é a barreira de segurança
+- Se um bump major quebra o CI, o PR fica aberto para intervenção manual
+- Vulnerabilidades são priorizadas e auto-merged imediatamente
+
+### Renovate (automação)
+
+O repositório usa [Renovate](https://docs.renovatebot.com/) para monitoramento
+automático de dependências. Configuração em `renovate.json`.
+
+| Tipo de update | Ação | Frequência |
+|---|---|---|
+| Patch (4.1.9→4.1.10) | Auto-merge se CI verde | Semanal (segundas) |
+| Minor (4.1→4.2) | Auto-merge se CI verde | Semanal (segundas) |
+| Major (4→5) | Auto-merge se CI verde | Semanal (segundas) |
+| Vulnerabilidade (CVE) | Auto-merge + label `security` | Imediato |
+
+**Agrupamento por workspace:**
+
+| Workspace | PR | Schedule |
+|---|---|---|
+| `web/` (frontend) | 1 PR agrupado | Semanal |
+| `docs-site/` | 1 PR agrupado | Mensal |
+| Go (`go.mod`) | 1 PR agrupado | Semanal |
+| GitHub Actions | 1 PR agrupado | Semanal |
+
+**Pacotes ignorados:** `@astrojs/*`, `astro`, `sharp` no docs-site (migrado para Rspress).
+
+### Segurança complementar
+
+| Ferramenta | Função | Ação |
+|---|---|---|
+| **Renovate** | Detecta + corrige (abre PR com fix) | Auto-merge |
+| **Codacy/Trivy** | Detecta + reporta (scan sem fix) | Alerta |
+| **npm audit** | Reporta vulnerabilidades JS | Manual |
+| **go vuln** | Reporta vulnerabilidades Go | Manual |
+
+Renovate corrige, Codacy/Trivy detecta — camadas complementares.
+
+### Como atualizar manualmente
+
+```bash
+# Frontend
+cd web && npm update && npm run build && npx vitest run
+
+# Go
+go get -u ./... && go mod tidy && go test ./...
+
+# Verificar outdated
+cd web && npm outdated
+go list -m -u all | grep '\['
+```
