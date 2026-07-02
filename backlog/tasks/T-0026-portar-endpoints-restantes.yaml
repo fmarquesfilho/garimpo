@@ -1,7 +1,7 @@
 id: T-0026
 titulo: "Portar endpoints restantes do Go legado para C#"
 epic: migracao-arch
-status: next
+status: done
 prioridade: alta
 estimativa: G
 sprint: ""
@@ -27,3 +27,11 @@ depende_de: []
 tags: [backend, csharp, migração, endpoints]
 criada_em: "2026-07-01"
 atualizada_em: "2026-07-01"
+concluida_em: "2026-07-01"
+notas: >
+  Portados todos os endpoints que o frontend api.js consume:
+  buscas, lojas, favoritos, destinos, templates, publicar, publicacoes,
+  alertas, onboarding, conversoes, estatisticas, coletas, resolver-link.
+  Endpoints admin-only (logs, log-level, shopee-introspect) e bulk
+  (coletar, comparar, eventos, produto/origem) ficam para fase posterior
+  se houver demanda.

@@ -3,11 +3,11 @@
 from fastapi import FastAPI
 
 from config import settings
-from routes import novidades, quedas, evolucao, estatisticas
+from routes import novidades, quedas, evolucao, estatisticas, coletas, conversoes
 
 app = FastAPI(
     title="Garimpei Analyzer",
-    description="Analytics service — novidades, quedas, evolução, estatísticas",
+    description="Analytics service — novidades, quedas, evolução, estatísticas, coletas, conversões",
     version="1.0.0",
 )
 
@@ -15,6 +15,8 @@ app.include_router(novidades.router)
 app.include_router(quedas.router)
 app.include_router(evolucao.router)
 app.include_router(estatisticas.router)
+app.include_router(coletas.router)
+app.include_router(conversoes.router)
 
 
 @app.get("/health")

@@ -1,23 +1,14 @@
-using MediatR;
-
+/// <summary>
+/// V2 Buscas endpoints — intentionally empty.
+/// The actual /api/v2/buscas CRUD is handled by LojasEndpoints.cs
+/// (MapLojasEndpoints maps to the same /buscas group with full EF Core implementation).
+/// This file kept for future MediatR-based refactoring.
+/// </summary>
 public static partial class EndpointExtensions
 {
     public static RouteGroupBuilder MapBuscasEndpoints(this RouteGroupBuilder group)
     {
-        var buscas = group.MapGroup("/buscas").WithTags("Buscas");
-
-        buscas.MapGet("/", async (IMediator mediator, CancellationToken ct) =>
-        {
-            // TODO: implement via MediatR query
-            return Results.Ok(Array.Empty<object>());
-        });
-
-        buscas.MapPost("/", async (IMediator mediator, CancellationToken ct) =>
-        {
-            // TODO: implement via MediatR command
-            return Results.Created();
-        });
-
+        // Handled by MapLojasEndpoints — same /buscas group
         return group;
     }
 }

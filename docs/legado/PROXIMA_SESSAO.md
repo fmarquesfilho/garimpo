@@ -6,8 +6,56 @@ A migração arquitetural (ADR-0012) está completa. O C# serve toda a API, os
 microserviços Go estão rodando como sidecars, o frontend está no Cloudflare Pages.
 O monólito Go foi decomissionado.
 
-Porém, muitas áreas do site ainda precisam dos endpoints portados (T-0026), e há
-um **bug grave** na detecção de variações de preço que precisa ser investigado.
+---
+
+## Status: Endpoints Portados ✅ (sessão anterior)
+
+Todos os endpoints que o frontend (`web/src/lib/api.js`) consome foram portados
+para o C# na camada de compatibilidade (`/api/*`):
+
+| Endpoint | Arquivo | Status |
+|----------|---------|--------|
+| `/api/candidatos` | CompatEndpoints.cs | ✅ já existia |
+| `/api/admin/me` | CompatEndpoints.cs | ✅ já existia |
+| `/api/health` | CompatEndpoints.cs | ✅ já existia |
+| `/api/buscas` (GET/POST) | BuscasCompatEndpoints.cs | ✅ portado |
+| `/api/lojas` (GET/POST/DELETE) | LojasCompatEndpoints.cs | ✅ portado |
+| `/api/lojas/novidades` | LojasCompatEndpoints.cs | ✅ portado (proxy → analyzer) |
+| `/api/lojas/evolucao` | LojasCompatEndpoints.cs | ✅ portado (proxy → analyzer) |
+| `/api/favoritos` (GET/POST/DELETE) | FavoritosEndpoints.cs | ✅ portado |
+| `/api/destinos` (GET/POST/DELETE) | DestinosEndpoints.cs | ✅ portado |
+| `/api/templates` (GET/POST/DELETE) | TemplatesEndpoints.cs | ✅ portado |
+| `/api/templates/preview` | TemplatesEndpoints.cs | ✅ portado |
+| `/api/publicar` (POST) | PublicacoesEndpoints.cs | ✅ portado |
+| `/api/publicacoes` (GET/POST) | PublicacoesEndpoints.cs | ✅ portado |
+| `/api/alertas` (GET) | AlertasEndpoints.cs | ✅ portado |
+| `/api/alertas/testar` (POST) | AlertasEndpoints.cs | ✅ portado (stub) |
+| `/api/alertas/configurar` (POST) | AlertasEndpoints.cs | ✅ portado |
+| `/api/onboarding/status` | OnboardingEndpoints.cs | ✅ portado |
+| `/api/onboarding/termos` | OnboardingEndpoints.cs | ✅ portado |
+| `/api/onboarding/shopee` | OnboardingEndpoints.cs | ✅ portado |
+| `/api/onboarding/telegram` | OnboardingEndpoints.cs | ✅ portado |
+| `/api/onboarding/validar` | OnboardingEndpoints.cs | ✅ portado |
+| `/api/onboarding/excluir-conta` | OnboardingEndpoints.cs | ✅ portado |
+| `/api/conversoes` | AnalyticsEndpoints.cs | ✅ portado |
+| `/api/conversoes/reais` | AnalyticsEndpoints.cs | ✅ portado (proxy → analyzer) |
+| `/api/estatisticas` | AnalyticsEndpoints.cs | ✅ portado (proxy → analyzer) |
+| `/api/coletas` | AnalyticsEndpoints.cs | ✅ portado (proxy → analyzer) |
+| `/api/resolver-link` | ResolverLinkEndpoints.cs | ✅ portado |
+
+### Entidades adicionadas ao domínio/PostgreSQL:
+- `TenantConfig` — credenciais + onboarding + alertas
+- `Publicacao` — publicações agendadas/enviadas
+- `Favorito` — produtos favoritos
+- `Template` — templates de mensagem
+- `Destino` — canais de publicação
+
+### Rotas do Analyzer Python adicionadas:
+- `/coletas` — histórico de coletas (BigQuery)
+- `/conversoes` — conversões reais da Shopee (BigQuery)
+
+### Migration EF Core criada:
+- `AddPortedEntities` — adiciona as novas tabelas ao PostgreSQL
 
 ---
 
@@ -51,53 +99,45 @@ TRUNCATE TABLE `garimpo-500114.garimpei.snapshots`;
 
 ---
 
-## 3. Port dos endpoints restantes (T-0026)
+## 3. Itens pendentes (próxima sessão)
 
-Endpoints que o frontend usa mas não existem no C#. Portar por prioridade:
+### Prioridade Alta
+- [ ] Investigar bug de variações (query BigQuery)
+- [ ] Reset BigQuery (truncar snapshots)
+- [ ] Aplicar migration `AddPortedEntities` no PostgreSQL de produção
+- [ ] Deploy do C# API com os novos endpoints
+- [ ] Configurar coleta no scheduler (crons para popular snapshots limpos)
+- [ ] Validar pipeline de variações (coleta → snapshot → analyzer → quedas funciona)
 
-### Prioridade Alta (site não funciona sem eles)
-- `/api/buscas` — CRUD de buscas salvas
-- `/api/lojas` + `/novidades` + `/evolucao` — monitoramento de lojas
-- `/api/favoritos` — salvar/remover favoritos
-- `/api/publicar` + `/publicacoes` — publicação (core)
-- `/api/destinos` — configurar canais
-- `/api/onboarding/*` — fluxo de onboarding (multi-tenant)
+### Prioridade Média
+- [ ] Implementar envio real de alerta de teste via Telegram Bot API (AlertasEndpoints — atualmente stub)
+- [ ] Implementar encriptação de credenciais no onboarding (ShopeeSecret, TelegramToken)
+- [ ] T-0024: Testar WhatsApp Meta Cloud API
+- [ ] T-0005: Alertas automáticos (disparar quando queda detectada)
 
-### Prioridade Média (funcionalidades secundárias)
-- `/api/templates` + `/preview` — templates de mensagem
-- `/api/alertas` + `/testar` + `/configurar` — T-0005
-- `/api/coletas` — histórico de coletas
-- `/api/estatisticas` — dashboard
-- `/api/conversoes` + `/reais` — analytics de atribuição
-
-### Prioridade Baixa (pode esperar)
-- `/api/resolver-link` — resolve link curto Shopee
+### Prioridade Baixa
+- [ ] Validar chamada real Shopee no onboarding/validar
+- [ ] T-0007: Recomendação IA personalizada
 
 ---
 
-## 4. Testar WhatsApp Meta (T-0024)
-
-Configurar o app Meta Business e testar envio real. Guia em `docs/guias/configurar-whatsapp-meta.md`.
-
----
-
-## 5. Tarefas pendentes no backlog
+## 4. Tarefas pendentes no backlog
 
 | Task | Título | Prioridade |
 |------|--------|-----------|
 | T-0024 | Testar WhatsApp Meta Cloud API | Alta |
-| T-0026 | Portar endpoints restantes | Alta |
+| T-0026 | Portar endpoints restantes | ✅ Concluído |
 | T-0005 | Alertas configuráveis por usuário | Média |
 | T-0002 | Persistir conversões no BigQuery | Média |
 | T-0007 | Recomendação IA personalizada | Backlog |
 
 ---
 
-## Ordem sugerida para a sessão
+## Ordem sugerida para a próxima sessão
 
-1. **Investigar bug de variações** (query no BigQuery, verificar dados)
-2. **Reset BigQuery** (se dados estiverem inutilizáveis)
-3. **Portar endpoints alta prioridade** (buscas, lojas, favoritos, publicar, onboarding)
-4. **Configurar coleta no scheduler** (recriar crons para popular snapshots limpos)
-5. **Validar pipeline de variações** (coleta → snapshot → analyzer → quedas funciona)
+1. **Aplicar migration** (PostgreSQL produção) + deploy
+2. **Reset BigQuery** (truncar snapshots)
+3. **Configurar coleta no scheduler** (recriar crons)
+4. **Validar pipeline de variações** (coleta → snapshot → analyzer → quedas)
+5. **Implementar alertas Telegram reais** (bot API)
 6. **T-0024** (testar WhatsApp se sobrar tempo)

@@ -24,6 +24,11 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Busca> Buscas => Set<Busca>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<Favorito> Favoritos => Set<Favorito>();
+    public DbSet<Destino> Destinos => Set<Destino>();
+    public DbSet<Template> Templates => Set<Template>();
+    public DbSet<Publicacao> Publicacoes => Set<Publicacao>();
+    public DbSet<TenantConfig> TenantConfigs => Set<TenantConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +51,43 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.OwnerUid).IsUnique();
+        });
+
+        modelBuilder.Entity<Favorito>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OwnerUid);
+            entity.HasIndex(e => new { e.OwnerUid, e.ProdutoId }).IsUnique();
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
+        });
+
+        modelBuilder.Entity<Destino>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OwnerUid);
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
+        });
+
+        modelBuilder.Entity<Template>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OwnerUid);
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
+        });
+
+        modelBuilder.Entity<Publicacao>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OwnerUid);
+            entity.HasIndex(e => e.Status);
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
+        });
+
+        modelBuilder.Entity<TenantConfig>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OwnerUid).IsUnique();
+            entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
         });
     }
 

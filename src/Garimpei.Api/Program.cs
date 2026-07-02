@@ -85,7 +85,18 @@ app.MapGet("/", () => Results.Ok(new { service = "garimpei-api", version = "v2",
 
 // Compatibility routes (/api/*) for frontend during migration
 app.MapCompatEndpoints();
+app.MapBuscasCompatEndpoints();
+app.MapLojasCompatEndpoints();
+app.MapFavoritosEndpoints();
+app.MapDestinosEndpoints();
+app.MapTemplatesEndpoints();
+app.MapPublicacoesEndpoints();
+app.MapAlertasEndpoints();
+app.MapOnboardingEndpoints();
+app.MapAnalyticsEndpoints();
+app.MapResolverLinkEndpoints();
 
+// V2 API routes (native C# format)
 app.MapGroup("/api/v2")
     .RequireAuthorization()
     .MapBuscasEndpoints()
