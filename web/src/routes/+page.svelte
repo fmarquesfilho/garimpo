@@ -51,7 +51,7 @@
 		const promises = [];
 
 		if (fontes.curadoria && (busca.trim() || categoriasEfetivas.length > 0)) {
-			promises.push(carregarCuradoria({ busca, comissaoMin, vendasMin, categorias: categoriasEfetivas, buscasComLojas }).then(r => { dadosCuradoria = r; }));
+			promises.push(carregarCuradoria({ busca, comissaoMin, categorias: categoriasEfetivas, buscasComLojas }).then(r => { dadosCuradoria = r; }));
 		} else {
 			dadosCuradoria = [];
 		}

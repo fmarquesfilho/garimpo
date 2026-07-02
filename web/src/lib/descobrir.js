@@ -11,7 +11,7 @@ import { encontrarLojaPorNome } from './descobrir-logic.js';
  * Carrega produtos da curadoria (Shopee API).
  * Se o termo bate com uma loja monitorada, busca via shop_ids.
  */
-export async function carregarCuradoria({ busca, comissaoMin, vendasMin, categorias, buscasComLojas }) {
+export async function carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas }) {
 	try {
 		const termo = (busca ?? '').trim();
 		const lojaMatch = encontrarLojaPorNome(termo, buscasComLojas);
