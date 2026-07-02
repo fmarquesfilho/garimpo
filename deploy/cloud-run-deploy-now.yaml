@@ -143,7 +143,7 @@ spec:
             - name: BQ_PROJECT
               value: garimpo-500114
             - name: BQ_DATASET
-              value: garimpei
+              value: garimpo
             - name: PORT
               value: "8060"
           resources:

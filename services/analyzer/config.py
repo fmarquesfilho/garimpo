@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     """Configuration loaded from environment variables."""
 
     bq_project: str = ""
-    bq_dataset: str = "garimpei"
+    bq_dataset: str = "garimpo"
     port: int = 8060
 
     # BigQuery emulator (dev local)
