@@ -338,9 +338,12 @@ Os seguintes componentes de `$lib/components/` foram atualizados para usar os pr
 | `<input>` inline | 30 | 28 | **-7%** |
 | `<select>` nativo | 8 | 5 | **-37%** |
 | Badge utility class | 25 | 16 | **-36%** |
-| `.btn` utility class | — | 26 | tracking |
+| `.btn` utility class | ~40 | 10 | **-75%** |
 | msg-erro/sucesso class | 6 | 1 | **-83%** |
 | Hex colors hardcoded | 50 | **0** | **-100%** ✓ |
+| Dead CSS utility classes | ~17 | **0** | **-100%** ✓ |
+| svelte-check warnings | 28 | **0** | **-100%** ✓ |
+| eslint warnings | 6 | **0** | **-100%** ✓ |
 
 ### Compostos Bits UI — Adoção
 
