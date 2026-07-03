@@ -59,6 +59,17 @@ echo ""
 echo "🔍 Verificando completude do docs-site..."
 MISSING=0
 
+# Sidebar gerado deve existir e ser JSON válido
+if [ ! -f "docs-site/docs/_sidebar.json" ]; then
+  echo -e "${RED}   ✗ Faltando: _sidebar.json${NC}"
+  MISSING=$((MISSING + 1))
+elif ! python3 -c "import json; json.load(open('docs-site/docs/_sidebar.json'))" 2>/dev/null; then
+  echo -e "${RED}   ✗ _sidebar.json é JSON inválido${NC}"
+  MISSING=$((MISSING + 1))
+else
+  echo -e "${GREEN}   ✓ _sidebar.json válido${NC}"
+fi
+
 # Todas as ADRs devem ser copiadas
 ADR_SOURCE=$(ls docs/decisoes/*.md 2>/dev/null | wc -l | tr -d ' ')
 ADR_DEST=$(ls docs-site/docs/decisoes/*.md 2>/dev/null | wc -l | tr -d ' ')

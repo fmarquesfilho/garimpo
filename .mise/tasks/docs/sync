@@ -185,3 +185,97 @@ for f in "$DEST"/*.md "$DEST"/decisoes/*.md "$DEST"/frontend/*.md "$DEST"/gerado
 done
 
 echo "✓ Docs sincronizados para $DEST ($(ls "$DEST"/decisoes/ | wc -l | tr -d ' ') ADRs)"
+
+# ── Gerar _sidebar.json (consumido pelo rspress.config.ts) ───────────────────
+# Gera sidebar completo a partir do filesystem — qualquer novo .md aparece automaticamente.
+
+generate_sidebar() {
+  local dest="$1"
+  local json="$dest/_sidebar.json"
+
+  # Helper: lista .md de um diretório como items JSON
+  dir_items() {
+    local dir="$1"
+    local prefix="$2"
+    local first=true
+    for f in "$dir"/*.md; do
+      [ -f "$f" ] || continue
+      local basename=$(basename "$f" .md)
+      [ "$basename" = "index" ] && continue
+      local title=$(head -1 "$f" | sed 's/^#* *//' | sed 's/^ *//')
+      [ -z "$title" ] && title="$basename"
+      $first || printf ","
+      first=false
+      printf '{"text":"%s","link":"/%s/%s"}' "$title" "$prefix" "$basename"
+    done
+  }
+
+  cat > "$json" << ENDJSON
+[
+  {"text":"Visão Geral","items":[
+    {"text":"Introdução","link":"/"},
+    {"text":"Visão e Negócio","link":"/visao-e-negocio"}
+  ]},
+  {"text":"Arquitetura","items":[
+    {"text":"Visão Geral","link":"/arquitetura"},
+    {"text":"Fluxos e Modelo","link":"/fluxos-e-modelo"},
+    {"text":"Operação Shopee","link":"/operacao-shopee"}
+  ]},
+  {"text":"Operação","items":[
+    {"text":"Manual do Usuário","link":"/manual-do-usuario"},
+    {"text":"Qualidade e Testes","link":"/qualidade-e-testes"},
+    {"text":"Dados e IA","link":"/dados-e-ia"}
+  ]},
+ENDJSON
+
+  # Frontend (dinâmico)
+  printf '  {"text":"Frontend","items":[' >> "$json"
+  dir_items "$dest/frontend" "frontend" >> "$json"
+  printf ']},\n' >> "$json"
+
+  # Projeto (dinâmico)
+  printf '  {"text":"Projeto","items":[' >> "$json"
+  local proj_first=true
+  for f in "$dest/gerado"/*.md; do
+    [ -f "$f" ] || continue
+    local bn=$(basename "$f" .md)
+    local t=$(head -1 "$f" | sed 's/^#* *//')
+    [ -z "$t" ] && t="$bn"
+    $proj_first || printf "," >> "$json"
+    proj_first=false
+    printf '{"text":"%s","link":"/gerado/%s"}' "$t" "$bn" >> "$json"
+  done
+  if [ -f "$dest/projeto/sprint.md" ]; then
+    printf ',{"text":"Sprint Atual","link":"/projeto/sprint"}' >> "$json"
+  fi
+  printf ']},\n' >> "$json"
+
+  # ADRs (dinâmico)
+  printf '  {"text":"Decisões (ADRs)","items":[' >> "$json"
+  local adr_first=true
+  for f in "$dest/decisoes"/*.md; do
+    [ -f "$f" ] || continue
+    local bn=$(basename "$f" .md)
+    local num=$(echo "$bn" | cut -d- -f1)
+    local slug=$(echo "$bn" | sed 's/^[0-9]*-//' | sed 's/-/ /g')
+    local cap=$(echo "$slug" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
+    $adr_first || printf "," >> "$json"
+    adr_first=false
+    printf '{"text":"%s: %s","link":"/decisoes/%s"}' "$num" "$cap" "$bn" >> "$json"
+  done
+  printf ']},\n' >> "$json"
+
+  # Guias (dinâmico)
+  if [ -d "$dest/guias" ]; then
+    printf '  {"text":"Guias","items":[' >> "$json"
+    dir_items "$dest/guias" "guias" >> "$json"
+    printf ']},\n' >> "$json"
+  fi
+
+  # API (fixo)
+  printf '  {"text":"API","items":[{"text":"OpenAPI Spec","link":"/api"}]}\n' >> "$json"
+  printf ']\n' >> "$json"
+}
+
+generate_sidebar "$DEST"
+echo "✓ _sidebar.json gerado"
