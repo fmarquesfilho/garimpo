@@ -1,0 +1,7 @@
+# Semgrep ignore patterns
+
+# Firebase client API keys are public by design — they identify the project
+# in the browser SDK. Security is enforced server-side via Firebase Auth
+# token validation, not by hiding the API key.
+# See: https://firebase.google.com/docs/projects/api-keys
+web/src/lib/firebase.js

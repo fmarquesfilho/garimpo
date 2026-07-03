@@ -69,8 +69,8 @@ description = "Ruff lint no analyzer"
 run = "uvx ruff check services/analyzer/"
 
 [tasks."lint:web"]
-description = "ESLint + Stylelint no frontend"
-run = "cd web && npm run lint:js && npm run lint:css"
+description = "ESLint + Stylelint + npm audit no frontend"
+run = "cd web && npm run lint:js && npm run lint:css && npm audit --audit-level=high"
 
 # ── Checks (file tasks em .mise/tasks/check/) ─────────────────────────────────
 
@@ -153,6 +153,3 @@ run = "cd web && npx svelte-kit sync && npm run check"
 description = "Vitest (unit + contrast + theme) no frontend"
 run = "cd web && npx vitest run"
 
-[tasks."lint:web"]
-description = "ESLint + Stylelint + npm audit no frontend"
-run = "cd web && npm run lint:js && npm run lint:css && npm audit --audit-level=high"
