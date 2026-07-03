@@ -1,5 +1,9 @@
 package publish
 
+// TelegramSender implementa envio de ofertas via Telegram Bot API.
+// Suporta sendPhoto (com fallback para sendMessage se CDN inacessível)
+// e sendMessage (texto com botão inline de compra).
+
 import (
 	"bytes"
 	"context"
