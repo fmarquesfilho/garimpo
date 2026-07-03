@@ -23,6 +23,7 @@
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
 - **T-0036** Avaliar migração de scripts bash para Taskfile ou mise · E-001 · M
+- **T-0038** Migração UI fase 2: consumir compostos restantes · E-001 · M
 
 ## ✅ Concluídas
 
@@ -49,3 +50,4 @@
 - **T-0025** Serviço Analyzer Python (FastAPI + BigQuery) · migracao-arch · M
 - **T-0026** Portar endpoints restantes do Go legado para C# · migracao-arch · G
 - **T-0032** Migrar docs-site de Astro Starlight para Rspress · docs-migration · P
+- **T-0037** Biblioteca de componentes UI com Bits UI + Design Tokens · E-001 · L
