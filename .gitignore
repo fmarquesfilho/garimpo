@@ -6,16 +6,11 @@
 cloudflare-worker/.wrangler/
 coverage.out
 
-# Docs site (Astro Starlight)
+# Docs site (Rspress) — conteúdo gerado pelo sync (fonte única: docs/)
 docs-site/node_modules/
-docs-site/dist/
-docs-site/.astro/
-
-# Docs site — conteúdo gerado pelo sync (fonte única: docs/)
-docs-site/src/content/docs/0[1-7]-*.md
-docs-site/src/content/docs/decisoes/
-docs-site/src/content/docs/gerado/*.md
-docs-site/src/content/docs/backlog/
+docs-site/doc_build/
+docs-site/.rspress/
+docs-site/docs/
 
 # Binários Go compilados
 /gen-er

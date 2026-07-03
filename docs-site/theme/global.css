@@ -1,0 +1,110 @@
+/* ============================================================
+   Garimpei Docs — Custom Theme
+   Sobrescreve variáveis do Rspress para alinhar com a identidade visual.
+   ============================================================ */
+
+:root {
+	/* Brand colors */
+	--rp-c-brand: #9e7422;
+	--rp-c-brand-light: #dfc487;
+	--rp-c-brand-dark: #7d5b18;
+	--rp-c-brand-lighter: #f4ecd8;
+	--rp-c-brand-darker: #5c4210;
+
+	/* Backgrounds */
+	--rp-c-bg: #faf7f5;
+	--rp-c-bg-soft: #f5f0ed;
+	--rp-c-bg-mute: #f0ebe8;
+
+	/* Text */
+	--rp-c-text-1: #2e2226;
+	--rp-c-text-2: #6d5a53;
+	--rp-c-text-3: #9e8e87;
+
+	/* Borders */
+	--rp-c-divider: #e3d9d4;
+	--rp-c-divider-light: #ede6e2;
+
+	/* Sidebar */
+	--rp-sidebar-width: 280px;
+}
+
+/* Dark mode */
+html.dark {
+	--rp-c-brand: #d4a845;
+	--rp-c-brand-light: #e6be5c;
+	--rp-c-brand-dark: #8b7230;
+	--rp-c-brand-lighter: #2e2618;
+	--rp-c-brand-darker: #f0d080;
+
+	--rp-c-bg: #1a1517;
+	--rp-c-bg-soft: #221e20;
+	--rp-c-bg-mute: #2a2527;
+
+	--rp-c-text-1: #f0ebe8;
+	--rp-c-text-2: #a89a95;
+	--rp-c-text-3: #6d5f5a;
+
+	--rp-c-divider: #3d3538;
+	--rp-c-divider-light: #2d2729;
+}
+
+/* Typography — usar Fraunces para headings */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600&display=swap');
+
+.rspress-doc h1,
+.rspress-doc h2,
+.rspress-doc h3 {
+	font-family: 'Fraunces', Georgia, serif;
+	letter-spacing: -0.01em;
+}
+
+.rspress-doc {
+	font-family: 'Archivo', system-ui, sans-serif;
+}
+
+/* Nav logo styling */
+.rspress-nav-logo-text {
+	font-family: 'Fraunces', Georgia, serif;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+
+/* Sidebar active item */
+.rspress-sidebar .active {
+	color: var(--rp-c-brand);
+	font-weight: 600;
+}
+
+/* Code blocks — warm tones */
+.rspress-doc code {
+	background: var(--rp-c-bg-mute);
+	border-radius: 4px;
+	padding: 2px 6px;
+	font-size: 0.85em;
+}
+
+/* Tables — better readability */
+.rspress-doc table {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+.rspress-doc table th {
+	background: var(--rp-c-bg-soft);
+	font-weight: 600;
+	text-align: left;
+}
+
+.rspress-doc table td,
+.rspress-doc table th {
+	border: 1px solid var(--rp-c-divider);
+	padding: 8px 12px;
+}
+
+/* Footer */
+.rspress-doc-footer {
+	border-top: 1px solid var(--rp-c-divider);
+	margin-top: 3rem;
+	padding-top: 1.5rem;
+}

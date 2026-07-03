@@ -90,60 +90,51 @@ fi
 
 # ── Index page ────────────────────────────────────────────────────────────────
 cat > "$DEST/index.md" << 'EOF'
-# Garimpei
+---
+pageType: home
+hero:
+  name: Garimpei
+  text: Documentação Técnica
+  tagline: Curadoria inteligente para afiliados — arquitetura, decisões, e guias.
+  actions:
+    - theme: brand
+      text: Arquitetura
+      link: /arquitetura
+    - theme: alt
+      text: Componentes UI
+      link: /frontend/componentes
+---
 
-Plataforma de curadoria e publicação automatizada para afiliados Shopee.
+## Navegação Rápida
 
-## O que é
-
-O Garimpei busca produtos na API de afiliados da Shopee, ranqueia por potencial
-de retorno (comissão × demanda × avaliação), monitora variações de preço, e
-publica ofertas em canais (Telegram, WhatsApp) — tudo multi-tenant com
-rastreamento de conversão.
-
-## Navegação
-
-### Documentação principal
+### Produto
 
 - [Visão e Negócio](/visao-e-negocio) — O quê e pra quem
-- [Arquitetura](/arquitetura) — Como roda (Cloud Run, gRPC, BigQuery)
+- [Arquitetura](/arquitetura) — Cloud Run, gRPC, BigQuery, Cloudflare
 - [Fluxos e Modelo](/fluxos-e-modelo) — Entidades e regras de negócio
 - [Operação Shopee](/operacao-shopee) — Integração com API de afiliados
 - [Manual do Usuário](/manual-do-usuario) — Como usar o app
-- [Qualidade e Testes](/qualidade-e-testes) — CI, fitness functions, drift checks
-- [Dados e IA](/dados-e-ia) — BigQuery, scoring, recomendações
 
 ### Frontend
 
-- [Componentes UI](/frontend/componentes) — Biblioteca de componentes (Bits UI + tokens)
-- [Linting & Qualidade](/frontend/linting) — Ferramentas e pipeline
-- [Impacto da Migração](/frontend/impacto-migracao-ui) — Métricas de dívida técnica
+- [Componentes UI](/frontend/componentes) — shadcn-svelte + Tailwind + Bits UI
+- [Linting & Qualidade](/frontend/linting) — Pipeline de qualidade
+- [Impacto da Migração](/frontend/impacto-migracao-ui) — Métricas e dívida técnica
 
 ### Projeto
 
-- [Quadro Kanban](/gerado/BOARD) — Sprint atual (tarefas por status)
 - [Roadmap](/gerado/ROADMAP) — Now / Next / Later
-- [Sprint Atual](/projeto/sprint) — Tasks da sprint corrente
+- [Quadro Kanban](/gerado/BOARD) — Sprint atual
 - [Entidades (ER)](/gerado/ENTIDADES) — Schema BigQuery
 - [Variáveis de Ambiente](/gerado/env-vars) — Configs dos serviços
 
-### Decisões Arquiteturais (ADRs)
-
-- [Todas as decisões](/decisoes/0001-nome-garimpei) — 22 ADRs registrados
-
-### Guias
-
-- [Configurar WhatsApp Meta](/guias/configurar-whatsapp-meta) — Setup do canal WhatsApp
-
 ### Referência
 
-- [API Reference](/api) — OpenAPI 3.1
-
-## Links
-
-- **App:** https://garimpei.app.br
-- **Repo:** https://github.com/fmarquesfilho/garimpo
-- **API Spec:** [OpenAPI 3.1](/api)
+- [22 Decisões Arquiteturais (ADRs)](/decisoes/0012-migracao-csharp-go-microservices)
+- [API Reference (OpenAPI 3.1)](/api)
+- [Guia: Desenvolvimento Local](/guias/desenvolvimento-local)
+- [Guia: WhatsApp Meta](/guias/configurar-whatsapp-meta)
+- [Sessões de Desenvolvimento](/sessoes/SESSAO_2026-07-03_SHADCN_MIGRATION)
 EOF
 
 # ── API page ──────────────────────────────────────────────────────────────────
