@@ -8,59 +8,15 @@
 </script>
 
 {#if items.length === 0}
-	<p class="vazio">{vazio}</p>
+	<p class="m-0 text-sm italic text-tinta-suave">{vazio}</p>
 {:else}
-	<div class="lista" {...rest}>
+	<div class="flex flex-col gap-0.5" {...rest}>
 		{#each items as item, i}
-			<div class="item">
-				<span class="pos">{i + 1}</span>
-				<span class="nome">{item.nome}</span>
-				<span class="valor">{item.valor}</span>
+			<div class="flex items-center gap-2 border-b border-border py-2 last:border-b-0">
+				<span class="w-[18px] text-xs font-bold text-tinta-suave">{i + 1}</span>
+				<span class="flex-1 truncate text-sm">{item.nome}</span>
+				<span class="font-mono text-xs font-bold tabular-nums text-ouro">{item.valor}</span>
 			</div>
 		{/each}
 	</div>
 {/if}
-
-<style>
-	.vazio {
-		font-size: var(--text-sm);
-		color: var(--tinta-suave);
-		font-style: italic;
-		margin: 0;
-	}
-	.lista {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.item {
-		display: flex;
-		align-items: center;
-		gap: var(--r2);
-		padding: var(--r2) 0;
-		border-bottom: 1px solid var(--linha);
-	}
-	.item:last-child {
-		border-bottom: none;
-	}
-	.pos {
-		font-size: var(--text-xs);
-		font-weight: var(--font-bold);
-		color: var(--tinta-suave);
-		width: 18px;
-	}
-	.nome {
-		flex: 1;
-		font-size: var(--text-sm);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.valor {
-		font-size: var(--text-xs);
-		font-weight: var(--font-bold);
-		color: var(--ouro);
-		font-family: var(--mono);
-		font-variant-numeric: tabular-nums;
-	}
-</style>

@@ -12,42 +12,11 @@
 	let resolvedVariant = $derived(VARIANTS.includes(variant) ? variant : 'default');
 </script>
 
-<div class="stat-card" {...rest}>
-	<span class="label">{label}</span>
-	<span class="valor {resolvedVariant}">{valor}</span>
+<div class="flex flex-col items-center gap-1 rounded-sm border border-border bg-card px-4 py-3" {...rest}>
+	<span class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">{label}</span>
+	<span class="font-mono text-xl font-bold tabular-nums"
+		class:text-[var(--sucesso-texto)]={resolvedVariant === 'positive'}
+		class:text-[var(--erro-texto)]={resolvedVariant === 'negative'}
+		class:text-ouro={resolvedVariant === 'gold'}
+	>{valor}</span>
 </div>
-
-<style>
-	.stat-card {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		padding: var(--r3) var(--r4);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--r1);
-	}
-	.label {
-		font-size: var(--text-xs);
-		text-transform: uppercase;
-		color: var(--tinta-suave);
-		font-weight: var(--font-semi);
-		letter-spacing: 0.02em;
-	}
-	.valor {
-		font-size: var(--text-xl);
-		font-weight: var(--font-bold);
-		font-family: var(--mono);
-		font-variant-numeric: tabular-nums;
-	}
-	.positive {
-		color: var(--sucesso-texto);
-	}
-	.negative {
-		color: var(--erro-texto);
-	}
-	.gold {
-		color: var(--ouro);
-	}
-</style>

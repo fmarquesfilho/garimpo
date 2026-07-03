@@ -5,28 +5,30 @@
 	let { busca, buscaAtiva = '', onaplicar = null, onproximakw = null, onremover = null } = $props();
 </script>
 
-<div class="cartao-busca">
-	<div class="cartao-topo">
-		<div class="cartao-kws">
+<div class="flex flex-col gap-2 rounded-md border border-border bg-card px-4 py-3">
+	<div class="flex items-start justify-between gap-3">
+		<div class="flex flex-1 flex-wrap gap-2">
 			{#each busca.keywords ?? [] as kw, i}
 				<button
 					type="button"
-					class="kw-btn"
-					class:kw-ativa={buscaAtiva === kw}
+					class="cursor-pointer rounded-full border border-border bg-porcelana px-3 py-1 font-[var(--ui)] font-semibold text-foreground transition-[background,border-color] duration-150 ease-linear hover:border-ouro hover:bg-ouro-fundo hover:text-ouro-escuro motion-reduce:transition-none"
+					class:!bg-ouro-fundo={buscaAtiva === kw}
+					class:!border-ouro={buscaAtiva === kw}
+					class:!text-ouro-escuro={buscaAtiva === kw}
 					onclick={() =>
 						onaplicar?.({ ...busca, keywords: busca.keywords.slice(i).concat(busca.keywords.slice(0, i)) })}
 					title="Aplicar filtros com '{kw}'">{kw}</button
 				>
 			{/each}
 		</div>
-		<div class="cartao-acoes">
+		<div class="flex shrink-0 items-center gap-1">
 			{#if (busca.keywords?.length ?? 0) > 1}
 				<Button variant="ghost" size="sm" onclick={() => onproximakw?.(busca)} aria-label="Próxima keyword">→</Button>
 			{/if}
 			<Button variant="ghost" size="sm" onclick={() => onremover?.(busca.id)} aria-label="Remover busca">✕</Button>
 		</div>
 	</div>
-	<div class="cartao-meta">
+	<div class="flex flex-wrap gap-2">
 		{#if busca.fontes?.length}
 			{#each busca.fontes as f}
 				<Badge variant="gold"
@@ -54,64 +56,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	.cartao-busca {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r3) var(--r4);
-		display: flex;
-		flex-direction: column;
-		gap: var(--r2);
-	}
-	.cartao-topo {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: var(--r3);
-	}
-	.cartao-kws {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--r2);
-		flex: 1;
-	}
-	.kw-btn {
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		color: var(--tinta);
-		font-family: var(--ui);
-		font-weight: var(--font-semi);
-		font-size: var(--text-base);
-		padding: var(--r1) var(--r3);
-		border-radius: var(--raio-full);
-		cursor: pointer;
-		transition:
-			background 0.15s ease,
-			border-color 0.15s ease;
-	}
-	.kw-btn:hover,
-	.kw-btn.kw-ativa {
-		background: var(--ouro-fundo);
-		border-color: var(--ouro);
-		color: var(--ouro-escuro);
-	}
-	.cartao-acoes {
-		display: flex;
-		align-items: center;
-		gap: var(--r1);
-		flex-shrink: 0;
-	}
-	.cartao-meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--r2);
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.kw-btn {
-			transition-duration: 0ms;
-		}
-	}
-</style>

@@ -30,22 +30,25 @@
 	}
 </script>
 
-<div class="agendador">
-	<div class="topo">
-		<span class="rotulo-secao">coleta automática</span>
-		<div class="modo-toggle">
-			<button class:ativo={modo === 'atalho'} onclick={() => (modo = 'atalho')} type="button">Atalhos</button>
-			<button class:ativo={modo === 'avancado'} onclick={() => (modo = 'avancado')} type="button">Avançado</button>
+<div class="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
+	<div class="flex items-center justify-between gap-4">
+		<span class="text-xs font-bold uppercase tracking-wide text-tinta-suave">coleta automática</span>
+		<div class="inline-flex gap-0.5 rounded-full bg-[var(--linha)] p-0.5">
+			<button class="cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-xs font-semibold text-tinta-suave" class:!bg-porcelana={modo === 'atalho'} class:!text-foreground={modo === 'atalho'} onclick={() => (modo = 'atalho')} type="button">Atalhos</button>
+			<button class="cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-xs font-semibold text-tinta-suave" class:!bg-porcelana={modo === 'avancado'} class:!text-foreground={modo === 'avancado'} onclick={() => (modo = 'avancado')} type="button">Avançado</button>
 		</div>
 	</div>
 
 	{#if modo === 'atalho'}
-		<div class="grade-atalhos">
+		<div class="flex flex-wrap gap-2">
 			{#each atalhos as a}
 				<button
 					type="button"
-					class="atalho"
-					class:selecionado={value === a.cron}
+					class="cursor-pointer rounded-full border border-border bg-porcelana px-3 py-1.5 text-sm font-medium text-foreground transition-all duration-100 ease-linear hover:border-ouro hover:text-ouro"
+					class:!bg-ouro-fundo={value === a.cron}
+					class:!border-ouro={value === a.cron}
+					class:!text-ouro-escuro={value === a.cron}
+					class:!font-bold={value === a.cron}
 					onclick={() => selecionarAtalho(a.cron)}
 				>
 					{a.label}
@@ -53,151 +56,27 @@
 			{/each}
 		</div>
 	{:else}
-		<div class="campo-avancado">
+		<div class="flex flex-col gap-2">
 			<input
 				type="text"
-				class="entrada dado"
+				class="dado w-full rounded-[10px] border border-border bg-porcelana px-3 py-2 font-mono text-[0.9rem] text-foreground"
 				bind:value
 				placeholder="ex.: 0 8 * * * (min hora dia mês semana)"
 				spellcheck="false"
 			/>
-			<p class="dica">
-				Formato: <code>minuto hora dia-do-mês mês dia-da-semana</code>. Exemplos: <code>0 8 * * *</code> = todo dia às
-				8h;
-				<code>0 9 * * 1,4</code> = segunda e quinta às 9h.
+			<p class="m-0 text-xs leading-relaxed text-tinta-suave">
+				Formato: <code class="rounded bg-ouro-fundo px-1.5 py-px font-mono text-[0.85em]">minuto hora dia-do-mês mês dia-da-semana</code>. Exemplos: <code class="rounded bg-ouro-fundo px-1.5 py-px font-mono text-[0.85em]">0 8 * * *</code> = todo dia às 8h;
+				<code class="rounded bg-ouro-fundo px-1.5 py-px font-mono text-[0.85em]">0 9 * * 1,4</code> = segunda e quinta às 9h.
 			</p>
 		</div>
 	{/if}
 
 	{#if value}
-		<p class="resumo dado">
+		<p class="dado m-0 flex items-center gap-3 text-sm">
 			⏱ {descricao(value)}
-			<button type="button" class="limpar" onclick={() => (value = '')}>remover</button>
+			<button type="button" class="cursor-pointer rounded-md border-none bg-transparent px-1.5 py-0.5 text-xs text-tinta-suave hover:text-[var(--erro-texto)]" onclick={() => (value = '')}>remover</button>
 		</p>
 	{:else}
-		<p class="resumo dado mudo">Sem agendamento — a busca só roda quando você clicar.</p>
+		<p class="dado m-0 text-sm italic text-tinta-suave">Sem agendamento — a busca só roda quando você clicar.</p>
 	{/if}
 </div>
-
-<style>
-	.agendador {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r4);
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-	.topo {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--r4);
-	}
-	.rotulo-secao {
-		font-size: 0.8rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--tinta-suave);
-	}
-	.modo-toggle {
-		display: inline-flex;
-		gap: 2px;
-		background: var(--linha);
-		border-radius: 999px;
-		padding: 2px;
-	}
-	.modo-toggle button {
-		border: none;
-		background: transparent;
-		font-size: 0.78rem;
-		font-weight: 600;
-		color: var(--tinta-suave);
-		padding: 4px 12px;
-		border-radius: 999px;
-		cursor: pointer;
-	}
-	.modo-toggle button.ativo {
-		background: var(--porcelana);
-		color: var(--tinta);
-	}
-	.grade-atalhos {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--r2);
-	}
-	.atalho {
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		color: var(--tinta);
-		font-size: 0.82rem;
-		font-weight: 500;
-		padding: 6px 12px;
-		border-radius: 999px;
-		cursor: pointer;
-		transition: all 0.12s ease;
-	}
-	.atalho:hover {
-		border-color: var(--ouro);
-		color: var(--ouro);
-	}
-	.atalho.selecionado {
-		background: var(--ouro-fundo);
-		border-color: var(--ouro);
-		color: var(--ouro-escuro);
-		font-weight: var(--font-bold);
-	}
-	.campo-avancado {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r2);
-	}
-	.entrada {
-		font-family: var(--mono);
-		font-size: 0.9rem;
-		padding: 8px 12px;
-		border-radius: 10px;
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		color: var(--tinta);
-		width: 100%;
-	}
-	.dica {
-		font-size: 0.78rem;
-		color: var(--tinta-suave);
-		margin: 0;
-		line-height: 1.5;
-	}
-	code {
-		background: var(--ouro-fundo);
-		padding: 1px 5px;
-		border-radius: 4px;
-		font-family: var(--mono);
-		font-size: 0.85em;
-	}
-	.resumo {
-		font-size: 0.82rem;
-		margin: 0;
-		display: flex;
-		align-items: center;
-		gap: var(--r3);
-	}
-	.mudo {
-		color: var(--tinta-suave);
-		font-style: italic;
-	}
-	.limpar {
-		border: none;
-		background: transparent;
-		color: var(--tinta-suave);
-		font-size: 0.75rem;
-		cursor: pointer;
-		padding: 2px 6px;
-		border-radius: 6px;
-	}
-	.limpar:hover {
-		color: var(--erro-texto);
-	}
-</style>

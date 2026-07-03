@@ -45,34 +45,34 @@
 	}
 </script>
 
-<div class="gerenciar-buscas">
-	<div class="cabecalho">
-		<h2>🔍 Buscas Agendadas</h2>
+<div class="mb-6">
+	<div class="mb-3 flex items-center justify-between">
+		<h2 class="m-0 text-lg text-foreground">🔍 Buscas Agendadas</h2>
 		<Button variant="secondary" size="sm" onclick={() => (mostrarForm = !mostrarForm)}>
 			{mostrarForm ? '✕ cancelar' : '+ nova busca'}
 		</Button>
 	</div>
 
 	{#if mostrarForm}
-		<div class="form-nova">
+		<div class="mb-4 flex flex-col gap-4 rounded-md border border-border bg-card p-4">
 			<TagInput bind:tags={keywordsNovas} label="Palavras-chave (opcional)" placeholder="ex.: sérum, skin1004…" />
 			<TagInput bind:tags={categoriasNovas} label="Categorias (opcional)" placeholder="ex.: cosméticos, perfumaria…" />
 
 			<!-- Fontes -->
-			<div class="fontes-config">
-				<span class="rotulo">Fontes de dados:</span>
-				<div class="fontes-toggles">
-					<label><input type="checkbox" bind:checked={fontes.curadoria} /> 🔍 Curadoria</label>
-					<label><input type="checkbox" bind:checked={fontes.quedas} /> 📉 Quedas de preço</label>
-					<label><input type="checkbox" bind:checked={fontes.novos} /> 🆕 Produtos novos</label>
+			<div class="flex flex-col gap-1.5">
+				<span class="text-sm font-semibold text-foreground">Fontes de dados:</span>
+				<div class="flex flex-wrap gap-3">
+					<label class="flex cursor-pointer items-center gap-1 text-sm"><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.curadoria} /> 🔍 Curadoria</label>
+					<label class="flex cursor-pointer items-center gap-1 text-sm"><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.quedas} /> 📉 Quedas de preço</label>
+					<label class="flex cursor-pointer items-center gap-1 text-sm"><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.novos} /> 🆕 Produtos novos</label>
 				</div>
 			</div>
 
 			<!-- Dias janela (para novos) -->
 			{#if fontes.novos}
-				<div class="campo-dias">
-					<label for="dias-janela">Considerar "novo" se apareceu nos últimos:</label>
-					<select id="dias-janela" bind:value={diasJanela}>
+				<div class="flex flex-wrap items-center gap-2">
+					<label for="dias-janela" class="text-sm font-semibold text-foreground">Considerar "novo" se apareceu nos últimos:</label>
+					<select id="dias-janela" class="rounded-lg border border-border px-2.5 py-1.5 text-sm" bind:value={diasJanela}>
 						<option value={1}>1 dia</option>
 						<option value={2}>2 dias</option>
 						<option value={3}>3 dias</option>
@@ -85,7 +85,7 @@
 
 			<AgendadorBusca bind:value={cronNova} />
 
-			<div class="form-acoes">
+			<div class="flex justify-end">
 				<Button
 					onclick={salvar}
 					disabled={keywordsNovas.length === 0 && categoriasNovas.length === 0 && fontesArray.length === 0}
@@ -97,95 +97,12 @@
 	{/if}
 
 	{#if buscasKw.length > 0}
-		<div class="buscas-lista">
+		<div class="flex flex-col gap-3">
 			{#each buscasKw as b (b.id)}
 				<BuscaCard busca={b} onremover={(id) => buscasSalvas.remover(id)} />
 			{/each}
 		</div>
 	{:else if !mostrarForm}
-		<p class="vazio">Nenhuma busca agendada. Clique em "+ nova busca" para criar.</p>
+		<p class="text-sm italic text-tinta-suave">Nenhuma busca agendada. Clique em "+ nova busca" para criar.</p>
 	{/if}
 </div>
-
-<style>
-	.gerenciar-buscas {
-		margin-bottom: var(--r6);
-	}
-	.cabecalho {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: var(--r3);
-	}
-	h2 {
-		font-size: 1.1rem;
-		margin: 0;
-		color: var(--tinta);
-	}
-	.form-nova {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r4);
-		display: flex;
-		flex-direction: column;
-		gap: var(--r4);
-		margin-bottom: var(--r4);
-	}
-	.fontes-config {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-	.fontes-config .rotulo {
-		font-size: 0.82rem;
-		font-weight: 600;
-		color: var(--tinta);
-	}
-	.fontes-toggles {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--r3);
-	}
-	.fontes-toggles label {
-		font-size: 0.85rem;
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		cursor: pointer;
-	}
-	.fontes-toggles input {
-		accent-color: var(--ouro);
-	}
-	.campo-dias {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--r2);
-	}
-	.campo-dias label {
-		font-size: 0.82rem;
-		font-weight: 600;
-		color: var(--tinta);
-	}
-	.campo-dias select {
-		padding: 6px 10px;
-		border: 1px solid var(--linha);
-		border-radius: 8px;
-		font-size: 0.85rem;
-	}
-	.form-acoes {
-		display: flex;
-		justify-content: flex-end;
-	}
-	.buscas-lista {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-	.vazio {
-		font-size: 0.85rem;
-		color: var(--tinta-suave);
-		font-style: italic;
-	}
-</style>

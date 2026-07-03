@@ -64,78 +64,24 @@
 	}
 </script>
 
-<div class="campo-pub">
-	<label for="link-produto">🔗 Link do produto</label>
-	<div class="link-input">
+<div class="flex flex-col gap-2">
+	<label for="link-produto" class="text-sm font-semibold">🔗 Link do produto</label>
+	<div class="flex flex-wrap gap-2">
 		<input
 			id="link-produto"
 			type="url"
 			bind:value={linkColado}
 			placeholder="Cole o link da Shopee aqui…"
 			onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
+			class="min-w-[200px] flex-1 rounded-sm border border-border bg-porcelana px-3.5 py-2.5 text-[0.9rem]"
 		/>
-		<button type="button" class="btn-colar" onclick={colarDoClipboard} disabled={resolvendoLink}>
+		<button type="button" class="whitespace-nowrap rounded-sm border border-ouro bg-[var(--ouro)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-ouro-escuro disabled:cursor-not-allowed disabled:opacity-50" onclick={colarDoClipboard} disabled={resolvendoLink}>
 			{resolvendoLink ? '⏳ Resolvendo…' : '📋 Colar e aplicar'}
 		</button>
 	</div>
 	{#if resolvendoLink}
-		<p class="dica loading-msg">Buscando dados do produto…</p>
+		<p class="m-0 text-sm text-ouro">Buscando dados do produto…</p>
 	{:else if linkAplicado}
-		<p class="dica sucesso-msg">✓ Link aplicado — edite os campos abaixo se necessário.</p>
+		<p class="m-0 text-sm text-[var(--sucesso-texto)]">✓ Link aplicado — edite os campos abaixo se necessário.</p>
 	{/if}
 </div>
-
-<style>
-	.campo-pub {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-	.campo-pub label {
-		font-weight: 600;
-		font-size: 0.88rem;
-	}
-	.link-input {
-		display: flex;
-		gap: var(--r2);
-		flex-wrap: wrap;
-	}
-	.link-input input {
-		flex: 1;
-		min-width: 200px;
-		padding: 10px 14px;
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		font-size: 0.9rem;
-		background: var(--porcelana);
-	}
-	.btn-colar {
-		padding: 10px 18px;
-		background: var(--ouro);
-		border: 1px solid var(--ouro);
-		color: white;
-		font-weight: 600;
-		font-size: 0.85rem;
-		border-radius: var(--raio-sm);
-		cursor: pointer;
-		white-space: nowrap;
-	}
-	.btn-colar:hover:not(:disabled) {
-		background: var(--ouro-escuro);
-	}
-	.btn-colar:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	.dica {
-		font-size: 0.82rem;
-		color: var(--tinta-suave);
-		margin: 0;
-	}
-	.sucesso-msg {
-		color: var(--sucesso-texto);
-	}
-	.loading-msg {
-		color: var(--ouro);
-	}
-</style>

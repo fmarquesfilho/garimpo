@@ -8,40 +8,11 @@
 	let { icone = '', mensagem, dica = '', ...rest } = $props();
 </script>
 
-<div class="vazio" {...rest}>
-	{#if icone}<span class="icone">{icone}</span>{/if}
-	<p class="mensagem">{mensagem}</p>
+<div class="rounded-md border border-border bg-porcelana p-8 text-center text-tinta-suave" {...rest}>
+	{#if icone}<span class="mb-3 block text-3xl">{icone}</span>{/if}
+	<p class="m-0 text-base">{mensagem}</p>
 	{#if dica}
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-		<p class="dica">{@html dica}</p>
+		<p class="mt-2 text-sm text-tinta-suave [&_a]:text-ouro [&_a]:underline">{@html dica}</p>
 	{/if}
 </div>
-
-<style>
-	.vazio {
-		background: var(--porcelana);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r8);
-		text-align: center;
-		color: var(--tinta-suave);
-	}
-	.icone {
-		font-size: 2rem;
-		display: block;
-		margin-bottom: var(--r3);
-	}
-	.mensagem {
-		margin: 0;
-		font-size: var(--text-md);
-	}
-	.dica {
-		font-size: var(--text-sm);
-		margin-top: var(--r2);
-		color: var(--tinta-suave);
-	}
-	.dica :global(a) {
-		color: var(--ouro);
-		text-decoration: underline;
-	}
-</style>

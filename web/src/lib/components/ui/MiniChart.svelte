@@ -15,62 +15,22 @@
 </script>
 
 {#if pontos.length > 1}
-	<div class="chart" style="height: {altura}px" {...rest}>
+	<div class="flex items-end gap-0.5" style="height: {altura}px" {...rest}>
 		{#each pontos as ponto, i}
 			{@const h = ((ponto.valor - min) / range) * 100}
 			<div
-				class="bar"
-				class:down={i > 0 && ponto.valor < pontos[i - 1].valor}
-				class:up={i > 0 && ponto.valor > pontos[i - 1].valor}
+				class="min-h-[3px] flex-1 rounded-t-sm bg-[var(--ouro-claro)] transition-[height] duration-200 ease-linear motion-reduce:transition-none"
+				class:!bg-[var(--sucesso-texto)]={i > 0 && ponto.valor < pontos[i - 1].valor}
+				class:!bg-[var(--erro-texto)]={i > 0 && ponto.valor > pontos[i - 1].valor}
 				style="height: {Math.max(h, 8)}%"
 				title="{ponto.data}: {formatValor(ponto.valor)}"
 			></div>
 		{/each}
 	</div>
-	<div class="labels">
+	<div class="mt-0.5 flex justify-between text-xs text-tinta-suave">
 		<span>{formatValor(min)}</span>
 		<span>{formatValor(max)}</span>
 	</div>
 {:else}
-	<p class="sem-dados">Aguardando dados…</p>
+	<p class="m-0 text-sm italic text-tinta-suave">Aguardando dados…</p>
 {/if}
-
-<style>
-	.chart {
-		display: flex;
-		align-items: flex-end;
-		gap: 2px;
-	}
-	.bar {
-		flex: 1;
-		background: var(--ouro-claro);
-		border-radius: 2px 2px 0 0;
-		min-height: 3px;
-		transition: height 0.2s ease;
-	}
-	.bar.down {
-		background: var(--sucesso-texto);
-	}
-	.bar.up {
-		background: var(--erro-texto);
-	}
-	.labels {
-		display: flex;
-		justify-content: space-between;
-		font-size: var(--text-xs);
-		color: var(--tinta-suave);
-		margin-top: 2px;
-	}
-	.sem-dados {
-		font-size: var(--text-sm);
-		color: var(--tinta-suave);
-		font-style: italic;
-		margin: 0;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.bar {
-			transition-duration: 0ms;
-		}
-	}
-</style>

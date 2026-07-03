@@ -66,77 +66,39 @@
 	}
 </script>
 
-<div class="rich-editor">
-	<div class="toolbar">
+<div class="overflow-hidden rounded-[10px] border border-border bg-white">
+	<div class="flex gap-0.5 border-b border-border bg-porcelana px-2 py-1.5">
 		<Tooltip content="Negrito">
-			<button type="button" class="tb-btn" class:ativo={editor?.isActive('bold')} onclick={toggleBold}>
+			<button type="button" class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground" class:!bg-ouro-fundo={editor?.isActive('bold')} class:!text-ouro-escuro={editor?.isActive('bold')} class:!border-ouro={editor?.isActive('bold')} onclick={toggleBold}>
 				<strong>B</strong>
 			</button>
 		</Tooltip>
 		<Tooltip content="Itálico">
-			<button type="button" class="tb-btn" class:ativo={editor?.isActive('italic')} onclick={toggleItalic}>
+			<button type="button" class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground" class:!bg-ouro-fundo={editor?.isActive('italic')} class:!text-ouro-escuro={editor?.isActive('italic')} class:!border-ouro={editor?.isActive('italic')} onclick={toggleItalic}>
 				<em>I</em>
 			</button>
 		</Tooltip>
 		<Tooltip content="Inserir link">
-			<button type="button" class="tb-btn" onclick={setLink}>🔗</button>
+			<button type="button" class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground" onclick={setLink}>🔗</button>
 		</Tooltip>
 		{#if editor?.isActive('link')}
 			<Tooltip content="Remover link">
-				<button type="button" class="tb-btn" onclick={removeLink}>✕🔗</button>
+				<button type="button" class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground" onclick={removeLink}>✕🔗</button>
 			</Tooltip>
 		{/if}
 	</div>
-	<div class="editor-content" bind:this={element}></div>
+	<div class="min-h-[120px] p-3 text-[0.92rem] leading-relaxed" bind:this={element}></div>
 </div>
 
 <style>
-	.rich-editor {
-		border: 1px solid var(--linha);
-		border-radius: 10px;
-		overflow: hidden;
-		background: white;
-	}
-	.toolbar {
-		display: flex;
-		gap: 2px;
-		padding: 6px 8px;
-		border-bottom: 1px solid var(--linha);
-		background: var(--porcelana);
-	}
-	.tb-btn {
-		border: 1px solid transparent;
-		background: transparent;
-		padding: 4px 10px;
-		border-radius: 6px;
-		cursor: pointer;
-		font-size: 0.85rem;
-		color: var(--tinta-suave);
-	}
-	.tb-btn:hover {
-		background: white;
-		color: var(--tinta);
-	}
-	.tb-btn.ativo {
-		background: var(--ouro-fundo);
-		color: var(--ouro-escuro);
-		border-color: var(--ouro);
-	}
-
-	.editor-content {
-		min-height: 120px;
-		padding: 12px;
-		font-size: 0.92rem;
-		line-height: 1.6;
-	}
-	.editor-content :global(.tiptap) {
+	:global(.tiptap) {
 		outline: none;
 		min-height: 100px;
 	}
-	.editor-content :global(.tiptap p) {
+	:global(.tiptap p) {
 		margin: 0 0 0.5em;
 	}
-	.editor-content :global(.tiptap p.is-editor-empty:first-child::before) {
+	:global(.tiptap p.is-editor-empty:first-child::before) {
 		content: attr(data-placeholder);
 		color: var(--tinta-suave);
 		opacity: 0.5;
@@ -144,7 +106,7 @@
 		float: left;
 		height: 0;
 	}
-	.editor-content :global(.editor-link) {
+	:global(.editor-link) {
 		color: var(--ouro);
 		text-decoration: underline;
 	}

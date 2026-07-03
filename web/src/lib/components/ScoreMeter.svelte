@@ -33,154 +33,63 @@
 	const largura = $derived(Math.min(100, Math.max(0, score * 100)));
 </script>
 
-<div class="teor">
-	<div class="cabeca">
+<div class="flex flex-col gap-2">
+	<div class="flex items-baseline gap-2">
 		<span class="rotulo">teor</span>
-		<button class="ajuda" type="button" aria-label="O que é o teor?" onclick={() => (mostraAjuda = !mostraAjuda)}
-			>?</button
-		>
-		<span class="valor dado">{score.toFixed(3)}</span>
+		<button class="flex h-4 w-4 cursor-pointer items-center justify-center self-center rounded-full border border-border bg-card p-0 text-[0.7rem] font-bold leading-none text-tinta-suave hover:border-ouro hover:text-ouro" type="button" aria-label="O que é o teor?" onclick={() => (mostraAjuda = !mostraAjuda)}>?</button>
+		<span class="dado text-lg font-bold text-ouro">{score.toFixed(3)}</span>
 		{#if mult && mult > 1}
-			<span class="chip" title="bônus por estar no nicho">×{mult.toLocaleString('pt-BR')} nicho</span>
+			<span class="ml-auto rounded-full bg-ouro-fundo px-2 py-0.5 text-xs font-semibold text-ouro-escuro" title="bônus por estar no nicho">×{mult.toLocaleString('pt-BR')} nicho</span>
 		{/if}
 	</div>
 
 	{#if mostraAjuda}
-		<div class="popover">
-			<p>
+		<div class="rounded-[10px] border border-border border-l-[3px] border-l-[var(--ouro)] bg-porcelana px-4 py-3 text-[0.8rem] leading-snug text-foreground">
+			<p class="mb-2 mt-0">
 				<strong>Teor</strong> é o "grau de ouro" da pepita — um número de 0 a 1 que mede
 				<em>o quanto o produto rende pelo esforço de divulgar</em>. Quanto maior, melhor a aposta.
 			</p>
-			<p>É a soma de três sinais, cada um comparado aos outros produtos do dia:</p>
-			<ul>
-				<li><strong>comissão</strong> — quanto da venda volta pra você;</li>
-				<li>
+			<p class="mb-2 mt-0">É a soma de três sinais, cada um comparado aos outros produtos do dia:</p>
+			<ul class="mb-2 mt-0 pl-4">
+				<li class="mb-0.5"><strong>comissão</strong> — quanto da venda volta pra você;</li>
+				<li class="mb-0.5">
 					<strong>valor esperado</strong> — comissão × preço × vendas: o retorno provável, não só a porcentagem;
 				</li>
-				<li><strong>avaliação</strong> — a nota, como sinal de confiança.</li>
+				<li class="mb-0.5"><strong>avaliação</strong> — a nota, como sinal de confiança.</li>
 			</ul>
-			<p>
+			<p class="mb-2 mt-0">
 				Na estratégia <strong>nicho</strong>, produtos de cosméticos/perfumaria/bem-estar ganham um bônus (o
 				<span class="dado">×nicho</span>). A barra colorida abaixo mostra o peso de cada sinal nesta pepita.
 			</p>
-			<button class="fechar-pop" type="button" onclick={() => (mostraAjuda = false)}>entendi</button>
+			<button class="cursor-pointer rounded-sm border-none bg-[var(--ouro)] px-3 py-1 text-sm font-semibold text-[var(--branco)]" type="button" onclick={() => (mostraAjuda = false)}>entendi</button>
 		</div>
 	{/if}
 
-	<div class="trilho" role="meter" aria-valuemin="0" aria-valuemax="1" aria-valuenow={score} aria-label="teor">
+	<div class="h-2.5 overflow-hidden rounded-full bg-[var(--linha)]" role="meter" aria-valuemin="0" aria-valuemax="1" aria-valuenow={score} aria-label="teor">
 		<div
-			class="ouro"
-			class:animar
-			style="
-
---w: {largura}%"
+			class="h-full rounded-full bg-gradient-to-r from-[var(--ouro-claro)] to-[var(--ouro)]"
+			class:animate-[encher_0.7s_cubic-bezier(0.2,0.7,0.2,1)_both]={animar}
+			style="width: {largura}%"
 		></div>
 	</div>
 
-	<div class="quebra" aria-hidden="true">
+	<div class="flex h-[5px] gap-0.5" aria-hidden="true">
 		{#each partes as p}
 			<span
-				class="seg"
+				class="min-w-[3px] rounded-full"
 				style="flex: {p.valor / somaPartes}; background: {p.cor}"
 				title="{p.rotulo}: {p.valor.toFixed(3)}"
 			></span>
 		{/each}
 	</div>
-	<ul class="legenda">
+	<ul class="m-0 flex list-none flex-wrap gap-3 p-0 text-xs text-tinta-suave">
 		{#each partes as p}
-			<li><span class="ponto" style="background: {p.cor}"></span>{p.rotulo}</li>
+			<li class="flex items-center gap-1.5"><span class="inline-block h-2 w-2 rounded-full" style="background: {p.cor}"></span>{p.rotulo}</li>
 		{/each}
 	</ul>
 </div>
 
 <style>
-	.teor {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r2);
-	}
-	.cabeca {
-		display: flex;
-		align-items: baseline;
-		gap: var(--r2);
-	}
-	.ajuda {
-		width: 16px;
-		height: 16px;
-		border-radius: 999px;
-		border: 1px solid var(--linha);
-		background: var(--nevoa);
-		color: var(--tinta-suave);
-		font-size: 0.7rem;
-		font-weight: 700;
-		line-height: 1;
-		cursor: pointer;
-		padding: 0;
-		align-self: center;
-	}
-	.ajuda:hover {
-		border-color: var(--ouro);
-		color: var(--ouro);
-	}
-	.popover {
-		font-size: 0.8rem;
-		line-height: 1.45;
-		color: var(--tinta);
-		background: var(--porcelana);
-		border: 1px solid var(--linha);
-		border-left: 3px solid var(--ouro);
-		border-radius: 10px;
-		padding: var(--r3) var(--r4);
-	}
-	.popover p {
-		margin: 0 0 var(--r2);
-	}
-	.popover ul {
-		margin: 0 0 var(--r2);
-		padding-left: 1.1rem;
-	}
-	.popover li {
-		margin-bottom: 2px;
-	}
-	.fechar-pop {
-		border: none;
-		background: var(--ouro);
-		color: var(--branco);
-		font-weight: var(--font-semi);
-		font-size: var(--text-sm);
-		padding: var(--r1) var(--r3);
-		border-radius: var(--raio-sm);
-		cursor: pointer;
-	}
-	.valor {
-		font-size: var(--text-lg);
-		font-weight: var(--font-bold);
-		color: var(--ouro);
-	}
-	.chip {
-		margin-left: auto;
-		font-size: var(--text-xs);
-		font-weight: var(--font-semi);
-		padding: 2px var(--r2);
-		border-radius: var(--raio-full);
-		background: var(--ouro-fundo);
-		color: var(--ouro-escuro);
-	}
-	.trilho {
-		height: 10px;
-		border-radius: 999px;
-		background: var(--linha);
-		overflow: hidden;
-	}
-	.ouro {
-		height: 100%;
-		width: var(--w);
-		border-radius: 999px;
-		background: linear-gradient(90deg, var(--ouro-claro), var(--ouro));
-	}
-	.ouro.animar {
-		animation: encher 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-	}
 	@keyframes encher {
 		from {
 			width: 0;
@@ -188,35 +97,5 @@
 		to {
 			width: var(--w);
 		}
-	}
-	.quebra {
-		display: flex;
-		gap: 2px;
-		height: 5px;
-	}
-	.seg {
-		border-radius: 999px;
-		min-width: 3px;
-	}
-	.legenda {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--r3);
-		font-size: 0.72rem;
-		color: var(--tinta-suave);
-	}
-	.legenda li {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-	}
-	.ponto {
-		width: 8px;
-		height: 8px;
-		border-radius: 999px;
-		display: inline-block;
 	}
 </style>

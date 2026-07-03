@@ -30,48 +30,48 @@
 	}
 </script>
 
-<article class="cartao" class:destaque>
+<article class="overflow-hidden rounded-md border border-border bg-card shadow-sm transition-[transform,box-shadow] duration-150 ease-linear hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(46,34,38,0.2)]" class:!border-[var(--ouro-claro)]={destaque}>
 	{#if candidato.imagem}
-		<a href={candidato.link || '#'} target="_blank" rel="noopener" class="thumb-link">
-			<img src={candidato.imagem} alt={candidato.nome} class="thumb" loading="lazy" />
+		<a href={candidato.link || '#'} target="_blank" rel="noopener" class="block no-underline">
+			<img src={candidato.imagem} alt={candidato.nome} class="block h-[180px] w-full bg-porcelana object-cover max-sm:h-[140px]" loading="lazy" />
 		</a>
 	{/if}
 
-	<div class="corpo">
+	<div class="flex flex-col gap-3 p-4">
 		{#if posicao != null}
-			<span class="posicao dado">#{posicao}</span>
+			<span class="dado text-xs font-bold text-tinta-suave opacity-60">#{posicao}</span>
 		{/if}
 
 		<header>
-			<h3>{candidato.nome}</h3>
-			<div class="meta">
+			<h3 class="m-0 line-clamp-2 text-base font-semibold leading-tight">{candidato.nome}</h3>
+			<div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
 				{#if candidato.loja}
-					<span class="loja">🏪 {candidato.loja}</span>
+					<span class="max-w-[140px] truncate text-xs font-semibold text-tinta-suave">🏪 {candidato.loja}</span>
 				{/if}
 				{#if candidato.origem}
-					<span class="selo origem"
+					<span class="rounded-full bg-[var(--sucesso-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--sucesso-texto)]"
 						>{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{:else if candidato.origem === 'China'}🇨🇳{/if}
 						{candidato.origem}</span
 					>
 				{/if}
 				{#if candidato.desconto > 0 && candidato.desconto <= 1}
-					<span class="selo desconto">🔥 {Math.round(candidato.desconto * 100)}% OFF</span>
+					<span class="rounded-full bg-[var(--erro-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--erro-texto)]">🔥 {Math.round(candidato.desconto * 100)}% OFF</span>
 				{:else if candidato.desconto > 1 && candidato.desconto <= 100}
-					<span class="selo desconto">🔥 {Math.round(candidato.desconto)}% OFF</span>
+					<span class="rounded-full bg-[var(--erro-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--erro-texto)]">🔥 {Math.round(candidato.desconto)}% OFF</span>
 				{/if}
 				{#if candidato.oferta_expira}
 					<span
-						class="selo expira"
+						class="rounded-full bg-ouro-fundo px-1.5 py-px text-[0.65rem] font-bold text-ouro-escuro"
 						title="Oferta de afiliado expira em {new Date(candidato.oferta_expira).toLocaleDateString('pt-BR')}"
 						>⏳ {tempoRestante(candidato.oferta_expira)}</span
 					>
 				{/if}
 				{#if candidato.categoria}
-					<span class="cat">{candidato.categoria}</span>
+					<span class="text-xs font-semibold lowercase text-rosa">{candidato.categoria}</span>
 				{/if}
 				{#if candidato.suspeito}
 					<span
-						class="selo alerta"
+						class="rounded-full bg-[var(--erro-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--erro-texto)]"
 						title="Comissão alta com poucas vendas — pode ser produto sem tração real. Avalie antes de publicar."
 						>⚠ suspeito</span
 					>
@@ -79,12 +79,12 @@
 			</div>
 		</header>
 
-		<div class="dados">
-			<div class="dado-principal">
-				<span class="preco">{brl(candidato.preco)}</span>
-				<span class="comissao">{pct(candidato.comissao)}</span>
+		<div class="flex flex-col items-baseline justify-between gap-1 sm:flex-row">
+			<div class="flex items-baseline gap-2">
+				<span class="font-mono text-lg font-bold">{brl(candidato.preco)}</span>
+				<span class="text-sm font-bold text-ouro">{pct(candidato.comissao)}</span>
 			</div>
-			<div class="dado-secundario">
+			<div class="flex gap-3 text-xs text-tinta-suave">
 				<span>{candidato.vendas.toLocaleString('pt-BR')} vendas</span>
 				<span>★ {candidato.avaliacao.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</span>
 			</div>
@@ -92,7 +92,7 @@
 
 		<ScoreMeter score={candidato.score} componentes={candidato.componentes} animar={destaque} />
 
-		<footer>
+		<footer class="mt-2 flex gap-2">
 			{#if onpublicar}
 				<Button size="sm" onclick={() => onpublicar(candidato)}>📤 Publicar</Button>
 			{/if}
@@ -102,151 +102,3 @@
 		</footer>
 	</div>
 </article>
-
-<style>
-	.cartao {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		overflow: hidden;
-		box-shadow: var(--sombra);
-		transition:
-			transform 0.15s ease,
-			box-shadow 0.15s ease;
-	}
-	.cartao:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 4px 20px -8px rgba(46, 34, 38, 0.2);
-	}
-	.destaque {
-		border-color: var(--ouro-claro);
-	}
-
-	.thumb {
-		width: 100%;
-		height: 180px;
-		object-fit: cover;
-		display: block;
-		background: var(--porcelana);
-	}
-	.thumb-link {
-		display: block;
-		text-decoration: none;
-	}
-	.thumb-link:hover .thumb {
-		opacity: 0.9;
-	}
-
-	.corpo {
-		padding: var(--r4);
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-
-	.posicao {
-		font-size: var(--text-xs);
-		font-weight: 700;
-		color: var(--tinta-suave);
-		opacity: 0.6;
-	}
-
-	header h3 {
-		font-size: 1rem;
-		font-weight: 600;
-		line-height: 1.3;
-		margin: 0;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-	.meta {
-		display: flex;
-		align-items: center;
-		gap: 4px 6px;
-		margin-top: 4px;
-		flex-wrap: wrap;
-	}
-	.cat {
-		font-size: var(--text-xs);
-		font-weight: 600;
-		color: var(--rosa);
-		text-transform: lowercase;
-	}
-	.loja {
-		font-size: var(--text-xs);
-		font-weight: 600;
-		color: var(--tinta-suave);
-		max-width: 140px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.selo {
-		font-size: 0.65rem;
-		font-weight: 700;
-		padding: 1px 6px;
-		border-radius: var(--raio-full);
-	}
-	.selo.alerta {
-		background: var(--erro-fundo);
-		color: var(--erro-texto);
-	}
-	.selo.origem {
-		background: var(--sucesso-fundo);
-		color: var(--sucesso-texto);
-	}
-	.selo.desconto {
-		background: var(--erro-fundo);
-		color: var(--erro-texto);
-	}
-	.selo.expira {
-		background: var(--ouro-fundo);
-		color: var(--ouro-escuro);
-	}
-
-	.dados {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-	}
-	.dado-principal {
-		display: flex;
-		align-items: baseline;
-		gap: var(--r2);
-	}
-	.preco {
-		font-size: 1.1rem;
-		font-weight: 700;
-		font-family: var(--mono);
-	}
-	.comissao {
-		font-size: var(--text-sm);
-		font-weight: 700;
-		color: var(--ouro);
-	}
-	.dado-secundario {
-		display: flex;
-		gap: var(--r3);
-		font-size: var(--text-xs);
-		color: var(--tinta-suave);
-	}
-
-	footer {
-		display: flex;
-		gap: var(--r2);
-		margin-top: var(--r2);
-	}
-
-	@media (max-width: 420px) {
-		.thumb {
-			height: 140px;
-		}
-		.dados {
-			flex-direction: column;
-			gap: 4px;
-		}
-	}
-</style>

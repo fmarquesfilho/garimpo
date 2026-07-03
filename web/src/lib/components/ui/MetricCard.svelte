@@ -12,40 +12,11 @@
 	let resolvedVariant = $derived(VARIANTS.includes(variant) ? variant : 'default');
 </script>
 
-<div class="metrica {resolvedVariant}" {...rest}>
-	<span class="metrica-valor">{valor}</span>
-	<span class="metrica-label">{label}</span>
+<div class="rounded-sm border border-border bg-card px-4 py-3 text-center" {...rest}>
+	<span class="block font-mono text-2xl font-bold leading-tight tabular-nums"
+		class:text-ouro={resolvedVariant === 'gold'}
+		class:text-[var(--sucesso-texto)]={resolvedVariant === 'green'}
+		class:text-[var(--erro-texto)]={resolvedVariant === 'red'}
+	>{valor}</span>
+	<span class="text-xs font-semibold uppercase text-tinta-suave">{label}</span>
 </div>
-
-<style>
-	.metrica {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		padding: var(--r3) var(--r4);
-		text-align: center;
-	}
-	.metrica-valor {
-		display: block;
-		font-size: var(--text-2xl);
-		font-weight: var(--font-bold);
-		font-family: var(--mono);
-		font-variant-numeric: tabular-nums;
-		line-height: 1.2;
-	}
-	.metrica-label {
-		font-size: var(--text-xs);
-		color: var(--tinta-suave);
-		text-transform: uppercase;
-		font-weight: var(--font-semi);
-	}
-	.gold .metrica-valor {
-		color: var(--ouro);
-	}
-	.green .metrica-valor {
-		color: var(--sucesso-texto);
-	}
-	.red .metrica-valor {
-		color: var(--erro-texto);
-	}
-</style>

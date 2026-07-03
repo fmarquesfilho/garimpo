@@ -6,23 +6,9 @@
 	let { titulo = '', children, ...rest } = $props();
 </script>
 
-<div class="painel" {...rest}>
+<div class="rounded-md border border-border bg-card p-4" {...rest}>
 	{#if titulo}
-		<h2>{titulo}</h2>
+		<h2 class="m-0 mb-3 text-base font-semibold">{titulo}</h2>
 	{/if}
 	{@render children()}
 </div>
-
-<style>
-	.painel {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r4);
-	}
-	h2 {
-		font-size: var(--text-base);
-		font-weight: var(--font-semi);
-		margin: 0 0 var(--r3);
-	}
-</style>

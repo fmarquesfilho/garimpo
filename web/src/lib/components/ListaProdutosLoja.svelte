@@ -14,24 +14,11 @@
 {:else if erro}
 	<Alert variant="error">{erro}</Alert>
 {:else if produtos.length === 0}
-	<p class="vazio-tab">Nenhum produto encontrado. A coleta periódica pode ainda não ter rodado.</p>
+	<p class="italic text-tinta-suave">Nenhum produto encontrado. A coleta periódica pode ainda não ter rodado.</p>
 {:else}
-	<div class="grade-produtos">
+	<div class="flex flex-col gap-3">
 		{#each produtos as p (p.id)}
 			<ProductCard produto={p} layout="compact" {onpublicar} />
 		{/each}
 	</div>
 {/if}
-
-<style>
-	.vazio-tab {
-		color: var(--tinta-suave);
-		font-size: var(--text-base);
-		font-style: italic;
-	}
-	.grade-produtos {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-</style>

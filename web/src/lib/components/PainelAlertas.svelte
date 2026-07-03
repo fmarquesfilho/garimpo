@@ -62,8 +62,8 @@
 	}
 </script>
 
-<div class="painel-alertas">
-	<button class="btn-toggle-alertas" onclick={() => (mostraAlertas = !mostraAlertas)}>
+<div class="mb-5">
+	<button class="flex w-full items-center gap-2 rounded-sm border border-border bg-card px-4 py-3 text-left font-[var(--ui)] font-semibold transition-[border-color] duration-150 ease-linear hover:border-ouro motion-reduce:transition-none" onclick={() => (mostraAlertas = !mostraAlertas)}>
 		🔔 Alertas Telegram
 		{#if alertasConfig?.ativo}
 			<Badge variant="green">Ativo</Badge>
@@ -73,27 +73,27 @@
 	</button>
 
 	{#if mostraAlertas}
-		<div class="alertas-config">
+		<div class="flex flex-col gap-3 rounded-b-sm border border-t-0 border-border bg-[var(--branco)] p-4">
 			<Input
 				bind:value={alertaChatId}
 				label="Chat ID do grupo Telegram"
 				placeholder={alertasConfig?.chat_id || 'Ex: -1001234567890'}
 			/>
-			<span class="hint">ID do grupo onde os alertas serão enviados. Use @BotFather para criar o bot.</span>
+			<span class="text-xs text-tinta-suave">ID do grupo onde os alertas serão enviados. Use @BotFather para criar o bot.</span>
 
-			<div class="campo-alerta">
+			<div class="flex flex-col gap-1">
 				<Input bind:value={alertaThreshold} type="number" label="Threshold de variação (%)" variant="mono" size="sm" />
-				<span class="hint">Alerta se preço variar mais que {alertaThreshold}%.</span>
+				<span class="text-xs text-tinta-suave">Alerta se preço variar mais que {alertaThreshold}%.</span>
 			</div>
 
-			<div class="campo-alerta checkbox">
-				<label>
-					<input type="checkbox" bind:checked={alertaApenasQuedas} />
+			<div class="flex flex-col gap-1">
+				<label class="flex cursor-pointer items-center gap-2 text-sm">
+					<input type="checkbox" class="h-4 w-4 cursor-pointer accent-[var(--ouro)]" bind:checked={alertaApenasQuedas} />
 					Alertar apenas quedas de preço (oportunidades)
 				</label>
 			</div>
 
-			<div class="alertas-acoes">
+			<div class="mt-2 flex flex-col gap-3 sm:flex-row">
 				<Button onclick={handleSalvar} disabled={salvandoAlerta} size="sm">
 					{salvandoAlerta ? '⏳' : '💾'} Salvar
 				</Button>
@@ -110,76 +110,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	.painel-alertas {
-		margin-bottom: var(--r5);
-	}
-	.btn-toggle-alertas {
-		display: flex;
-		align-items: center;
-		gap: var(--r2);
-		padding: var(--r3) var(--r4);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		background: var(--nevoa);
-		cursor: pointer;
-		font-family: var(--ui);
-		font-size: var(--text-base);
-		font-weight: var(--font-semi);
-		width: 100%;
-		text-align: left;
-		transition: border-color 0.15s ease;
-	}
-	.btn-toggle-alertas:hover {
-		border-color: var(--ouro);
-	}
-	.alertas-config {
-		border: 1px solid var(--linha);
-		border-top: none;
-		border-radius: 0 0 var(--raio-sm) var(--raio-sm);
-		padding: var(--r4);
-		background: var(--branco);
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-	.campo-alerta {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r1);
-	}
-	.campo-alerta.checkbox label {
-		display: flex;
-		align-items: center;
-		gap: var(--r2);
-		font-size: var(--text-sm);
-		cursor: pointer;
-	}
-	.campo-alerta.checkbox input {
-		width: 16px;
-		height: 16px;
-		accent-color: var(--ouro);
-		cursor: pointer;
-	}
-	.hint {
-		font-size: var(--text-xs);
-		color: var(--tinta-suave);
-	}
-	.alertas-acoes {
-		display: flex;
-		gap: var(--r3);
-		margin-top: var(--r2);
-	}
-
-	@media (max-width: 600px) {
-		.alertas-acoes {
-			flex-direction: column;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.btn-toggle-alertas {
-			transition-duration: 0ms;
-		}
-	}
-</style>

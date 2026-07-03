@@ -8,37 +8,12 @@
 	let { rotulo = '', titulo, subtitulo = '', ...rest } = $props();
 </script>
 
-<section class="page-header" {...rest}>
+<section class="mb-8 max-w-[42rem]" {...rest}>
 	{#if rotulo}
-		<p class="rotulo">{rotulo}</p>
+		<p class="text-xs font-semibold uppercase tracking-widest text-tinta-suave">{rotulo}</p>
 	{/if}
-	<h1>{titulo}</h1>
+	<h1 class="my-2 mb-4 font-display text-[clamp(1.8rem,5vw,2.5rem)]">{titulo}</h1>
 	{#if subtitulo}
-		<p class="sub">{subtitulo}</p>
+		<p class="m-0 mb-4 leading-relaxed text-tinta-suave">{subtitulo}</p>
 	{/if}
 </section>
-
-<style>
-	.page-header {
-		max-width: 42rem;
-		margin-bottom: var(--r8);
-	}
-	.rotulo {
-		font-size: var(--text-xs);
-		font-weight: var(--font-semi);
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--tinta-suave);
-	}
-	h1 {
-		font-family: var(--display);
-		font-size: clamp(1.8rem, 5vw, 2.5rem);
-		margin: var(--r2) 0 var(--r4);
-	}
-	.sub {
-		color: var(--tinta-suave);
-		margin: 0 0 var(--r4);
-		font-size: var(--text-base);
-		line-height: 1.5;
-	}
-</style>
