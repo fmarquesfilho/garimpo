@@ -3,6 +3,7 @@
 	import { listarDestinos, salvarDestino, deletarDestino } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 	import SeletorGrupo from '$lib/SeletorGrupo.svelte';
+	import { Alert, Button, Dialog, DropdownMenu, Input } from '$lib/components/ui';
 
 	let destinos = $state([]);
 	let carregando = $state(true);
@@ -25,6 +26,10 @@
 	let gruposWA = $state([]);
 	let carregandoGrupos = $state(false);
 	let erroGrupos = $state(null);
+
+	// Dialog de confirmação
+	let dialogRemover = $state(false);
+	let destinoParaRemover = $state(null);
 
 	onMount(async () => {
 		await carregar();
@@ -115,14 +120,20 @@
 	}
 
 	async function remover(id) {
-		if (!confirm(`Remover o destino "${id}"?`)) return;
 		erro = null;
 		try {
 			await deletarDestino(id);
 			destinos = destinos.filter((d) => d.id !== id);
+			dialogRemover = false;
+			destinoParaRemover = null;
 		} catch (e) {
 			erro = e.message;
 		}
+	}
+
+	function pedirRemocao(d) {
+		destinoParaRemover = d;
+		dialogRemover = true;
 	}
 
 	const tipoIcone = { telegram: '✈️', whatsapp: '💬' };
@@ -146,10 +157,10 @@
 		</p>
 
 		{#if erro}
-			<div class="erro">{erro}</div>
+			<Alert variant="error">{erro}</Alert>
 		{/if}
 		{#if sucesso}
-			<div class="sucesso">{sucesso}</div>
+			<Alert variant="success">{sucesso}</Alert>
 		{/if}
 
 		<!-- Form novo destino -->
@@ -178,9 +189,9 @@
 					<input id="config" bind:value={config} placeholder="@meucanal ou -1001234567890" required />
 				{/if}
 			</div>
-			<button type="submit" disabled={salvando || !nome.trim() || !config.trim()}>
+			<Button type="submit" disabled={salvando || !nome.trim() || !config.trim()}>
 				{salvando ? 'Salvando…' : '+ Adicionar'}
-			</button>
+			</Button>
 		</form>
 
 		<!-- Lista -->
@@ -214,10 +225,10 @@
 									{/if}
 								</div>
 								<div class="edit-acoes">
-									<button class="btn-salvar" onclick={() => salvarEdicao(d)} disabled={editSalvando || !editNome.trim() || !editConfig.trim()}>
+									<Button size="sm" onclick={() => salvarEdicao(d)} disabled={editSalvando || !editNome.trim() || !editConfig.trim()}>
 										{editSalvando ? 'Salvando…' : 'Salvar'}
-									</button>
-									<button class="btn-cancelar" onclick={cancelarEdicao}>Cancelar</button>
+									</Button>
+									<Button variant="ghost" size="sm" onclick={cancelarEdicao}>Cancelar</Button>
 								</div>
 							</div>
 						</div>
@@ -239,8 +250,12 @@
 								{/if}
 							</div>
 							<div class="card-acoes">
-								<button class="btn-editar" onclick={() => iniciarEdicao(d)} title="Editar">✎</button>
-								<button class="btn-remover" onclick={() => remover(d.id)} title="Remover">✕</button>
+								<DropdownMenu items={[
+									{ label: '✎ Editar', onclick: () => iniciarEdicao(d) },
+									{ label: '✕ Remover', onclick: () => pedirRemocao(d), destructive: true }
+								]}>
+									<button class="btn-menu" aria-label="Ações">⋮</button>
+								</DropdownMenu>
 							</div>
 						</div>
 					{/if}
@@ -248,6 +263,16 @@
 			</div>
 		{/if}
 	{/if}
+
+	<Dialog bind:open={dialogRemover} title="Remover destino" description="Tem certeza que quer remover este destino?">
+		{#if destinoParaRemover}
+			<p>O destino <strong>{destinoParaRemover.nome}</strong> será removido permanentemente.</p>
+			<div class="dialog-acoes">
+				<Button variant="danger" onclick={() => remover(destinoParaRemover.id)}>Remover</Button>
+				<Button variant="ghost" onclick={() => { dialogRemover = false; }}>Cancelar</Button>
+			</div>
+		{/if}
+	</Dialog>
 </section>
 
 <style>
@@ -291,13 +316,12 @@
 	.tipo-badge { font-size: 0.72rem; font-weight: 600; color: var(--tinta-suave); }
 
 	.card-acoes { display: flex; gap: 4px; }
-	.btn-editar, .btn-remover {
-		background: none; border: 1px solid var(--linha); border-radius: 6px;
+	.btn-menu {
+		background: none; border: 1px solid var(--linha); border-radius: var(--raio-sm);
 		width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-		cursor: pointer; color: var(--tinta-suave); font-size: 1rem;
+		cursor: pointer; color: var(--tinta-suave); font-size: var(--text-lg);
 	}
-	.btn-editar:hover { color: var(--ouro); border-color: var(--ouro); background: var(--branco)beb; }
-	.btn-remover:hover { color: var(--erro-texto); border-color: var(--erro-borda); background: var(--erro-fundo); }
+	.btn-menu:hover { border-color: var(--ouro); color: var(--ouro); }
 
 	.edit-form { width: 100%; display: flex; flex-direction: column; gap: var(--r3); }
 	.campo-edit { display: flex; flex-direction: column; gap: 4px; }
@@ -317,4 +341,5 @@
 
 	.grupos-lista { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
 	.grupo-nome { font-size: 0.78rem; color: var(--tinta-suave); padding: 1px 6px; background: var(--sucesso-fundo); border-radius: 4px; border: 1px solid var(--sucesso-borda); }
+	.dialog-acoes { display: flex; gap: var(--r3); margin-top: var(--r4); }
 </style>

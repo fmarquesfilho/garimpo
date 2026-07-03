@@ -11,6 +11,7 @@
 	import StarterKit from '@tiptap/starter-kit';
 	import Link from '@tiptap/extension-link';
 	import Placeholder from '@tiptap/extension-placeholder';
+	import { Tooltip } from '$lib/components/ui';
 
 	let { content = $bindable(''), placeholder = 'Escreva a legenda…', onchange = null } = $props();
 
@@ -61,15 +62,23 @@
 
 <div class="rich-editor">
 	<div class="toolbar">
-		<button type="button" class="tb-btn" class:ativo={editor?.isActive('bold')} onclick={toggleBold} title="Negrito">
-			<strong>B</strong>
-		</button>
-		<button type="button" class="tb-btn" class:ativo={editor?.isActive('italic')} onclick={toggleItalic} title="Itálico">
-			<em>I</em>
-		</button>
-		<button type="button" class="tb-btn" onclick={setLink} title="Inserir link">🔗</button>
+		<Tooltip content="Negrito">
+			<button type="button" class="tb-btn" class:ativo={editor?.isActive('bold')} onclick={toggleBold}>
+				<strong>B</strong>
+			</button>
+		</Tooltip>
+		<Tooltip content="Itálico">
+			<button type="button" class="tb-btn" class:ativo={editor?.isActive('italic')} onclick={toggleItalic}>
+				<em>I</em>
+			</button>
+		</Tooltip>
+		<Tooltip content="Inserir link">
+			<button type="button" class="tb-btn" onclick={setLink}>🔗</button>
+		</Tooltip>
 		{#if editor?.isActive('link')}
-			<button type="button" class="tb-btn" onclick={removeLink} title="Remover link">✕🔗</button>
+			<Tooltip content="Remover link">
+				<button type="button" class="tb-btn" onclick={removeLink}>✕🔗</button>
+			</Tooltip>
 		{/if}
 	</div>
 	<div class="editor-content" bind:this={element}></div>

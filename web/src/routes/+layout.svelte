@@ -5,6 +5,7 @@
 	import { verificarAdmin } from '$lib/api.js';
 	import NavDrawer from '$lib/components/NavDrawer.svelte';
 	import LandingHero from '$lib/components/LandingHero.svelte';
+	import { Button } from '$lib/components/ui';
 	let { children } = $props();
 
 	let menuAberto = $state(false);
@@ -45,7 +46,7 @@
 		{#if $usuario}
 			<div class="acoes-barra">
 				<span class="usuario-nome">{$usuario.nome ?? $usuario.email}</span>
-				<button class="btn-auth" onclick={logout}>Sair</button>
+				<Button variant="secondary" size="sm" onclick={logout}>Sair</Button>
 				<button
 					class="hamburguer"
 					onclick={toggleMenu}
