@@ -68,7 +68,9 @@
 	{/if}
 
 	<div class="trilho" role="meter" aria-valuemin="0" aria-valuemax="1" aria-valuenow={score} aria-label="teor">
-		<div class="ouro" class:animar style="--w: {largura}%"></div>
+		<div class="ouro" class:animar style="
+
+--w: {largura}%"></div>
 	</div>
 
 	<div class="quebra" aria-hidden="true">

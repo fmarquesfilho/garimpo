@@ -9,14 +9,14 @@
 
 	let {
 		content = '',
-		side = 'top',
+		side = /** @type {'top'|'bottom'|'left'|'right'} */ ('top'),
 		children,
 		...rest
 	} = $props();
 </script>
 
 <Tooltip.Root {...rest}>
-	<Tooltip.Trigger asChild>
+	<Tooltip.Trigger>
 		{@render children()}
 	</Tooltip.Trigger>
 	<Tooltip.Portal>

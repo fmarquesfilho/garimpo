@@ -22,11 +22,7 @@
   },
   "overrides": [
     {
-      "files": ["src/app.css"],
-      "rules": { "color-no-hex": null }
-    },
-    {
-      "files": ["src/lib/components/**/*.svelte"],
+      "files": ["src/app.css", "src/lib/components/ui/tokens.css"],
       "rules": { "color-no-hex": null }
     }
   ]

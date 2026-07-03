@@ -14,7 +14,7 @@
 </script>
 
 <DropdownMenu.Root {...rest}>
-	<DropdownMenu.Trigger asChild>
+	<DropdownMenu.Trigger>
 		{@render children()}
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Portal>

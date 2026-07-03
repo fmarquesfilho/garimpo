@@ -13,7 +13,7 @@
 		variant = 'primary',
 		size = 'md',
 		disabled = false,
-		type = 'button',
+		type = /** @type {'button' | 'submit' | 'reset'} */ ('button'),
 		onclick = null,
 		children,
 		...rest

@@ -29,7 +29,7 @@
 	{#if label}
 		<span class="select-label">{label}</span>
 	{/if}
-	<Select.Root bind:value {disabled}>
+	<Select.Root type="single" bind:value {disabled}>
 		<Select.Trigger class="select-trigger size-{resolvedSize}">
 			<Select.Value {placeholder} />
 		</Select.Trigger>
