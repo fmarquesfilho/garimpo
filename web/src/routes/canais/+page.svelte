@@ -3,7 +3,7 @@
 	import { listarDestinos, salvarDestino, deletarDestino } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 	import SeletorGrupo from '$lib/SeletorGrupo.svelte';
-	import { Alert, Button, Dialog, DropdownMenu, Input } from '$lib/components/ui';
+	import { Alert, Button, Dialog, DropdownMenu } from '$lib/components/ui';
 
 	let destinos = $state([]);
 	let carregando = $state(true);

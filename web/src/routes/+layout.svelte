@@ -97,12 +97,6 @@
 		padding: 6px 12px; border-radius: 8px; line-height: 1;
 	}
 	.hamburguer:hover { border-color: var(--ouro); color: var(--ouro); }
-	.btn-auth {
-		border: 1px solid var(--linha); background: var(--porcelana);
-		color: var(--tinta); font-size: 0.8rem; font-weight: 600;
-		padding: 6px 14px; border-radius: var(--raio-full); cursor: pointer; width: fit-content;
-	}
-	.btn-auth:hover { border-color: var(--ouro); color: var(--ouro); }
 
 	@media (max-width: 480px) { .usuario-nome { display: none; } }
 

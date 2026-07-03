@@ -1,0 +1,59 @@
+id: T-0038
+titulo: "Migração UI fase 2: consumir compostos restantes"
+epic: E-001
+status: backlog
+prioridade: media
+estimativa: M
+sprint: ""
+criado_em: "2026-07-03"
+valor: |
+  Os 5 compostos Bits UI estão implementados e cada um tem ao menos 1
+  consumidor. Porém ainda há 51 buttons inline, 28 inputs inline, e 5
+  selects nativos que poderiam usar os componentes padronizados.
+  Esta task cobre a migração progressiva dos restantes.
+
+descricao: |
+  ## Contexto
+
+  Após T-0037, o audit mostra:
+  - <button> inline: 51 (maioria em ProductCard, FilterBar, AgendadorBusca, routes)
+  - <input> inline: 28 (FilterBar autocomplete, configurar, canais)
+  - <select> nativo: 5 (canais, coletas, estatisticas, GerenciarBuscas)
+  - .badge class: 16 (ProductCard selos, +page.svelte atalhos)
+  - .btn class: 26 (app.css utilities usadas em routes)
+
+  ## Escopo
+
+  ### Fase 2a: Selects nativos → <Select>
+  - [ ] canais/+page: tipo selector
+  - [ ] coletas/+page
+  - [ ] estatisticas/+page
+  - [ ] GerenciarBuscas: dias_janela
+  - [ ] FilterBar: comissaoMin
+
+  ### Fase 2b: Tooltips significativos
+  - [ ] ProductCard: selos (suspeito, expira, desconto) com tooltip
+  - [ ] ScoreMeter: chip "bônus nicho" com tooltip
+  - [ ] +page.svelte: fontes buttons com tooltip
+
+  ### Fase 2c: Dialogs
+  - [ ] lojas/+page: confirm() remoção de loja → Dialog
+  - [ ] configurar: confirm() exclusão de conta → Dialog
+
+  ### Fase 2d: ProductCard buttons
+  - [ ] Avaliar se publicar-btn e ghost btn podem usar <Button>
+  - [ ] Se não (visual muito customizado): documentar como exceção aceita
+
+  ## Não-escopo
+  - FilterBar autocomplete (input customizado, mantém inline)
+  - AgendadorBusca atalhos (toggle pills, não são "buttons" genéricos)
+  - RichEditor toolbar (já tem Tooltip, buttons são do editor)
+
+criterios_aceite:
+  - <select> nativo: 5 → 0
+  - Dialog: ≥ 3 consumidores
+  - Tooltip: ≥ 5 consumidores
+  - Audit UI sem regressão de cobertura
+
+dependencias:
+  - T-0037

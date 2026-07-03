@@ -1,4 +1,11 @@
 {
   "entry": ["src/routes/**/+*.{js,svelte}", "src/lib/**/*.{js,svelte}"],
-  "project": ["src/**/*.{js,svelte}"]
+  "project": ["src/**/*.{js,svelte}"],
+  "ignoreDependencies": [
+    "@axe-core/playwright",
+    "axe-core",
+    "csstype",
+    "fast-check",
+    "vitest-axe"
+  ]
 }

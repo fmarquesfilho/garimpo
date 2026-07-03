@@ -1,0 +1,61 @@
+id: T-0037
+titulo: "Biblioteca de componentes UI com Bits UI + Design Tokens"
+epic: E-001
+status: done
+prioridade: alta
+estimativa: L
+sprint: "2026-S27"
+criado_em: "2026-07-03"
+concluido_em: "2026-07-03"
+valor: |
+  Frontend com ~36 componentes ad-hoc sem padronização, cada um reinventando
+  botões, modais, inputs com estilos inline e hex colors. Acessibilidade
+  inexistente (sem ARIA, sem keyboard nav). Design tokens informais em app.css
+  sem proteção contra drift.
+
+descricao: |
+  ## Entregue
+
+  ### Infraestrutura
+  - tokens.css: design tokens formais (cores, spacing, tipografia, surfaces)
+  - Bits UI 2.18.1 como headless layer (acessibilidade + keyboard nav)
+  - ADR-0001: decisão documentada com alternativas avaliadas
+  - tsconfig.json + svelte-check para type checking
+  - Stylelint com color-no-hex ativo (bloqueia hex em componentes)
+  - Script audit-ui-coverage (mise task + npm script)
+
+  ### Componentes implementados (10 primitivos + compostos)
+  - Primitivos: Button, Input, Badge, Alert, Card
+  - Compostos (Bits UI): Select, Tabs, Dialog, Tooltip, DropdownMenu
+  - Todos com: $props(), variant/size tipados, rest props, focus-visible, prefers-reduced-motion
+
+  ### Migrações realizadas
+  - 15+ componentes refatorados para usar primitivos UI
+  - Compostos adotados: Select (3×), Tabs (2×), Dialog (1×), DropdownMenu (1×), Tooltip (1×)
+  - Hex colors: 50 → 0 (-100%)
+  - msg-erro/sucesso: 6 → 1 (-83%)
+  - Buttons inline: 75 → 51 (-32%)
+  - Dead code removido (EmptyState duplicado, CSS morto)
+
+  ### CI/Linting
+  - svelte-check integrado ao CI
+  - mise task check:ui-coverage (--strict bloqueia hex)
+  - npm run precheck para validação local antes do push
+  - Versão Bits UI verificada automaticamente no audit
+
+  ### Documentação
+  - docs/componentes.md: guia de uso com exemplos
+  - docs/adr/ADR-0001-component-library.md
+  - docs/linting.md: ferramentas de qualidade
+  - .kiro/specs/component-library-refactor/: requirements + design + tasks
+
+criterios_aceite:
+  - Bits UI instalado e todos 5 compostos com consumidores reais
+  - Design tokens formalizados em tokens.css
+  - Zero hex colors hardcoded em .svelte
+  - Build verde com svelte-check + stylelint + eslint
+  - Todos os testes passando (108 unit tests)
+  - ADR documentando a decisão
+  - Audit de cobertura disponível via mise/npm
+
+dependencias: []

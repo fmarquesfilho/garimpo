@@ -5,7 +5,7 @@
 	import { buscasSalvas } from '$lib/buscas.js';
 	import { usuario } from '$lib/firebase.js';
 	import { brl, pct } from '$lib/formatters.js';
-	import { Tabs, Loading, Alert, Button } from '$lib/components/ui/index.js';
+	import { Tabs, Loading, Alert } from '$lib/components/ui/index.js';
 	import FormAdicionarLoja from '$lib/components/FormAdicionarLoja.svelte';
 	import PainelAlertas from '$lib/components/PainelAlertas.svelte';
 	import ListaProdutosLoja from '$lib/components/ListaProdutosLoja.svelte';
@@ -261,9 +261,6 @@
 	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r6); }
 
 	.aviso, .vazio { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
-	.dica { font-size: 0.85rem; margin-top: 4px; }
-	.vazio-tab { color: var(--tinta-suave); font-size: 0.9rem; font-style: italic; }
-	.msg-erro { background: var(--erro-fundo); color: var(--erro-texto); padding: var(--r3) var(--r4); border-radius: 8px; margin-bottom: var(--r4); }
 
 	/* Lista de lojas */
 	.lojas-lista { display: flex; flex-wrap: wrap; gap: var(--r3); margin-bottom: var(--r5); }

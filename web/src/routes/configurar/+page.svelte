@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { usuario } from '$lib/firebase.js';
 	import { onboardingStatus, onboardingTermos, onboardingShopee, onboardingTelegram, onboardingWhatsapp, onboardingValidar, excluirConta } from '$lib/api.js';
-	import { Button, Alert, Input, Card } from '$lib/components/ui';
+	import { Button, Alert } from '$lib/components/ui';
 
 	let step = $state(0);
 	let carregando = $state(true);
@@ -308,8 +308,6 @@
 	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r6); }
 	.aviso { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
 	.loading { color: var(--tinta-suave); font-style: italic; }
-	.msg-erro { background: var(--erro-fundo); color: var(--erro-texto); padding: var(--r3) var(--r4); border-radius: var(--raio-sm); margin-bottom: var(--r4); }
-	.msg-sucesso { background: var(--sucesso-fundo); color: var(--sucesso-texto); padding: var(--r3) var(--r4); border-radius: var(--raio-sm); margin-bottom: var(--r4); }
 
 	/* Progress bar */
 	.progress { display: flex; gap: var(--r3); margin-bottom: var(--r6); }
