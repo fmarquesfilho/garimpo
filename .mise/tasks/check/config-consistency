@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Consistência de configs (dataset, portas, URLs)"
 # =============================================================================
 # check-config-consistency.sh — Verifica consistência de configurações
 # =============================================================================

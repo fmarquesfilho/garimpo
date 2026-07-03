@@ -14,47 +14,23 @@ on:
   pull_request:
 
 jobs:
-  # ── Go (microserviços + ferramentas) ─────────────────────────────────────
+  # ── Go (build + test + lint) ─────────────────────────────────────────────
   go:
     name: Go (build + test + lint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: jdx/mise-action@v2
+      - run: mise run build:go
+      - run: mise run test:go
+      - run: mise run lint:go
+      - run: mise run check:file-size -- 400
+      - run: mise run docs:check
 
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Build
-        run: go build ./...
-
-      - name: Test
-        run: go test ./...
-
-      - name: Lint
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          golangci-lint run --timeout=3m ./...
-
-      - name: Architecture rules
-        run: |
-          go install github.com/arch-go/arch-go@latest
-          arch-go
-
-      - name: File size check
-        run: ./scripts/check-file-size.sh 400
-
-      - name: Docs check (generated files up to date)
-        run: make docs-check
-
-  # ── C# (Web App) ────────────────────────────────────────────────────────
+  # ── C# (build + test) ───────────────────────────────────────────────────
   csharp:
     name: C# (build + test)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src
     services:
       postgres:
         image: postgres:17-alpine
@@ -71,77 +47,49 @@ jobs:
           --health-retries=5
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Test
-        run: dotnet test --no-build --configuration Release
+      - run: dotnet restore src/Garimpei.sln
+      - run: dotnet build --no-restore --configuration Release src/Garimpei.sln
+      - run: dotnet test --no-build --configuration Release src/Garimpei.sln
         env:
           ConnectionStrings__PostgreSQL: "Host=localhost;Port=5432;Database=garimpei;Username=garimpei;Password=garimpei_dev"
 
-  # ── Python (analyzer) ───────────────────────────────────────────────────
+  # ── Python (lint + syntax) ──────────────────────────────────────────────
   python:
     name: Python (lint + syntax)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/analyzer
     steps:
       - uses: actions/checkout@v5
+      - uses: jdx/mise-action@v2
+      - run: mise run lint:python
+      - run: python -c "import sys; sys.path.insert(0, 'services/analyzer'); import main"
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-
-      - name: Install deps
-        run: pip install -r requirements.txt ruff
-
-      - name: Lint (ruff)
-        run: ruff check .
-
-      - name: Syntax check
-        run: python -c "import main"
-
-  # ── Proto ───────────────────────────────────────────────────────────────
+  # ── Proto (lint + sync + breaking) ──────────────────────────────────────
   proto:
-    name: Proto (lint + sync check)
+    name: Proto (lint + sync + breaking)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
+        with:
+          fetch-depth: 0  # needed for buf breaking
       - uses: bufbuild/buf-setup-action@v1
-
-      - name: Lint
-        run: buf lint
-        working-directory: protos
-
-      - name: Sync check (Go)
+      - run: mise run proto:lint
+        env:
+          MISE_EXPERIMENTAL: "1"
+      - name: Sync check (Go + C#)
         run: |
-          cd protos && buf generate
-          cd ..
-          if ! git diff --exit-code gen/go/; then
-            echo "❌ gen/go/ desatualizado"
+          cd protos && buf generate && cd ..
+          if ! git diff --exit-code gen/go/ src/Garimpei.Protos/Generated/; then
+            echo "❌ Stubs desatualizados. Rode: mise run proto:generate"
             exit 1
           fi
+      - name: Breaking changes
+        run: cd protos && buf breaking --against '../.git#branch=main'
+        continue-on-error: true
 
-      - name: Sync check (C#)
-        run: |
-          cd protos && buf generate
-          cd ..
-          if ! git diff --exit-code src/Garimpei.Protos/Generated/; then
-            echo "❌ C# stubs desatualizados"
-            exit 1
-          fi
-
-  # ── Frontend ────────────────────────────────────────────────────────────
+  # ── Frontend (build + test + e2e) ───────────────────────────────────────
   frontend:
     name: Frontend (build + test + e2e)
     runs-on: ubuntu-latest
@@ -150,44 +98,32 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
+      - uses: jdx/mise-action@v2
       - run: npm ci
       - run: npm run build
       - run: npm run lint:css
       - run: npm run lint:js
       - run: npx vitest run
 
-      # ── E2E (Playwright + Firebase Auth Emulator) ──────────────────────
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
-
       - name: Start Firebase Auth Emulator
         run: firebase emulators:start --only auth --project garimpo-500114 &
         working-directory: ${{ github.workspace }}
-
       - name: Wait for emulator
         run: |
           for i in $(seq 1 15); do
             curl -s http://127.0.0.1:9099/ > /dev/null 2>&1 && break
             sleep 1
           done
-
       - name: Run E2E tests
         run: npx playwright test
         env:
           FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
           E2E_TEST_EMAIL: teste-e2e@garimpo.dev
           E2E_TEST_PASSWORD: senha-teste-123
-
       - name: Upload E2E results
         if: failure()
         uses: actions/upload-artifact@v4
@@ -196,74 +132,40 @@ jobs:
           path: web/test-results/
           retention-days: 7
 
-  # ── API Contract (drift frontend ↔ backend) ─────────────────────────────
-  api-contract:
-    name: API contract check
+  # ── Service Contracts + API drift ───────────────────────────────────────
+  contracts:
+    name: Contracts & drift checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Check API drift
-        run: ./scripts/check-api-contract.sh
-      - name: Check config consistency
-        run: ./scripts/check-config-consistency.sh
-      - name: Check schema sync
-        run: ./scripts/check-schema-sync.sh
-
-  # ── Service Contracts ───────────────────────────────────────────────────
-  service-contracts:
-    name: Service contracts check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
+      - uses: jdx/mise-action@v2
       - name: Install yq
         run: |
           sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/bin/yq
-
-      - name: Validate service contracts
-        run: ./scripts/check-service-contracts.sh
-
-      - name: Proto breaking changes
-        uses: bufbuild/buf-setup-action@v1
-      - run: cd protos && buf breaking --against '../.git#branch=main'
-        continue-on-error: true
+      - run: mise run checks
 
   # ── Docker (build all images) ───────────────────────────────────────────
   docker:
     name: Docker builds
     runs-on: ubuntu-latest
-    needs: [go, csharp, python, proto, frontend, api-contract]
+    needs: [go, csharp, python, proto, frontend, contracts]
     steps:
       - uses: actions/checkout@v5
-
       - name: C# API
         run: docker build -f src/Garimpei.Api/Dockerfile src/
-
-      - name: Collector (unified)
+      - name: Collector
         run: docker build -f services/collector/Dockerfile .
-
       - name: Publisher
         run: docker build -f services/publisher/Dockerfile .
-
       - name: Alerter
         run: docker build -f services/alerter/Dockerfile .
-
       - name: Scheduler
         run: docker build -f services/scheduler/Dockerfile .
-
       - name: Analyzer
         run: docker build -f services/analyzer/Dockerfile services/analyzer/
 
-  # ── Code Quality (Codacy — free for ≤5 users) ────────────────────────────
-  # Codacy runs automatically via GitHub App integration (not a workflow step).
-  # It analyzes Go (golangci-lint), Python (ruff), C# (Roslyn), + security (Trivy).
-  # Dashboard: https://app.codacy.com
-  # Setup: install Codacy GitHub App → add repo → auto-analyzes on PRs.
-  # No YAML step needed — Codacy hooks into GitHub directly.
-
-
-  # ── Deploy Backend (Cloud Run) ────────────────────────────────────────────
+  # ── Deploy Backend (Cloud Run) ──────────────────────────────────────────
   deploy-backend:
     name: Deploy backend (Cloud Run)
     runs-on: ubuntu-latest
@@ -344,7 +246,7 @@ jobs:
             --region=${{ env.REGION }} \
             --project=${{ env.PROJECT_ID }}
 
-  # ── Deploy Frontend (Cloudflare Pages) ───────────────────────────────────
+  # ── Deploy Frontend (Cloudflare Pages) ──────────────────────────────────
   deploy-web:
     name: Deploy frontend
     runs-on: ubuntu-latest
@@ -352,17 +254,10 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
+      - uses: jdx/mise-action@v2
       - name: Install & build
         run: npm ci && npm run build
         working-directory: web
-
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Fronteiras de dados (PG vs BQ)"
 # =============================================================================
 # check-data-ownership.sh — Valida fronteiras de dados entre serviços
 # =============================================================================

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Sync schemas (BQ ↔ Go ↔ C# ↔ Analyzer)"
 # =============================================================================
 # check-schema-sync.sh — Verifica sincronização do schema BigQuery
 # =============================================================================

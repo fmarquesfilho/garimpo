@@ -2,8 +2,6 @@
 # mise.toml — Garimpei
 # ═══════════════════════════════════════════════════════════════════════════════
 # Task runner + version manager para o monorepo polyglot.
-# Substitui Makefile + scripts avulsos com discovery (`mise tasks`) e
-# gerenciamento de runtimes (`mise install`).
 #
 # Uso:
 #   mise install          → instala todas as ferramentas declaradas
@@ -47,7 +45,7 @@ description = "Testes Go"
 run = "go test ./..."
 
 [tasks."test:csharp"]
-description = "Testes C# (51 testes)"
+description = "Testes C#"
 run = "dotnet test --nologo --no-build src/Garimpei.sln"
 
 # ── Lint ──────────────────────────────────────────────────────────────────────
@@ -68,42 +66,18 @@ run = "uvx ruff check services/analyzer/"
 description = "ESLint + Stylelint no frontend"
 run = "cd web && npm run lint:js && npm run lint:css"
 
-# ── Checks (contratos, drift, consistência) ───────────────────────────────────
+# ── Checks (file tasks em .mise/tasks/check/) ─────────────────────────────────
 
 [tasks.checks]
-description = "Roda todos os checks de integridade (CI-equivalent)"
+description = "Roda todos os checks de integridade"
 depends = [
-  "check:contracts",
-  "check:api",
-  "check:config",
-  "check:schema",
-  "check:ownership",
-  "check:stale",
+  "check:service-contracts",
+  "check:api-contract",
+  "check:config-consistency",
+  "check:schema-sync",
+  "check:data-ownership",
+  "check:stale-refs",
 ]
-
-[tasks."check:contracts"]
-description = "Valida contratos de serviço (registry + schemas + flows)"
-run = "./scripts/check-service-contracts.sh"
-
-[tasks."check:api"]
-description = "Verifica drift frontend ↔ backend (rotas)"
-run = "./scripts/check-api-contract.sh"
-
-[tasks."check:config"]
-description = "Verifica consistência de configs (dataset, portas, URLs)"
-run = "./scripts/check-config-consistency.sh"
-
-[tasks."check:schema"]
-description = "Verifica sync de schemas (BQ ↔ Go ↔ C# ↔ Analyzer)"
-run = "./scripts/check-schema-sync.sh"
-
-[tasks."check:ownership"]
-description = "Verifica fronteiras de dados (PG vs BQ, quem acessa o quê)"
-run = "./scripts/check-data-ownership.sh"
-
-[tasks."check:stale"]
-description = "Detecta referências stale (serviços removidos, dead code)"
-run = "./scripts/check-stale-refs.sh"
 
 # ── Docs ──────────────────────────────────────────────────────────────────────
 
@@ -115,20 +89,9 @@ depends = ["docs:er", "docs:env", "docs:board", "docs:sync"]
 description = "Gera Mermaid ER do schema BigQuery"
 run = "go run ./cmd/gen-er > docs/gerado/ENTIDADES.md"
 
-[tasks."docs:env"]
-description = "Extrai variáveis de ambiente documentadas"
-run = "./scripts/gen-env-doc.sh > docs/gerado/env-vars.md"
-
 [tasks."docs:board"]
 description = "Gera quadro Kanban do backlog"
 run = "go run ./cmd/gen-board"
-
-[tasks."docs:sync"]
-description = "Sincroniza docs para o site"
-run = """
-./scripts/sync-docs-to-site.sh
-cp api/openapi.yaml docs-site/public/openapi.yaml
-"""
 
 [tasks."docs:check"]
 description = "CI: verifica se docs geradas estão atualizadas"
@@ -143,7 +106,7 @@ git diff --exit-code docs/gerado docs-site/public/openapi.yaml || (echo "❌ Doc
 
 # ── Proto (gRPC) ──────────────────────────────────────────────────────────────
 
-[tasks.proto]
+[tasks."proto:generate"]
 description = "Gera stubs Go e C# a partir dos .proto"
 run = "cd protos && buf generate"
 
@@ -169,30 +132,12 @@ run = "docker compose down"
 description = "Logs de todos os containers"
 run = "docker compose logs -f"
 
-# ── Deploy (manual) ───────────────────────────────────────────────────────────
-
-[tasks."deploy:backend"]
-description = "Build + push + deploy do backend no Cloud Run"
-run = """
-echo "⚠️  Deploy manual do backend"
-echo "1. Build da imagem..."
-docker build --platform linux/amd64 --provenance=false \
-  -f src/Garimpei.Api/Dockerfile src/ \
-  -t southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/garimpei-api-v2:latest
-echo "2. Push para Artifact Registry..."
-docker push southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/garimpei-api-v2:latest
-echo "3. Deploy no Cloud Run..."
-gcloud run services replace deploy/cloud-run-deploy-now.yaml \
-  --region=southamerica-east1 --project=garimpo-500114
-echo "✅ Deploy concluído"
-"""
-
 # ── Atalhos ───────────────────────────────────────────────────────────────────
 
 [tasks.ci]
-description = "Simula o CI completo localmente (build + test + lint + checks)"
+description = "Simula o CI completo localmente"
 depends = ["build", "test", "lint", "checks", "docs:check"]
 
 [tasks.prepush]
-description = "Verificação pré-push (mesmo que o hook, mas explícito)"
+description = "Verificação pré-push (equivalente ao hook)"
 depends = ["build", "test", "lint:go", "checks", "docs:check"]

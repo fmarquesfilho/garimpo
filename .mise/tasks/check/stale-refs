@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Referências stale (dead code, serviços removidos)"
 # =============================================================================
 # check-stale-refs.sh — Detecta referências a código/serviços que não existem mais
 # =============================================================================
@@ -57,7 +58,7 @@ echo "🔍 Paths de services/ referenciados em scripts/configs..."
 
 SERVICE_REFS=$(grep -rhoE "services/[a-zA-Z0-9_-]+/" \
   --include="*.sh" --include="*.yml" --include="*.yaml" --include="*.go" \
-  scripts/ deploy/ .github/ docker-compose.yml 2>/dev/null | \
+  scripts/ .mise/tasks/ deploy/ .github/ docker-compose.yml 2>/dev/null | \
   sort -u || true)
 
 STALE_SERVICES=""

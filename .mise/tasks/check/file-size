@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Verifica tamanho máximo de arquivos"
 # check-file-size.sh — Impede que arquivos de código cresçam além do limite.
 #
 # Uso: ./scripts/check-file-size.sh [--max-lines N]

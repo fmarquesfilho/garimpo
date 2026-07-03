@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Verifica drift frontend ↔ backend (rotas)"
 # =============================================================================
 # check-api-contract.sh — Verifica drift entre frontend (api.js) e backend (C#)
 # =============================================================================

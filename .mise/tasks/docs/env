@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# scripts/gen-env-doc.sh — Extrai variáveis de ambiente referenciadas no código Go
-# e gera docs/gerado/env-vars.md.
-#
-# Uso: ./scripts/gen-env-doc.sh > docs/gerado/env-vars.md
-# Ou via Makefile: make docs-env
+#MISE description="Extrai variáveis de ambiente do código → docs/gerado/env-vars.md"
+# Gera docs/gerado/env-vars.md a partir das referências no código Go.
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUTPUT="docs/gerado/env-vars.md"
 
+{
 cat <<'HEADER'
 ---
 title: Variáveis de ambiente
@@ -16,7 +14,7 @@ description: Lista de variáveis de ambiente extraídas do código-fonte.
 ---
 
 :::caution[Arquivo gerado]
-Não edite manualmente. Rode `make docs-env` para regenerar.
+Não edite manualmente. Rode `mise run docs:env` para regenerar.
 :::
 
 | Variável | Arquivo | Linha |
@@ -24,13 +22,11 @@ Não edite manualmente. Rode `make docs-env` para regenerar.
 HEADER
 
 # Busca por os.Getenv("...") e os.LookupEnv("...") nos fontes Go
-# sort -t'|' -k2,2 -k3,3: ordena por variável, depois por arquivo (determinístico)
-# awk: mantém apenas a primeira ocorrência de cada variável
-grep -rn "os\.Getenv\|os\.LookupEnv" "$ROOT" \
+grep -rn "os\.Getenv\|os\.LookupEnv" . \
   --include="*.go" \
   --exclude-dir=vendor \
   --exclude-dir=.git \
-  | sed "s|${ROOT}/||" \
+  | sed "s|^\./||" \
   | while IFS='' read -r match; do
       file="${match%%:*}"
       rest="${match#*:}"
@@ -44,4 +40,7 @@ grep -rn "os\.Getenv\|os\.LookupEnv" "$ROOT" \
       fi
     done \
   | sort -t'|' -k2,2 -k3,3 \
-  | awk -F'|' '!seen[$2]++' 
+  | awk -F'|' '!seen[$2]++'
+} > "$OUTPUT"
+
+echo "✓ $OUTPUT gerado" 

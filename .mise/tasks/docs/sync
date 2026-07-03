@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Sincroniza docs canônicos para docs-site"
 # =============================================================================
 # sync-docs-to-site.sh — Sincroniza docs/ para docs-site/docs/ (Rspress)
 # =============================================================================

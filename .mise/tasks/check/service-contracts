@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Contratos de serviço (registry + schemas + flows)"
 # =============================================================================
 # check-service-contracts.sh — Valida contracts/registry.yaml contra o código
 # =============================================================================
