@@ -569,10 +569,10 @@ O CI executa 3 scripts de verificação que detectam inconsistências cross-stac
 
 | Script | O que detecta |
 |--------|--------------|
-| `scripts/check-api-contract.sh` | Rotas no frontend (`api.js`) sem endpoint no backend (ou vice-versa) |
-| `scripts/check-config-consistency.sh` | Nome errado do dataset BQ, portas divergentes, URLs hardcoded |
-| `scripts/check-schema-sync.sh` | Entidades C# sem DbSet, IOwnedEntity sem QueryFilter, tabelas BQ faltantes |
-| `scripts/check-data-ownership.sh` | Go/Python acessando PG, C# acessando BQ, collectors lendo PG |
+| `mise run check:api-contract` | Rotas no frontend (`api.js`) sem endpoint no backend (ou vice-versa) |
+| `mise run check:config-consistency` | Nome errado do dataset BQ, portas divergentes, URLs hardcoded |
+| `mise run check:schema-sync` | Entidades C# sem DbSet, IOwnedEntity sem QueryFilter, tabelas BQ faltantes |
+| `mise run check:data-ownership` | Go/Python acessando PG, C# acessando BQ, collectors lendo PG |
 
 **Decisão de design:** O SQL schema (`deploy/bigquery_schema.sql`) é a **fonte de verdade**
 (superset). O Go `EnsureSchema` pode ser um **subset** — ele só cria as tabelas que os

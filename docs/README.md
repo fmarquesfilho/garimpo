@@ -11,7 +11,7 @@ docs/
   05-manual-do-usuario.md    ← Como usar o produto
   06-qualidade-e-testes.md   ← CI, linters, BDD, cenários
   07-dados-e-ia.md           ← Análises + IA
-  gerado/                    ← Não editar manualmente (make docs)
+  gerado/                    ← Não editar manualmente (mise run docs)
     ENTIDADES.md             ← Mermaid ER do schema BigQuery
     env-vars.md              ← Variáveis de ambiente extraídas do código
   decisoes/                  ← ADRs (Architecture Decision Records)
@@ -19,14 +19,14 @@ docs/
   meta/                      ← Plano de migração e auditoria
 api/
   openapi.yaml               ← Fonte única do contrato da API (OpenAPI 3.1)
-docs-site/                   ← Site Astro Starlight (build com `make docs-site`)
+docs-site/                   ← Site Astro Starlight (build com `mise run docs:sync`)
 ```
 
 ## Como gerar
 
 ```bash
-make docs          # Gera tudo (ER, env-vars, site)
-make docs-check    # Confere se docs geradas estão atualizadas (CI)
+mise run docs          # Gera tudo (ER, env-vars, site)
+mise run docs:check    # Confere se docs geradas estão atualizadas (CI)
 ```
 
 ## Princípios

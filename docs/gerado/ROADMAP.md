@@ -1,6 +1,6 @@
 # Roadmap
 
-> Gerado automaticamente. Não edite — rode `make docs-board`.
+> Gerado automaticamente. Não edite — rode `mise run docs:board`.
 
 ## 🔵 Now (em andamento)
 

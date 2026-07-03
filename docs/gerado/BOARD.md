@@ -4,7 +4,7 @@ T-0028
 T-0029
 T-0030
 
-> Gerado automaticamente. Não edite — rode `make docs-board`.
+> Gerado automaticamente. Não edite — rode `mise run docs:board`.
 
 | 📋 Backlog | ⏭️ Next | 🔨 Doing | 👀 Review | ✅ Done |
 |---|---|---|---|---|

@@ -4,7 +4,7 @@ description: Diagrama entidade-relacionamento gerado do schema BigQuery.
 ---
 
 :::caution[Arquivo gerado]
-Não edite manualmente. Rode `make docs-er` para regenerar.
+Não edite manualmente. Rode `mise run docs:er` para regenerar.
 :::
 
 ```mermaid
