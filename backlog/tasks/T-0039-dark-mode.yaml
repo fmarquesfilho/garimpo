@@ -1,11 +1,12 @@
 id: T-0039
 titulo: "Dark mode com tokens CSS e detecção automática"
 epic: E-001
-status: doing
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S27"
 criado_em: "2026-07-03"
+concluido_em: "2026-07-03"
 valor: |
   Usuários com preferência de dark mode não conseguem usar o app confortavelmente
   à noite ou em ambientes escuros. Em telas OLED, dark mode reduz consumo de

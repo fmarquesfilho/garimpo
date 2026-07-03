@@ -6,7 +6,6 @@
 
 - **T-0034** Descobrir: corrigir filtros + badge drift + remover nota mínima · E-001 · M
 - **T-0035** Pós-migração: resolver bugs de deploy e garantir funcionalidade completa · E-001 · M
-- **T-0039** Dark mode com tokens CSS e detecção automática · E-001 · M
 
 ## 🟡 Next (próximo sprint)
 
@@ -52,3 +51,4 @@
 - **T-0026** Portar endpoints restantes do Go legado para C# · migracao-arch · G
 - **T-0032** Migrar docs-site de Astro Starlight para Rspress · docs-migration · P
 - **T-0037** Biblioteca de componentes UI com Bits UI + Design Tokens · E-001 · L
+- **T-0039** Dark mode com tokens CSS e detecção automática · E-001 · M

@@ -10,7 +10,7 @@ T-0030
 |---|---|---|---|---|
 | T-0007 Recomendação personalizada baseada em histórico (G) | T-0002 Persistir conversões da Shopee no BigQuery (M) | T-0034 Descobrir: corrigir filtros + badge drift + remover nota mínima (M) | | T-0001 Docs: site Starlight + geradores + consolidação (G) |
 | T-0031 Compartilhamento de credenciais Shopee entre tenants (P) | T-0005 Alertas configuráveis por usuário (M) | T-0035 Pós-migração: resolver bugs de deploy e garantir funcionalidade completa (M) | | T-0003 Backlog como código (schema + gen-board) (M) |
-| T-0036 Avaliar migração de scripts bash para Taskfile ou mise (M) | T-0024 Testar publicação WhatsApp via Meta Cloud API (P) | T-0039 Dark mode com tokens CSS e detecção automática (M) | | T-0004 ScopedStore por owner_uid (multi-tenant) (G) |
+| T-0036 Avaliar migração de scripts bash para Taskfile ou mise (M) | T-0024 Testar publicação WhatsApp via Meta Cloud API (P) | | | T-0004 ScopedStore por owner_uid (multi-tenant) (G) |
 | T-0038 Migração UI fase 2: consumir compostos restantes (M) | T-0027 Publisher multi-tenant: tokens do tenant em vez de env vars globais (M) | | | T-0006 Integrar docs-check e docs-board na CI (P) |
 | | T-0028 Configurar coleta no scheduler (popular snapshots do zero) (M) | | | T-0008 Refactor: tratamento de erros idiomático + telemetria (G) |
 | | T-0029 Deploy da nova API C# em produção (com endpoints portados) (P) | | | T-0009 Setup mono-repo (Go + C# + protos) + Docker Compose (M) |
@@ -32,14 +32,13 @@ T-0030
 | | | | | T-0026 Portar endpoints restantes do Go legado para C# (G) |
 | | | | | T-0032 Migrar docs-site de Astro Starlight para Rspress (P) |
 | | | | | T-0037 Biblioteca de componentes UI com Bits UI + Design Tokens (L) |
+| | | | | T-0039 Dark mode com tokens CSS e detecção automática (M) |
 
 ---
 
 **Métricas:**
 - 📋 backlog: 4
 - ⏭️ next: 8
-- 🔨 doing: 3
+- 🔨 doing: 2
 - 👀 review: 0
-- ✅ done: 24
-
-⚠️ **WIP excedido:** 3 tarefas em Doing (limite: 2)
+- ✅ done: 25
