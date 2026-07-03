@@ -64,7 +64,19 @@ func (d *Dispatcher) Publicar(ctx context.Context, o Oferta) (Resultado, error) 
 	// Busca o destino no store
 	destino, err := d.destinos.Buscar(ctx, o.DestinoID)
 	if err != nil {
-		return Resultado{Enviado: false, Detalhe: err.Error()}, fmt.Errorf("dispatcher buscar destino: %w", err)
+		// Se o destino não está no store, trata o DestinoID como config direta
+		// (chat_id ou telefone). Isso acontece quando a API C# resolve o Config
+		// do PostgreSQL e passa diretamente via gRPC.
+		sender, ok := d.senders[d.tipoPad]
+		if !ok {
+			return Resultado{Enviado: false, Detalhe: "provedor padrão não configurado"},
+				fmt.Errorf("provedor %q: %w", d.tipoPad, apperr.ErrNoProvider)
+		}
+		res, sendErr := sender.Enviar(ctx, o, o.DestinoID)
+		if sendErr != nil {
+			return res, fmt.Errorf("dispatcher enviar direto: %w", sendErr)
+		}
+		return res, nil
 	}
 	if !destino.Ativo {
 		return Resultado{Enviado: false, Detalhe: "destino inativo"},

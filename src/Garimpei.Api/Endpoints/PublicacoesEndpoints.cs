@@ -83,13 +83,30 @@ public static partial class EndpointExtensions
             PublicarCompatRequest req,
             CancellationToken ct) =>
         {
+            // Resolve o destino: se DestinoId informado, busca o Config (chat_id real)
+            // O publisher Go usa o Config diretamente — não conhece os UUIDs do PostgreSQL.
+            string resolvedGroupId = "";
+            if (!string.IsNullOrWhiteSpace(req.DestinoId))
+            {
+                if (Guid.TryParse(req.DestinoId, out var destinoGuid))
+                {
+                    var destino = await db.Destinos.FindAsync([destinoGuid], ct);
+                    resolvedGroupId = destino?.Config ?? req.DestinoId;
+                }
+                else
+                {
+                    // Se não for UUID, assume que já é o chat_id diretamente
+                    resolvedGroupId = req.DestinoId;
+                }
+            }
+
             // Tentativa de envio via publisher gRPC
             try
             {
                 var grpcRequest = new Publisher.V1.PublishRequest
                 {
                     Channel = "telegram",
-                    GroupId = req.DestinoId ?? "",
+                    GroupId = resolvedGroupId,
                     Content = new Publisher.V1.PublishContent
                     {
                         Title = req.Nome ?? "",

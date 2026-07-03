@@ -30,9 +30,17 @@ func TestDispatcherDestinoNaoEncontrado(t *testing.T) {
 		Destinos: store, TipoPadrao: "telegram", ConfigPadrao: "@padrao",
 	}, spy)
 
-	_, err := d.Publicar(context.Background(), Oferta{Nome: "Test", DestinoID: "inexistente"})
-	if err == nil {
-		t.Error("deveria retornar erro para destino inexistente")
+	// Quando DestinoID não está no store, é tratado como config direta (chat_id)
+	// e enviado pelo sender padrão. Isso permite a API C# passar o config resolvido.
+	res, err := d.Publicar(context.Background(), Oferta{Nome: "Test", DestinoID: "@meugrupo"})
+	if err != nil {
+		t.Errorf("não deveria dar erro ao usar DestinoID como config direta: %v", err)
+	}
+	if !res.Enviado {
+		t.Error("deveria ter enviado via sender padrão")
+	}
+	if spy.ultimaConfig != "@meugrupo" {
+		t.Errorf("config passada ao sender deveria ser '@meugrupo', foi %q", spy.ultimaConfig)
 	}
 }
 
