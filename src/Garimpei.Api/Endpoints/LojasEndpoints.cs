@@ -18,7 +18,19 @@ public static partial class EndpointExtensions
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync(ct);
 
-            return Results.Ok(new { buscas, total = buscas.Count });
+            return Results.Ok(new
+            {
+                buscas = buscas.Select(b => new
+                {
+                    id = b.Id,
+                    keywords = b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                    sort_by = b.SortBy,
+                    limit = b.Limit,
+                    active = b.Active,
+                    created_at = b.CreatedAt
+                }),
+                total = buscas.Count
+            });
         });
 
         lojas.MapPost("/", async (AppDbContext db, CreateBuscaRequest req, CancellationToken ct) =>

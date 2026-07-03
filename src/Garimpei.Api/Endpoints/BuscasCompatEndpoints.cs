@@ -22,7 +22,7 @@ public static partial class EndpointExtensions
                 buscas = buscas.Select(b => new
                 {
                     id = b.Id,
-                    keywords = new[] { b.Keyword },
+                    keywords = b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
                     ativo = b.Active,
                     criado_em = b.CreatedAt,
                     sort_by = b.SortBy,
@@ -59,12 +59,15 @@ public static partial class EndpointExtensions
             }
 
             // Salvar (upsert por keyword)
-            var kw = req.Keywords?.FirstOrDefault() ?? req.Keyword ?? "";
+            var keywords = req.Keywords ?? (req.Keyword is not null ? [req.Keyword] : []);
+            var kw = string.Join(",", keywords.Where(k => !string.IsNullOrWhiteSpace(k)));
             if (string.IsNullOrWhiteSpace(kw))
                 return Results.BadRequest(new { error = "keyword é obrigatório" });
 
+            // Busca por match exato ou pela primeira keyword
+            var primeiraKw = keywords.FirstOrDefault() ?? kw;
             var busca = await db.Buscas
-                .FirstOrDefaultAsync(b => b.Keyword == kw, ct);
+                .FirstOrDefaultAsync(b => b.Keyword == kw || b.Keyword == primeiraKw, ct);
 
             if (busca is null)
             {
@@ -81,10 +84,15 @@ public static partial class EndpointExtensions
             {
                 busca.Active = true;
                 busca.UpdatedAt = DateTime.UtcNow;
+                // Atualiza keywords se mudaram
+                if (busca.Keyword != kw)
+                {
+                    busca.Keyword = kw;
+                }
             }
 
             await db.SaveChangesAsync(ct);
-            return Results.Ok(new { id = busca.Id, keyword = kw, status = "salva" });
+            return Results.Ok(new { id = busca.Id, keywords, status = "salva" });
         }).RequireAuthorization().WithTags("Buscas");
 
         return app;
