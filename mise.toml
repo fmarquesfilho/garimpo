@@ -147,7 +147,7 @@ depends = ["build", "test", "lint", "checks"]
 
 [tasks."check:web"]
 description = "svelte-check (tipos, props, a11y, CSS unused) — strict, zero tolerance"
-run = "cd web && npx svelte-kit sync && npm run check"
+run = "cd web && npm run check"
 
 [tasks."test:web"]
 description = "Vitest (unit + contrast + theme) no frontend"

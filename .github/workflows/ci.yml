@@ -122,7 +122,6 @@ jobs:
       - uses: jdx/mise-action@v2
       - run: npm ci
       - run: npm audit --audit-level=high
-      - run: npx svelte-kit sync
       - run: npm run check
       - run: npm run build
       - run: npm run lint:css
