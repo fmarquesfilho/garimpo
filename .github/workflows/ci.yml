@@ -133,16 +133,26 @@ jobs:
   frontend-e2e:
     name: Frontend E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 5
     needs: [frontend]
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v5
+
       - uses: jdx/mise-action@v2
-      - run: npm ci
-      - run: npm run build
+
+      - name: Cache node_modules
+        id: nm-cache
+        uses: actions/cache@v4
+        with:
+          path: web/node_modules
+          key: node-modules-${{ hashFiles('web/package-lock.json') }}
+
+      - name: Install deps
+        if: steps.nm-cache.outputs.cache-hit != 'true'
+        run: npm ci
 
       - name: Cache Playwright browsers
         id: pw-cache
@@ -159,23 +169,25 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-      - name: Start Firebase Auth Emulator
-        run: firebase emulators:start --only auth --project garimpo-500114 &
-        working-directory: ${{ github.workspace }}
-      - name: Wait for emulator
+      - name: Build & start emulator
         run: |
-          for i in $(seq 1 15); do
-            curl -s http://127.0.0.1:9099/ > /dev/null 2>&1 && break
-            sleep 1
-          done
+          cd web && npm run build &
+          BUILD_PID=$!
+          # Firebase Auth Emulator standalone (sem instalar firebase-tools inteiro)
+          curl -sL https://firebase.tools/bin/linux/latest -o /tmp/firebase && chmod +x /tmp/firebase
+          /tmp/firebase emulators:start --only auth --project garimpo-500114 &
+          wait $BUILD_PID
+          # Wait for emulator ready
+          for i in $(seq 1 10); do curl -s http://127.0.0.1:9099/ >/dev/null 2>&1 && break; sleep 1; done
+        working-directory: ${{ github.workspace }}
+
       - name: Run E2E tests
         run: npx playwright test
         env:
           FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
           E2E_TEST_EMAIL: teste-e2e@garimpo.dev
           E2E_TEST_PASSWORD: senha-teste-123
+
       - name: Upload E2E results
         if: failure()
         uses: actions/upload-artifact@v4
