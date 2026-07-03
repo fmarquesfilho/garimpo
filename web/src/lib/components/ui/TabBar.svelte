@@ -52,12 +52,12 @@
 	}
 	button:hover:not(.ativa) { color: var(--tinta); }
 	.badge-tab {
-		font-size: 0.7rem;
+		font-size: var(--text-xs);
 		background: var(--ouro-fundo);
-		color: #7a5a1e;
-		padding: 1px 6px;
-		border-radius: 999px;
-		font-weight: 700;
+		color: var(--ouro-escuro);
+		padding: 1px var(--r2);
+		border-radius: var(--raio-full);
+		font-weight: var(--font-bold);
 	}
 	.badge-tab.alerta { background: var(--erro-fundo); color: var(--erro-texto); }
 

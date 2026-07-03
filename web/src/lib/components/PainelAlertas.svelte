@@ -5,6 +5,7 @@
 	 */
 	import { buscarAlertasConfig, testarAlertas, configurarAlertas } from '$lib/api.js';
 	import { onMount } from 'svelte';
+	import { Button, Badge, Alert, Input } from '$lib/components/ui';
 
 	let { buscaSelecionada = null } = $props();
 
@@ -63,102 +64,122 @@
 	<button class="btn-toggle-alertas" onclick={() => mostraAlertas = !mostraAlertas}>
 		🔔 Alertas Telegram
 		{#if alertasConfig?.ativo}
-			<span class="badge-ativo">Ativo</span>
+			<Badge variant="green">Ativo</Badge>
 		{:else}
-			<span class="badge-inativo">Inativo</span>
+			<Badge variant="red">Inativo</Badge>
 		{/if}
 	</button>
 
 	{#if mostraAlertas}
 		<div class="alertas-config">
+			<Input
+				bind:value={alertaChatId}
+				label="Chat ID do grupo Telegram"
+				placeholder={alertasConfig?.chat_id || 'Ex: -1001234567890'}
+			/>
+			<span class="hint">ID do grupo onde os alertas serão enviados. Use @BotFather para criar o bot.</span>
+
 			<div class="campo-alerta">
-				<label for="chat-id">Chat ID do grupo Telegram</label>
-				<input id="chat-id" type="text" bind:value={alertaChatId}
-					placeholder={alertasConfig?.chat_id || 'Ex: -1001234567890'} />
-				<span class="hint">ID do grupo onde os alertas serão enviados. Use @BotFather para criar o bot.</span>
-			</div>
-			<div class="campo-alerta">
-				<label for="threshold">Threshold de variação (%)</label>
-				<input id="threshold" type="number" bind:value={alertaThreshold} min="5" max="50" step="5" />
+				<Input
+					bind:value={alertaThreshold}
+					type="number"
+					label="Threshold de variação (%)"
+					variant="mono"
+					size="sm"
+				/>
 				<span class="hint">Alerta se preço variar mais que {alertaThreshold}%.</span>
 			</div>
+
 			<div class="campo-alerta checkbox">
 				<label>
 					<input type="checkbox" bind:checked={alertaApenasQuedas} />
 					Alertar apenas quedas de preço (oportunidades)
 				</label>
 			</div>
+
 			<div class="alertas-acoes">
-				<button onclick={handleSalvar} disabled={salvandoAlerta} class="btn-salvar">
+				<Button onclick={handleSalvar} disabled={salvandoAlerta} size="sm">
 					{salvandoAlerta ? '⏳' : '💾'} Salvar
-				</button>
-				<button onclick={handleTestar} disabled={testandoAlerta || !alertasConfig?.ativo} class="btn-testar">
+				</Button>
+				<Button variant="secondary" onclick={handleTestar} disabled={testandoAlerta || !alertasConfig?.ativo} size="sm">
 					{testandoAlerta ? '⏳' : '📨'} Testar
-				</button>
+				</Button>
 			</div>
+
 			{#if msgAlerta}
-				<p class={msgAlerta.tipo === 'erro' ? 'msg-erro-inline' : 'msg-sucesso'}>
+				<Alert variant={msgAlerta.tipo === 'erro' ? 'error' : 'success'} inline>
 					{msgAlerta.texto}
-				</p>
+				</Alert>
 			{/if}
 		</div>
 	{/if}
 </div>
 
 <style>
-	.painel-alertas { margin-bottom: var(--r5); }
+	.painel-alertas {
+		margin-bottom: var(--r5);
+	}
 	.btn-toggle-alertas {
-		display: flex; align-items: center; gap: 8px;
-		padding: 10px 16px; border: 1px solid var(--linha);
-		border-radius: var(--raio-sm); background: var(--nevoa);
-		cursor: pointer; font-size: 0.9rem; font-weight: 600;
-		width: 100%; text-align: left;
+		display: flex;
+		align-items: center;
+		gap: var(--r2);
+		padding: var(--r3) var(--r4);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio-sm);
+		background: var(--nevoa);
+		cursor: pointer;
+		font-family: var(--ui);
+		font-size: var(--text-base);
+		font-weight: var(--font-semi);
+		width: 100%;
+		text-align: left;
+		transition: border-color 0.15s ease;
 	}
-	.btn-toggle-alertas:hover { border-color: var(--ouro); }
-	.badge-ativo {
-		font-size: 0.7rem; background: var(--sucesso-fundo);
-		color: var(--sucesso-texto); padding: 2px 8px;
-		border-radius: var(--raio-full); font-weight: 700;
-	}
-	.badge-inativo {
-		font-size: 0.7rem; background: var(--erro-fundo);
-		color: var(--erro-texto); padding: 2px 8px;
-		border-radius: var(--raio-full); font-weight: 700;
+	.btn-toggle-alertas:hover {
+		border-color: var(--ouro);
 	}
 	.alertas-config {
-		border: 1px solid var(--linha); border-top: none;
-		border-radius: 0 0 10px 10px; padding: var(--r4); background: var(--branco);
+		border: 1px solid var(--linha);
+		border-top: none;
+		border-radius: 0 0 var(--raio-sm) var(--raio-sm);
+		padding: var(--r4);
+		background: var(--branco);
+		display: flex;
+		flex-direction: column;
+		gap: var(--r3);
 	}
-	.campo-alerta { margin-bottom: var(--r3); }
-	.campo-alerta label {
-		display: block; font-size: 0.82rem; font-weight: 600;
-		margin-bottom: 4px; color: var(--tinta);
+	.campo-alerta {
+		display: flex;
+		flex-direction: column;
+		gap: var(--r1);
 	}
-	.campo-alerta input[type="text"],
-	.campo-alerta input[type="number"] {
-		width: 100%; padding: 8px 12px; border: 1px solid var(--linha);
-		border-radius: 8px; font-size: 0.88rem;
-	}
-	.campo-alerta input:focus { outline: none; border-color: var(--ouro); }
 	.campo-alerta.checkbox label {
-		display: flex; align-items: center; gap: 8px;
-		font-weight: normal; cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: var(--r2);
+		font-size: var(--text-sm);
+		cursor: pointer;
 	}
-	.hint { font-size: 0.72rem; color: var(--tinta-suave); margin-top: 2px; display: block; }
-	.alertas-acoes { display: flex; gap: var(--r3); margin-top: var(--r4); }
-	.btn-salvar, .btn-testar {
-		padding: 8px 16px; border-radius: 8px; border: 1px solid var(--linha);
-		font-weight: 600; font-size: 0.85rem; cursor: pointer;
+	.campo-alerta.checkbox input {
+		width: 16px;
+		height: 16px;
+		accent-color: var(--ouro);
+		cursor: pointer;
 	}
-	.btn-salvar { background: var(--ouro); color: white; border-color: var(--ouro); }
-	.btn-salvar:hover:not(:disabled) { opacity: 0.9; }
-	.btn-testar { background: var(--branco); }
-	.btn-testar:hover:not(:disabled) { border-color: var(--ouro); }
-	.btn-salvar:disabled, .btn-testar:disabled { opacity: 0.5; cursor: not-allowed; }
-	.msg-erro-inline { color: var(--erro-texto); font-size: 0.85rem; margin-top: 6px; }
-	.msg-sucesso { color: var(--sucesso-texto); font-size: 0.85rem; margin-top: 6px; }
+	.hint {
+		font-size: var(--text-xs);
+		color: var(--tinta-suave);
+	}
+	.alertas-acoes {
+		display: flex;
+		gap: var(--r3);
+		margin-top: var(--r2);
+	}
 
 	@media (max-width: 600px) {
 		.alertas-acoes { flex-direction: column; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.btn-toggle-alertas { transition-duration: 0ms; }
 	}
 </style>

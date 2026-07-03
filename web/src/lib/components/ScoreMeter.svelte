@@ -135,26 +135,26 @@
 	.fechar-pop {
 		border: none;
 		background: var(--ouro);
-		color: #fff;
-		font-weight: 600;
-		font-size: 0.78rem;
-		padding: 5px 12px;
-		border-radius: 8px;
+		color: var(--branco);
+		font-weight: var(--font-semi);
+		font-size: var(--text-sm);
+		padding: var(--r1) var(--r3);
+		border-radius: var(--raio-sm);
 		cursor: pointer;
 	}
 	.valor {
-		font-size: 1.05rem;
-		font-weight: 700;
+		font-size: var(--text-lg);
+		font-weight: var(--font-bold);
 		color: var(--ouro);
 	}
 	.chip {
 		margin-left: auto;
-		font-size: 0.68rem;
-		font-weight: 600;
-		padding: 2px 8px;
-		border-radius: 999px;
+		font-size: var(--text-xs);
+		font-weight: var(--font-semi);
+		padding: 2px var(--r2);
+		border-radius: var(--raio-full);
 		background: var(--ouro-fundo);
-		color: #7a5a1e;
+		color: var(--ouro-escuro);
 	}
 	.trilho {
 		height: 10px;

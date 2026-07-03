@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { usuario } from '$lib/firebase.js';
 	import { onboardingStatus, onboardingTermos, onboardingShopee, onboardingTelegram, onboardingWhatsapp, onboardingValidar, excluirConta } from '$lib/api.js';
+	import { Button, Alert, Input, Card } from '$lib/components/ui';
 
 	let step = $state(0);
 	let carregando = $state(true);
@@ -128,10 +129,10 @@
 		<p class="loading">Carregando...</p>
 	{:else}
 		{#if erro}
-			<div class="msg-erro">{erro}</div>
+			<Alert variant="error">{erro}</Alert>
 		{/if}
 		{#if sucesso}
-			<div class="msg-sucesso">{sucesso}</div>
+			<Alert variant="success">{sucesso}</Alert>
 		{/if}
 
 		<!-- Progress bar -->
@@ -167,7 +168,7 @@
 						<li>O serviço está em fase beta — sem garantias de disponibilidade</li>
 					</ul>
 				</div>
-				<button class="btn-primario" onclick={aceitarTermos}>Aceitar e Continuar</button>
+				<Button onclick={aceitarTermos}>Aceitar e Continuar</Button>
 			</div>
 		{/if}
 
@@ -194,9 +195,9 @@
 						<input type="password" bind:value={secret} placeholder="Ex: MJS67QHU7HMCRX5..." />
 					</label>
 				</div>
-				<button class="btn-primario" onclick={salvarShopee} disabled={salvandoShopee}>
+				<Button onclick={salvarShopee} disabled={salvandoShopee}>
 					{salvandoShopee ? '⏳ Salvando...' : '💾 Salvar Credenciais'}
-				</button>
+				</Button>
 			</div>
 		{/if}
 
@@ -262,12 +263,12 @@
 				{/if}
 
 				<div class="acoes-dupla">
-					<button class="btn-primario" onclick={() => salvarCanal(false)} disabled={salvandoCanal}>
+					<Button onclick={() => salvarCanal(false)} disabled={salvandoCanal}>
 						{salvandoCanal ? '⏳' : '💾'} Salvar {canalEscolhido === 'telegram' ? 'Telegram' : 'WhatsApp'}
-					</button>
-					<button class="btn-secundario" onclick={() => salvarCanal(true)} disabled={salvandoCanal}>
+					</Button>
+					<Button variant="secondary" onclick={() => salvarCanal(true)} disabled={salvandoCanal}>
 						Pular →
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}
@@ -277,23 +278,23 @@
 			<div class="step-card">
 				<h2>4. Validar Credenciais</h2>
 				<p>Vamos testar suas credenciais fazendo uma chamada real à API da Shopee.</p>
-				<button class="btn-primario" onclick={validar} disabled={validando}>
+				<Button onclick={validar} disabled={validando}>
 					{validando ? '⏳ Validando...' : '🔍 Testar Credenciais'}
-				</button>
+				</Button>
 			</div>
 		{/if}
 
 		<!-- Exclusão de conta -->
 		<div class="zona-perigo">
-			<button class="btn-perigo" onclick={() => mostraExcluir = !mostraExcluir}>
+			<Button variant="danger" size="sm" onclick={() => mostraExcluir = !mostraExcluir}>
 				🗑️ Excluir minha conta e dados
-			</button>
+			</Button>
 			{#if mostraExcluir}
 				<div class="confirmar-exclusao">
 					<p>⚠️ Esta ação é <strong>irreversível</strong>. Todos os seus dados (buscas, publicações, credenciais) serão removidos permanentemente.</p>
-					<button class="btn-perigo-confirmar" onclick={handleExcluir} disabled={excluindo}>
+					<Button variant="danger" onclick={handleExcluir} disabled={excluindo}>
 						{excluindo ? '⏳' : '🗑️'} Confirmar Exclusão
-					</button>
+					</Button>
 				</div>
 			{/if}
 		</div>
@@ -307,8 +308,8 @@
 	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r6); }
 	.aviso { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
 	.loading { color: var(--tinta-suave); font-style: italic; }
-	.msg-erro { background: var(--erro-fundo); color: var(--erro-texto); padding: var(--r3) var(--r4); border-radius: 8px; margin-bottom: var(--r4); }
-	.msg-sucesso { background: var(--sucesso-fundo); color: var(--sucesso-texto); padding: var(--r3) var(--r4); border-radius: 8px; margin-bottom: var(--r4); }
+	.msg-erro { background: var(--erro-fundo); color: var(--erro-texto); padding: var(--r3) var(--r4); border-radius: var(--raio-sm); margin-bottom: var(--r4); }
+	.msg-sucesso { background: var(--sucesso-fundo); color: var(--sucesso-texto); padding: var(--r3) var(--r4); border-radius: var(--raio-sm); margin-bottom: var(--r4); }
 
 	/* Progress bar */
 	.progress { display: flex; gap: var(--r3); margin-bottom: var(--r6); }
@@ -332,10 +333,10 @@
 	.form-campos input { padding: 10px 14px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
 	.form-campos input:focus { outline: none; border-color: var(--ouro); box-shadow: 0 0 0 2px var(--ouro-fundo); }
 
-	.btn-primario { padding: 10px 20px; background: var(--ouro); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+	.btn-primario { padding: var(--r3) var(--r5); background: var(--ouro); color: var(--branco); border: none; border-radius: var(--raio-sm); font-weight: var(--font-semi); font-size: var(--text-base); cursor: pointer; }
 	.btn-primario:hover:not(:disabled) { opacity: 0.9; }
 	.btn-primario:disabled { opacity: 0.5; cursor: not-allowed; }
-	.btn-secundario { padding: 10px 20px; background: var(--branco); border: 1px solid var(--linha); border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+	.btn-secundario { padding: var(--r3) var(--r5); background: var(--branco); border: 1px solid var(--linha); border-radius: var(--raio-sm); font-weight: var(--font-semi); font-size: var(--text-base); cursor: pointer; }
 	.btn-secundario:hover { border-color: var(--ouro); }
 	.acoes-dupla { display: flex; gap: var(--r3); }
 
@@ -360,12 +361,8 @@
 
 	/* Zona de perigo */
 	.zona-perigo { margin-top: var(--r8); padding-top: var(--r5); border-top: 1px solid var(--linha); }
-	.btn-perigo { padding: 8px 16px; border: 1px solid var(--erro-texto); color: var(--erro-texto); background: transparent; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
-	.btn-perigo:hover { background: var(--erro-fundo); }
-	.confirmar-exclusao { margin-top: var(--r3); background: var(--erro-fundo); border-radius: 8px; padding: var(--r4); }
-	.confirmar-exclusao p { font-size: 0.88rem; margin-bottom: var(--r3); }
-	.btn-perigo-confirmar { padding: 8px 16px; background: var(--erro-texto); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-	.btn-perigo-confirmar:disabled { opacity: 0.5; }
+	.confirmar-exclusao { margin-top: var(--r3); background: var(--erro-fundo); border-radius: var(--raio-sm); padding: var(--r4); }
+	.confirmar-exclusao p { font-size: var(--text-base); margin-bottom: var(--r3); }
 
 	@media (max-width: 600px) {
 		.progress { flex-wrap: wrap; }
