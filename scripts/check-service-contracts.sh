@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+# =============================================================================
+# check-service-contracts.sh — Valida contracts/registry.yaml contra o código
+# =============================================================================
+# Verifica:
+#   1. Registry YAML é parseável e tem estrutura válida
+#   2. Fronteiras HTTP existem no código C# (Endpoints/*.cs)
+#   3. Fronteiras gRPC existem nos .proto referenciados
+#   4. Schemas referenciados existem e são JSON válido
+#   5. Schemas usam snake_case (sem camelCase)
+#   6. Referências de flows apontam para boundaries existentes
+#
+# Dependências: yq, jq (ambos disponíveis via brew/apt)
+# =============================================================================
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+REGISTRY="contracts/registry.yaml"
+ERRORS=0
+WARNINGS=0
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Service Contracts Check"
+echo "═══════════════════════════════════════════════════════════════"
+echo ""
+
+# ── Pré-requisitos ────────────────────────────────────────────────────────────
+if ! command -v yq &> /dev/null; then
+    echo -e "${RED}✗ yq não encontrado. Instale: brew install yq${NC}"
+    exit 1
+fi
+if ! command -v jq &> /dev/null; then
+    echo -e "${RED}✗ jq não encontrado. Instale: brew install jq${NC}"
+    exit 1
+fi
+
+# ── 1. Registry é parseável ───────────────────────────────────────────────────
+echo "🔍 Validando estrutura do registry..."
+
+if [ ! -f "$REGISTRY" ]; then
+    echo -e "${RED}   ✗ $REGISTRY não encontrado${NC}"
+    exit 1
+fi
+
+if ! yq '.' "$REGISTRY" > /dev/null 2>&1; then
+    echo -e "${RED}   ✗ $REGISTRY não é YAML válido${NC}"
+    exit 1
+fi
+
+# Verificar campos obrigatórios
+for field in version services boundaries flows; do
+    if [ "$(yq ".$field" "$REGISTRY")" = "null" ]; then
+        echo -e "${RED}   ✗ Campo obrigatório ausente: $field${NC}"
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+
+SERVICES_COUNT=$(yq '.services | length' "$REGISTRY")
+BOUNDARIES_COUNT=$(yq '.boundaries | length' "$REGISTRY")
+echo -e "${GREEN}   ✓ Registry válido ($SERVICES_COUNT serviços, $BOUNDARIES_COUNT fronteiras)${NC}"
+
+# ── 2. Fronteiras HTTP existem no código ──────────────────────────────────────
+echo ""
+echo "🔍 Verificando fronteiras HTTP no código C#..."
+
+HTTP_OK=0
+HTTP_FAIL=0
+
+while IFS= read -r line; do
+    path=$(echo "$line" | cut -d'|' -f1)
+    method=$(echo "$line" | cut -d'|' -f2)
+    bid=$(echo "$line" | cut -d'|' -f3)
+
+    # Procura o path nos Endpoints C#
+    escaped_path=$(echo "$path" | sed 's/\//\\\//g')
+    if grep -rq "$path\|\"${path}\"" src/Garimpei.Api/Endpoints/ src/Garimpei.Api/Program.cs 2>/dev/null; then
+        HTTP_OK=$((HTTP_OK + 1))
+    else
+        echo -e "${RED}   ✗ [$bid] $method $path — não encontrado no código C#${NC}"
+        HTTP_FAIL=$((HTTP_FAIL + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+done < <(yq -r '.boundaries[] | select(.protocol == "http" and .target == "csharp-api") | .path + "|" + .method + "|" + .id' "$REGISTRY")
+
+if [ "$HTTP_FAIL" -eq 0 ]; then
+    echo -e "${GREEN}   ✓ Todas as $HTTP_OK fronteiras HTTP encontradas no código${NC}"
+fi
+
+# ── 3. Fronteiras gRPC existem nos protos ─────────────────────────────────────
+echo ""
+echo "🔍 Verificando fronteiras gRPC nos .proto..."
+
+GRPC_OK=0
+GRPC_FAIL=0
+
+while IFS= read -r line; do
+    service_name=$(echo "$line" | cut -d'|' -f1)
+    method_name=$(echo "$line" | cut -d'|' -f2)
+    bid=$(echo "$line" | cut -d'|' -f3)
+    target=$(echo "$line" | cut -d'|' -f4)
+
+    # Busca o proto file do target service
+    proto_file=$(yq -r ".services[] | select(.id == \"$target\") | .proto // \"\"" "$REGISTRY")
+
+    if [ -z "$proto_file" ] || [ ! -f "$proto_file" ]; then
+        echo -e "${YELLOW}   ⚠ [$bid] proto não encontrado para serviço '$target'${NC}"
+        WARNINGS=$((WARNINGS + 1))
+        continue
+    fi
+
+    # Verifica se o método existe no proto
+    if grep -q "rpc $method_name" "$proto_file"; then
+        GRPC_OK=$((GRPC_OK + 1))
+    else
+        echo -e "${RED}   ✗ [$bid] rpc $method_name não encontrado em $proto_file${NC}"
+        GRPC_FAIL=$((GRPC_FAIL + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+done < <(yq -r '.boundaries[] | select(.protocol == "grpc") | .service + "|" + .method + "|" + .id + "|" + .target' "$REGISTRY")
+
+if [ "$GRPC_FAIL" -eq 0 ]; then
+    echo -e "${GREEN}   ✓ Todos os $GRPC_OK métodos gRPC encontrados nos protos${NC}"
+fi
+
+# ── 4. Schemas referenciados existem e são JSON válido ────────────────────────
+echo ""
+echo "🔍 Verificando schemas referenciados..."
+
+SCHEMA_OK=0
+SCHEMA_FAIL=0
+
+while IFS= read -r schema_path; do
+    if [ -z "$schema_path" ] || [ "$schema_path" = "null" ]; then
+        continue
+    fi
+    if [ ! -f "$schema_path" ]; then
+        echo -e "${RED}   ✗ Schema não encontrado: $schema_path${NC}"
+        SCHEMA_FAIL=$((SCHEMA_FAIL + 1))
+        ERRORS=$((ERRORS + 1))
+    elif ! jq empty "$schema_path" 2>/dev/null; then
+        echo -e "${RED}   ✗ JSON inválido: $schema_path${NC}"
+        SCHEMA_FAIL=$((SCHEMA_FAIL + 1))
+        ERRORS=$((ERRORS + 1))
+    else
+        SCHEMA_OK=$((SCHEMA_OK + 1))
+    fi
+done < <(yq -r '.boundaries[].request_schema // ""' "$REGISTRY"; yq -r '.boundaries[].response_schema // ""' "$REGISTRY")
+
+if [ "$SCHEMA_FAIL" -eq 0 ]; then
+    echo -e "${GREEN}   ✓ Todos os $SCHEMA_OK schemas válidos${NC}"
+fi
+
+# ── 5. Schemas usam snake_case ────────────────────────────────────────────────
+echo ""
+echo "🔍 Verificando naming convention nos schemas..."
+
+NAMING_FAIL=0
+
+for schema_file in contracts/schemas/*.json; do
+    [ -f "$schema_file" ] || continue
+    # Extrai apenas property names definidos pelo usuário (dentro de "properties": {})
+    # Ignora keywords do JSON Schema (type, format, minItems, description, etc.)
+    camel_fields=$(jq -r '[.. | .properties? // empty | keys[]] | unique[]' "$schema_file" 2>/dev/null | grep -E '^[a-z]+[A-Z]' || true)
+    if [ -n "$camel_fields" ]; then
+        echo -e "${RED}   ✗ camelCase em $schema_file: $camel_fields${NC}"
+        NAMING_FAIL=$((NAMING_FAIL + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+
+if [ "$NAMING_FAIL" -eq 0 ]; then
+    echo -e "${GREEN}   ✓ Todos os schemas usam snake_case${NC}"
+fi
+
+# ── 6. Referências de flows ───────────────────────────────────────────────────
+echo ""
+echo "🔍 Verificando referências nos flows..."
+
+# Coleta todos os boundary IDs
+ALL_BOUNDARY_IDS=$(yq -r '.boundaries[].id' "$REGISTRY")
+
+FLOW_OK=0
+FLOW_FAIL=0
+
+while IFS= read -r ref; do
+    if [ -z "$ref" ] || [ "$ref" = "null" ]; then
+        continue
+    fi
+    if echo "$ALL_BOUNDARY_IDS" | grep -qx "$ref"; then
+        FLOW_OK=$((FLOW_OK + 1))
+    else
+        echo -e "${RED}   ✗ Flow referencia boundary inexistente: '$ref'${NC}"
+        FLOW_FAIL=$((FLOW_FAIL + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+done < <(yq -r '.flows[].steps[].boundary // ""' "$REGISTRY")
+
+if [ "$FLOW_FAIL" -eq 0 ]; then
+    echo -e "${GREEN}   ✓ Todas as $FLOW_OK referências de flow válidas${NC}"
+fi
+
+# ── Resultado ─────────────────────────────────────────────────────────────────
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+if [ "$ERRORS" -eq 0 ]; then
+    if [ "$WARNINGS" -gt 0 ]; then
+        echo -e "${GREEN}✅ Contratos válidos! ($WARNINGS warning(s))${NC}"
+    else
+        echo -e "${GREEN}✅ Contratos válidos! Todos os serviços alinhados.${NC}"
+    fi
+    exit 0
+else
+    echo -e "${RED}❌ $ERRORS erro(s) de contrato detectados!${NC}"
+    exit 1
+fi
