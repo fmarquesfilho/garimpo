@@ -168,8 +168,8 @@
 
 <svelte:head><title>Publicar — Garimpei</title></svelte:head>
 
-<section class="max-w-xl">
-	<Button variant="ghost" size="sm" class="mb-4" onclick={() => goto('/')}>← Voltar</Button>
+<section class="max-w-xl space-y-8">
+	<Button variant="ghost" size="sm" onclick={() => goto('/')}>← Voltar</Button>
 
 	{#if carregando}
 		<p class="text-muted-foreground italic">Carregando…</p>
@@ -185,7 +185,7 @@
 		<ResolverLink onresolvido={handleLinkResolvido} />
 
 		<!-- Configuração -->
-		<div class="grid grid-cols-1 gap-4 my-5 sm:grid-cols-3">
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 			<div class="flex flex-col gap-1.5">
 				<span class="text-xs font-semibold text-muted-foreground">📡 Destino</span>
 				{#if destinos.length === 0}
@@ -222,7 +222,7 @@
 		</div>
 
 		<!-- Legenda -->
-		<div class="mb-5">
+		<div>
 			<div class="flex items-center justify-between mb-2">
 				<span class="text-sm font-semibold">✏️ Legenda</span>
 				{#if legendaEditada}
@@ -240,7 +240,7 @@
 		<PublicarPreview imagem={produto.imagem} {legenda} link={produto.link} />
 
 		<!-- Ação -->
-		<div class="mb-5">
+		<div>
 			<Button
 				variant="danger"
 				size="lg"

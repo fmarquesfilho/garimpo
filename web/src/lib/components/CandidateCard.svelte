@@ -31,7 +31,7 @@
 </script>
 
 <article
-	class="overflow-hidden rounded-md border border-border bg-card shadow-sm transition-[transform,box-shadow] duration-150 ease-linear hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(46,34,38,0.2)]"
+	class="overflow-hidden rounded-md border border-border bg-card shadow-sm transition-[transform,box-shadow] duration-150 ease-linear hover:-translate-y-0.5 hover:shadow-[var(--sombra)]"
 	class:!border-[var(--ouro-claro)]={destaque}
 >
 	{#if candidato.imagem}

@@ -128,12 +128,14 @@
 	<title>Lojas — Garimpei</title>
 </svelte:head>
 
-<section class="max-w-[900px]">
-	<h1 class="text-2xl mb-1">🏪 Lojas Monitoradas</h1>
-	<p class="text-tinta-suave text-sm mb-6">
-		Acompanhe os produtos das lojas que você monitora. Veja novidades, variações de preço e publique ofertas
-		diretamente.
-	</p>
+<section class="max-w-[900px] space-y-8">
+	<div>
+		<h1 class="text-2xl mb-1">🏪 Lojas Monitoradas</h1>
+		<p class="text-tinta-suave text-sm">
+			Acompanhe os produtos das lojas que você monitora. Veja novidades, variações de preço e publique ofertas
+			diretamente.
+		</p>
+	</div>
 
 	{#if !$usuario}
 		<div class="bg-porcelana p-4 rounded-sm text-tinta-suave">Faça login para ver as lojas monitoradas.</div>
@@ -149,7 +151,7 @@
 			</div>
 		{:else}
 			<!-- Lista de buscas com lojas -->
-			<div class="flex flex-wrap gap-3 mb-5">
+			<div class="flex flex-wrap gap-3">
 				{#each buscasComLojas as b (b.id)}
 					<div class="relative">
 						<button

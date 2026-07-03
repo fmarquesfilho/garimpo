@@ -138,16 +138,18 @@
 	<title>Descobrir — Garimpei</title>
 </svelte:head>
 
-<section class="max-w-[900px]">
-	<h1 class="text-[clamp(1.8rem,5vw,2.5rem)] mb-2">O que publicar hoje?</h1>
-	<p class="text-tinta-suave text-[0.95rem] mb-5">
-		Encontre produtos para divulgar — por busca, oportunidades ou favoritos.
-	</p>
+<section class="max-w-[900px] space-y-8">
+	<div>
+		<h1 class="text-[clamp(1.8rem,5vw,2.5rem)] mb-2">O que publicar hoje?</h1>
+		<p class="text-tinta-suave text-[0.95rem]">
+			Encontre produtos para divulgar — por busca, oportunidades ou favoritos.
+		</p>
+	</div>
 
 	<FilterBar bind:busca bind:categoria bind:comissaoMin bind:vendasMin mostrarBusca={true} />
 
 	<!-- Fontes -->
-	<div class="flex flex-wrap gap-1.5 mb-6">
+	<div class="flex flex-wrap gap-1.5">
 		<button
 			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.curadoria
 				? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro'
@@ -210,14 +212,14 @@
 		</button>
 	</div>
 	{#if !fontes.curadoria && !fontes.quedas && !fontes.novos && !fontes.favoritos}
-		<p class="text-[0.82rem] text-tinta-suave italic mb-4">Ative ao menos uma fonte para ver resultados.</p>
+		<p class="text-[0.82rem] text-tinta-suave italic">Ative ao menos uma fonte para ver resultados.</p>
 	{:else if fontes.curadoria && !busca.trim() && categoriasEfetivas.length === 0 && !fontes.quedas && !fontes.novos && !fontes.favoritos}
-		<p class="text-[0.82rem] text-tinta-suave italic mb-4">Digite um termo acima para buscar produtos.</p>
+		<p class="text-[0.82rem] text-tinta-suave italic">Digite um termo acima para buscar produtos.</p>
 	{/if}
 
 	<!-- Atalhos -->
 	{#if buscasSalvasKw.length > 0}
-		<div class="flex flex-wrap gap-2 mb-5">
+		<div class="flex flex-wrap gap-2">
 			{#each buscasSalvasKw as b (b.id)}
 				<div class="flex items-center gap-1">
 					{#if b.cron}<span class="text-xs text-ouro" title="Busca agendada">⏱</span>{/if}
@@ -274,7 +276,7 @@
 						: 'Ative "Busca" e digite um termo, ou monitore lojas para ver oportunidades.'}
 		/>
 	{:else}
-		<p class="text-[0.82rem] text-tinta-suave mb-4">
+		<p class="text-[0.82rem] text-tinta-suave">
 			{resultados.length}
 			{resultados.length === 1 ? 'produto' : 'produtos'}
 		</p>

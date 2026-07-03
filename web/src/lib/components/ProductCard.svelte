@@ -74,7 +74,7 @@
 	<!-- ═══ LAYOUT FULL — card vertical com imagem grande ═══ -->
 	<article
 		class={cn(
-			'bg-card border border-border rounded-md overflow-hidden shadow-sm transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(46,34,38,0.2)]',
+			'bg-card border border-border rounded-md overflow-hidden shadow-sm transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[var(--sombra)]',
 			destaque && 'border-ouro-claro'
 		)}
 	>

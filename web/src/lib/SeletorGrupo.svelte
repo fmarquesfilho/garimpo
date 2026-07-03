@@ -131,7 +131,7 @@
 				{@const lista = filtrados()}
 				{#if lista.length > 0}
 					<ul
-						class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+						class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-[var(--branco)] p-1 shadow-[var(--sombra)]"
 						onpointerdown={(e) => e.preventDefault()}
 					>
 						{#each lista as g (g.id)}
@@ -148,7 +148,7 @@
 					</ul>
 				{:else}
 					<ul
-						class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+						class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-[var(--branco)] p-1 shadow-[var(--sombra)]"
 					>
 						<li class="px-3 py-2 text-sm text-tinta-suave">Nenhum grupo encontrado</li>
 					</ul>

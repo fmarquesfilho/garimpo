@@ -1,0 +1,51 @@
+id: T-0042
+titulo: "Sistema de layout consistente + auditoria dark mode"
+epic: E-001
+status: doing
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+criado_em: "2026-07-03"
+valor: |
+  Após migração para Tailwind, espaçamento entre componentes é inconsistente
+  (cada página usa valores arbitrários). Dark mode tem problemas de contraste
+  em vários componentes (texto escuro em fundo escuro). Ambos impactam UX.
+
+descricao: |
+  ## Problemas
+
+  ### Layout/Spacing
+  - Páginas usam spacing ad-hoc (gap-3, gap-4, gap-5, mb-4, mb-5, mb-6 sem padrão)
+  - Seções de página não seguem ritmo vertical consistente
+  - Componentes não têm margin/padding padronizado
+  - Mobile: alguns breakpoints inconsistentes
+
+  ### Dark Mode
+  - Texto permanece escuro em fundo escuro (ex: legenda na publicar)
+  - Alguns componentes não usam tokens semânticos (usam cores hardcoded)
+  - Contraste insuficiente (< 4.5:1) em elementos secundários
+  - Inputs/selects com background que não inverte
+
+  ## Solução
+
+  ### Layout System
+  - Criar componentes de layout: PageSection, FormGroup, ActionBar
+  - Padronizar spacing scale: section gap = gap-8, field gap = gap-4, inline = gap-2
+  - Padronizar max-width por tipo de página (form: max-w-xl, dashboard: max-w-5xl)
+  - Usar Tailwind @layer para definir padrões base que não precisam ser repetidos
+
+  ### Dark Mode Audit
+  - Rodar axe-core com prefers-color-scheme: dark em todas as páginas
+  - Garantir que TODOS os textos usam text-foreground ou text-muted-foreground
+  - Garantir que TODOS os backgrounds usam bg-background, bg-card, bg-popover
+  - Verificar e corrigir tokens em tokens.css :root[data-theme="dark"]
+  - Adicionar teste E2E de contraste com axe-core
+
+criterios_aceite:
+  - Todas as páginas seguem spacing scale consistente
+  - axe-core com dark mode ativo reporta 0 violações de contraste
+  - Componentes de layout documentados em docs/componentes.md
+  - Lighthouse Accessibility ≥ 95 em ambos os temas
+
+dependencias:
+  - T-0040

@@ -124,8 +124,10 @@
 	<title>Configurações — Garimpei</title>
 </svelte:head>
 
-<section class="max-w-[900px]">
-	<h1 class="text-2xl mb-6">⚙️ Configurações</h1>
+<section class="max-w-[900px] space-y-8">
+	<div>
+		<h1 class="text-2xl mb-2">⚙️ Configurações</h1>
+	</div>
 
 	{#if !$usuario}
 		<div class="py-3 px-4 rounded-sm text-sm mb-4 bg-porcelana text-tinta-suave">
@@ -133,7 +135,7 @@
 		</div>
 	{:else}
 		<h2 class="text-lg mb-2">📡 Destinos de publicação</h2>
-		<p class="text-tinta-suave text-sm mb-5">
+		<p class="text-tinta-suave text-sm">
 			Configure os grupos e canais onde o Garimpei publica. Cada destino usa o bot configurado para o tipo (Telegram,
 			WhatsApp). Adicione o bot como admin do grupo.
 		</p>
@@ -147,7 +149,7 @@
 
 		<!-- Form novo destino -->
 		<form
-			class="flex flex-wrap gap-3 items-end mb-5 p-4 border border-border rounded-md bg-porcelana"
+			class="flex flex-wrap gap-3 items-end p-4 border border-border rounded-md bg-porcelana"
 			onsubmit={(e) => {
 				e.preventDefault();
 				adicionar();

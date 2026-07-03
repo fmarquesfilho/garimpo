@@ -12,7 +12,7 @@
 {#if aberto && usuario}
 	<!-- Backdrop -->
 	<div
-		class="fixed inset-0 z-90 animate-[fadeIn_0.2s_ease] bg-[rgba(46,34,38,0.4)] motion-reduce:animate-none"
+		class="fixed inset-0 z-90 animate-[fadeIn_0.2s_ease] bg-[rgba(0,0,0,0.5)] motion-reduce:animate-none"
 		onclick={onfechar}
 		aria-hidden="true"
 	></div>

@@ -66,12 +66,12 @@
 	}
 </script>
 
-<div class="overflow-hidden rounded-[10px] border border-border bg-white">
+<div class="overflow-hidden rounded-[10px] border border-border bg-[var(--branco)]">
 	<div class="flex gap-0.5 border-b border-border bg-porcelana px-2 py-1.5">
 		<Tooltip content="Negrito">
 			<button
 				type="button"
-				class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground"
+				class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-[var(--branco)] hover:text-foreground"
 				class:!bg-ouro-fundo={editor?.isActive('bold')}
 				class:!text-ouro-escuro={editor?.isActive('bold')}
 				class:!border-ouro={editor?.isActive('bold')}
@@ -83,7 +83,7 @@
 		<Tooltip content="Itálico">
 			<button
 				type="button"
-				class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground"
+				class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-[var(--branco)] hover:text-foreground"
 				class:!bg-ouro-fundo={editor?.isActive('italic')}
 				class:!text-ouro-escuro={editor?.isActive('italic')}
 				class:!border-ouro={editor?.isActive('italic')}
@@ -95,7 +95,7 @@
 		<Tooltip content="Inserir link">
 			<button
 				type="button"
-				class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground"
+				class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-[var(--branco)] hover:text-foreground"
 				onclick={setLink}>🔗</button
 			>
 		</Tooltip>
@@ -103,13 +103,13 @@
 			<Tooltip content="Remover link">
 				<button
 					type="button"
-					class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-white hover:text-foreground"
+					class="rounded-md border border-transparent bg-transparent px-2.5 py-1 text-sm text-tinta-suave hover:bg-[var(--branco)] hover:text-foreground"
 					onclick={removeLink}>✕🔗</button
 				>
 			</Tooltip>
 		{/if}
 	</div>
-	<div class="min-h-[120px] p-3 text-[0.92rem] leading-relaxed" bind:this={element}></div>
+	<div class="min-h-[120px] bg-[var(--branco)] p-3 text-[0.92rem] leading-relaxed text-foreground" bind:this={element}></div>
 </div>
 
 <style>
