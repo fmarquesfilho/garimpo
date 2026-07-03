@@ -17,7 +17,7 @@
 go = "1.26"
 node = "24"
 python = "3.13"
-"pipx:ruff" = "latest"
+uv = "latest"
 
 [env]
 GARIMPEI_ENV = "development"
@@ -62,7 +62,7 @@ run = "golangci-lint run ./..."
 
 [tasks."lint:python"]
 description = "Ruff lint no analyzer"
-run = "ruff check services/analyzer/"
+run = "uvx ruff check services/analyzer/"
 
 [tasks."lint:web"]
 description = "ESLint + Stylelint no frontend"
