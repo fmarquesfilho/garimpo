@@ -158,22 +158,22 @@
 		align-items: center;
 		gap: 4px;
 		padding: 3px 8px;
-		background: #f0fdf4;
-		border: 1px solid #86efac;
+		background: var(--sucesso-fundo);
+		border: 1px solid var(--sucesso-borda);
 		border-radius: 6px;
 		font-size: 0.78rem;
-		color: #166534;
+		color: var(--sucesso-texto);
 	}
 	.chip button {
 		background: none;
 		border: none;
 		cursor: pointer;
-		color: #166534;
+		color: var(--sucesso-texto);
 		font-size: 0.75rem;
 		padding: 0 2px;
 		line-height: 1;
 	}
-	.chip button:hover { color: #b91c1c; }
+	.chip button:hover { color: var(--erro-texto); }
 	.limite {
 		font-size: 0.78rem;
 		color: var(--tinta-suave);
@@ -214,5 +214,5 @@
 		color: var(--tinta-suave);
 		font-size: 0.85rem;
 	}
-	.erro-inline { font-size: 0.8rem; color: #b91c1c; margin-bottom: 4px; }
+	.erro-inline { font-size: 0.8rem; color: var(--erro-texto); margin-bottom: 4px; }
 </style>

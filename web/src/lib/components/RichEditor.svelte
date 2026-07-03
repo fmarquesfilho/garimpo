@@ -99,7 +99,7 @@
 		color: var(--tinta-suave);
 	}
 	.tb-btn:hover { background: white; color: var(--tinta); }
-	.tb-btn.ativo { background: var(--ouro-fundo); color: #7a5a1e; border-color: var(--ouro); }
+	.tb-btn.ativo { background: var(--ouro-fundo); color: var(--ouro-escuro); border-color: var(--ouro); }
 
 	.editor-content {
 		min-height: 120px;
