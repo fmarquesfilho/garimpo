@@ -5,6 +5,7 @@
 	 */
 	import { adicionarLoja } from '$lib/api.js';
 	import { buscasSalvas } from '$lib/buscas.js';
+	import { Card, Button, Input, Alert } from '$lib/components/ui';
 
 	let { onadicionada = null } = $props();
 
@@ -38,23 +39,25 @@
 	}
 </script>
 
-<div class="form-loja">
-	<h2>Adicionar loja</h2>
+<Card padding="md">
+	<h2 class="form-titulo">Adicionar loja</h2>
 	<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
 		<div class="form-row">
-			<input
-				type="text"
+			<Input
 				bind:value={inputLoja}
 				placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"
 				disabled={adicionando}
-				class="input-loja"
 			/>
-			<button type="submit" disabled={adicionando || !inputLoja.trim()} class="btn-adicionar">
+			<Button
+				type="submit"
+				disabled={adicionando || !inputLoja.trim()}
+				size="md"
+			>
 				{adicionando ? '⏳' : '➕'} Adicionar
-			</button>
+			</Button>
 		</div>
 		<div class="form-row-origem">
-			<label for="origem-padrao">Origem dos produtos:</label>
+			<label for="origem-padrao" class="label-origem">Origem dos produtos:</label>
 			<select id="origem-padrao" bind:value={origemPadrao} class="select-origem">
 				<option value="">— sem origem definida —</option>
 				<option value="Coreia">🇰🇷 Coreia</option>
@@ -64,52 +67,59 @@
 			<span class="hint">Se a loja vende só produtos de um país, marque aqui para badge automático.</span>
 		</div>
 		{#if erroAdicionar}
-			<p class="msg-erro-inline">{erroAdicionar}</p>
+			<Alert variant="error" inline>{erroAdicionar}</Alert>
 		{/if}
 		{#if sucessoAdicionar}
-			<p class="msg-sucesso">{sucessoAdicionar}</p>
+			<Alert variant="success" inline>{sucessoAdicionar}</Alert>
 		{/if}
 	</form>
-</div>
+</Card>
 
 <style>
-	.form-loja {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r4);
-		margin-bottom: var(--r5);
+	.form-titulo {
+		font-size: var(--text-lg);
+		margin-bottom: var(--r3);
+		color: var(--tinta);
 	}
-	h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--tinta); }
-	.form-row { display: flex; gap: var(--r3); align-items: stretch; }
+	.form-row {
+		display: flex;
+		gap: var(--r3);
+		align-items: flex-end;
+	}
 	.form-row-origem {
-		display: flex; flex-wrap: wrap; align-items: center;
-		gap: var(--r2); margin-top: var(--r3);
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--r2);
+		margin-top: var(--r3);
 	}
-	.form-row-origem label { font-size: 0.82rem; font-weight: 600; color: var(--tinta); }
+	.label-origem {
+		font-size: var(--text-sm);
+		font-weight: var(--font-semi);
+		color: var(--tinta);
+	}
 	.select-origem {
-		padding: 6px 10px; border: 1px solid var(--linha);
-		border-radius: 8px; font-size: 0.85rem; background: var(--branco);
+		padding: var(--r2) var(--r3);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio-sm);
+		font-size: var(--text-sm);
+		background: var(--branco);
+		font-family: var(--ui);
 	}
-	.select-origem:focus { outline: none; border-color: var(--ouro); }
-	.input-loja {
-		flex: 1; padding: 10px 14px; border: 1px solid var(--linha);
-		border-radius: 8px; font-size: 0.9rem; background: var(--branco);
+	.select-origem:focus {
+		outline: none;
+		border-color: var(--ouro);
 	}
-	.input-loja:focus { outline: none; border-color: var(--ouro); box-shadow: 0 0 0 2px var(--ouro-fundo); }
-	.btn-adicionar {
-		padding: 10px 18px; background: var(--ouro); color: white;
-		border: none; border-radius: 8px; font-weight: 600;
-		font-size: 0.9rem; cursor: pointer; white-space: nowrap;
+	.hint {
+		font-size: var(--text-xs);
+		color: var(--tinta-suave);
+		margin-top: 2px;
+		display: block;
 	}
-	.btn-adicionar:hover:not(:disabled) { opacity: 0.9; }
-	.btn-adicionar:disabled { opacity: 0.5; cursor: not-allowed; }
-	.hint { font-size: 0.72rem; color: var(--tinta-suave); margin-top: 2px; display: block; }
-	.msg-erro-inline { color: var(--erro-texto); font-size: 0.85rem; margin-top: 6px; }
-	.msg-sucesso { color: var(--sucesso-texto); font-size: 0.85rem; margin-top: 6px; }
 
 	@media (max-width: 600px) {
-		.form-row { flex-direction: column; }
-		.btn-adicionar { width: 100%; }
+		.form-row {
+			flex-direction: column;
+		}
 	}
 </style>

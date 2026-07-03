@@ -3,10 +3,10 @@
 	 * DashPanel — painel genérico para dashboard (título + conteúdo).
 	 * @prop titulo — título do painel
 	 */
-	let { titulo = '', children } = $props();
+	let { titulo = '', children, ...rest } = $props();
 </script>
 
-<div class="painel">
+<div class="painel" {...rest}>
 	{#if titulo}
 		<h2>{titulo}</h2>
 	{/if}
@@ -20,5 +20,9 @@
 		border-radius: var(--raio);
 		padding: var(--r4);
 	}
-	h2 { font-size: 1rem; margin: 0 0 var(--r3); font-weight: 600; }
+	h2 {
+		font-size: var(--text-base);
+		font-weight: var(--font-semi);
+		margin: 0 0 var(--r3);
+	}
 </style>

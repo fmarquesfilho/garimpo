@@ -253,3 +253,31 @@ Para migrar, substitua imports gradualmente:
 ```
 
 O `TabBar` permanece exportado durante a transição.
+
+## Componentes de Negócio Refatorados
+
+Os seguintes componentes de `$lib/components/` foram atualizados para usar os primitivos UI:
+
+| Componente | Primitivos usados |
+|---|---|
+| `ErrorMessage` | Card, Button |
+| `EmptyState` | Card |
+| `FormAdicionarLoja` | Card, Button, Input, Alert |
+| `TagInput` | Badge |
+| `PeriodSelector` | Tokens (+ ARIA radiogroup) |
+
+### Padrão de composição
+
+```svelte
+<script>
+  import { Card, Button, Alert } from '$lib/components/ui';
+</script>
+
+<Card padding="md">
+  <!-- business logic usando primitivos UI -->
+  <Button onclick={handle}>Ação</Button>
+  {#if erro}
+    <Alert variant="error" inline>{erro}</Alert>
+  {/if}
+</Card>
+```

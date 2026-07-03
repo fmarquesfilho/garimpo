@@ -5,7 +5,7 @@
 	 * @prop altura — altura em px (default 40)
 	 * @prop formatValor — função para formatar tooltip (default: String)
 	 */
-	let { pontos = [], altura = 40, formatValor = String } = $props();
+	let { pontos = [], altura = 40, formatValor = String, ...rest } = $props();
 
 	let max = $derived(Math.max(...pontos.map(p => p.valor), 1));
 	let min = $derived(Math.min(...pontos.map(p => p.valor), 0));
@@ -13,7 +13,7 @@
 </script>
 
 {#if pontos.length > 1}
-	<div class="chart" style="height: {altura}px">
+	<div class="chart" style="height: {altura}px" {...rest}>
 		{#each pontos as ponto, i}
 			{@const h = ((ponto.valor - min) / range) * 100}
 			<div
@@ -51,9 +51,18 @@
 	.labels {
 		display: flex;
 		justify-content: space-between;
-		font-size: 0.65rem;
+		font-size: var(--text-xs);
 		color: var(--tinta-suave);
 		margin-top: 2px;
 	}
-	.sem-dados { font-size: var(--text-sm); color: var(--tinta-suave); font-style: italic; margin: 0; }
+	.sem-dados {
+		font-size: var(--text-sm);
+		color: var(--tinta-suave);
+		font-style: italic;
+		margin: 0;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.bar { transition-duration: 0ms; }
+	}
 </style>

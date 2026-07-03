@@ -5,10 +5,14 @@
 	 * @prop label — descrição abaixo do valor
 	 * @prop variant — 'default' | 'gold' | 'green' | 'red'
 	 */
-	let { valor, label, variant = 'default' } = $props();
+	const VARIANTS = ['default', 'gold', 'green', 'red'];
+
+	let { valor, label, variant = 'default', ...rest } = $props();
+
+	let resolvedVariant = $derived(VARIANTS.includes(variant) ? variant : 'default');
 </script>
 
-<div class="metrica {variant}">
+<div class="metrica {resolvedVariant}" {...rest}>
 	<span class="metrica-valor">{valor}</span>
 	<span class="metrica-label">{label}</span>
 </div>
@@ -23,16 +27,17 @@
 	}
 	.metrica-valor {
 		display: block;
-		font-size: 1.5rem;
-		font-weight: 700;
+		font-size: var(--text-2xl);
+		font-weight: var(--font-bold);
 		font-family: var(--mono);
+		font-variant-numeric: tabular-nums;
 		line-height: 1.2;
 	}
 	.metrica-label {
 		font-size: var(--text-xs);
 		color: var(--tinta-suave);
 		text-transform: uppercase;
-		font-weight: 600;
+		font-weight: var(--font-semi);
 	}
 	.gold .metrica-valor { color: var(--ouro); }
 	.green .metrica-valor { color: var(--sucesso-texto); }

@@ -5,10 +5,10 @@
 	 * @prop mensagem — texto principal
 	 * @prop dica — texto secundário (opcional)
 	 */
-	let { icone = '', mensagem, dica = '' } = $props();
+	let { icone = '', mensagem, dica = '', ...rest } = $props();
 </script>
 
-<div class="vazio">
+<div class="vazio" {...rest}>
 	{#if icone}<span class="icone">{icone}</span>{/if}
 	<p class="mensagem">{mensagem}</p>
 	{#if dica}<p class="dica">{@html dica}</p>{/if}
@@ -23,8 +23,22 @@
 		text-align: center;
 		color: var(--tinta-suave);
 	}
-	.icone { font-size: 2rem; display: block; margin-bottom: var(--r3); }
-	.mensagem { margin: 0; font-size: 0.95rem; }
-	.dica { font-size: 0.85rem; margin-top: var(--r2); color: var(--tinta-suave); }
-	.dica :global(a) { color: var(--ouro); text-decoration: underline; }
+	.icone {
+		font-size: 2rem;
+		display: block;
+		margin-bottom: var(--r3);
+	}
+	.mensagem {
+		margin: 0;
+		font-size: var(--text-md);
+	}
+	.dica {
+		font-size: var(--text-sm);
+		margin-top: var(--r2);
+		color: var(--tinta-suave);
+	}
+	.dica :global(a) {
+		color: var(--ouro);
+		text-decoration: underline;
+	}
 </style>
