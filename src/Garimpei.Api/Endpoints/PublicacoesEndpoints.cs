@@ -52,7 +52,11 @@ public static partial class EndpointExtensions
             });
         });
 
-        publicacoes.MapPost("/", async (AppDbContext db, AgendarPublicacaoRequest req, CancellationToken ct) =>
+        publicacoes.MapPost("/", async (
+            AppDbContext db,
+            Publisher.V1.PublisherService.PublisherServiceClient publisher,
+            AgendarPublicacaoRequest req,
+            CancellationToken ct) =>
         {
             var pub = new Publicacao
             {
@@ -70,10 +74,54 @@ public static partial class EndpointExtensions
                 Status = req.AgendadaEm.HasValue ? "agendada" : "pendente"
             };
 
+            // Se envio imediato (sem agendamento), publica via gRPC
+            if (!req.AgendadaEm.HasValue && !string.IsNullOrWhiteSpace(req.DestinoId))
+            {
+                string resolvedGroupId = "";
+                if (Guid.TryParse(req.DestinoId, out var destinoGuid))
+                {
+                    var destino = await db.Destinos.FindAsync([destinoGuid], ct);
+                    resolvedGroupId = destino?.Config ?? req.DestinoId;
+                }
+                else
+                {
+                    resolvedGroupId = req.DestinoId;
+                }
+
+                try
+                {
+                    var grpcRequest = new Publisher.V1.PublishRequest
+                    {
+                        Channel = "telegram",
+                        GroupId = resolvedGroupId,
+                        Content = new Publisher.V1.PublishContent
+                        {
+                            Title = req.Nome ?? "",
+                            Description = req.LegendaCustom ?? "",
+                            ImageUrl = req.Imagem ?? "",
+                            ProductUrl = req.Link ?? "",
+                            Price = (double)req.Preco,
+                            OriginalPrice = (double)req.Preco,
+                            DiscountPercent = 0
+                        }
+                    };
+
+                    var response = await publisher.PublishAsync(grpcRequest, cancellationToken: ct);
+                    pub.Status = response.Success ? "enviada" : "erro";
+                    pub.Detalhe = response.Success ? response.MessageId : "Falha no envio";
+                    pub.EnviadaEm = response.Success ? DateTime.UtcNow : null;
+                }
+                catch (Exception ex)
+                {
+                    pub.Status = "erro";
+                    pub.Detalhe = ex.Message;
+                }
+            }
+
             db.Publicacoes.Add(pub);
             await db.SaveChangesAsync(ct);
 
-            return Results.Ok(new { id = pub.Id, status = pub.Status, criada_em = pub.CreatedAt.ToString("o") });
+            return Results.Ok(new { publicacao = new { id = pub.Id, status = pub.Status, detalhe = pub.Detalhe ?? "", criada_em = pub.CreatedAt.ToString("o") } });
         });
 
         // /api/publicar — endpoint compat para publicar imediatamente (envia via gRPC publisher)
@@ -199,6 +247,7 @@ public sealed record AgendarPublicacaoRequest
     public string? DestinoId { get; init; }
     public string? TemplateId { get; init; }
     public DateTime? AgendadaEm { get; init; }
+    public string? LegendaCustom { get; init; }
 }
 
 public sealed record PublicarCompatRequest

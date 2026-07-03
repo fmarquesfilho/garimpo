@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -58,13 +59,22 @@ func (s *PublisherServer) Publish(ctx context.Context, req *publisherpb.PublishR
 	}
 
 	c := req.GetContent()
+
+	// Description contém a legenda customizada (HTML) quando o frontend edita.
+	// Se for texto simples (sem tags HTML), não é legenda — é apenas a categoria.
+	legendaHTML := ""
+	if desc := c.GetDescription(); desc != "" && strings.Contains(desc, "<") {
+		legendaHTML = desc
+	}
+
 	oferta := publish.Oferta{
-		Nome:       c.GetTitle(),
-		Preco:      c.GetPrice(),
-		Link:       c.GetProductUrl(),
-		Imagem:     c.GetImageUrl(),
-		DestinoID:  req.GetGroupId(),
-		Estrategia: "grpc",
+		Nome:        c.GetTitle(),
+		Preco:       c.GetPrice(),
+		Link:        c.GetProductUrl(),
+		Imagem:      c.GetImageUrl(),
+		LegendaHTML: legendaHTML,
+		DestinoID:   req.GetGroupId(),
+		Estrategia:  "grpc",
 	}
 
 	res, err := s.dispatcher.Publicar(ctx, oferta)
