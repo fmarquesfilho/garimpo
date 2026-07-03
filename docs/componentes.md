@@ -241,6 +241,59 @@ Todos os componentes aceitam:
 - **ARIA**: Roles, states e properties gerenciados automaticamente pelo Bits UI
 - **Reduced motion**: Animações desativadas quando `prefers-reduced-motion: reduce`
 - **Contraste**: Todas as combinações de cor passam WCAG AA (≥4.5:1 texto normal)
+- **Dark mode**: Suportado via `data-theme="dark"` com contraste AA garantido
+
+## Dark Mode
+
+O app suporta dark mode via design tokens. A detecção é automática (segue OS) com override manual.
+
+### Uso
+
+O toggle aparece no header quando logado. Cicla: ☀️ Light → 🌙 Dark → 🖥️ Sistema.
+
+### Como funciona
+
+1. **Blocking script** no `<head>` resolve o tema antes do primeiro paint (sem FOUC)
+2. **`theme.js`** gerencia estado, persistência (localStorage) e reatividade (Svelte store)
+3. **`tokens.css`** define `:root[data-theme="dark"]` com overrides de cor
+4. **Transições** de 200ms em background/color quando tema muda (respeitando reduced-motion)
+
+### Tokens Dark
+
+A paleta dark é **warm** (não invertida):
+
+| Token | Light | Dark |
+|---|---|---|
+| `--porcelana` | #f5f0ed (warm white) | #1a1517 (warm charcoal) |
+| `--tinta` | #2e2226 | #f0ebe8 (warm off-white) |
+| `--ouro` | #9e7422 | #d4a845 (brighter gold) |
+| `--rosa` | #944c63 | #c47a92 (lighter pink) |
+
+### Para consumir no código
+
+Não é necessário nenhum import — os tokens já se adaptam automaticamente:
+
+```svelte
+<style>
+  .card {
+    background: var(--nevoa);  /* adapta entre light/dark automaticamente */
+    color: var(--tinta);
+    border: 1px solid var(--linha);
+  }
+</style>
+```
+
+### Theme store (para lógica programática)
+
+```javascript
+import { theme } from '$lib/theme.js';
+
+// Ler o tema atual
+theme.subscribe(value => console.log(value)); // 'light' | 'dark' | 'system'
+
+// Mudar programaticamente
+theme.set('dark');
+```
 
 ## Migração
 
