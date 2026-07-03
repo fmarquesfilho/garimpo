@@ -1,7 +1,21 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="no-transitions">
 	<head>
 		<meta charset="utf-8" />
+		<script>
+			// FOUC prevention: resolve theme before first paint.
+			// Sync, no imports, no async. Mirrors logic in theme.js.
+			(function() {
+				try {
+					var s = localStorage.getItem('theme');
+					var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+					var t = s === 'dark' ? 'dark' : s === 'light' ? 'light' : d ? 'dark' : 'light';
+					document.documentElement.setAttribute('data-theme', t);
+				} catch(e) {
+					document.documentElement.setAttribute('data-theme', 'light');
+				}
+			})();
+		</script>
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />

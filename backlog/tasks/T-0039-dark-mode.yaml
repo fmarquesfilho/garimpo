@@ -1,0 +1,50 @@
+id: T-0039
+titulo: "Dark mode com tokens CSS e detecção automática"
+epic: E-001
+status: doing
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+criado_em: "2026-07-03"
+valor: |
+  Usuários com preferência de dark mode não conseguem usar o app confortavelmente
+  à noite ou em ambientes escuros. Em telas OLED, dark mode reduz consumo de
+  energia em até 60%. A paleta dourada/rosa do Garimpei é ideal para dark mode
+  quando adaptada (não invertida) — tons quentes se destacam em fundos escuros.
+
+descricao: |
+  ## Entregáveis
+
+  - Dark tokens em :root[data-theme="dark"] (tokens.css)
+  - Theme engine (theme.js) com detecção automática + override manual
+  - Blocking inline script em app.html (FOUC prevention)
+  - ThemeToggle no header (3 estados: light/dark/system)
+  - Transições suaves (200ms, respeitando prefers-reduced-motion)
+  - WCAG AA ≥4.5:1 em todas as combinações de cor dark
+  - Compatibilidade com Bits UI (sem conflito data-*)
+  - Testes: unit + contrast + e2e
+
+  ## Decisões técnicas
+
+  - Paleta dark: warm charcoal (#1a1517), não preto puro
+  - Gold/pink adaptados (mais luminosos em dark), não invertidos
+  - :root[data-theme="dark"] como selector (specificity > :root)
+  - localStorage key "theme" com valores "light"|"dark"|"system"
+  - Blocking script sync no <head> (sem FOUC no static deploy)
+
+  ## Spec completa
+  - .kiro/specs/dark-mode/requirements.md (9 requisitos)
+  - .kiro/specs/dark-mode/design.md (arquitetura + palette + properties)
+  - .kiro/specs/dark-mode/tasks.md (14 tasks)
+
+criterios_aceite:
+  - App detecta prefers-color-scheme e aplica tema correto automaticamente
+  - Toggle funcional com 3 estados (light/dark/system) + persistência localStorage
+  - Zero FOUC em page load (Cloudflare Pages static)
+  - Todas as cores dark passam WCAG AA (≥4.5:1)
+  - Bits UI componentes renderizam corretamente em dark
+  - Build verde (svelte-check + stylelint + eslint + vitest)
+  - Documentado no backlog e docs/componentes.md
+
+dependencias:
+  - T-0037

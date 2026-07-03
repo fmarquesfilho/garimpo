@@ -85,6 +85,14 @@ button {
 	}
 }
 
+/* ── Theme transitions (desabilitada no load, ativada via JS) ──── */
+html:not(.no-transitions) * {
+	transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+html.no-transitions * {
+	transition: none !important;
+}
+
 /* ============================================================
    Utility classes — eliminam duplicação entre páginas
    ============================================================ */

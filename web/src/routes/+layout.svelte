@@ -3,9 +3,11 @@
 	import { page } from '$app/stores';
 	import { usuario, logout } from '$lib/firebase.js';
 	import { verificarAdmin } from '$lib/api.js';
+	import { initTheme } from '$lib/theme.js';
 	import NavDrawer from '$lib/components/NavDrawer.svelte';
 	import LandingHero from '$lib/components/LandingHero.svelte';
-	import { Button } from '$lib/components/ui';
+	import { Button, ThemeToggle } from '$lib/components/ui';
+	import { onMount } from 'svelte';
 	let { children } = $props();
 
 	let menuAberto = $state(false);
@@ -17,6 +19,15 @@
 
 	function fecharMenu() { menuAberto = false; }
 	function toggleMenu() { menuAberto = !menuAberto; }
+
+	// Inicializa theme engine e remove classe no-transitions após primeiro paint
+	onMount(() => {
+		const cleanup = initTheme();
+		requestAnimationFrame(() => {
+			document.documentElement.classList.remove('no-transitions');
+		});
+		return cleanup;
+	});
 
 	// Fecha menu ao navegar
 	$effect(() => { $page.url.pathname; menuAberto = false; });
@@ -46,6 +57,7 @@
 		{#if $usuario}
 			<div class="acoes-barra">
 				<span class="usuario-nome">{$usuario.nome ?? $usuario.email}</span>
+				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={logout}>Sair</Button>
 				<button
 					class="hamburguer"

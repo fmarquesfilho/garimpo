@@ -10,6 +10,7 @@ export { default as Dialog } from './Dialog.svelte';
 export { default as DropdownMenu } from './DropdownMenu.svelte';
 export { default as Select } from './Select.svelte';
 export { default as Tabs } from './Tabs.svelte';
+export { default as ThemeToggle } from './ThemeToggle.svelte';
 export { default as Tooltip } from './Tooltip.svelte';
 
 // Application-level (keep existing)
