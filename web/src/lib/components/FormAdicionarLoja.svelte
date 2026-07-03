@@ -5,7 +5,7 @@
 	 */
 	import { adicionarLoja } from '$lib/api.js';
 	import { buscasSalvas } from '$lib/buscas.js';
-	import { Card, Button, Input, Alert } from '$lib/components/ui';
+	import { Card, Button, Input, Alert, Select } from '$lib/components/ui';
 
 	let { onadicionada = null } = $props();
 
@@ -57,13 +57,18 @@
 			</Button>
 		</div>
 		<div class="form-row-origem">
-			<label for="origem-padrao" class="label-origem">Origem dos produtos:</label>
-			<select id="origem-padrao" bind:value={origemPadrao} class="select-origem">
-				<option value="">— sem origem definida —</option>
-				<option value="Coreia">🇰🇷 Coreia</option>
-				<option value="Japão">🇯🇵 Japão</option>
-				<option value="China">🇨🇳 China</option>
-			</select>
+			<span class="label-origem">Origem dos produtos:</span>
+			<Select
+				bind:value={origemPadrao}
+				options={[
+					{ value: '', label: '— sem origem definida —' },
+					{ value: 'Coreia', label: '🇰🇷 Coreia' },
+					{ value: 'Japão', label: '🇯🇵 Japão' },
+					{ value: 'China', label: '🇨🇳 China' }
+				]}
+				size="sm"
+				placeholder="Selecione origem"
+			/>
 			<span class="hint">Se a loja vende só produtos de um país, marque aqui para badge automático.</span>
 		</div>
 		{#if erroAdicionar}
@@ -97,18 +102,6 @@
 		font-size: var(--text-sm);
 		font-weight: var(--font-semi);
 		color: var(--tinta);
-	}
-	.select-origem {
-		padding: var(--r2) var(--r3);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		font-size: var(--text-sm);
-		background: var(--branco);
-		font-family: var(--ui);
-	}
-	.select-origem:focus {
-		outline: none;
-		border-color: var(--ouro);
 	}
 	.hint {
 		font-size: var(--text-xs);

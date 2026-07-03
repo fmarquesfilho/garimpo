@@ -5,7 +5,7 @@
 	import { buscasSalvas } from '$lib/buscas.js';
 	import { usuario } from '$lib/firebase.js';
 	import { brl, pct } from '$lib/formatters.js';
-	import { TabBar, Loading } from '$lib/components/ui/index.js';
+	import { Tabs, Loading, Alert, Button } from '$lib/components/ui/index.js';
 	import FormAdicionarLoja from '$lib/components/FormAdicionarLoja.svelte';
 	import PainelAlertas from '$lib/components/PainelAlertas.svelte';
 	import ListaProdutosLoja from '$lib/components/ListaProdutosLoja.svelte';
@@ -162,9 +162,8 @@
 			</div>
 
 			{#if buscaSelecionada}
-				<TabBar {tabs} bind:active={aba} />
-
-				{#if aba === 'produtos'}
+				<Tabs {tabs} bind:active={aba}>
+					{#if aba === 'produtos'}
 					<ListaProdutosLoja
 						{produtos}
 						carregando={carregandoProdutos}
@@ -176,7 +175,7 @@
 					{#if carregandoNovidades}
 						<Loading mensagem="Analisando novidades…" />
 					{:else if erroNovidades}
-						<div class="msg-erro">{erroNovidades}</div>
+						<Alert variant="error">{erroNovidades}</Alert>
 					{:else if !novidades || novidades.produtos_novos?.length === 0}
 						<p class="vazio-tab">Nenhum produto novo detectado nos últimos {novidades?.dias_janela ?? 7} dias.</p>
 					{:else}
@@ -250,6 +249,7 @@
 						</div>
 					{/if}
 				{/if}
+				</Tabs>
 			{/if}
 		{/if}
 	{/if}

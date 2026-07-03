@@ -7,6 +7,7 @@
 	import ResolverLink from '$lib/components/ResolverLink.svelte';
 	import HeroProduto from '$lib/components/HeroProduto.svelte';
 	import PublicarPreview from '$lib/components/PublicarPreview.svelte';
+	import { Select } from '$lib/components/ui';
 
 	let produto = $state(null);
 	let destinos = $state([]);
@@ -117,10 +118,11 @@
 				{#if destinos.length === 0}
 					<p class="dica">Nenhum destino. <a href="/canais">Adicione</a>.</p>
 				{:else}
-					<select id="destino-sel" bind:value={destinoId}>
-						<option value="" disabled>Selecione…</option>
-						{#each destinos as d (d.id)}<option value={d.id}>{d.nome} ({d.tipo})</option>{/each}
-					</select>
+					<Select
+						bind:value={destinoId}
+						options={destinos.map(d => ({ value: d.id, label: `${d.nome} (${d.tipo})` }))}
+						placeholder="Selecione…"
+					/>
 				{/if}
 			</div>
 			<div class="campo">
@@ -128,9 +130,10 @@
 				{#if templates.length === 0}
 					<p class="dica">Formatação padrão.</p>
 				{:else}
-					<select id="template-sel" bind:value={templateId}>
-						{#each templates as t (t.id)}<option value={t.id}>{t.nome} {t.com_foto ? '📷' : ''}</option>{/each}
-					</select>
+					<Select
+						bind:value={templateId}
+						options={templates.map(t => ({ value: t.id, label: `${t.nome} ${t.com_foto ? '📷' : ''}` }))}
+					/>
 				{/if}
 			</div>
 			<div class="campo">

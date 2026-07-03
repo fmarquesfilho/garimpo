@@ -3,7 +3,7 @@
 	import { listarPublicacoes, buscarConversoes, buscarConversoesReais } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 	import { dataHoraCompleta } from '$lib/formatters.js';
-	import { TabBar, Loading } from '$lib/components/ui/index.js';
+	import { Tabs, Loading, Button } from '$lib/components/ui/index.js';
 	import PeriodSelector from '$lib/components/PeriodSelector.svelte';
 	import ErrorMessage from '$lib/components/ErrorMessage.svelte';
 
@@ -112,8 +112,7 @@
 	{#if !$usuario}
 		<div class="aviso">Faça login para ver publicações.</div>
 	{:else}
-		<TabBar tabs={abasPrincipais} bind:active={aba} />
-
+		<Tabs tabs={abasPrincipais} bind:active={aba}>
 		{#if aba === 'historico'}
 			<!-- Filtros de status -->
 			<nav class="filtros-pub">
@@ -165,9 +164,9 @@
 		{:else if aba === 'desempenho'}
 			<div class="desemp-header">
 				<PeriodSelector bind:value={diasReais} options={[7, 30, 90]} />
-				<button class="btn-sync" onclick={() => { tentouReais = false; carregarReais(); }} disabled={carregandoReais}>
+				<Button variant="secondary" size="sm" onclick={() => { tentouReais = false; carregarReais(); }} disabled={carregandoReais}>
 					{carregandoReais ? '⏳' : '🔄'} Sincronizar
-				</button>
+				</Button>
 			</div>
 
 			{#if erroReais}
@@ -245,6 +244,7 @@
 				</div>
 			{/if}
 		{/if}
+		</Tabs>
 	{/if}
 </section>
 

@@ -59,7 +59,7 @@ echo ""
 echo -e "${BOLD}Compostos Bits UI — Adoção:${NC}"
 echo ""
 for comp in Dialog DropdownMenu Select Tabs Tooltip; do
-  count=$(grep -r "import.*{[^}]*$comp" --include="*.svelte" | grep -v node_modules | grep -v 'components/ui/' | wc -l | tr -d ' ')
+  count=$(grep -rl "$comp" --include="*.svelte" | grep -v node_modules | grep -v 'components/ui/' | xargs grep -l "from.*components/ui" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$count" -eq 0 ]; then
     printf "  ${YELLOW}⚠${NC}  %-14s → 0 consumidores\n" "$comp"
   else
