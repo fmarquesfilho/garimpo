@@ -7,6 +7,7 @@
 	import NavDrawer from '$lib/components/NavDrawer.svelte';
 	import LandingHero from '$lib/components/LandingHero.svelte';
 	import { Button, ThemeToggle } from '$lib/components/ui';
+	import { Tooltip } from 'bits-ui';
 	import { onMount } from 'svelte';
 	let { children } = $props();
 
@@ -49,6 +50,7 @@
 	});
 </script>
 
+<Tooltip.Provider>
 <header class="topo">
 	<div class="casca barra">
 		<a class="marca" href="/" onclick={fecharMenu}>
@@ -86,6 +88,7 @@
 	<span>{hoje}</span>
 	<span class="dado">teor = grau de ouro da pepita</span>
 </footer>
+</Tooltip.Provider>
 
 <style>
 	.topo {
