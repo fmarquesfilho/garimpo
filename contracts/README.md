@@ -18,7 +18,7 @@ Os contratos previnem essas falhas sendo verificados automaticamente pelo CI.
 
 1. **`registry.yaml`** — Declara serviços, fronteiras e fluxos
 2. **`schemas/*.json`** — JSON Schemas para payloads HTTP
-3. **`scripts/check-service-contracts.sh`** — Valida tudo no CI e pre-push
+3. **`.mise/tasks/check/service-contracts`** — Valida tudo no CI e pre-push
 
 ## Como adicionar um novo contrato
 
@@ -94,10 +94,13 @@ O CI detecta breaking changes via:
 
 ```bash
 # Rodar o validador de contratos
-./scripts/check-service-contracts.sh
+mise run check:service-contracts
 
-# Ou como parte do pre-push completo
-./scripts/pre-push-check.sh
+# Rodar todos os checks
+mise run checks
+
+# Ou o CI completo localmente
+mise run ci
 ```
 
 ## Referência
