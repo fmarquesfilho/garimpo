@@ -1,10 +1,10 @@
 <script>
 	/**
-	 * Dialog — modal acessível usando Bits UI.
-	 * @prop open — bind:open para controlar abertura/fechamento
-	 * @prop title — título do modal
-	 * @prop description — descrição opcional
-	 * @prop children — conteúdo do modal
+	 * Dialog — modal acessível com Bits UI + Tailwind.
+	 * @prop open — bind:open para controle externo
+	 * @prop title — título do dialog
+	 * @prop description — descrição opcional abaixo do título
+	 * @prop children — conteúdo do body
 	 */
 	import { Dialog } from 'bits-ui';
 
@@ -19,106 +19,21 @@
 
 <Dialog.Root bind:open {...rest}>
 	<Dialog.Portal>
-		<Dialog.Overlay class="dialog-overlay" />
-		<Dialog.Content class="dialog-content">
+		<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0" />
+		<Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-popover p-6 shadow-lg animate-in fade-in-0 zoom-in-95">
 			{#if title}
-				<Dialog.Title class="dialog-title">{title}</Dialog.Title>
+				<Dialog.Title class="text-lg font-semibold text-foreground">{title}</Dialog.Title>
 			{/if}
 			{#if description}
-				<Dialog.Description class="dialog-description">{description}</Dialog.Description>
+				<Dialog.Description class="mt-1 text-sm text-muted-foreground">{description}</Dialog.Description>
 			{/if}
-			<div class="dialog-body">
+			<div class="mt-4">
 				{@render children()}
 			</div>
-			<Dialog.Close class="dialog-close" aria-label="Fechar">✕</Dialog.Close>
+			<Dialog.Close class="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+				<span class="text-lg">✕</span>
+				<span class="sr-only">Fechar</span>
+			</Dialog.Close>
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
-
-<style>
-	:global(.dialog-overlay) {
-		position: fixed;
-		inset: 0;
-		background: rgba(46, 34, 38, 0.4);
-		z-index: 99;
-		animation: fadeIn 0.15s ease;
-	}
-	:global(.dialog-content) {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-lg);
-		box-shadow: var(--sombra);
-		padding: var(--r6);
-		max-width: 520px;
-		width: calc(100% - var(--r8));
-		max-height: 85vh;
-		overflow-y: auto;
-		z-index: 100;
-		animation: slideUp 0.2s ease;
-	}
-	:global(.dialog-content:focus-visible) {
-		outline: 2px solid var(--ouro);
-		outline-offset: 2px;
-	}
-	:global(.dialog-title) {
-		font-family: var(--display);
-		font-size: var(--text-xl);
-		font-weight: var(--font-semi);
-		color: var(--tinta);
-		margin-bottom: var(--r2);
-	}
-	:global(.dialog-description) {
-		font-size: var(--text-sm);
-		color: var(--tinta-suave);
-		margin-bottom: var(--r4);
-	}
-	.dialog-body {
-		margin-top: var(--r4);
-	}
-	:global(.dialog-close) {
-		position: absolute;
-		top: var(--r4);
-		right: var(--r4);
-		width: 32px;
-		height: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: none;
-		background: transparent;
-		color: var(--tinta-suave);
-		font-size: var(--text-lg);
-		cursor: pointer;
-		border-radius: var(--raio-sm);
-		transition: background 0.15s ease, color 0.15s ease;
-	}
-	:global(.dialog-close:hover) {
-		background: var(--porcelana);
-		color: var(--tinta);
-	}
-	:global(.dialog-close:focus-visible) {
-		outline: 2px solid var(--ouro);
-		outline-offset: 2px;
-	}
-
-	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
-	}
-	@keyframes slideUp {
-		from { opacity: 0; transform: translate(-50%, -48%); }
-		to { opacity: 1; transform: translate(-50%, -50%); }
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		:global(.dialog-overlay),
-		:global(.dialog-content) {
-			animation-duration: 0ms;
-		}
-		:global(.dialog-close) { transition-duration: 0ms; }
-	}
-</style>

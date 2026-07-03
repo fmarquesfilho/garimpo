@@ -1,54 +1,36 @@
 <script>
 	/**
-	 * Alert — mensagem de feedback (erro, sucesso, aviso).
-	 * @prop variant — 'error' | 'success' | 'warning'
-	 * @prop inline — se true, estilo mais compacto sem fundo (apenas cor)
+	 * Alert — feedback banner with semantic variants.
+	 * @prop variant — 'info' | 'success' | 'warning' | 'error'
+	 * @prop inline — compact mode (no padding, transparent bg)
 	 */
-	const VARIANTS = ['error', 'success', 'warning'];
+	import { cn } from '$lib/utils';
 
-	let { variant = 'error', inline = false, children, ...rest } = $props();
+	const VARIANTS = {
+		info: 'border-border bg-background text-foreground',
+		success: 'border-sucesso-borda bg-sucesso-fundo text-sucesso',
+		warning: 'border-aviso-borda bg-aviso-fundo text-aviso',
+		error: 'border-erro-borda bg-erro-fundo text-erro'
+	};
 
-	let resolvedVariant = $derived(VARIANTS.includes(variant) ? variant : 'error');
+	let {
+		variant = 'info',
+		inline = false,
+		class: className = '',
+		children,
+		...rest
+	} = $props();
 </script>
 
-{#if inline}
-	<p class="inline {resolvedVariant}" role="alert" {...rest}>
-		{@render children()}
-	</p>
-{:else}
-	<div class="alert {resolvedVariant}" role="alert" {...rest}>
-		{@render children()}
-	</div>
-{/if}
-
-<style>
-	.alert {
-		padding: var(--r3) var(--r4);
-		border-radius: var(--raio-sm);
-		font-size: var(--text-base);
-		border: 1px solid;
-	}
-	.alert.error {
-		background: var(--erro-fundo);
-		color: var(--erro-texto);
-		border-color: var(--erro-borda);
-	}
-	.alert.success {
-		background: var(--sucesso-fundo);
-		color: var(--sucesso-texto);
-		border-color: var(--sucesso-borda);
-	}
-	.alert.warning {
-		background: var(--aviso-fundo);
-		color: var(--aviso-texto);
-		border-color: var(--aviso-borda);
-	}
-
-	.inline {
-		font-size: var(--text-sm);
-		margin-top: var(--r2);
-	}
-	.inline.error { color: var(--erro-texto); }
-	.inline.success { color: var(--sucesso-texto); }
-	.inline.warning { color: var(--aviso-texto); }
-</style>
+<div
+	role="alert"
+	class={cn(
+		'rounded-md border text-sm',
+		inline ? 'px-0 py-0 border-none bg-transparent' : 'px-4 py-3',
+		VARIANTS[variant] ?? VARIANTS.info,
+		className
+	)}
+	{...rest}
+>
+	{@render children()}
+</div>

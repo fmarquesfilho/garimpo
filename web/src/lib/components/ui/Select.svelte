@@ -1,6 +1,6 @@
 <script>
 	/**
-	 * Select — dropdown acessível usando Bits UI.
+	 * Select — dropdown acessível usando Bits UI + Tailwind.
 	 * @prop value — bind:value para two-way
 	 * @prop label — rótulo acima (opcional)
 	 * @prop options — array de { value, label }
@@ -9,8 +9,9 @@
 	 * @prop disabled
 	 */
 	import { Select } from 'bits-ui';
+	import { cn } from '$lib/utils';
 
-	const SIZES = ['sm', 'md', 'lg'];
+	const SIZES = { sm: 'h-8 text-xs px-2', md: 'h-9 text-sm px-3', lg: 'h-11 text-base px-4' };
 
 	let {
 		value = $bindable(''),
@@ -19,25 +20,27 @@
 		placeholder = '',
 		size = 'md',
 		disabled = false,
+		class: className = '',
 		...rest
 	} = $props();
-
-	let resolvedSize = $derived(SIZES.includes(size) ? size : 'md');
 </script>
 
-<div class="select-wrapper" {...rest}>
+<div class={cn('flex flex-col gap-1', className)} {...rest}>
 	{#if label}
-		<span class="select-label">{label}</span>
+		<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
 	{/if}
 	<Select.Root type="single" bind:value {disabled}>
-		<Select.Trigger class="select-trigger size-{resolvedSize}">
+		<Select.Trigger class={cn(
+			'inline-flex w-full items-center justify-between gap-2 rounded-sm border border-input bg-background font-sans transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=open]:border-ring data-[state=open]:ring-2 data-[state=open]:ring-ring/20',
+			SIZES[size] ?? SIZES.md
+		)}>
 			<Select.Value {placeholder} />
 		</Select.Trigger>
 		<Select.Portal>
-			<Select.Content class="select-content">
+			<Select.Content class="z-50 max-h-72 overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-md animate-in fade-in-0 zoom-in-95">
 				<Select.Viewport>
 					{#each options as opt (opt.value)}
-						<Select.Item value={opt.value} class="select-item">
+						<Select.Item value={opt.value} class="relative cursor-pointer select-none rounded-sm px-3 py-2 text-sm outline-none transition-colors data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[state=checked]:font-semibold data-[state=checked]:text-primary">
 							{opt.label}
 						</Select.Item>
 					{/each}
@@ -46,93 +49,3 @@
 		</Select.Portal>
 	</Select.Root>
 </div>
-
-<style>
-	.select-wrapper {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r1);
-	}
-	.select-label {
-		font-size: var(--text-xs);
-		font-weight: var(--font-semi);
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--tinta-suave);
-	}
-
-	:global(.select-trigger) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--r2);
-		font-family: var(--ui);
-		padding: var(--r3) var(--r4);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		background: var(--branco);
-		color: var(--tinta);
-		cursor: pointer;
-		width: 100%;
-		transition: border-color 0.15s ease, box-shadow 0.15s ease;
-	}
-	:global(.select-trigger:focus-visible) {
-		outline: 2px solid var(--ouro);
-		outline-offset: 2px;
-	}
-	:global(.select-trigger[data-state="open"]) {
-		border-color: var(--ouro);
-		box-shadow: 0 0 0 2px var(--ouro-fundo);
-	}
-	:global(.select-trigger[data-disabled]) {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	:global(.select-trigger.size-sm) {
-		font-size: var(--text-sm);
-		padding: var(--r2) var(--r3);
-	}
-	:global(.select-trigger.size-md) {
-		font-size: var(--text-base);
-		padding: var(--r3) var(--r4);
-	}
-	:global(.select-trigger.size-lg) {
-		font-size: var(--text-md);
-		padding: var(--r4) var(--r5);
-	}
-
-	:global(.select-content) {
-		background: var(--branco);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		box-shadow: var(--sombra);
-		padding: var(--r1) 0;
-		max-height: 300px;
-		overflow-y: auto;
-		z-index: 50;
-	}
-
-	:global(.select-item) {
-		font-family: var(--ui);
-		font-size: var(--text-base);
-		padding: var(--r2) var(--r4);
-		cursor: pointer;
-		outline: none;
-		transition: background 0.1s ease;
-	}
-	:global(.select-item[data-highlighted]) {
-		background: var(--porcelana);
-		color: var(--tinta);
-	}
-	:global(.select-item[data-state="checked"]) {
-		font-weight: var(--font-semi);
-		color: var(--ouro);
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		:global(.select-trigger),
-		:global(.select-item) {
-			transition-duration: 0ms;
-		}
-	}
-</style>

@@ -1,80 +1,47 @@
 <script>
 	/**
-	 * Button — componente padrão de botão.
-	 * @prop variant — 'primary' | 'secondary' | 'danger' | 'ghost'
-	 * @prop size — 'sm' | 'md' | 'lg'
-	 * @prop disabled
-	 * @prop type — 'button' | 'submit' | 'reset'
+	 * Button — shadcn-svelte style with Tailwind + brand tokens.
+	 * @prop variant — 'primary' | 'secondary' | 'danger' | 'ghost' | 'link'
+	 * @prop size — 'sm' | 'md' | 'lg' | 'icon'
 	 */
-	const VARIANTS = ['primary', 'secondary', 'danger', 'ghost'];
-	const SIZES = ['sm', 'md', 'lg'];
+	import { cn } from '$lib/utils';
+
+	const VARIANTS = {
+		primary: 'bg-primary text-primary-foreground hover:bg-ouro-hover shadow-sm',
+		secondary: 'border border-border bg-background hover:bg-accent hover:text-accent-foreground',
+		danger: 'bg-destructive text-destructive-foreground hover:bg-rosa-hover shadow-sm',
+		ghost: 'hover:bg-accent hover:text-accent-foreground',
+		link: 'text-primary underline-offset-4 hover:underline'
+	};
+
+	const SIZES = {
+		sm: 'h-8 px-3 text-xs rounded-sm gap-1',
+		md: 'h-9 px-4 text-sm rounded-md gap-2',
+		lg: 'h-11 px-6 text-base rounded-md gap-2',
+		icon: 'h-9 w-9 rounded-md'
+	};
 
 	let {
 		variant = 'primary',
 		size = 'md',
+		class: className = '',
+		type = /** @type {'button'|'submit'|'reset'} */ ('button'),
 		disabled = false,
-		type = /** @type {'button' | 'submit' | 'reset'} */ ('button'),
-		onclick = null,
 		children,
 		...rest
 	} = $props();
-
-	let resolvedVariant = $derived(VARIANTS.includes(variant) ? variant : 'primary');
-	let resolvedSize = $derived(SIZES.includes(size) ? size : 'md');
 </script>
 
 <button
-	class="btn {resolvedVariant} {resolvedSize}"
 	{type}
 	{disabled}
-	{onclick}
+	class={cn(
+		'inline-flex items-center justify-center whitespace-nowrap font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50',
+		VARIANTS[variant] ?? VARIANTS.primary,
+		SIZES[size] ?? SIZES.md,
+		className
+	)}
 	{...rest}
 >
 	{@render children()}
 </button>
-
-<style>
-	.btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--r2);
-		font-family: var(--ui);
-		font-weight: var(--font-semi);
-		border: 1px solid transparent;
-		border-radius: var(--raio-sm);
-		cursor: pointer;
-		white-space: nowrap;
-		transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-	}
-	.btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	.btn:focus-visible {
-		outline: 2px solid var(--ouro);
-		outline-offset: 2px;
-	}
-
-	/* Sizes */
-	.sm { font-size: var(--text-sm); padding: var(--r2) var(--r3); }
-	.md { font-size: var(--text-base); padding: var(--r3) var(--r5); }
-	.lg { font-size: var(--text-md); padding: var(--r3) var(--r8); }
-
-	/* Variants */
-	.primary { background: var(--ouro); color: var(--branco); }
-	.primary:hover:not(:disabled) { background: var(--ouro-hover); }
-
-	.secondary { background: var(--porcelana); border-color: var(--linha); color: var(--tinta); }
-	.secondary:hover:not(:disabled) { border-color: var(--ouro); color: var(--ouro); }
-
-	.danger { background: var(--rosa); color: var(--branco); }
-	.danger:hover:not(:disabled) { background: var(--rosa-hover); }
-
-	.ghost { background: transparent; color: var(--tinta-suave); }
-	.ghost:hover:not(:disabled) { background: var(--porcelana); color: var(--tinta); }
-
-	@media (prefers-reduced-motion: reduce) {
-		.btn { transition-duration: 0ms; }
-	}
-</style>

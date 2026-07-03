@@ -1,0 +1,13 @@
+{
+	"style": "default",
+	"tailwind": {
+		"config": "",
+		"css": "src/app.css",
+		"baseColor": "neutral"
+	},
+	"aliases": {
+		"components": "$lib/components/ui",
+		"utils": "$lib/utils"
+	},
+	"typescript": true
+}

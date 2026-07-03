@@ -4,8 +4,72 @@
    da pepita. Estética editorial de beleza (nicho cosmético).
    ============================================================ */
 
+@import "tailwindcss";
 @import '$lib/components/ui/tokens.css';
 
+/* ── Dark mode: usa data-theme ao invés de .dark ───────────── */
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Theme: mapeia tokens existentes para Tailwind/shadcn ──── */
+@theme {
+	/* Font families */
+	--font-display: 'Fraunces', Georgia, serif;
+	--font-sans: 'Archivo', system-ui, sans-serif;
+	--font-mono: 'Space Mono', ui-monospace, monospace;
+
+	/* Border radius */
+	--radius-sm: 8px;
+	--radius-md: 14px;
+	--radius-lg: 16px;
+	--radius-full: 999px;
+
+	/* shadcn semantic colors (light mode defaults; dark overridden via CSS vars) */
+	--color-background: var(--porcelana);
+	--color-foreground: var(--tinta);
+	--color-card: var(--nevoa);
+	--color-card-foreground: var(--tinta);
+	--color-popover: var(--branco);
+	--color-popover-foreground: var(--tinta);
+	--color-primary: var(--ouro);
+	--color-primary-foreground: var(--branco);
+	--color-secondary: var(--porcelana);
+	--color-secondary-foreground: var(--tinta);
+	--color-muted: var(--porcelana);
+	--color-muted-foreground: var(--tinta-suave);
+	--color-accent: var(--ouro-fundo);
+	--color-accent-foreground: var(--ouro-escuro);
+	--color-destructive: var(--rosa);
+	--color-destructive-foreground: var(--branco);
+	--color-border: var(--linha);
+	--color-input: var(--linha);
+	--color-ring: var(--ouro);
+
+	/* Brand-specific colors exposed to Tailwind */
+	--color-ouro: var(--ouro);
+	--color-ouro-hover: var(--ouro-hover);
+	--color-ouro-claro: var(--ouro-claro);
+	--color-ouro-fundo: var(--ouro-fundo);
+	--color-ouro-escuro: var(--ouro-escuro);
+	--color-rosa: var(--rosa);
+	--color-rosa-hover: var(--rosa-hover);
+	--color-rosa-fundo: var(--rosa-fundo);
+	--color-sucesso: var(--sucesso-texto);
+	--color-sucesso-fundo: var(--sucesso-fundo);
+	--color-sucesso-borda: var(--sucesso-borda);
+	--color-erro: var(--erro-texto);
+	--color-erro-fundo: var(--erro-fundo);
+	--color-erro-borda: var(--erro-borda);
+	--color-aviso: var(--aviso-texto);
+	--color-aviso-fundo: var(--aviso-fundo);
+	--color-aviso-borda: var(--aviso-borda);
+	--color-linha: var(--linha);
+	--color-tinta: var(--tinta);
+	--color-tinta-suave: var(--tinta-suave);
+	--color-porcelana: var(--porcelana);
+	--color-nevoa: var(--nevoa);
+}
+
+/* ── Base styles ───────────────────────────────────────────── */
 * {
 	box-sizing: border-box;
 }
@@ -93,11 +157,7 @@ html.no-transitions * {
 	transition: none !important;
 }
 
-/* ============================================================
-   Utility classes — eliminam duplicação entre páginas
-   ============================================================ */
-
-/* ── Feedback messages ─────────────────────────────────────── */
+/* ── Legacy utility classes (mantidas durante migração) ─────── */
 .msg-erro {
 	background: var(--erro-fundo);
 	color: var(--erro-texto);
@@ -107,7 +167,6 @@ html.no-transitions * {
 	font-size: 0.88rem;
 }
 
-/* ── States ────────────────────────────────────────────────── */
 .loading {
 	color: var(--tinta-suave);
 	font-style: italic;
@@ -134,14 +193,12 @@ html.no-transitions * {
 	text-decoration: underline;
 }
 
-/* ── Typography utilities ──────────────────────────────────── */
 .subtitulo {
 	color: var(--tinta-suave);
 	font-size: 0.9rem;
 	margin-bottom: var(--r6);
 }
 
-/* ── Layout panels ─────────────────────────────────────────── */
 .painel {
 	background: var(--nevoa);
 	border: 1px solid var(--linha);
@@ -149,106 +206,6 @@ html.no-transitions * {
 	padding: var(--r4);
 }
 
-/* ── Color utilities ───────────────────────────────────────── */
 .cor-sucesso { color: var(--sucesso-texto); }
 .cor-erro { color: var(--erro-texto); }
 .cor-ouro { color: var(--ouro); font-weight: 700; }
-
-/* ============================================================
-   Utility classes — botões, cards, inputs (padrão de interface)
-   ============================================================ */
-
-/* ── Botões ────────────────────────────────────────────────── */
-.btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-	font-family: var(--ui);
-	font-weight: 600;
-	font-size: var(--text-base);
-	padding: 10px 18px;
-	border: 1px solid transparent;
-	border-radius: var(--raio-sm);
-	cursor: pointer;
-	white-space: nowrap;
-	transition: background 0.15s, border-color 0.15s, opacity 0.15s;
-}
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ── Inputs ────────────────────────────────────────────────── */
-.input {
-	width: 100%;
-	padding: 10px 14px;
-	border: 1px solid var(--linha);
-	border-radius: var(--raio-sm);
-	font-family: var(--ui);
-	font-size: var(--text-base);
-	background: white;
-	transition: border-color 0.15s, box-shadow 0.15s;
-}
-.input:focus {
-	outline: none;
-	border-color: var(--ouro);
-	box-shadow: 0 0 0 2px var(--ouro-fundo);
-}
-
-/* ── Cards ─────────────────────────────────────────────────── */
-.card {
-	background: var(--nevoa);
-	border: 1px solid var(--linha);
-	border-radius: var(--raio);
-	padding: var(--r4);
-}
-
-/* ── Badges ────────────────────────────────────────────────── */
-.badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	font-size: var(--text-xs);
-	font-weight: 700;
-	padding: 2px 8px;
-	border-radius: var(--raio-full);
-	white-space: nowrap;
-}
-
-/* ── Tipografia ────────────────────────────────────────────── */
-.text-xs { font-size: var(--text-xs); }
-.text-sm { font-size: var(--text-sm); }
-.text-base { font-size: var(--text-base); }
-.text-md { font-size: var(--text-md); }
-.text-lg { font-size: var(--text-lg); }
-.text-xl { font-size: var(--text-xl); }
-.text-muted { color: var(--tinta-suave); }
-.text-ouro { color: var(--ouro); }
-.text-sucesso { color: var(--sucesso-texto); }
-.text-erro { color: var(--erro-texto); }
-.font-bold { font-weight: 700; }
-.font-semi { font-weight: 600; }
-.font-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-
-/* ── Flex/Grid helpers ─────────────────────────────────────── */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.flex-wrap { flex-wrap: wrap; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.gap-1 { gap: var(--r1); }
-.gap-2 { gap: var(--r2); }
-.gap-3 { gap: var(--r3); }
-.gap-4 { gap: var(--r4); }
-
-/* ── Truncation ────────────────────────────────────────────── */
-.truncate {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-.line-clamp-2 {
-	display: -webkit-box;
-	-webkit-line-clamp: 2; line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-}
-

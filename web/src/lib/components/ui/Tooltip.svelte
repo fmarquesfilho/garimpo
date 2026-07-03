@@ -1,6 +1,6 @@
 <script>
 	/**
-	 * Tooltip — dica flutuante acessível usando Bits UI.
+	 * Tooltip — dica flutuante acessível com Bits UI + Tailwind.
 	 * @prop content — texto do tooltip
 	 * @prop side — 'top' | 'bottom' | 'left' | 'right'
 	 * @prop children — elemento que recebe o tooltip
@@ -20,32 +20,8 @@
 		{@render children()}
 	</Tooltip.Trigger>
 	<Tooltip.Portal>
-		<Tooltip.Content {side} class="tooltip-content">
+		<Tooltip.Content {side} class="z-50 max-w-[240px] rounded-sm bg-foreground px-2 py-1 text-xs text-background shadow-md animate-in fade-in-0 zoom-in-95" sideOffset={4}>
 			{content}
 		</Tooltip.Content>
 	</Tooltip.Portal>
 </Tooltip.Root>
-
-<style>
-	:global(.tooltip-content) {
-		font-family: var(--ui);
-		font-size: var(--text-xs);
-		background: var(--tinta);
-		color: var(--branco);
-		padding: var(--r1) var(--r2);
-		border-radius: var(--raio-sm);
-		max-width: 240px;
-		z-index: 110;
-		animation: tooltipFade 0.15s ease;
-		box-shadow: var(--sombra);
-	}
-
-	@keyframes tooltipFade {
-		from { opacity: 0; transform: scale(0.96); }
-		to { opacity: 1; transform: scale(1); }
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		:global(.tooltip-content) { animation-duration: 0ms; }
-	}
-</style>

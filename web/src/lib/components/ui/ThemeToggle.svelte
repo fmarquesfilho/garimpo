@@ -17,9 +17,7 @@
 	let current = $state('system');
 
 	onMount(() => {
-		const unsub = theme.subscribe((value) => {
-			current = value;
-		});
+		const unsub = theme.subscribe((value) => { current = value; });
 		return unsub;
 	});
 
@@ -32,38 +30,11 @@
 </script>
 
 <button
-	class="theme-toggle"
+	class="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-border bg-background text-lg transition-colors hover:border-primary hover:bg-accent"
 	onclick={cycle}
 	aria-label={LABELS[current]}
 	title={LABELS[current]}
+	type="button"
 >
 	{ICONS[current]}
 </button>
-
-<style>
-	.theme-toggle {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		background: var(--porcelana);
-		cursor: pointer;
-		font-size: var(--text-lg);
-		transition: border-color 0.15s ease, background 0.15s ease;
-	}
-	.theme-toggle:hover {
-		border-color: var(--ouro);
-		background: var(--ouro-fundo);
-	}
-	.theme-toggle:focus-visible {
-		outline: 2px solid var(--ouro);
-		outline-offset: 2px;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.theme-toggle { transition-duration: 0ms; }
-	}
-</style>
