@@ -1,0 +1,198 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# mise.toml — Garimpei
+# ═══════════════════════════════════════════════════════════════════════════════
+# Task runner + version manager para o monorepo polyglot.
+# Substitui Makefile + scripts avulsos com discovery (`mise tasks`) e
+# gerenciamento de runtimes (`mise install`).
+#
+# Uso:
+#   mise install          → instala todas as ferramentas declaradas
+#   mise run checks       → roda todos os checks de integridade
+#   mise run build        → builda Go + C#
+#   mise run test         → roda todos os testes
+#   mise tasks            → lista todas as tasks disponíveis
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[tools]
+go = "1.26"
+node = "24"
+python = "3.13"
+"pipx:ruff" = "latest"
+
+[env]
+GARIMPEI_ENV = "development"
+
+# ── Build ─────────────────────────────────────────────────────────────────────
+
+[tasks.build]
+description = "Build de todos os projetos (Go + C#)"
+depends = ["build:go", "build:csharp"]
+
+[tasks."build:go"]
+description = "Build dos serviços Go"
+run = "go build ./..."
+
+[tasks."build:csharp"]
+description = "Build da solution C#"
+run = "dotnet build --nologo src/Garimpei.sln"
+
+# ── Test ──────────────────────────────────────────────────────────────────────
+
+[tasks.test]
+description = "Roda todos os testes (Go + C#)"
+depends = ["test:go", "test:csharp"]
+
+[tasks."test:go"]
+description = "Testes Go"
+run = "go test ./..."
+
+[tasks."test:csharp"]
+description = "Testes C# (51 testes)"
+run = "dotnet test --nologo --no-build src/Garimpei.sln"
+
+# ── Lint ──────────────────────────────────────────────────────────────────────
+
+[tasks.lint]
+description = "Roda todos os linters"
+depends = ["lint:go", "lint:python", "lint:web"]
+
+[tasks."lint:go"]
+description = "golangci-lint"
+run = "golangci-lint run ./..."
+
+[tasks."lint:python"]
+description = "Ruff lint no analyzer"
+run = "ruff check services/analyzer/"
+
+[tasks."lint:web"]
+description = "ESLint + Stylelint no frontend"
+run = "cd web && npm run lint:js && npm run lint:css"
+
+# ── Checks (contratos, drift, consistência) ───────────────────────────────────
+
+[tasks.checks]
+description = "Roda todos os checks de integridade (CI-equivalent)"
+depends = [
+  "check:contracts",
+  "check:api",
+  "check:config",
+  "check:schema",
+  "check:ownership",
+  "check:stale",
+]
+
+[tasks."check:contracts"]
+description = "Valida contratos de serviço (registry + schemas + flows)"
+run = "./scripts/check-service-contracts.sh"
+
+[tasks."check:api"]
+description = "Verifica drift frontend ↔ backend (rotas)"
+run = "./scripts/check-api-contract.sh"
+
+[tasks."check:config"]
+description = "Verifica consistência de configs (dataset, portas, URLs)"
+run = "./scripts/check-config-consistency.sh"
+
+[tasks."check:schema"]
+description = "Verifica sync de schemas (BQ ↔ Go ↔ C# ↔ Analyzer)"
+run = "./scripts/check-schema-sync.sh"
+
+[tasks."check:ownership"]
+description = "Verifica fronteiras de dados (PG vs BQ, quem acessa o quê)"
+run = "./scripts/check-data-ownership.sh"
+
+[tasks."check:stale"]
+description = "Detecta referências stale (serviços removidos, dead code)"
+run = "./scripts/check-stale-refs.sh"
+
+# ── Docs ──────────────────────────────────────────────────────────────────────
+
+[tasks.docs]
+description = "Gera toda a documentação (ER, env, board, sync)"
+depends = ["docs:er", "docs:env", "docs:board", "docs:sync"]
+
+[tasks."docs:er"]
+description = "Gera Mermaid ER do schema BigQuery"
+run = "go run ./cmd/gen-er > docs/gerado/ENTIDADES.md"
+
+[tasks."docs:env"]
+description = "Extrai variáveis de ambiente documentadas"
+run = "./scripts/gen-env-doc.sh > docs/gerado/env-vars.md"
+
+[tasks."docs:board"]
+description = "Gera quadro Kanban do backlog"
+run = "go run ./cmd/gen-board"
+
+[tasks."docs:sync"]
+description = "Sincroniza docs para o site"
+run = """
+./scripts/sync-docs-to-site.sh
+cp api/openapi.yaml docs-site/public/openapi.yaml
+"""
+
+[tasks."docs:check"]
+description = "CI: verifica se docs geradas estão atualizadas"
+run = """
+mise run docs:er
+mise run docs:env
+mise run docs:board
+mkdir -p docs-site/public
+cp api/openapi.yaml docs-site/public/openapi.yaml
+git diff --exit-code docs/gerado docs-site/public/openapi.yaml || (echo "❌ Docs desatualizadas: rode 'mise run docs'"; exit 1)
+"""
+
+# ── Proto (gRPC) ──────────────────────────────────────────────────────────────
+
+[tasks.proto]
+description = "Gera stubs Go e C# a partir dos .proto"
+run = "cd protos && buf generate"
+
+[tasks."proto:lint"]
+description = "Lint nos .proto files"
+run = "cd protos && buf lint"
+
+[tasks."proto:breaking"]
+description = "Verifica breaking changes nos protos"
+run = "cd protos && buf breaking --against '../.git#branch=main'"
+
+# ── Docker Compose (dev local) ────────────────────────────────────────────────
+
+[tasks.up]
+description = "Sobe todos os serviços (dev local)"
+run = "docker compose up -d"
+
+[tasks.down]
+description = "Para todos os serviços"
+run = "docker compose down"
+
+[tasks.logs]
+description = "Logs de todos os containers"
+run = "docker compose logs -f"
+
+# ── Deploy (manual) ───────────────────────────────────────────────────────────
+
+[tasks."deploy:backend"]
+description = "Build + push + deploy do backend no Cloud Run"
+run = """
+echo "⚠️  Deploy manual do backend"
+echo "1. Build da imagem..."
+docker build --platform linux/amd64 --provenance=false \
+  -f src/Garimpei.Api/Dockerfile src/ \
+  -t southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/garimpei-api-v2:latest
+echo "2. Push para Artifact Registry..."
+docker push southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/garimpei-api-v2:latest
+echo "3. Deploy no Cloud Run..."
+gcloud run services replace deploy/cloud-run-deploy-now.yaml \
+  --region=southamerica-east1 --project=garimpo-500114
+echo "✅ Deploy concluído"
+"""
+
+# ── Atalhos ───────────────────────────────────────────────────────────────────
+
+[tasks.ci]
+description = "Simula o CI completo localmente (build + test + lint + checks)"
+depends = ["build", "test", "lint", "checks", "docs:check"]
+
+[tasks.prepush]
+description = "Verificação pré-push (mesmo que o hook, mas explícito)"
+depends = ["build", "test", "lint:go", "checks", "docs:check"]
