@@ -235,31 +235,54 @@ public static partial class EndpointExtensions
 
 public sealed record AgendarPublicacaoRequest
 {
+    [System.Text.Json.Serialization.JsonPropertyName("id")]
     public string? Id { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("produto_id")]
     public string? ProdutoId { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("nome")]
     public string? Nome { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("categoria")]
     public string? Categoria { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("preco")]
     public decimal Preco { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("comissao")]
     public double Comissao { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("link")]
     public string? Link { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("imagem")]
     public string? Imagem { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("estrategia")]
     public string? Estrategia { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("destino_id")]
     public string? DestinoId { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("template_id")]
     public string? TemplateId { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("agendada_em")]
     public DateTime? AgendadaEm { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("legenda_custom")]
     public string? LegendaCustom { get; init; }
 }
 
 public sealed record PublicarCompatRequest
 {
+    [System.Text.Json.Serialization.JsonPropertyName("id")]
     public string? Id { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("nome")]
     public string? Nome { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("categoria")]
     public string? Categoria { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("preco")]
     public decimal Preco { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("comissao")]
     public double Comissao { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("link")]
     public string? Link { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("imagem")]
     public string? Imagem { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("estrategia")]
     public string? Estrategia { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("destino_id")]
     public string? DestinoId { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("template_id")]
     public string? TemplateId { get; init; }
 }
