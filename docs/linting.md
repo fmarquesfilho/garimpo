@@ -143,8 +143,10 @@ O projeto usa [mise](https://mise.jdx.dev) para orquestrar tarefas. Tasks releva
 | Task | Comando | Comportamento no CI |
 |---|---|---|
 | `check:ui-coverage` | `mise run check:ui-coverage` | Relatório de cobertura UI. Com `--strict`: **falha se hex colors > 0** |
+| `check:docs-drift` | `mise run check:docs-drift` | **Falha se docs/gerado/ stale**, sync quebrado, ou links quebrados no index |
 | `check:file-size` | `mise run check:file-size` | Bloqueia arquivos > 400 linhas |
 | `check:config-consistency` | `mise run check:config-consistency` | Verifica configs sincronizadas |
+| `checks` | `mise run checks` | Roda **todos** os checks (contracts, API, config, schema, docs-drift, etc.) |
 
 ### Modos da auditoria UI
 

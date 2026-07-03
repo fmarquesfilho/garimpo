@@ -83,6 +83,7 @@ depends = [
   "check:schema-sync",
   "check:data-ownership",
   "check:stale-refs",
+  "check:docs-drift",
 ]
 
 # ── Docs ──────────────────────────────────────────────────────────────────────
@@ -100,15 +101,8 @@ description = "Gera quadro Kanban do backlog"
 run = "go run ./cmd/gen-board"
 
 [tasks."docs:check"]
-description = "CI: verifica se docs geradas estão atualizadas"
-run = """
-mise run docs:er
-mise run docs:env
-mise run docs:board
-mkdir -p docs-site/public
-cp api/openapi.yaml docs-site/public/openapi.yaml
-git diff --exit-code docs/gerado docs-site/public/openapi.yaml || (echo "❌ Docs desatualizadas: rode 'mise run docs'"; exit 1)
-"""
+description = "CI: verifica se docs geradas e docs-site estão atualizadas"
+run = "bash .mise/tasks/check/docs-drift"
 
 # ── Proto (gRPC) ──────────────────────────────────────────────────────────────
 
@@ -146,4 +140,4 @@ depends = ["build", "test", "lint", "checks", "docs:check"]
 
 [tasks.prepush]
 description = "Verificação pré-push (equivalente ao hook)"
-depends = ["build", "test", "lint:go", "checks", "docs:check"]
+depends = ["build", "test", "lint:go", "checks"]

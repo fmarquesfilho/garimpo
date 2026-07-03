@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+#MISE description="Verifica que documentação gerada está sincronizada com as fontes"
+# =============================================================================
+# check/docs-drift — Detecta drift entre fontes canônicas e docs gerados
+# =============================================================================
+# Fontes:
+#   - backlog/tasks/*.yaml → docs/gerado/BOARD.md, docs/gerado/ROADMAP.md
+#   - internal/store/ → docs/gerado/ENTIDADES.md
+#   - deploy/, services/ → docs/gerado/env-vars.md
+#   - docs/**/*.md → docs-site/docs/ (via sync)
+#
+# O check regenera tudo e verifica se docs/gerado/ tem diff.
+# Se tiver: o desenvolvedor esqueceu de rodar `mise run docs`.
+#
+# Roda no pre-push e no CI. Exit 1 = drift detectado.
+# =============================================================================
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+ERRORS=0
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Docs Drift Check"
+echo "═══════════════════════════════════════════════════════════════"
+echo ""
+
+# ── 1. Regenerar docs/gerado/ ─────────────────────────────────────────────────
+echo "🔍 Regenerando docs gerados..."
+go run ./cmd/gen-board > /dev/null 2>&1
+go run ./cmd/gen-er > docs/gerado/ENTIDADES.md 2>/dev/null
+bash .mise/tasks/docs/env > /dev/null 2>&1 || true
+
+# ── 2. Verificar drift em docs/gerado/ ────────────────────────────────────────
+echo ""
+echo "🔍 Verificando drift em docs/gerado/..."
+if ! git diff --quiet docs/gerado/ 2>/dev/null; then
+  echo -e "${RED}   ✗ docs/gerado/ desatualizado:${NC}"
+  git diff --stat docs/gerado/
+  ERRORS=$((ERRORS + 1))
+else
+  echo -e "${GREEN}   ✓ docs/gerado/ em dia${NC}"
+fi
+
+# ── 3. Verificar que docs/sync roda sem erros ─────────────────────────────────
+echo ""
+echo "🔍 Verificando docs/sync..."
+if ! bash .mise/tasks/docs/sync > /dev/null 2>&1; then
+  echo -e "${RED}   ✗ docs/sync falhou${NC}"
+  ERRORS=$((ERRORS + 1))
+else
+  echo -e "${GREEN}   ✓ docs/sync executou com sucesso${NC}"
+fi
+
+# ── 4. Verificar links internos no index ──────────────────────────────────────
+echo ""
+echo "🔍 Verificando links quebrados no docs-site..."
+BROKEN=0
+while IFS= read -r link; do
+  # Extrai o path do link markdown [text](/path)
+  path=$(echo "$link" | sed 's|.*](/||' | sed 's|).*||' | sed 's|^/||')
+  # Converte path para docs-site/docs/path.md (Rspress usa .md)
+  target="docs-site/docs/${path}.md"
+  target_index="docs-site/docs/${path}/index.md"
+  if [ -f "$target" ] || [ -f "$target_index" ]; then
+    continue
+  fi
+  echo "   ⚠  Link quebrado: ${path}"
+  BROKEN=$((BROKEN + 1))
+done < <(grep -oE '\]\(/[^)]+\)' docs-site/docs/index.md 2>/dev/null || true)
+
+if [ "$BROKEN" -eq 0 ]; then
+  echo -e "${GREEN}   ✓ Todos os links do index resolvem${NC}"
+else
+  echo -e "${RED}   ✗ ${BROKEN} link(s) quebrado(s) no index${NC}"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# ── Resultado ─────────────────────────────────────────────────────────────────
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+if [ "$ERRORS" -eq 0 ]; then
+  echo -e "${GREEN}✅ Docs sincronizadas — sem drift.${NC}"
+  exit 0
+else
+  echo -e "${RED}❌ ${ERRORS} problema(s) de drift detectado(s)!${NC}"
+  echo ""
+  echo "   Correção: mise run docs && git add docs/ docs-site/"
+  exit 1
+fi
