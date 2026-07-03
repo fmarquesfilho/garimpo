@@ -7,7 +7,7 @@
 	import { montarResultados } from '$lib/descobrir-logic.js';
 	import ProductCard from '$lib/components/ProductCard.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
-	import { Loading, EmptyState } from '$lib/components/ui/index.js';
+	import { Loading, EmptyState, Button } from '$lib/components/ui/index.js';
 
 	// ── Filtros ───────────────────────────────────────────────────────────────
 	let busca = $state('');
@@ -167,7 +167,7 @@
 	{:else if erro}
 		<div class="msg-erro">
 			<p><strong>😕 {erro.message ?? erro}</strong></p>
-			<button class="btn-retry" onclick={carregar}>🔄 Tentar novamente</button>
+			<Button size="sm" onclick={carregar}>🔄 Tentar novamente</Button>
 		</div>
 	{:else if resultados.length === 0}
 		<EmptyState
@@ -214,6 +214,4 @@
 	.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--r5); }
 	.msg-erro { background: var(--nevoa); border: 1px solid color-mix(in srgb, var(--erro-texto) 30%, var(--linha)); border-radius: var(--raio); padding: var(--r5); text-align: center; }
 	.msg-erro p { margin: var(--r2) 0; }
-	.btn-retry { margin-top: var(--r3); padding: 8px 16px; background: var(--ouro); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
-	.btn-retry:hover { opacity: 0.9; }
 </style>

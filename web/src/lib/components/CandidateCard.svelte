@@ -1,5 +1,6 @@
 <script>
 	import ScoreMeter from './ScoreMeter.svelte';
+	import { Button } from '$lib/components/ui';
 
 	let { candidato, posicao = null, destaque = false, onpublicar = null } = $props();
 
@@ -82,11 +83,11 @@
 
 		<footer>
 			{#if onpublicar}
-				<button class="publicar-btn" onclick={() => onpublicar(candidato)}>📤 Publicar</button>
+				<Button size="sm" onclick={() => onpublicar(candidato)}>📤 Publicar</Button>
 			{/if}
-			<button class="ghost" onclick={copiarLink} disabled={!candidato.link}>
+			<Button variant="ghost" size="sm" onclick={copiarLink} disabled={!candidato.link}>
 				{copiado ? '✓ Copiado' : '🔗 Link'}
-			</button>
+			</Button>
 		</footer>
 	</div>
 </article>
@@ -224,27 +225,6 @@
 		gap: var(--r2);
 		margin-top: var(--r2);
 	}
-	footer button {
-		border-radius: var(--raio-sm);
-		padding: 8px 14px;
-		font-size: var(--text-sm);
-		font-weight: 600;
-		border: 1px solid transparent;
-	}
-	.publicar-btn {
-		background: var(--ouro-fundo);
-		border-color: var(--ouro-claro);
-		color: var(--ouro-escuro);
-		flex: 1;
-	}
-	.publicar-btn:hover { background: var(--ouro-claro); }
-	.ghost {
-		background: transparent;
-		color: var(--tinta-suave);
-		padding: 8px 10px;
-	}
-	.ghost:hover:not(:disabled) { color: var(--ouro); }
-	.ghost:disabled { opacity: 0.3; cursor: not-allowed; }
 
 	@media (max-width: 420px) {
 		.thumb { height: 140px; }

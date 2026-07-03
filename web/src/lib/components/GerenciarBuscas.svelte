@@ -7,6 +7,7 @@
 	import TagInput from './TagInput.svelte';
 	import AgendadorBusca from './AgendadorBusca.svelte';
 	import BuscaCard from './BuscaCard.svelte';
+	import { Button } from '$lib/components/ui';
 
 	let buscasKw = $derived(($buscasSalvas ?? []).filter(b => !b.shop_ids?.length));
 
@@ -45,9 +46,9 @@
 <div class="gerenciar-buscas">
 	<div class="cabecalho">
 		<h2>🔍 Buscas Agendadas</h2>
-		<button class="btn-nova" onclick={() => (mostrarForm = !mostrarForm)} type="button">
+		<Button variant="secondary" size="sm" onclick={() => (mostrarForm = !mostrarForm)}>
 			{mostrarForm ? '✕ cancelar' : '+ nova busca'}
-		</button>
+		</Button>
 	</div>
 
 	{#if mostrarForm}
@@ -83,9 +84,9 @@
 			<AgendadorBusca bind:value={cronNova} />
 
 			<div class="form-acoes">
-				<button class="salvar" onclick={salvar} disabled={keywordsNovas.length === 0 && categoriasNovas.length === 0 && fontesArray.length === 0} type="button">
+				<Button onclick={salvar} disabled={keywordsNovas.length === 0 && categoriasNovas.length === 0 && fontesArray.length === 0}>
 					Salvar busca
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
@@ -107,8 +108,8 @@
 	h2 { font-size: 1.1rem; margin: 0; color: var(--tinta); }
 	.btn-nova {
 		border: 1px solid var(--linha); background: var(--porcelana);
-		color: var(--tinta); font-size: 0.82rem; font-weight: 600;
-		padding: 6px 14px; border-radius: var(--raio-full); cursor: pointer;
+		color: var(--tinta); font-size: var(--text-sm); font-weight: var(--font-semi);
+		padding: var(--r2) var(--r4); border-radius: var(--raio-full); cursor: pointer;
 	}
 	.btn-nova:hover { border-color: var(--ouro); color: var(--ouro); }
 	.form-nova {
@@ -127,12 +128,6 @@
 	.campo-dias label { font-size: 0.82rem; font-weight: 600; color: var(--tinta); }
 	.campo-dias select { padding: 6px 10px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.85rem; }
 	.form-acoes { display: flex; justify-content: flex-end; }
-	.salvar {
-		border: 1px solid var(--linha); background: var(--ouro-fundo);
-		color: var(--ouro-escuro); font-weight: 600; font-size: 0.85rem;
-		padding: 9px 18px; border-radius: var(--raio-sm); cursor: pointer;
-	}
-	.salvar:disabled { opacity: 0.5; cursor: not-allowed; }
 	.buscas-lista { display: flex; flex-direction: column; gap: var(--r3); }
 	.vazio { font-size: 0.85rem; color: var(--tinta-suave); font-style: italic; }
 </style>

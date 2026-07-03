@@ -154,8 +154,8 @@
 	.atalho.selecionado {
 		background: var(--ouro-fundo);
 		border-color: var(--ouro);
-		color: #7a5a1e;
-		font-weight: 700;
+		color: var(--ouro-escuro);
+		font-weight: var(--font-bold);
 	}
 	.campo-avancado {
 		display: flex;
