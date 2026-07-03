@@ -6,8 +6,10 @@
 |---|---|---|
 | `svelte-check` | Tipos, props incorretos, CSS unused, a11y (compile-time) | `npm run check` |
 | `stylelint` | CSS duplicado, hex hardcoded, propriedades inválidas | `npm run lint:css` |
-| `eslint` + `eslint-plugin-svelte` | Code smells JS/Svelte, regras a11y, no-unused-vars | `npm run lint:js` |
+| `eslint` + `eslint-plugin-svelte` | Code smells, complexidade, XSS, a11y | `npm run lint:js` |
 | `knip` | Dead code, imports e exports não usados | `npm run lint:dead` |
+| `npm audit` | Vulnerabilidades conhecidas (CVEs) em dependências | `npm audit --audit-level=high` |
+| `Semgrep` | Security SAST (XSS, injection, secrets, patterns) | `npm run lint:security` |
 | `axe-core` / `vitest-axe` | Acessibilidade runtime (WCAG 2.1 AA) em testes unitários | `npm run test:unit` |
 | `@axe-core/playwright` | Acessibilidade e2e contra DOM real renderizado | `npm run test` |
 
@@ -23,11 +25,17 @@ npm run check:watch
 # Lint CSS (hex colors, duplicatas, formatação)
 npm run lint:css
 
-# Lint JS/Svelte (code smells, unused vars, a11y rules)
+# Lint JS/Svelte (code smells, complexity, XSS warnings, a11y)
 npm run lint:js
+
+# Security SAST (Semgrep — patterns para XSS, injection, secrets)
+npm run lint:security
 
 # Detectar dead code e imports não usados
 npm run lint:dead
+
+# Vulnerabilidades em dependências (CVEs high/critical)
+npm audit --audit-level=high
 
 # Todos os linters juntos (check + css + js)
 npm run lint
@@ -76,8 +84,48 @@ A regra `color-no-hex` garante que **nenhum componente** pode usar cores hex dir
 Usa `flat/recommended` do eslint-plugin-svelte que inclui:
 
 - **Regras a11y**: missing labels, interactive elements sem keyboard access, role conflicts
-- **Svelte-specific**: no-dupe-style-properties, require-each-key (desativada), no-at-html-tags
+- **Svelte-specific**: no-dupe-style-properties, require-each-key (desativada), no-at-html-tags (warn)
 - **JS quality**: no-unused-vars, no-undef (desativada para runes)
+- **Complexidade**: `complexity` (max 15), `max-depth` (max 4), `max-lines-per-function` (max 80), `max-params` (max 4)
+- **Svelte blocks**: `svelte/max-lines-per-block` (script: 120, style: 150, template: 250)
+- **XSS**: `svelte/no-at-html-tags` como warning (sinaliza uso de `{@html}` para review)
+
+### Semgrep (Security SAST)
+
+Análise estática de segurança via pattern matching. Roda no CI via container Docker e localmente via `npm run lint:security`.
+
+Detecta:
+- XSS (innerHTML, {@html} com dados não sanitizados)
+- Prototype pollution
+- Open redirects
+- Hardcoded secrets/credentials
+- Insecure crypto patterns
+- SQL/NoSQL injection patterns
+
+**CI**: Job `security` roda em paralelo com os outros jobs.
+**Local**: `npm run lint:security` (requer `semgrep` instalado ou usa `npx`).
+
+### npm audit (Dependency Vulnerabilities)
+
+Verifica se as dependências têm CVEs conhecidos reportados no npm advisory database.
+
+- `--audit-level=high` — reporta apenas high e critical
+- Roda no CI antes do build
+- Local: `npm audit` para ver tudo, `npm audit fix` para corrigir automáticas
+
+### Complexity Rules (ESLint)
+
+As regras de complexidade funcionam como **guardrails preventivos** — não bloqueiam imediatamente mas sinalizam código que precisa de refactor:
+
+| Regra | Limite | O que mede |
+|---|---|---|
+| `complexity` | max 15 | Cyclomatic complexity (branches) |
+| `max-depth` | max 4 | Nível de nesting (if dentro de if...) |
+| `max-lines-per-function` | max 80 | Tamanho da função |
+| `max-params` | max 4 | Parâmetros de função |
+| `svelte/max-lines-per-block` | script:120, style:150, template:250 | Tamanho dos blocos Svelte |
+
+O `--max-warnings=6` no CI permite os 6 hotspots conhecidos mas bloqueia qualquer warning novo.
 
 ### knip (Dead Code)
 
@@ -127,13 +175,19 @@ O lint completo roda no CI via GitHub Actions (job `frontend`). Ordem de execuç
 # .github/workflows/ci.yml — job: frontend
 steps:
   - npm ci
-  - npm run check              # svelte-check (tipos + a11y compile-time)
-  - npm run build              # build production
-  - npm run lint:css           # stylelint (protege tokens)
-  - npm run lint:js            # eslint
+  - npm audit --audit-level=high     # dependency vulnerabilities
+  - npx svelte-kit sync              # generate types
+  - npm run check                    # svelte-check (tipos + a11y)
+  - npm run build                    # build production
+  - npm run lint:css                 # stylelint (protege tokens)
+  - npm run lint:js                  # eslint (complexity + XSS + quality)
   - mise run check:ui-coverage -- --strict  # bloqueia se hex hardcoded
-  - npx vitest run             # unit tests + axe-core
-  - npx playwright test        # e2e + @axe-core/playwright
+  - npx vitest run                   # unit tests + axe-core + contrast
+  - npx playwright test              # e2e + @axe-core/playwright
+
+# .github/workflows/ci.yml — job: security
+steps:
+  - semgrep scan --config auto --config p/javascript --error  # SAST
 ```
 
 ### Mise Tasks
@@ -196,6 +250,11 @@ Rode **sempre antes de push**. Se passa local, passa no CI.
 | `<select>` nativo ao invés de `<Select>` | `npm run audit:ui` |
 | Padrões reimplementados (modais, tabs) | `npm run audit:ui` |
 | Utility classes legadas (.btn, .badge) | `npm run audit:ui` |
+| **Função muito complexa (cyclomatic > 15)** | ESLint `complexity` |
+| **Script/style block muito longo** | ESLint `svelte/max-lines-per-block` |
+| **XSS via `{@html}` não sanitizado** | ESLint `svelte/no-at-html-tags` + Semgrep |
+| **Dependência com CVE high/critical** | `npm audit` |
+| **Injection patterns, secrets hardcoded** | Semgrep SAST |
 
 ## Auditoria de Cobertura UI (`npm run audit:ui`)
 
