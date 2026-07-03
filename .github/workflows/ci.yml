@@ -64,7 +64,10 @@ jobs:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v2
       - run: mise run lint:python
-      - run: python -c "import sys; sys.path.insert(0, 'services/analyzer'); import main"
+      - name: Syntax check
+        run: |
+          pip install -r services/analyzer/requirements.txt --quiet
+          python -c "import sys; sys.path.insert(0, 'services/analyzer'); import main"
 
   # ── Proto (lint + sync + breaking) ──────────────────────────────────────
   proto:
@@ -73,11 +76,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0  # needed for buf breaking
+          fetch-depth: 0
+      - uses: jdx/mise-action@v2
       - uses: bufbuild/buf-setup-action@v1
-      - run: mise run proto:lint
-        env:
-          MISE_EXPERIMENTAL: "1"
+      - name: Lint
+        run: cd protos && buf lint
       - name: Sync check (Go + C#)
         run: |
           cd protos && buf generate && cd ..

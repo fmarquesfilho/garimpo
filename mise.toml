@@ -16,6 +16,8 @@ go = "1.26"
 node = "24"
 python = "3.13"
 uv = "latest"
+"go:github.com/golangci/golangci-lint/cmd/golangci-lint" = "latest"
+"go:github.com/arch-go/arch-go" = "latest"
 
 [env]
 GARIMPEI_ENV = "development"
