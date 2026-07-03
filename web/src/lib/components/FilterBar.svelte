@@ -50,16 +50,16 @@
 	});
 </script>
 
-<div class="filtros">
+<div class="mb-5">
 	<!-- Busca principal — sempre visível -->
 	{#if mostrarBusca}
-		<div class="busca-row">
-			<div class="busca-wrapper">
+		<div class="flex gap-2 max-[480px]:flex-col">
+			<div class="flex-1 relative">
 				<input
 					type="search"
 					bind:value={busca}
 					placeholder="🔍 Buscar produto… (ex: sérum, perfume, batom)"
-					class="busca-input"
+					class="w-full font-sans text-base py-3 pr-10 pl-4 rounded-md border border-border bg-[var(--branco)] text-foreground placeholder:text-tinta-suave placeholder:opacity-60 focus:outline-none focus:border-ouro focus:shadow-[0_0_0_3px_var(--ouro-fundo)]"
 					onkeydown={(e) => {
 						if (e.key === 'Escape') {
 							busca = '';
@@ -68,18 +68,22 @@
 					}}
 				/>
 				{#if busca}
-					<button class="btn-limpar" onclick={() => (busca = '')} type="button" aria-label="Limpar busca">✕</button>
+					<button
+						class="absolute right-2.5 top-1/2 -translate-y-1/2 border-none bg-porcelana text-tinta-suave w-6 h-6 rounded-full text-xs cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
+						onclick={() => (busca = '')}
+						type="button"
+						aria-label="Limpar busca"
+					>✕</button>
 				{/if}
 			</div>
 			<button
-				class="btn-avancado"
-				class:ativo={avancadoAberto}
+				class="flex items-center gap-1 py-2.5 px-3.5 border border-border rounded-sm bg-porcelana text-tinta-suave text-sm font-semibold cursor-pointer whitespace-nowrap hover:border-ouro hover:text-foreground max-[480px]:justify-center {avancadoAberto ? 'border-ouro bg-ouro-fundo text-ouro-escuro' : ''}"
 				onclick={() => (avancadoAberto = !avancadoAberto)}
 				type="button"
 			>
 				⚙️ Filtros
 				{#if filtrosAtivos > 0 && !avancadoAberto}
-					<span class="filtro-badge">{filtrosAtivos}</span>
+					<span class="text-[0.65rem] bg-ouro text-[var(--branco)] w-4 h-4 rounded-full flex items-center justify-center font-bold">{filtrosAtivos}</span>
 				{/if}
 			</button>
 		</div>
@@ -87,259 +91,62 @@
 
 	<!-- Filtros avançados — colapsáveis -->
 	{#if avancadoAberto}
-		<div class="avancados">
-			<label class="campo">
+		<div class="flex flex-wrap items-end gap-3 mt-3 p-4 bg-card border border-border rounded-sm">
+			<label class="flex flex-col gap-1 relative">
 				<span class="rotulo">categoria</span>
-				<div class="cat-wrapper">
+				<div class="relative">
 					<input
 						type="text"
 						bind:value={catInput}
 						placeholder="todas (digite para filtrar)"
-						class="entrada"
+						class="font-sans text-base py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground w-full placeholder:text-tinta-suave placeholder:opacity-70"
 						autocomplete="off"
 					/>
 					{#if categoria}
-						<button class="btn-limpar-cat" onclick={limparCategoria} type="button" aria-label="Limpar categoria"
-							>✕</button
-						>
+						<button
+							class="absolute right-2 top-1/2 -translate-y-1/2 border-none bg-porcelana text-tinta-suave w-5 h-5 rounded-full text-[0.65rem] cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
+							onclick={limparCategoria}
+							type="button"
+							aria-label="Limpar categoria"
+						>✕</button>
 					{/if}
 				</div>
 				{#if catInput && sugestoes.length > 0 && catInput.toLowerCase() !== categoria.toLowerCase()}
-					<ul class="cat-sugestoes" role="listbox">
+					<ul class="absolute z-20 top-full left-0 right-0 mt-1 p-1 list-none bg-[var(--branco)] border border-border rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.08)] max-h-[200px] overflow-y-auto" role="listbox">
 						{#each sugestoes.slice(0, 8) as cat (cat.id)}
 							<li role="option" aria-selected={categoria === cat.nome}>
-								<button type="button" class="cat-opcao" onclick={() => selecionarCategoria(cat.nome)}>
+								<button
+									type="button"
+									class="w-full py-2 px-2.5 border-none bg-transparent text-left text-sm text-foreground cursor-pointer rounded flex justify-between items-center hover:bg-ouro-fundo hover:text-ouro-escuro"
+									onclick={() => selecionarCategoria(cat.nome)}
+								>
 									{cat.nome}
-									<span class="cat-mp">{cat.marketplace}</span>
+									<span class="text-[0.65rem] text-tinta-suave uppercase">{cat.marketplace}</span>
 								</button>
 							</li>
 						{/each}
 					</ul>
 				{/if}
 			</label>
-			<label class="campo">
+			<label class="flex flex-col gap-1">
 				<span class="rotulo">comissão mín.</span>
-				<select bind:value={comissaoMin} class="dado">
+				<select bind:value={comissaoMin} class="dado font-mono text-sm py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground">
 					<option value={0.05}>5%</option>
 					<option value={0.07}>7%</option>
 					<option value={0.1}>10%</option>
 					<option value={0.15}>15%</option>
 				</select>
 			</label>
-			<label class="campo">
+			<label class="flex flex-col gap-1">
 				<span class="rotulo">vendas mín.</span>
-				<input type="number" min="0" step="1" bind:value={vendasMin} class="entrada num" />
+				<input
+					type="number"
+					min="0"
+					step="1"
+					bind:value={vendasMin}
+					class="font-mono text-base py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground w-[5.5rem]"
+				/>
 			</label>
 		</div>
 	{/if}
 </div>
-
-<style>
-	.filtros {
-		margin-bottom: var(--r5);
-	}
-
-	/* Busca principal */
-	.busca-row {
-		display: flex;
-		gap: var(--r2);
-	}
-	.busca-wrapper {
-		flex: 1;
-		position: relative;
-	}
-	.busca-input {
-		width: 100%;
-		font-family: var(--ui);
-		font-size: 1rem;
-		padding: 12px 40px 12px 16px;
-		border-radius: var(--raio);
-		border: 1px solid var(--linha);
-		background: var(--branco);
-		color: var(--tinta);
-	}
-	.busca-input:focus {
-		outline: none;
-		border-color: var(--ouro);
-		box-shadow: 0 0 0 3px var(--ouro-fundo);
-	}
-	.busca-input::placeholder {
-		color: var(--tinta-suave);
-		opacity: 0.6;
-	}
-	.btn-limpar {
-		position: absolute;
-		right: 10px;
-		top: 50%;
-		transform: translateY(-50%);
-		border: none;
-		background: var(--porcelana);
-		color: var(--tinta-suave);
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		font-size: 0.75rem;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.btn-limpar:hover {
-		background: var(--linha);
-		color: var(--tinta);
-	}
-
-	.btn-avancado {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		padding: 10px 14px;
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		background: var(--porcelana);
-		color: var(--tinta-suave);
-		font-size: var(--text-sm);
-		font-weight: 600;
-		cursor: pointer;
-		white-space: nowrap;
-	}
-	.btn-avancado:hover {
-		border-color: var(--ouro);
-		color: var(--tinta);
-	}
-	.btn-avancado.ativo {
-		border-color: var(--ouro);
-		background: var(--ouro-fundo);
-		color: var(--ouro-escuro);
-	}
-	.filtro-badge {
-		font-size: 0.65rem;
-		background: var(--ouro);
-		color: var(--branco);
-		width: 16px;
-		height: 16px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: 700;
-	}
-
-	/* Avançados */
-	.avancados {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: var(--r3);
-		margin-top: var(--r3);
-		padding: var(--r4);
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-	}
-	.campo {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		position: relative;
-	}
-	.entrada {
-		font-family: var(--ui);
-		font-size: var(--text-base);
-		padding: 8px 12px;
-		border-radius: var(--raio-sm);
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		color: var(--tinta);
-		width: 100%;
-	}
-	.entrada::placeholder {
-		color: var(--tinta-suave);
-		opacity: 0.7;
-	}
-	.entrada.num {
-		font-family: var(--mono);
-		width: 5.5rem;
-	}
-	.cat-wrapper {
-		position: relative;
-	}
-	.btn-limpar-cat {
-		position: absolute;
-		right: 8px;
-		top: 50%;
-		transform: translateY(-50%);
-		border: none;
-		background: var(--porcelana);
-		color: var(--tinta-suave);
-		width: 20px;
-		height: 20px;
-		border-radius: 50%;
-		font-size: 0.65rem;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.btn-limpar-cat:hover {
-		background: var(--linha);
-		color: var(--tinta);
-	}
-	.cat-sugestoes {
-		position: absolute;
-		z-index: 20;
-		top: 100%;
-		left: 0;
-		right: 0;
-		margin: 4px 0 0;
-		padding: 4px;
-		list-style: none;
-		background: var(--branco);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-		max-height: 200px;
-		overflow-y: auto;
-	}
-	.cat-opcao {
-		width: 100%;
-		padding: 8px 10px;
-		border: none;
-		background: none;
-		text-align: left;
-		font-size: var(--text-sm);
-		color: var(--tinta);
-		cursor: pointer;
-		border-radius: 4px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	.cat-opcao:hover {
-		background: var(--ouro-fundo);
-		color: var(--ouro-escuro);
-	}
-	.cat-mp {
-		font-size: 0.65rem;
-		color: var(--tinta-suave);
-		text-transform: uppercase;
-	}
-	select {
-		font-family: var(--mono);
-		font-size: var(--text-sm);
-		padding: 8px 12px;
-		border-radius: var(--raio-sm);
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		color: var(--tinta);
-	}
-
-	@media (max-width: 480px) {
-		.busca-row {
-			flex-direction: column;
-		}
-		.btn-avancado {
-			justify-content: center;
-		}
-	}
-</style>

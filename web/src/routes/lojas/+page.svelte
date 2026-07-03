@@ -128,37 +128,44 @@
 	<title>Lojas — Garimpei</title>
 </svelte:head>
 
-<section class="lojas-page">
-	<h1>🏪 Lojas Monitoradas</h1>
-	<p class="subtitulo">
+<section class="max-w-[900px]">
+	<h1 class="text-2xl mb-1">🏪 Lojas Monitoradas</h1>
+	<p class="text-tinta-suave text-sm mb-6">
 		Acompanhe os produtos das lojas que você monitora. Veja novidades, variações de preço e publique ofertas
 		diretamente.
 	</p>
 
 	{#if !$usuario}
-		<div class="aviso">Faça login para ver as lojas monitoradas.</div>
+		<div class="bg-porcelana p-4 rounded-sm text-tinta-suave">Faça login para ver as lojas monitoradas.</div>
 	{:else}
 		<FormAdicionarLoja onadicionada={handleLojaAdicionada} />
 		<GerenciarBuscas />
 		<PainelAlertas {buscaSelecionada} />
 
 		{#if buscasComLojas.length === 0}
-			<div class="vazio">
+			<div class="bg-porcelana p-4 rounded-sm text-tinta-suave">
 				<p>Nenhuma loja monitorada ainda.</p>
-				<p class="dica">Use o formulário acima para adicionar uma loja Shopee.</p>
+				<p class="text-sm mt-2 text-tinta-suave">Use o formulário acima para adicionar uma loja Shopee.</p>
 			</div>
 		{:else}
 			<!-- Lista de buscas com lojas -->
-			<div class="lojas-lista">
+			<div class="flex flex-wrap gap-3 mb-5">
 				{#each buscasComLojas as b (b.id)}
-					<div class="loja-card-wrapper">
-						<button class="loja-card" class:ativa={buscaSelecionada?.id === b.id} onclick={() => selecionarBusca(b)}>
-							<strong>{b.nome || b.id}</strong>
+					<div class="relative">
+						<button
+							class="border border-border bg-card rounded-sm px-4 py-3 pr-8 cursor-pointer text-left flex flex-col gap-0.5 hover:border-ouro {buscaSelecionada?.id === b.id ? 'border-ouro bg-ouro-fundo' : ''}"
+							onclick={() => selecionarBusca(b)}
+						>
+							<strong class="text-sm">{b.nome || b.id}</strong>
 							{#if b.cron}
-								<span class="loja-meta">⏱ coleta automática</span>
+								<span class="text-xs text-tinta-suave">⏱ coleta automática</span>
 							{/if}
 						</button>
-						<button class="btn-remover" onclick={() => handleRemoverLoja(b)} title="Remover monitoramento">✕</button>
+						<button
+							class="absolute top-1 right-1 w-[22px] h-[22px] rounded-full border-none bg-transparent text-tinta-suave text-xs cursor-pointer flex items-center justify-center hover:bg-erro-fundo hover:text-erro"
+							onclick={() => handleRemoverLoja(b)}
+							title="Remover monitoramento"
+						>✕</button>
 					</div>
 				{/each}
 			</div>
@@ -178,24 +185,24 @@
 						{:else if erroNovidades}
 							<Alert variant="error">{erroNovidades}</Alert>
 						{:else if !novidades || novidades.produtos_novos?.length === 0}
-							<p class="vazio-tab">Nenhum produto novo detectado nos últimos {novidades?.dias_janela ?? 7} dias.</p>
+							<p class="text-sm text-tinta-suave py-4">Nenhum produto novo detectado nos últimos {novidades?.dias_janela ?? 7} dias.</p>
 						{:else}
-							<p class="info-novidades">
+							<p class="text-sm mb-4">
 								<strong>{novidades.produtos_novos.length}</strong> produto(s) novo(s) detectado(s) nos últimos {novidades.dias_janela}
 								dias.
 							</p>
-							<div class="grade-novidades">
+							<div class="flex flex-col gap-3">
 								{#each novidades.produtos_novos as p (p.produto_id)}
-									<div class="card-novidade">
-										<div class="novidade-badge">🆕</div>
-										<div class="novidade-info">
-											<strong>{p.nome}</strong>
-											<div class="novidade-dados">
+									<div class="flex gap-3 px-4 py-3 border border-sucesso-borda border-l-[3px] border-l-sucesso rounded-sm bg-sucesso-fundo">
+										<div class="text-xl">🆕</div>
+										<div class="flex-1">
+											<strong class="text-sm">{p.nome}</strong>
+											<div class="flex gap-3 text-xs text-tinta-suave mt-0.5">
 												<span>{brl(p.preco)}</span>
 												<span>{pct(p.comissao)} comissão</span>
 												<span>{p.vendas} vendas</span>
 											</div>
-											<span class="novidade-data">Detectado: {p.detectado_em?.split('T')[0]}</span>
+											<span class="text-[0.72rem] text-tinta-suave">Detectado: {p.detectado_em?.split('T')[0]}</span>
 										</div>
 									</div>
 								{/each}
@@ -205,45 +212,43 @@
 						{#if carregandoNovidades}
 							<Loading mensagem="Analisando variações…" />
 						{:else if !novidades || novidades.variacoes?.length === 0}
-							<p class="vazio-tab">
+							<p class="text-sm text-tinta-suave py-4">
 								Nenhuma variação de preço detectada nos últimos {novidades?.dias_janela ?? 7} dias.
 							</p>
 						{:else}
-							<p class="info-novidades">
+							<p class="text-sm mb-4">
 								<strong>{novidades.variacoes.length}</strong> variação(ões) de preço detectada(s).
 							</p>
-							<div class="tabela-variacoes">
-								<table>
+							<div class="overflow-x-auto">
+								<table class="w-full border-collapse text-[0.85rem]">
 									<thead>
 										<tr>
-											<th>Produto</th>
-											<th>Antes</th>
-											<th>Agora</th>
-											<th>Variação</th>
-											<th>Detectado</th>
-											<th></th>
+											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Produto</th>
+											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Antes</th>
+											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Agora</th>
+											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Variação</th>
+											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Detectado</th>
+											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"></th>
 										</tr>
 									</thead>
 									<tbody>
 										{#each novidades.variacoes as v (v.produto_id)}
-											<tr class:baixou={v.variacao_pct < 0} class:subiu={v.variacao_pct > 0}>
-												<td class="nome-col">{v.nome}</td>
-												<td>{brl(v.preco_anterior)}</td>
-												<td class="preco-atual">{brl(v.preco_atual)}</td>
-												<td class="variacao">
+											<tr>
+												<td class="px-2.5 py-2 border-b border-border max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{v.nome}</td>
+												<td class="px-2.5 py-2 border-b border-border">{brl(v.preco_anterior)}</td>
+												<td class="px-2.5 py-2 border-b border-border font-bold {v.variacao_pct < 0 ? 'text-sucesso' : v.variacao_pct > 0 ? 'text-erro' : ''}">{brl(v.preco_atual)}</td>
+												<td class="px-2.5 py-2 border-b border-border font-bold">
 													<span
-														class="badge-variacao"
-														class:badge-baixou={v.variacao_pct < 0}
-														class:badge-subiu={v.variacao_pct > 0}
+														class="inline-block px-2 py-0.5 rounded-full text-xs font-bold {v.variacao_pct < 0 ? 'bg-sucesso-fundo text-sucesso' : 'bg-erro-fundo text-erro'}"
 													>
 														{v.variacao_pct < 0 ? '↓' : '↑'}
 														{Math.abs(v.variacao_pct * 100).toFixed(1)}%
 													</span>
 												</td>
-												<td class="data">{v.detectado_em?.split('T')[0]}</td>
-												<td>
+												<td class="px-2.5 py-2 border-b border-border text-xs text-tinta-suave">{v.detectado_em?.split('T')[0]}</td>
+												<td class="px-2.5 py-2 border-b border-border">
 													<button
-														class="btn-pub-mini"
+														class="border border-border bg-porcelana rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-base shrink-0 hover:border-rosa hover:bg-[color-mix(in_srgb,var(--rosa)_8%,white)]"
 														onclick={() =>
 															irParaPublicar({
 																id: v.produto_id,
@@ -265,200 +270,3 @@
 		{/if}
 	{/if}
 </section>
-
-<style>
-	.lojas-page {
-		max-width: 900px;
-	}
-	h1 {
-		font-size: 1.5rem;
-		margin-bottom: 0.25rem;
-	}
-	.subtitulo {
-		color: var(--tinta-suave);
-		font-size: 0.9rem;
-		margin-bottom: var(--r6);
-	}
-
-	.aviso,
-	.vazio {
-		background: var(--porcelana);
-		padding: var(--r4);
-		border-radius: var(--raio-sm);
-		color: var(--tinta-suave);
-	}
-
-	/* Lista de lojas */
-	.lojas-lista {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--r3);
-		margin-bottom: var(--r5);
-	}
-	.loja-card-wrapper {
-		position: relative;
-	}
-	.loja-card {
-		border: 1px solid var(--linha);
-		background: var(--nevoa);
-		border-radius: var(--raio-sm);
-		padding: var(--r3) var(--r4);
-		padding-right: 32px;
-		cursor: pointer;
-		text-align: left;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.loja-card:hover {
-		border-color: var(--ouro);
-	}
-	.loja-card.ativa {
-		border-color: var(--ouro);
-		background: var(--ouro-fundo);
-	}
-	.loja-card strong {
-		font-size: 0.9rem;
-	}
-	.loja-meta {
-		font-size: 0.78rem;
-		color: var(--tinta-suave);
-	}
-	.btn-remover {
-		position: absolute;
-		top: 4px;
-		right: 4px;
-		width: 22px;
-		height: 22px;
-		border-radius: 50%;
-		border: none;
-		background: transparent;
-		color: var(--tinta-suave);
-		font-size: 0.75rem;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.btn-remover:hover {
-		background: var(--erro-fundo);
-		color: var(--erro-texto);
-	}
-
-	/* Novidades */
-	.info-novidades {
-		font-size: 0.88rem;
-		margin-bottom: var(--r4);
-	}
-	.grade-novidades {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-	.card-novidade {
-		display: flex;
-		gap: var(--r3);
-		padding: var(--r3) var(--r4);
-		border: 1px solid var(--sucesso-borda);
-		border-left: 3px solid var(--sucesso-texto);
-		border-radius: var(--raio-sm);
-		background: var(--sucesso-fundo);
-	}
-	.novidade-badge {
-		font-size: 1.2rem;
-	}
-	.novidade-info {
-		flex: 1;
-	}
-	.novidade-info strong {
-		font-size: 0.9rem;
-	}
-	.novidade-dados {
-		display: flex;
-		gap: var(--r3);
-		font-size: 0.78rem;
-		color: var(--tinta-suave);
-		margin-top: 2px;
-	}
-	.novidade-data {
-		font-size: 0.72rem;
-		color: var(--tinta-suave);
-	}
-
-	/* Variações de preço */
-	.tabela-variacoes {
-		overflow-x: auto;
-	}
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.85rem;
-	}
-	th {
-		text-align: left;
-		font-weight: 600;
-		padding: 8px 10px;
-		border-bottom: 2px solid var(--linha);
-		font-size: 0.78rem;
-		text-transform: uppercase;
-		color: var(--tinta-suave);
-	}
-	td {
-		padding: 8px 10px;
-		border-bottom: 1px solid var(--linha);
-	}
-	.nome-col {
-		max-width: 200px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.preco-atual {
-		font-weight: 700;
-	}
-	.variacao {
-		font-weight: 700;
-	}
-	.badge-variacao {
-		display: inline-block;
-		padding: 2px 8px;
-		border-radius: var(--raio-full);
-		font-size: 0.78rem;
-		font-weight: 700;
-	}
-	.badge-baixou {
-		background: var(--sucesso-fundo);
-		color: var(--sucesso-texto);
-	}
-	.badge-subiu {
-		background: var(--erro-fundo);
-		color: var(--erro-texto);
-	}
-	tr.baixou .preco-atual {
-		color: var(--sucesso-texto);
-	}
-	tr.subiu .preco-atual {
-		color: var(--erro-texto);
-	}
-	.data {
-		font-size: 0.78rem;
-		color: var(--tinta-suave);
-	}
-	.btn-pub-mini {
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		border-radius: 8px;
-		width: 36px;
-		height: 36px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		font-size: 1rem;
-		flex-shrink: 0;
-	}
-	.btn-pub-mini:hover {
-		border-color: var(--rosa);
-		background: color-mix(in srgb, var(--rosa) 8%, white);
-	}
-</style>

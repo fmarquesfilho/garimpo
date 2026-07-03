@@ -138,81 +138,83 @@
 	<title>Descobrir — Garimpei</title>
 </svelte:head>
 
-<section class="page">
-	<h1>O que publicar hoje?</h1>
-	<p class="sub">Encontre produtos para divulgar — por busca, oportunidades ou favoritos.</p>
+<section class="max-w-[900px]">
+	<h1 class="text-[clamp(1.8rem,5vw,2.5rem)] mb-2">O que publicar hoje?</h1>
+	<p class="text-tinta-suave text-[0.95rem] mb-5">Encontre produtos para divulgar — por busca, oportunidades ou favoritos.</p>
 
 	<FilterBar bind:busca bind:categoria bind:comissaoMin bind:vendasMin mostrarBusca={true} />
 
 	<!-- Fontes -->
-	<div class="fontes">
+	<div class="flex flex-wrap gap-1.5 mb-6">
 		<button
-			class="fonte-btn"
-			class:ativa={fontes.curadoria}
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.curadoria ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
 			onclick={() => {
 				fontes.curadoria = !fontes.curadoria;
 			}}
 			type="button"
 			title="Busca por palavra-chave na API de afiliados Shopee"
 		>
-			🔍 Busca {#if fontes.curadoria && contagemCuradoria > 0}<span class="fonte-badge">{contagemCuradoria}</span>{/if}
+			🔍 Busca {#if fontes.curadoria && contagemCuradoria > 0}<span class="text-[0.65rem] bg-ouro text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{contagemCuradoria}</span>{/if}
 		</button>
 		<button
-			class="fonte-btn"
-			class:ativa={fontes.quedas}
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.quedas ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
 			onclick={() => {
 				fontes.quedas = !fontes.quedas;
 			}}
 			type="button"
 			title="Produtos que caíram de preço nas lojas monitoradas"
 		>
-			📉 Quedas {#if contagemQuedas > 0}<span class="fonte-badge queda">{contagemQuedas}</span>{/if}
+			📉 Quedas {#if contagemQuedas > 0}<span class="text-[0.65rem] bg-sucesso text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{contagemQuedas}</span>{/if}
 		</button>
 		<button
-			class="fonte-btn"
-			class:ativa={fontes.novos}
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.novos ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
 			onclick={() => {
 				fontes.novos = !fontes.novos;
 			}}
 			type="button"
 			title="Produtos novos detectados nas lojas monitoradas"
 		>
-			🆕 Novos {#if contagemNovos > 0}<span class="fonte-badge novo">{contagemNovos}</span>{/if}
+			🆕 Novos {#if contagemNovos > 0}<span class="text-[0.65rem] bg-rosa text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{contagemNovos}</span>{/if}
 		</button>
 		<button
-			class="fonte-btn"
-			class:ativa={fontes.favoritos}
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.favoritos ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
 			onclick={() => {
 				fontes.favoritos = !fontes.favoritos;
 			}}
 			type="button"
 			title="Produtos que você salvou como favorito"
 		>
-			⭐ Favoritos {#if $favoritos.length > 0}<span class="fonte-badge">{$favoritos.length}</span>{/if}
+			⭐ Favoritos {#if $favoritos.length > 0}<span class="text-[0.65rem] bg-ouro text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{$favoritos.length}</span>{/if}
 		</button>
 	</div>
 	{#if !fontes.curadoria && !fontes.quedas && !fontes.novos && !fontes.favoritos}
-		<p class="hint-fontes">Ative ao menos uma fonte para ver resultados.</p>
+		<p class="text-[0.82rem] text-tinta-suave italic mb-4">Ative ao menos uma fonte para ver resultados.</p>
 	{:else if fontes.curadoria && !busca.trim() && categoriasEfetivas.length === 0 && !fontes.quedas && !fontes.novos && !fontes.favoritos}
-		<p class="hint-fontes">Digite um termo acima para buscar produtos.</p>
+		<p class="text-[0.82rem] text-tinta-suave italic mb-4">Digite um termo acima para buscar produtos.</p>
 	{/if}
 
 	<!-- Atalhos -->
 	{#if buscasSalvasKw.length > 0}
-		<div class="buscas-atalhos">
+		<div class="flex flex-wrap gap-2 mb-5">
 			{#each buscasSalvasKw as b (b.id)}
-				<div class="atalho-busca">
-					{#if b.cron}<span class="atalho-icone" title="Busca agendada">⏱</span>{/if}
-					{#if b.fontes?.includes('quedas')}<span class="atalho-icone" title="Monitora quedas">📉</span>{/if}
-					{#if b.fontes?.includes('novos')}<span class="atalho-icone" title="Monitora novos">🆕</span>{/if}
+				<div class="flex items-center gap-1">
+					{#if b.cron}<span class="text-xs text-ouro" title="Busca agendada">⏱</span>{/if}
+					{#if b.fontes?.includes('quedas')}<span class="text-xs text-ouro" title="Monitora quedas">📉</span>{/if}
+					{#if b.fontes?.includes('novos')}<span class="text-xs text-ouro" title="Monitora novos">🆕</span>{/if}
 					{#each b.keywords ?? [] as kw}
-						<button class="kw-pill" class:ativa={busca === kw} onclick={() => aplicarBuscaSalva(b)} type="button"
-							>{kw}</button
-						>
+						<button
+							class="py-[5px] px-3 border border-border rounded-full bg-porcelana text-foreground text-[0.82rem] font-semibold cursor-pointer hover:border-ouro hover:text-ouro-escuro {busca === kw ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
+							onclick={() => aplicarBuscaSalva(b)}
+							type="button"
+						>{kw}</button>
 					{/each}
 					{#if (b.keywords ?? []).length === 0 && b.categorias?.length}
 						{#each b.categorias as cat}
-							<button class="kw-pill cat-pill" onclick={() => aplicarBuscaSalva(b)} type="button">{cat}</button>
+							<button
+								class="py-[5px] px-3 border rounded-full bg-porcelana text-rosa border-[color-mix(in_srgb,var(--rosa)_30%,var(--linha))] text-[0.82rem] font-semibold cursor-pointer hover:border-ouro hover:text-ouro-escuro"
+								onclick={() => aplicarBuscaSalva(b)}
+								type="button"
+							>{cat}</button>
 						{/each}
 					{/if}
 				</div>
@@ -224,8 +226,8 @@
 	{#if carregando}
 		<Loading mensagem="Buscando produtos…" />
 	{:else if erro}
-		<div class="msg-erro">
-			<p><strong>😕 {erro.message ?? erro}</strong></p>
+		<div class="bg-card border border-[color-mix(in_srgb,var(--erro-texto)_30%,var(--linha))] rounded-md p-5 text-center">
+			<p class="my-2"><strong>😕 {erro.message ?? erro}</strong></p>
 			<Button size="sm" onclick={carregar}>🔄 Tentar novamente</Button>
 		</div>
 	{:else if resultados.length === 0}
@@ -245,8 +247,8 @@
 						: 'Ative "Busca" e digite um termo, ou monitore lojas para ver oportunidades.'}
 		/>
 	{:else}
-		<p class="contagem">{resultados.length} {resultados.length === 1 ? 'produto' : 'produtos'}</p>
-		<div class="grade">
+		<p class="text-[0.82rem] text-tinta-suave mb-4">{resultados.length} {resultados.length === 1 ? 'produto' : 'produtos'}</p>
+		<div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
 			{#each resultados as produto, i (produto.id || produto.produto_id || i)}
 				<ProductCard
 					{produto}
@@ -269,131 +271,3 @@
 		</div>
 	{/if}
 </section>
-
-<style>
-	.page {
-		max-width: 900px;
-	}
-	h1 {
-		font-size: clamp(1.8rem, 5vw, 2.5rem);
-		margin: 0 0 var(--r2);
-	}
-	.sub {
-		color: var(--tinta-suave);
-		font-size: 0.95rem;
-		margin: 0 0 var(--r5);
-	}
-	.fontes {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-		margin-bottom: var(--r6);
-	}
-	.fonte-btn {
-		padding: 7px 14px;
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-full);
-		background: var(--porcelana);
-		color: var(--tinta-suave);
-		font-size: 0.82rem;
-		font-weight: 600;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		transition:
-			border-color 0.15s,
-			background 0.15s;
-	}
-	.fonte-btn:hover {
-		border-color: var(--ouro);
-		color: var(--tinta);
-	}
-	.fonte-btn.ativa {
-		background: var(--ouro-fundo);
-		border-color: var(--ouro-claro);
-		color: var(--ouro-escuro);
-	}
-	.fonte-badge {
-		font-size: 0.65rem;
-		background: var(--ouro);
-		color: white;
-		width: 16px;
-		height: 16px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: 700;
-	}
-	.fonte-badge.queda {
-		background: var(--sucesso-texto);
-	}
-	.fonte-badge.novo {
-		background: var(--rosa);
-	}
-	.hint-fontes {
-		font-size: 0.82rem;
-		color: var(--tinta-suave);
-		font-style: italic;
-		margin: 0 0 var(--r4);
-	}
-	.buscas-atalhos {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		margin-bottom: var(--r5);
-	}
-	.atalho-busca {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-	}
-	.atalho-icone {
-		font-size: 0.75rem;
-		color: var(--ouro);
-	}
-	.kw-pill {
-		padding: 5px 12px;
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-full);
-		background: var(--porcelana);
-		color: var(--tinta);
-		font-size: 0.82rem;
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.kw-pill:hover {
-		border-color: var(--ouro);
-		color: var(--ouro-escuro);
-	}
-	.kw-pill.ativa {
-		background: var(--ouro-fundo);
-		border-color: var(--ouro-claro);
-		color: var(--ouro-escuro);
-	}
-	.cat-pill {
-		color: var(--rosa);
-		border-color: color-mix(in srgb, var(--rosa) 30%, var(--linha));
-	}
-	.contagem {
-		font-size: 0.82rem;
-		color: var(--tinta-suave);
-		margin-bottom: var(--r4);
-	}
-	.grade {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: var(--r5);
-	}
-	.msg-erro {
-		background: var(--nevoa);
-		border: 1px solid color-mix(in srgb, var(--erro-texto) 30%, var(--linha));
-		border-radius: var(--raio);
-		padding: var(--r5);
-		text-align: center;
-	}
-	.msg-erro p {
-		margin: var(--r2) 0;
-	}
-</style>
