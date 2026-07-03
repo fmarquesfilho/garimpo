@@ -1,33 +1,31 @@
-# Biblioteca de Componentes UI — Garimpo
+# Componentes UI — Garimpei
 
-## Visão Geral
+**Atualizado:** 2026-07-03
+**Stack:** Svelte 5 (runes) + Bits UI + Tailwind CSS v4 (shadcn-svelte style)
+**Referência:** ADR-0022, spec `shadcn-svelte-migration`
 
-A biblioteca de componentes `$lib/components/ui/` fornece primitivos e compostos reutilizáveis para o frontend Garimpo. Construída sobre [Bits UI](https://bits-ui.com) para acessibilidade e Svelte 5 runes para reatividade.
+---
 
-**Princípios:**
+## Arquitetura
 
-- Headless + tokens CSS — comportamento via Bits UI, visual via design tokens
-- WCAG AA — contraste ≥4.5:1, keyboard nav, ARIA semântico
-- Tree-shakeable — apenas componentes importados entram no bundle
-- Migração progressiva — coexiste com componentes legados
+```
+app.css
+├── @import "tailwindcss"        → engine de utilidades
+├── @import tokens.css           → variáveis CSS (:root + dark)
+├── @theme { ... }               → mapeia tokens para Tailwind/shadcn
+└── base styles + legacy utils   → classes .casca, .subtitulo, etc.
 
-## Design Tokens
+$lib/components/ui/
+├── Primitivos (Tailwind)        → Button, Alert, Badge, Card, Input
+├── Compostos (Bits UI + TW)     → Select, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
+└── Application                  → DashPanel, MetricCard, Loading, EmptyState, ...
 
-Arquivo: `src/lib/components/ui/tokens.css`
+$lib/utils.ts                    → cn() (tailwind-merge + clsx)
+```
 
-Todas as decisões visuais estão centralizadas em CSS custom properties organizadas por categoria:
+---
 
-| Categoria | Exemplos | Uso |
-|-----------|----------|-----|
-| Color: Neutrals | `--porcelana`, `--tinta`, `--linha` | Fundos, texto, bordas |
-| Color: Ouro | `--ouro`, `--ouro-hover`, `--ouro-fundo` | Ações primárias, destaques |
-| Color: Rosa | `--rosa`, `--rosa-hover`, `--rosa-fundo` | Tags, categorias (nicho beleza) |
-| Color: Feedback | `--erro-texto`, `--sucesso-fundo`, `--aviso-borda` | Alertas, validação |
-| Spacing | `--r1` a `--r12` | Padding, gap, margin |
-| Typography | `--display`, `--ui`, `--mono`, `--text-xs` a `--text-2xl` | Fontes e escalas |
-| Surfaces | `--raio`, `--raio-sm`, `--raio-full`, `--sombra` | Border-radius, shadows |
-
-## Componentes Primitivos
+## Primitivos
 
 ### Button
 
@@ -36,325 +34,238 @@ Todas as decisões visuais estão centralizadas em CSS custom properties organiz
   import { Button } from '$lib/components/ui';
 </script>
 
-<Button variant="primary" size="md" onclick={handleClick}>
-  Salvar
-</Button>
+<Button variant="primary" size="md" onclick={...}>Enviar</Button>
+<Button variant="secondary" size="sm">Cancelar</Button>
+<Button variant="danger">Remover</Button>
+<Button variant="ghost" size="icon">⋮</Button>
 ```
 
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `variant` | `'primary' \| 'secondary' \| 'danger' \| 'ghost'` | `'primary'` | Estilo visual |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Tamanho |
-| `disabled` | `boolean` | `false` | Desabilita interação |
-| `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | Tipo HTML |
-| `onclick` | `function` | `null` | Handler de clique |
-
-### Input
-
-```svelte
-<script>
-  import { Input } from '$lib/components/ui';
-  let nome = $state('');
-</script>
-
-<Input bind:value={nome} label="Nome" placeholder="Digite..." />
-```
-
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `value` | `string` (bindable) | `''` | Valor do campo |
-| `label` | `string` | `''` | Rótulo acima do input |
-| `variant` | `'default' \| 'mono'` | `'default'` | Família tipográfica |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Tamanho |
-| `type` | `string` | `'text'` | Tipo do input HTML |
-| `placeholder` | `string` | `''` | Placeholder |
-| `disabled` | `boolean` | `false` | Desabilita |
-
-### Badge
-
-```svelte
-<script>
-  import { Badge } from '$lib/components/ui';
-</script>
-
-<Badge variant="gold">Destaque</Badge>
-<Badge variant="pink">Beleza</Badge>
-```
-
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `variant` | `'default' \| 'gold' \| 'pink' \| 'green' \| 'red'` | `'default'` | Cor da badge |
+| Prop | Tipo | Default | Valores |
+|------|------|---------|---------|
+| variant | string | `'primary'` | `primary`, `secondary`, `danger`, `ghost`, `link` |
+| size | string | `'md'` | `sm`, `md`, `lg`, `icon` |
+| type | string | `'button'` | `button`, `submit`, `reset` |
+| disabled | boolean | `false` | |
+| class | string | `''` | Classes Tailwind extras |
 
 ### Alert
 
 ```svelte
-<script>
-  import { Alert } from '$lib/components/ui';
-</script>
-
-<Alert variant="success">Operação concluída!</Alert>
-<Alert variant="error" inline>Campo obrigatório</Alert>
+<Alert variant="success">Destino adicionado!</Alert>
+<Alert variant="error">Falha ao salvar.</Alert>
+<Alert variant="warning" inline>Atenção: limite atingido.</Alert>
 ```
 
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `variant` | `'error' \| 'success' \| 'warning'` | `'error'` | Tipo de feedback |
-| `inline` | `boolean` | `false` | Estilo compacto (sem fundo) |
+| Prop | Tipo | Default | Valores |
+|------|------|---------|---------|
+| variant | string | `'info'` | `info`, `success`, `warning`, `error` |
+| inline | boolean | `false` | Sem padding/borda (inline text) |
+
+### Badge
+
+```svelte
+<Badge variant="success">Ativo</Badge>
+<Badge variant="error">Erro</Badge>
+<Badge variant="outline">15%</Badge>
+```
+
+| Prop | Tipo | Default | Valores |
+|------|------|---------|---------|
+| variant | string | `'default'` | `default`, `secondary`, `success`, `warning`, `error`, `outline` |
 
 ### Card
 
 ```svelte
-<script>
-  import { Card } from '$lib/components/ui';
-</script>
-
-<Card variant="highlight" padding="lg">
-  <h3>Produto premium</h3>
-  <p>Conteúdo do card</p>
+<Card class="p-6">
+  <h3>Título</h3>
+  <p>Conteúdo</p>
 </Card>
 ```
 
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `variant` | `'default' \| 'highlight' \| 'success' \| 'error'` | `'default'` | Estilo visual |
-| `padding` | `'sm' \| 'md' \| 'lg'` | `'md'` | Espaçamento interno |
+| Prop | Tipo | Default |
+|------|------|---------|
+| class | string | `''` |
 
-## Componentes Compostos (Bits UI)
+### Input
+
+```svelte
+<Input label="Email" placeholder="seu@email.com" bind:value={email} />
+<Input error="Campo obrigatório" bind:value={nome} />
+```
+
+| Prop | Tipo | Default |
+|------|------|---------|
+| label | string | `''` |
+| error | string | `''` |
+| value | string (bindable) | `''` |
+| + todos os atributos HTML de `<input>` | | |
+
+---
+
+## Compostos (Bits UI)
 
 ### Select
 
 ```svelte
-<script>
-  import { Select } from '$lib/components/ui';
-  let status = $state('');
-  const options = [
-    { value: 'ativo', label: 'Ativo' },
-    { value: 'inativo', label: 'Inativo' },
-  ];
-</script>
-
-<Select bind:value={status} label="Status" {options} placeholder="Escolha..." />
+<Select
+  bind:value={destinoId}
+  options={destinos.map(d => ({ value: d.id, label: d.nome }))}
+  placeholder="Selecione…"
+  size="md"
+/>
 ```
 
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `value` | `string` (bindable) | `''` | Valor selecionado |
-| `label` | `string` | `''` | Rótulo |
-| `options` | `{ value, label }[]` | `[]` | Opções do select |
-| `placeholder` | `string` | `''` | Texto quando vazio |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Tamanho |
-| `disabled` | `boolean` | `false` | Desabilita |
+| Prop | Tipo | Default |
+|------|------|---------|
+| value | string (bindable) | `''` |
+| label | string | `''` |
+| options | `{ value, label }[]` | `[]` |
+| placeholder | string | `''` |
+| size | string | `'md'` |
+| disabled | boolean | `false` |
 
 ### Tabs
 
 ```svelte
-<script>
-  import { Tabs } from '$lib/components/ui';
-  import { Tabs as BitsTab } from 'bits-ui';
-  let active = $state('geral');
-  const tabs = [
-    { id: 'geral', label: 'Geral' },
-    { id: 'config', label: 'Config', badge: '3' },
-  ];
-</script>
-
-<Tabs {tabs} bind:active>
-  <BitsTab.Content value="geral">Conteúdo geral</BitsTab.Content>
-  <BitsTab.Content value="config">Configurações</BitsTab.Content>
+<Tabs {tabs} bind:active={aba}>
+  {#if aba === 'produtos'}...{/if}
 </Tabs>
 ```
 
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `tabs` | `{ id, label, badge?, badgeVariant? }[]` | `[]` | Definição das abas |
-| `active` | `string` (bindable) | `''` | Aba ativa |
+| Prop | Tipo | Default |
+|------|------|---------|
+| tabs | `{ id, label, badge?, badgeVariant? }[]` | `[]` |
+| active | string (bindable) | primeiro tab |
 
 ### Dialog
 
 ```svelte
-<script>
-  import { Dialog, Button } from '$lib/components/ui';
-  let aberto = $state(false);
-</script>
-
-<Button onclick={() => aberto = true}>Abrir</Button>
-
-<Dialog bind:open={aberto} title="Confirmar" description="Tem certeza?">
-  <p>Conteúdo do modal</p>
-  <Button onclick={() => aberto = false}>Fechar</Button>
+<Dialog bind:open={mostrar} title="Confirmar" description="Tem certeza?">
+  <Button onclick={confirmar}>Sim</Button>
 </Dialog>
 ```
 
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `open` | `boolean` (bindable) | `false` | Estado aberto/fechado |
-| `title` | `string` | `''` | Título do modal |
-| `description` | `string` | `''` | Descrição abaixo do título |
-
-### Tooltip
-
-```svelte
-<script>
-  import { Tooltip, Button } from '$lib/components/ui';
-</script>
-
-<Tooltip content="Copiar link" side="bottom">
-  <Button variant="ghost">📋</Button>
-</Tooltip>
-```
-
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `content` | `string` | `''` | Texto do tooltip |
-| `side` | `'top' \| 'bottom' \| 'left' \| 'right'` | `'top'` | Posição |
+| Prop | Tipo | Default |
+|------|------|---------|
+| open | boolean (bindable) | `false` |
+| title | string | `''` |
+| description | string | `''` |
 
 ### DropdownMenu
 
 ```svelte
-<script>
-  import { DropdownMenu, Button } from '$lib/components/ui';
-  const items = [
-    { label: 'Editar', onclick: () => edit() },
-    { label: 'Excluir', onclick: () => remove(), destructive: true },
-  ];
-</script>
-
-<DropdownMenu {items}>
-  <Button variant="ghost">⋮</Button>
+<DropdownMenu items={[
+  { label: '✎ Editar', onclick: editar },
+  { label: '✕ Remover', onclick: remover, destructive: true }
+]}>
+  <button>⋮</button>
 </DropdownMenu>
 ```
 
-| Prop | Tipo | Default | Descrição |
-|------|------|---------|-----------|
-| `items` | `{ label, onclick, disabled?, destructive? }[]` | `[]` | Itens do menu |
+| Prop | Tipo | Default |
+|------|------|---------|
+| items | `{ label, onclick, destructive? }[]` | `[]` |
+| children | snippet | trigger element |
 
-## Props Universais
-
-Todos os componentes aceitam:
-- `...rest` — atributos HTML extras são repassados ao elemento raiz (`data-testid`, `id`, `aria-label`, `class`, etc.)
-- Valores inválidos de `variant` ou `size` fazem fallback silencioso para o default
-
-## Acessibilidade
-
-- **Keyboard**: Arrow keys em Select/Tabs/DropdownMenu, Escape para fechar Dialog/Tooltip
-- **Focus**: `focus-visible` com outline dourado (2px solid `--ouro`, offset 2px)
-- **ARIA**: Roles, states e properties gerenciados automaticamente pelo Bits UI
-- **Reduced motion**: Animações desativadas quando `prefers-reduced-motion: reduce`
-- **Contraste**: Todas as combinações de cor passam WCAG AA (≥4.5:1 texto normal)
-- **Dark mode**: Suportado via `data-theme="dark"` com contraste AA garantido
-
-## Dark Mode
-
-O app suporta dark mode via design tokens. A detecção é automática (segue OS) com override manual.
-
-### Uso
-
-O toggle aparece no header quando logado. Cicla: ☀️ Light → 🌙 Dark → 🖥️ Sistema.
-
-### Como funciona
-
-1. **Blocking script** no `<head>` resolve o tema antes do primeiro paint (sem FOUC)
-2. **`theme.js`** gerencia estado, persistência (localStorage) e reatividade (Svelte store)
-3. **`tokens.css`** define `:root[data-theme="dark"]` com overrides de cor
-4. **Transições** de 200ms em background/color quando tema muda (respeitando reduced-motion)
-
-### Tokens Dark
-
-A paleta dark é **warm** (não invertida):
-
-| Token | Light | Dark |
-|---|---|---|
-| `--porcelana` | #f5f0ed (warm white) | #1a1517 (warm charcoal) |
-| `--tinta` | #2e2226 | #f0ebe8 (warm off-white) |
-| `--ouro` | #9e7422 | #d4a845 (brighter gold) |
-| `--rosa` | #944c63 | #c47a92 (lighter pink) |
-
-### Para consumir no código
-
-Não é necessário nenhum import — os tokens já se adaptam automaticamente:
+### Tooltip
 
 ```svelte
-<style>
-  .card {
-    background: var(--nevoa);  /* adapta entre light/dark automaticamente */
-    color: var(--tinta);
-    border: 1px solid var(--linha);
-  }
-</style>
+<Tooltip content="Negrito">
+  <button>B</button>
+</Tooltip>
 ```
 
-### Theme store (para lógica programática)
+| Prop | Tipo | Default |
+|------|------|---------|
+| content | string | `''` |
+| side | string | `'top'` |
 
-```javascript
-import { theme } from '$lib/theme.js';
+**Requisito:** `<Tooltip.Provider>` deve existir na árvore ancestral (está no `+layout.svelte`).
 
-// Ler o tema atual
-theme.subscribe(value => console.log(value)); // 'light' | 'dark' | 'system'
+---
 
-// Mudar programaticamente
-theme.set('dark');
+## Tema e Tokens
+
+### Estrutura
+
+```
+tokens.css        → :root { --ouro: #9e7422; ... }  (valores base)
+app.css @theme    → --color-primary: var(--ouro);   (mapeia para Tailwind)
 ```
 
-## Migração
+### Como usar cores nos componentes
 
-A migração é progressiva. Componentes legados (ex: `TabBar`) continuam funcionando.
-Para migrar, substitua imports gradualmente:
+```svelte
+<!-- Tailwind utility (preferido) -->
+<span class="text-primary">Destaque</span>
+<div class="bg-card border-border">...</div>
 
-```diff
-- import { TabBar } from '$lib/components/ui';
-+ import { Tabs } from '$lib/components/ui';
+<!-- CSS variable (quando necessário em <style>) -->
+<div style="color: var(--ouro)">...</div>
 ```
 
-O `TabBar` permanece exportado durante a transição.
+### Paleta semântica (shadcn)
 
-## Componentes de Negócio Refatorados
+| Token | Light | Dark | Uso |
+|-------|-------|------|-----|
+| `--primary` | `--ouro` (#9e7422) | #d4a845 | Botões, links, foco |
+| `--destructive` | `--rosa` (#944c63) | #c47a92 | Ações destrutivas |
+| `--background` | `--porcelana` (#f5f0ed) | #1a1517 | Fundo da página |
+| `--foreground` | `--tinta` (#2e2226) | #f0ebe8 | Texto primário |
+| `--muted` | `--porcelana` | #1a1517 | Superfícies sutis |
+| `--accent` | `--ouro-fundo` | #2e2618 | Hover states |
+| `--border` | `--linha` (#e3d9d4) | #3d3538 | Bordas |
 
-Os seguintes componentes de `$lib/components/` foram atualizados para usar os primitivos UI:
+### Dark mode
 
-| Componente | Primitivos usados |
-|---|---|
-| `ErrorMessage` | Card, Button |
-| `EmptyState` | Card |
-| `FormAdicionarLoja` | Card, Button, Input, Alert |
-| `TagInput` | Badge |
-| `PeriodSelector` | Tokens (+ ARIA radiogroup) |
-| `NavDrawer` | Button |
-| `PainelAlertas` | Button, Badge, Alert, Input |
-| `ListaProdutosLoja` | Alert |
-| `BuscaCard` | Badge, Button |
-| `ScoreMeter` | Tokens (sem hex) |
+Automático via `data-theme="dark"` no `<html>`. Os tokens são sobrescritos em `:root[data-theme="dark"]` dentro de `tokens.css`. Tailwind lê os valores via `@theme`.
 
-### Páginas migradas
+---
 
-| Rota | Primitivos usados |
-|---|---|
-| `/configurar` | Button, Alert, Input, Card |
+## Como adicionar um novo componente
 
-### Progresso da migração
+### Via CLI (quando disponível)
 
-| Padrão legado | Antes | Agora | Redução |
-|---|---|---|---|
-| `<button>` inline | 75 | 51 | **-32%** |
-| `<input>` inline | 30 | 28 | **-7%** |
-| `<select>` nativo | 8 | 5 | **-37%** |
-| Badge utility class | 25 | 16 | **-36%** |
-| `.btn` utility class | ~40 | 10 | **-75%** |
-| msg-erro/sucesso class | 6 | 1 | **-83%** |
-| Hex colors hardcoded | 50 | **0** | **-100%** ✓ |
-| Dead CSS utility classes | ~17 | **0** | **-100%** ✓ |
-| svelte-check warnings | 28 | **0** | **-100%** ✓ |
-| eslint warnings | 6 | **0** | **-100%** ✓ |
+```bash
+npx shadcn-svelte@latest add <component>
+```
 
-### Compostos Bits UI — Adoção
+### Manualmente
 
-| Componente | Consumidores | Onde |
-|---|---|---|
-| Select | 3 | publicar (2×), FormAdicionarLoja |
-| Tabs | 2 | lojas, publicacoes |
-| Dialog | 1 | canais (confirmação de remoção) |
-| Tooltip | 1 | RichEditor (toolbar) |
-| DropdownMenu | 1 | canais (ações editar/remover) |
+1. Criar em `src/lib/components/ui/<Nome>.svelte`
+2. Usar `cn()` de `$lib/utils` para classes condicionais
+3. Exportar em `index.js`
+4. Usar tokens semânticos Tailwind (`bg-primary`, `text-muted-foreground`, etc.)
+5. Verificar: `npm run check && npm run lint:css && npm run lint:js`
 
-**Todos os 5 compostos Bits UI estão em uso.** ✓
+### Padrão de props
 
-Os botões restantes (~56) são majoritariamente toggles estilizados por contexto (fontes na discovery, filtros de status) e buttons de ação em componentes multi-layout (ProductCard). A migração dos compostos restantes (Dialog, Tooltip, DropdownMenu) será feita nas próximas sprints.
+```svelte
+<script>
+  import { cn } from '$lib/utils';
+
+  let {
+    variant = 'default',
+    class: className = '',
+    children,
+    ...rest
+  } = $props();
+</script>
+
+<div class={cn('base-classes', variantClasses[variant], className)} {...rest}>
+  {@render children()}
+</div>
+```
+
+---
+
+## CI Guards
+
+| Guard | Protege | Quando roda |
+|-------|---------|-------------|
+| `npm run check` (svelte-check) | Props incorretas, tipos | CI + pre-push |
+| `npm run lint:css` (stylelint) | hex colors, at-rules válidas | CI + pre-push |
+| `npm run lint:js` (ESLint) | Unused vars, a11y | CI + pre-push |
+| `npm run lint:dead` (knip) | Dead code | CI + pre-push |
+| `npm run test:unit` (vitest) | Lógica de negócio | CI + pre-push |
+| `npm run test` (Playwright) | E2E com auth | CI |
