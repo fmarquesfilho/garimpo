@@ -26,13 +26,14 @@ function contrastRatio(hex1, hex2) {
 }
 
 /**
- * Extracts CSS custom property values from a :root block.
- * @param {string} css
- * @param {string} selector - e.g. ":root" or ":root[data-theme=\"dark\"]"
+ * Extracts CSS custom property values from a specific block.
+ * Uses hardcoded regex patterns to avoid dynamic RegExp (ReDoS safe).
  */
-function extractTokens(css, selector) {
-	const escaped = selector.replace(/[[\]"]/g, '\\$&');
-	const regex = new RegExp(escaped + '\\s*\\{([^}]+)\\}', 's');
+const ROOT_REGEX = /:root\s*\{([^}]+)\}/s;
+const DARK_REGEX = /:root\[data-theme="dark"\]\s*\{([^}]+)\}/s;
+
+function extractTokens(css, mode) {
+	const regex = mode === 'dark' ? DARK_REGEX : ROOT_REGEX;
 	const match = css.match(regex);
 	if (!match) return {};
 	const tokens = {};
@@ -62,7 +63,7 @@ describe('WCAG AA Contrast Compliance', () => {
 	const css = readFileSync(cssPath, 'utf-8');
 
 	describe('Light mode', () => {
-		const tokens = extractTokens(css, ':root');
+		const tokens = extractTokens(css, 'light');
 
 		for (const pair of PAIRS) {
 			const minRatio = pair.largeText ? 3.0 : 4.5;
@@ -77,7 +78,7 @@ describe('WCAG AA Contrast Compliance', () => {
 	});
 
 	describe('Dark mode', () => {
-		const tokens = extractTokens(css, ':root[data-theme="dark"]');
+		const tokens = extractTokens(css, 'dark');
 
 		for (const pair of PAIRS) {
 			const minRatio = pair.largeText ? 3.0 : 4.5;

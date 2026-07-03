@@ -69,8 +69,8 @@ description = "Ruff lint no analyzer"
 run = "uvx ruff check services/analyzer/"
 
 [tasks."lint:web"]
-description = "ESLint + Stylelint + npm audit no frontend"
-run = "cd web && npm run lint:js && npm run lint:css && npm audit --audit-level=high"
+description = "ESLint + Stylelint + npm audit + Semgrep no frontend"
+run = "cd web && npm run lint:js && npm run lint:css && npm audit --audit-level=high && npm run lint:security"
 
 # ── Checks (file tasks em .mise/tasks/check/) ─────────────────────────────────
 
