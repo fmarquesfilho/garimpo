@@ -84,7 +84,6 @@ depends = [
   "check:data-ownership",
   "check:stale-refs",
   "check:docs-drift",
-  "check:web",
 ]
 
 # ── Docs ──────────────────────────────────────────────────────────────────────
@@ -141,7 +140,7 @@ depends = ["build", "test", "lint", "checks"]
 
 [tasks.prepush]
 description = "Verificação pré-push (equivalente ao hook)"
-depends = ["build", "test", "lint", "checks"]
+depends = ["build", "test", "lint", "checks", "check:web"]
 
 # ── Frontend (tasks específicas) ──────────────────────────────────────────────
 
