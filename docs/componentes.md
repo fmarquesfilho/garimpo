@@ -281,10 +281,21 @@ Os seguintes componentes de `$lib/components/` foram atualizados para usar os pr
 
 | Padrão legado | Antes | Agora | Redução |
 |---|---|---|---|
-| `<button>` inline | 75 | 57 | **-24%** |
+| `<button>` inline | 75 | 56 | **-25%** |
 | `<input>` inline | 30 | 28 | **-7%** |
+| `<select>` nativo | 8 | 5 | **-37%** |
 | Badge utility class | 25 | 16 | **-36%** |
-| msg-erro/sucesso class | 6 | 2 | **-67%** |
+| msg-erro/sucesso class | 6 | 1 | **-83%** |
 | Hex colors hardcoded | 50 | **0** | **-100%** ✓ |
 
-Os botões restantes (~57) estão em componentes complexos com lógica contextual (ProductCard multi-layout, FilterBar autocomplete, fontes toggle na discovery page, AgendadorBusca). Estes são botões estilizados por contexto onde a abstração `<Button>` não agrega valor — cada um tem visual único ao componente.
+### Compostos Bits UI — Adoção
+
+| Componente | Consumidores | Onde |
+|---|---|---|
+| Select | 3 | publicar, FormAdicionarLoja |
+| Tabs | 2 | lojas, publicacoes |
+| Dialog | 0 | (próximo: NavDrawer, confirmações) |
+| Tooltip | 0 | (próximo: tooltips em ProductCard, ScoreMeter) |
+| DropdownMenu | 0 | (próximo: ações de contexto) |
+
+Os botões restantes (~56) são majoritariamente toggles estilizados por contexto (fontes na discovery, filtros de status) e buttons de ação em componentes multi-layout (ProductCard). A migração dos compostos restantes (Dialog, Tooltip, DropdownMenu) será feita nas próximas sprints.
