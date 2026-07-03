@@ -70,10 +70,22 @@ builder.Services.AddOpenTelemetry()
 // OpenAPI
 builder.Services.AddOpenApi();
 
+// CORS (dev only — production uses same-origin via Cloudflare Worker)
+builder.Services.AddCors();
+
 var app = builder.Build();
 
 // Middleware pipeline
 app.UseSerilogRequestLogging();
+
+// In Development, allow CORS from any origin (frontend dev server)
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors(policy => policy
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+}
 
 // In Development, bypass Firebase JWT auth with a fake user for local testing
 if (app.Environment.IsDevelopment())
