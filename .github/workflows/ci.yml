@@ -14,10 +14,11 @@ on:
   pull_request:
 
 jobs:
-  # ── Go (build + test + lint) ─────────────────────────────────────────────
+  # ── Go (build + test + lint + arch) ──────────────────────────────────────
   go:
-    name: Go (build + test + lint)
+    name: Go
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v2
@@ -29,8 +30,9 @@ jobs:
 
   # ── C# (build + test) ───────────────────────────────────────────────────
   csharp:
-    name: C# (build + test)
+    name: C#
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     services:
       postgres:
         image: postgres:17-alpine
@@ -58,8 +60,9 @@ jobs:
 
   # ── Python (lint + syntax) ──────────────────────────────────────────────
   python:
-    name: Python (lint + syntax)
+    name: Python
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v2
@@ -71,13 +74,13 @@ jobs:
 
   # ── Proto (lint + sync + breaking) ──────────────────────────────────────
   proto:
-    name: Proto (lint + sync + breaking)
+    name: Proto
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: jdx/mise-action@v2
       - uses: bufbuild/buf-setup-action@v1
       - name: Lint
         run: cd protos && buf lint
@@ -94,8 +97,9 @@ jobs:
 
   # ── Frontend (build + test + e2e) ───────────────────────────────────────
   frontend:
-    name: Frontend (build + test + e2e)
+    name: Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: web
@@ -137,8 +141,9 @@ jobs:
 
   # ── Service Contracts + API drift ───────────────────────────────────────
   contracts:
-    name: Contracts & drift checks
+    name: Contracts
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v2
@@ -148,31 +153,13 @@ jobs:
           sudo chmod +x /usr/bin/yq
       - run: mise run checks
 
-  # ── Docker (build all images) ───────────────────────────────────────────
-  docker:
-    name: Docker builds
-    runs-on: ubuntu-latest
-    needs: [go, csharp, python, proto, frontend, contracts]
-    steps:
-      - uses: actions/checkout@v5
-      - name: C# API
-        run: docker build -f src/Garimpei.Api/Dockerfile src/
-      - name: Collector
-        run: docker build -f services/collector/Dockerfile .
-      - name: Publisher
-        run: docker build -f services/publisher/Dockerfile .
-      - name: Alerter
-        run: docker build -f services/alerter/Dockerfile .
-      - name: Scheduler
-        run: docker build -f services/scheduler/Dockerfile .
-      - name: Analyzer
-        run: docker build -f services/analyzer/Dockerfile services/analyzer/
-
   # ── Deploy Backend (Cloud Run) ──────────────────────────────────────────
+  # Builds + pushes all images, then deploys. No separate docker job needed.
   deploy-backend:
-    name: Deploy backend (Cloud Run)
+    name: Deploy backend
     runs-on: ubuntu-latest
-    needs: [docker]
+    timeout-minutes: 20
+    needs: [go, csharp, python, proto, frontend, contracts]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       contents: read
@@ -253,7 +240,8 @@ jobs:
   deploy-web:
     name: Deploy frontend
     runs-on: ubuntu-latest
-    needs: [frontend, docker]
+    timeout-minutes: 8
+    needs: [frontend, contracts]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v5
