@@ -106,12 +106,6 @@
 	.gerenciar-buscas { margin-bottom: var(--r6); }
 	.cabecalho { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r3); }
 	h2 { font-size: 1.1rem; margin: 0; color: var(--tinta); }
-	.btn-nova {
-		border: 1px solid var(--linha); background: var(--porcelana);
-		color: var(--tinta); font-size: var(--text-sm); font-weight: var(--font-semi);
-		padding: var(--r2) var(--r4); border-radius: var(--raio-full); cursor: pointer;
-	}
-	.btn-nova:hover { border-color: var(--ouro); color: var(--ouro); }
 	.form-nova {
 		background: var(--nevoa); border: 1px solid var(--linha);
 		border-radius: var(--raio); padding: var(--r4);

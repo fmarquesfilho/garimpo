@@ -26,20 +26,20 @@
 	let resultado = $state(null);
 	let erro = $state(null);
 
-	onMount(async () => {
-		const dados = $page.url.searchParams.get('dados');
-		if (dados) { try { produto = JSON.parse(decodeURIComponent(dados)); } catch { /* */ } }
-		if (!produto) produto = { id: '', nome: '', preco: 0, categoria: '', link: '', imagem: '' };
+	async function resolverDadosProduto() {
+		if (!produto || produto.imagem || !produto.link) return;
+		try {
+			const r = await Promise.race([
+				resolverLinkShopee(produto.link),
+				new Promise((_, rej) => setTimeout(() => rej(), 10000))
+			]);
+			if (r.imagem) produto = { ...produto, imagem: r.imagem };
+			if (r.nome && !produto.nome) produto = { ...produto, nome: r.nome };
+			if (r.preco && !produto.preco) produto = { ...produto, preco: r.preco };
+		} catch { /* timeout or network error — produto fica sem imagem */ }
+	}
 
-		if (produto && !produto.imagem && produto.link) {
-			try {
-				const r = await Promise.race([resolverLinkShopee(produto.link), new Promise((_, rej) => setTimeout(() => rej(), 10000))]);
-				if (r.imagem) produto = { ...produto, imagem: r.imagem };
-				if (r.nome && !produto.nome) produto = { ...produto, nome: r.nome };
-				if (r.preco && !produto.preco) produto = { ...produto, preco: r.preco };
-			} catch { /* */ }
-		}
-
+	async function carregarDestinosETemplates() {
 		try {
 			const [rd, rt] = await Promise.all([
 				listarDestinos().catch(() => ({ destinos: [] })),
@@ -47,9 +47,20 @@
 			]);
 			destinos = rd?.destinos ?? [];
 			templates = rt?.templates ?? [];
-			if (templates.length > 0 && !templates.find(t => t.id === templateId)) templateId = templates[0].id;
+			if (templates.length > 0 && !templates.find(t => t.id === templateId)) {
+				templateId = templates[0].id;
+			}
 		} catch (e) { erro = e.message; }
 		finally { carregando = false; }
+	}
+
+	onMount(async () => {
+		const dados = $page.url.searchParams.get('dados');
+		if (dados) { try { produto = JSON.parse(decodeURIComponent(dados)); } catch { /* */ } }
+		if (!produto) produto = { id: '', nome: '', preco: 0, categoria: '', link: '', imagem: '' };
+
+		await resolverDadosProduto();
+		await carregarDestinosETemplates();
 		gerarLegenda();
 	});
 
@@ -74,7 +85,7 @@
 		}
 	}
 
-	let lastTemplateId = $state(templateId);
+	let lastTemplateId = $state('padrao');
 	$effect(() => { if (templateId !== lastTemplateId) { lastTemplateId = templateId; legendaEditada = false; gerarLegenda(); } });
 
 	function onEditorChange(html) { if (!atualizandoLegenda) { legendaEditada = true; legenda = html; } }
@@ -145,7 +156,7 @@
 		<!-- Legenda -->
 		<div class="legenda-section">
 			<div class="legenda-header">
-				<label>✏️ Legenda</label>
+				<span class="legenda-label" id="legenda-label">✏️ Legenda</span>
 				{#if legendaEditada}
 					<button class="btn-reset" onclick={resetarLegenda} type="button">↺ Resetar</button>
 				{/if}
@@ -190,14 +201,14 @@
 	@media (max-width: 500px) { .config-grid { grid-template-columns: 1fr; } }
 	.campo { display: flex; flex-direction: column; gap: 6px; }
 	.campo label { font-weight: 600; font-size: 0.82rem; }
-	.campo select, .campo input { padding: 9px 12px; border: 1px solid var(--linha); border-radius: var(--raio-sm); font-size: 0.88rem; background: var(--porcelana); }
+	.campo input { padding: 9px 12px; border: 1px solid var(--linha); border-radius: var(--raio-sm); font-size: 0.88rem; background: var(--porcelana); }
 	.dica { font-size: 0.78rem; color: var(--tinta-suave); margin: 0; }
 	.dica a { color: var(--ouro); }
 
 	/* Legenda */
 	.legenda-section { margin-bottom: var(--r5); }
 	.legenda-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-	.legenda-header label { font-weight: 600; font-size: 0.88rem; }
+	.legenda-header span { font-weight: 600; font-size: 0.88rem; }
 	.btn-reset { border: none; background: transparent; color: var(--tinta-suave); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 	.btn-reset:hover { color: var(--ouro); }
 

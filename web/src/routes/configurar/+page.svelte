@@ -331,11 +331,6 @@
 	.form-campos input { padding: 10px 14px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
 	.form-campos input:focus { outline: none; border-color: var(--ouro); box-shadow: 0 0 0 2px var(--ouro-fundo); }
 
-	.btn-primario { padding: var(--r3) var(--r5); background: var(--ouro); color: var(--branco); border: none; border-radius: var(--raio-sm); font-weight: var(--font-semi); font-size: var(--text-base); cursor: pointer; }
-	.btn-primario:hover:not(:disabled) { opacity: 0.9; }
-	.btn-primario:disabled { opacity: 0.5; cursor: not-allowed; }
-	.btn-secundario { padding: var(--r3) var(--r5); background: var(--branco); border: 1px solid var(--linha); border-radius: var(--raio-sm); font-weight: var(--font-semi); font-size: var(--text-base); cursor: pointer; }
-	.btn-secundario:hover { border-color: var(--ouro); }
 	.acoes-dupla { display: flex; gap: var(--r3); }
 
 	/* Canal tabs */

@@ -61,9 +61,10 @@
 </script>
 
 <div class="campo-pub">
-	<label>🔗 Link do produto</label>
+	<label for="link-produto">🔗 Link do produto</label>
 	<div class="link-input">
 		<input
+			id="link-produto"
 			type="url"
 			bind:value={linkColado}
 			placeholder="Cole o link da Shopee aqui…"

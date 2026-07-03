@@ -22,7 +22,7 @@
 	let editConfig = $state('');
 	let editSalvando = $state(false);
 
-	// Grupos WhatsApp (carregados sob demanda)
+	// Grupos WhatsApp (placeholder — carregados sob demanda futuramente)
 	let gruposWA = $state([]);
 	let carregandoGrupos = $state(false);
 	let erroGrupos = $state(null);
@@ -31,43 +31,16 @@
 	let dialogRemover = $state(false);
 	let destinoParaRemover = $state(null);
 
-	onMount(async () => {
-		await carregar();
-		carregarGruposWA();
-	});
+	onMount(() => { carregar(); });
+
+	function aoMudarTipo() { config = ''; }
 
 	async function carregar() {
 		carregando = true;
 		erro = null;
-		try {
-			const r = await listarDestinos();
-			destinos = r?.destinos ?? [];
-		} catch (e) {
-			erro = e.message;
-		} finally {
-			carregando = false;
-		}
-	}
-
-	async function carregarGruposWA() {
-		if (gruposWA.length > 0 || carregandoGrupos) return;
-		carregandoGrupos = true;
-		erroGrupos = null;
-		try {
-			const r = { data: [] }; // TODO: usar listarDestinos com channel=whatsapp
-			gruposWA = r?.grupos ?? [];
-		} catch (e) {
-			erroGrupos = e.message;
-		} finally {
-			carregandoGrupos = false;
-		}
-	}
-
-	function aoMudarTipo() {
-		config = '';
-		if (tipo === 'whatsapp') {
-			carregarGruposWA();
-		}
+		try { destinos = (await listarDestinos())?.destinos ?? []; }
+		catch (e) { erro = e.message; }
+		finally { carregando = false; }
 	}
 
 	async function adicionar() {
@@ -89,17 +62,8 @@
 		}
 	}
 
-	function iniciarEdicao(d) {
-		editandoId = d.id;
-		editNome = d.nome;
-		editConfig = d.config;
-	}
-
-	function cancelarEdicao() {
-		editandoId = null;
-		editNome = '';
-		editConfig = '';
-	}
+	function iniciarEdicao(d) { editandoId = d.id; editNome = d.nome; editConfig = d.config; }
+	function cancelarEdicao() { editandoId = null; editNome = ''; editConfig = ''; }
 
 	async function salvarEdicao(d) {
 		if (!editNome.trim() || !editConfig.trim()) return;
@@ -207,11 +171,12 @@
 						<div class="card-destino editando">
 							<div class="edit-form">
 								<div class="campo-edit">
-									<label>Nome</label>
+									<label>Nome
 									<input bind:value={editNome} placeholder="Nome do destino" />
+									</label>
 								</div>
 								<div class="campo-edit">
-									<label>Grupos</label>
+									<span class="campo-edit-label">Grupos</span>
 									{#if d.tipo === 'whatsapp'}
 										<SeletorGrupo
 											grupos={gruposWA}
@@ -281,10 +246,7 @@
 	h2 { font-size: 1.1rem; margin: 0 0 var(--r2); }
 	.subtitulo { color: var(--tinta-suave); font-size: 0.88rem; margin-bottom: var(--r5); }
 
-	.aviso, .erro, .sucesso { padding: var(--r3) var(--r4); border-radius: 8px; font-size: 0.88rem; margin-bottom: var(--r4); }
-	.aviso { background: var(--porcelana); color: var(--tinta-suave); }
-	.erro { background: var(--erro-fundo); color: var(--erro-texto); border: 1px solid var(--erro-borda); }
-	.sucesso { background: var(--sucesso-fundo); color: var(--sucesso-texto); border: 1px solid var(--sucesso-borda); }
+	.aviso { padding: var(--r3) var(--r4); border-radius: var(--raio-sm); font-size: 0.88rem; margin-bottom: var(--r4); background: var(--porcelana); color: var(--tinta-suave); }
 
 	.form-destino {
 		display: flex; flex-wrap: wrap; gap: var(--r3); align-items: flex-end;
@@ -293,14 +255,8 @@
 	}
 	.campo { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px; }
 	.campo label { font-size: 0.78rem; font-weight: 600; color: var(--tinta-suave); }
-	.campo :global(input), .campo :global(select) { padding: 8px 12px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
-	.campo :global(input:focus), .campo :global(select:focus) { outline: 2px solid var(--ouro); outline-offset: 1px; }
-	.form-destino > button {
-		padding: 8px 20px; background: var(--ouro); color: white;
-		font-weight: 600; font-size: 0.88rem; border: none; border-radius: 8px; cursor: pointer;
-	}
-	.form-destino > button:disabled { opacity: 0.5; cursor: not-allowed; }
-
+	.campo :global(input) { padding: 8px 12px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
+	.campo :global(input:focus) { outline: 2px solid var(--ouro); outline-offset: 1px; }
 	.loading, .vazio { color: var(--tinta-suave); font-size: 0.9rem; }
 	.lista { display: flex; flex-direction: column; gap: var(--r3); }
 	.card-destino {
@@ -308,7 +264,7 @@
 		padding: var(--r3) var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); background: var(--branco);
 	}
 	.card-destino.editando {
-		border-color: var(--ouro); background: var(--branco)beb;
+		border-color: var(--ouro); background: var(--ouro-fundo);
 	}
 	.card-destino .info { display: flex; flex-direction: column; gap: 2px; }
 	.card-destino strong { font-size: 0.92rem; }
@@ -329,15 +285,6 @@
 	.campo-edit input { padding: 8px 12px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.9rem; }
 	.campo-edit input:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
 	.edit-acoes { display: flex; gap: var(--r2); }
-	.btn-salvar {
-		padding: 6px 16px; background: var(--ouro); color: white;
-		font-weight: 600; font-size: 0.82rem; border: none; border-radius: 6px; cursor: pointer;
-	}
-	.btn-salvar:disabled { opacity: 0.5; cursor: not-allowed; }
-	.btn-cancelar {
-		padding: 6px 16px; background: transparent; color: var(--tinta-suave);
-		font-weight: 600; font-size: 0.82rem; border: 1px solid var(--linha); border-radius: 6px; cursor: pointer;
-	}
 
 	.grupos-lista { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
 	.grupo-nome { font-size: 0.78rem; color: var(--tinta-suave); padding: 1px 6px; background: var(--sucesso-fundo); border-radius: 4px; border: 1px solid var(--sucesso-borda); }

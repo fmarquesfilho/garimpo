@@ -48,9 +48,34 @@ export async function carregarCuradoria({ busca, comissaoMin, categorias, buscas
  */
 let cacheOportunidades = { em: 0, quedas: [], novos: [] };
 
+function extrairQuedas(resultado, nomesLojas) {
+	return (resultado.variacoes ?? [])
+		.filter(v => v.variacao_pct < 0)
+		.map(v => ({
+			id: v.produto_id, produto_id: v.produto_id, nome: v.nome,
+			preco: v.preco_atual, preco_anterior: v.preco_anterior,
+			variacao_pct: v.variacao_pct, detectado_em: v.detectado_em,
+			loja: v.loja || (nomesLojas[resultado.loja] ?? resultado.loja),
+			_loja_id: resultado.loja,
+			imagem: v.imagem, link: v.link, comissao: v.comissao ?? 0,
+			vendas: v.vendas ?? 0, _fonte: 'queda'
+		}));
+}
+
+function extrairNovos(resultado, nomesLojas) {
+	return (resultado.produtos_novos ?? []).map(p => ({
+		id: p.produto_id, produto_id: p.produto_id, nome: p.nome,
+		preco: p.preco, comissao: p.comissao ?? 0, vendas: p.vendas ?? 0,
+		detectado_em: p.detectado_em,
+		loja: p.loja || (nomesLojas[resultado.loja] ?? resultado.loja),
+		_loja_id: resultado.loja, imagem: p.imagem, link: p.link, _fonte: 'novo'
+	}));
+}
+
 export async function carregarOportunidades(buscasComLojas, nomesLojas) {
-	if (Date.now() - cacheOportunidades.em < 120000 &&
-		(cacheOportunidades.quedas.length > 0 || cacheOportunidades.novos.length > 0)) {
+	const cacheValido = Date.now() - cacheOportunidades.em < 120000 &&
+		(cacheOportunidades.quedas.length > 0 || cacheOportunidades.novos.length > 0);
+	if (cacheValido) {
 		return { quedas: cacheOportunidades.quedas, novos: cacheOportunidades.novos };
 	}
 
@@ -58,32 +83,11 @@ export async function carregarOportunidades(buscasComLojas, nomesLojas) {
 		const promises = buscasComLojas.map(b =>
 			buscarNovidades({ buscaId: b.id, dias: 7 }).then(r => ({ ...r, loja: b.id })).catch(() => null)
 		);
-		const resultados = await Promise.all(promises);
-		const quedas = [], novos = [];
+		const resultados = (await Promise.all(promises)).filter(Boolean);
 
-		for (const r of resultados) {
-			if (!r) continue;
-			for (const v of (r.variacoes ?? [])) {
-				if (v.variacao_pct < 0) {
-					quedas.push({
-						id: v.produto_id, produto_id: v.produto_id, nome: v.nome,
-						preco: v.preco_atual, preco_anterior: v.preco_anterior,
-						variacao_pct: v.variacao_pct, detectado_em: v.detectado_em,
-						loja: v.loja || (nomesLojas[r.loja] ?? r.loja), _loja_id: r.loja,
-						imagem: v.imagem, link: v.link, comissao: v.comissao ?? 0,
-						vendas: v.vendas ?? 0, _fonte: 'queda'
-					});
-				}
-			}
-			for (const p of (r.produtos_novos ?? [])) {
-				novos.push({
-					id: p.produto_id, produto_id: p.produto_id, nome: p.nome,
-					preco: p.preco, comissao: p.comissao ?? 0, vendas: p.vendas ?? 0,
-					detectado_em: p.detectado_em, loja: p.loja || (nomesLojas[r.loja] ?? r.loja),
-					_loja_id: r.loja, imagem: p.imagem, link: p.link, _fonte: 'novo'
-				});
-			}
-		}
+		const quedas = resultados.flatMap(r => extrairQuedas(r, nomesLojas));
+		const novos = resultados.flatMap(r => extrairNovos(r, nomesLojas));
+
 		quedas.sort((a, b) => a.variacao_pct - b.variacao_pct);
 		novos.sort((a, b) => (b.detectado_em ?? '').localeCompare(a.detectado_em ?? ''));
 		cacheOportunidades = { em: Date.now(), quedas, novos };

@@ -11,7 +11,10 @@
 <div class="vazio" {...rest}>
 	{#if icone}<span class="icone">{icone}</span>{/if}
 	<p class="mensagem">{mensagem}</p>
-	{#if dica}<p class="dica">{@html dica}</p>{/if}
+	{#if dica}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		<p class="dica">{@html dica}</p>
+	{/if}
 </div>
 
 <style>

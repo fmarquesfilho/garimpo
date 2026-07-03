@@ -104,7 +104,7 @@
 				{#if catInput && sugestoes.length > 0 && catInput.toLowerCase() !== categoria.toLowerCase()}
 					<ul class="cat-sugestoes" role="listbox">
 						{#each sugestoes.slice(0, 8) as cat (cat.id)}
-							<li role="option">
+							<li role="option" aria-selected={categoria === cat.nome}>
 								<button type="button" class="cat-opcao" onclick={() => selecionarCategoria(cat.nome)}>
 									{cat.nome}
 									<span class="cat-mp">{cat.marketplace}</span>
@@ -222,11 +222,6 @@
 		border-radius: var(--raio-sm);
 	}
 	.campo { display: flex; flex-direction: column; gap: 4px; position: relative; }
-	.campo-check {
-		display: flex; align-items: center; gap: 6px;
-		align-self: flex-end; padding-bottom: 8px; cursor: pointer;
-	}
-	.campo-check input { width: 16px; height: 16px; accent-color: var(--ouro); cursor: pointer; }
 	.entrada {
 		font-family: var(--ui); font-size: var(--text-base); padding: 8px 12px;
 		border-radius: var(--raio-sm); border: 1px solid var(--linha);

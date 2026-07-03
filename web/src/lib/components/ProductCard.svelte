@@ -214,7 +214,7 @@
 	.thumb-link:hover .thumb { opacity: 0.9; }
 	.corpo { padding: var(--r4); display: flex; flex-direction: column; gap: var(--r3); }
 	.posicao { font-size: var(--text-xs); font-weight: 700; color: var(--tinta-suave); opacity: 0.6; }
-	header h3 { font-size: 1rem; font-weight: 600; line-height: 1.3; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+	header h3 { font-size: 1rem; font-weight: 600; line-height: 1.3; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 	.meta { display: flex; align-items: center; gap: 4px 6px; margin-top: 4px; flex-wrap: wrap; }
 	.cat { font-size: var(--text-xs); font-weight: 600; color: var(--rosa); text-transform: lowercase; }
 	.loja-nome { font-size: var(--text-xs); font-weight: 600; color: var(--tinta-suave); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -267,7 +267,7 @@
 	.feed-body { display: flex; gap: var(--r3); }
 	.feed-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
 	.feed-content { flex: 1; min-width: 0; }
-	.feed-nome { font-size: 0.95rem; font-weight: 600; margin: 0 0 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+	.feed-nome { font-size: 0.95rem; font-weight: 600; margin: 0 0 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 	.feed-precos { display: flex; align-items: center; gap: var(--r2); font-size: 0.88rem; flex-wrap: wrap; }
 	.preco-antes { text-decoration: line-through; color: var(--tinta-suave); }
 	.seta { color: var(--tinta-suave); font-size: 0.8rem; }

@@ -12,6 +12,7 @@
 		{#if imagem}
 			<img src={imagem} alt="preview" class="preview-img" />
 		{/if}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- legenda is generated internally by templates, not user-provided raw HTML -->
 		<div class="preview-body">{@html legenda.replace(/\n/g, '<br>')}</div>
 		{#if link}
 			<div class="preview-btn"><span>🛒 Comprar</span></div>

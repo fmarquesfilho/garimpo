@@ -297,73 +297,69 @@ describe('Descobrir — Filtros numéricos', () => {
 
 // ── Todos os filtros combinados (cenários completos) ──────────────────────
 
-describe('Descobrir — Todos os filtros combinados', () => {
-	const todosProdutos = [
-		{ id: 'A', nome: 'Sérum SKIN1004', preco: 89.9, comissao: 0.15, vendas: 200, avaliacao: 4.9, loja: 'SKIN1004 Official', categoria: 'Cuidados com a Pele', _fonte: 'curadoria' },
-		{ id: 'B', nome: 'Perfume Kenzo', preco: 299.9, comissao: 0.08, vendas: 80, avaliacao: 4.6, loja: 'Perfumaria JP', categoria: 'Perfumaria', _fonte: 'curadoria' },
-		{ id: 'C', nome: 'Batom Barato', preco: 15, comissao: 0.03, vendas: 5, avaliacao: 3.2, loja: 'Loja X', categoria: 'Maquiagem', _fonte: 'curadoria' },
-		{ id: 'D', nome: 'Tônico COSRX Queda', preco: 59.9, comissao: 0.12, vendas: 150, avaliacao: 4.7, loja: 'COSRX Store', categoria: 'Cuidados com a Pele', variacao_pct: -0.25, _fonte: 'queda' },
-		{ id: 'E', nome: 'Retinol Novo SKIN1004', preco: 45.5, comissao: 0.10, vendas: 0, avaliacao: 0, loja: 'SKIN1004 Official', categoria: 'Cuidados com a Pele', _fonte: 'novo' },
-		{ id: 'F', nome: 'Meu Favorito Perfume', preco: 150, comissao: 0.09, vendas: 60, avaliacao: 4.4, loja: 'Loja Y', categoria: 'Perfumaria', _fonte: 'favorito' }
-	];
+const todosProdutos = [
+	{ id: 'A', nome: 'Sérum SKIN1004', preco: 89.9, comissao: 0.15, vendas: 200, avaliacao: 4.9, loja: 'SKIN1004 Official', categoria: 'Cuidados com a Pele', _fonte: 'curadoria' },
+	{ id: 'B', nome: 'Perfume Kenzo', preco: 299.9, comissao: 0.08, vendas: 80, avaliacao: 4.6, loja: 'Perfumaria JP', categoria: 'Perfumaria', _fonte: 'curadoria' },
+	{ id: 'C', nome: 'Batom Barato', preco: 15, comissao: 0.03, vendas: 5, avaliacao: 3.2, loja: 'Loja X', categoria: 'Maquiagem', _fonte: 'curadoria' },
+	{ id: 'D', nome: 'Tônico COSRX Queda', preco: 59.9, comissao: 0.12, vendas: 150, avaliacao: 4.7, loja: 'COSRX Store', categoria: 'Cuidados com a Pele', variacao_pct: -0.25, _fonte: 'queda' },
+	{ id: 'E', nome: 'Retinol Novo SKIN1004', preco: 45.5, comissao: 0.10, vendas: 0, avaliacao: 0, loja: 'SKIN1004 Official', categoria: 'Cuidados com a Pele', _fonte: 'novo' },
+	{ id: 'F', nome: 'Meu Favorito Perfume', preco: 150, comissao: 0.09, vendas: 60, avaliacao: 4.4, loja: 'Loja Y', categoria: 'Perfumaria', _fonte: 'favorito' }
+];
 
-	const allFontes = { curadoria: true, quedas: true, novos: true, favoritos: true };
+const allFontes = { curadoria: true, quedas: true, novos: true, favoritos: true };
 
-	function filtrar(opts) {
-		return montarResultados({
-			fontes: opts.fontes ?? allFontes,
-			dadosCuradoria: todosProdutos.filter(p => p._fonte === 'curadoria'),
-			dadosQuedas: todosProdutos.filter(p => p._fonte === 'queda'),
-			dadosNovos: todosProdutos.filter(p => p._fonte === 'novo'),
-			favoritos: todosProdutos.filter(p => p._fonte === 'favorito').map(p => ({ ...p, produto_id: p.id })),
-			busca: opts.busca ?? '',
-			categorias: opts.categorias ?? [],
-			comissaoMin: opts.comissaoMin ?? 0,
-			vendasMin: opts.vendasMin ?? 0
-		});
-	}
+function filtrar(opts) {
+	return montarResultados({
+		fontes: opts.fontes ?? allFontes,
+		dadosCuradoria: todosProdutos.filter(p => p._fonte === 'curadoria'),
+		dadosQuedas: todosProdutos.filter(p => p._fonte === 'queda'),
+		dadosNovos: todosProdutos.filter(p => p._fonte === 'novo'),
+		favoritos: todosProdutos.filter(p => p._fonte === 'favorito').map(p => ({ ...p, produto_id: p.id })),
+		busca: opts.busca ?? '',
+		categorias: opts.categorias ?? [],
+		comissaoMin: opts.comissaoMin ?? 0,
+		vendasMin: opts.vendasMin ?? 0
+	});
+}
 
+describe('Descobrir — Filtros combinados (básico)', () => {
 	it('sem filtros mostra todos (6 produtos)', () => {
 		expect(filtrar({})).toHaveLength(6);
 	});
 
 	it('keyword "SKIN1004" filtra por nome e loja', () => {
 		const r = filtrar({ busca: 'SKIN1004' });
-		expect(r).toHaveLength(2); // A + E (loja SKIN1004)
+		expect(r).toHaveLength(2);
 	});
 
 	it('keyword + comissaoMin combina (AND)', () => {
 		const r = filtrar({ busca: 'SKIN1004', comissaoMin: 0.12 });
-		// A (15%) passa, E (10%) não
 		expect(r).toHaveLength(1);
 		expect(r[0].id).toBe('A');
 	});
 
 	it('categoria "Perfumaria" + todas as fontes', () => {
 		const r = filtrar({ categorias: ['Perfumaria'] });
-		// B (Perfumaria) + F (Perfumaria) + E (sem dados, passa)... 
-		// Só B e F têm categoria Perfumaria; D e A têm Cuidados com a Pele; C tem Maquiagem; E tem Cuidados com a Pele
 		expect(r).toHaveLength(2);
 		expect(r.every(p => p.categoria === 'Perfumaria')).toBe(true);
 	});
 
+	it('vendasMin=100 remove produtos com poucas vendas', () => {
+		const r = filtrar({ vendasMin: 100 });
+		expect(r).toHaveLength(3);
+		expect(r.map(p => p.id).sort()).toEqual(['A', 'D', 'E']);
+	});
+});
+
+describe('Descobrir — Filtros combinados (avançado)', () => {
 	it('categoria + keyword + comissaoMin', () => {
 		const r = filtrar({ categorias: ['Cuidados com a Pele'], busca: 'SKIN1004', comissaoMin: 0.12 });
-		// Cuidados com a Pele: A, D, E; busca SKIN1004: A, E; comissao >= 12%: A
 		expect(r).toHaveLength(1);
 		expect(r[0].id).toBe('A');
 	});
 
-	it('vendasMin=100 remove produtos com poucas vendas', () => {
-		const r = filtrar({ vendasMin: 100 });
-		// A (200), D (150) passam; B (80), C (5), F (60) não; E (0 sem dados) passa
-		expect(r).toHaveLength(3);
-		expect(r.map(p => p.id).sort()).toEqual(['A', 'D', 'E']);
-	});
-
-	it('notaMin removed — vendasMin=100 + categoria "Cuidados com a Pele"', () => {
+	it('vendasMin=100 + categoria "Cuidados com a Pele"', () => {
 		const r = filtrar({ vendasMin: 100, categorias: ['Cuidados com a Pele'] });
-		// Categoria: A, D, E; vendas >= 100: A (200), D (150), E (0 sem dados, passa)
 		expect(r).toHaveLength(3);
 	});
 
@@ -374,16 +370,11 @@ describe('Descobrir — Todos os filtros combinados', () => {
 			comissaoMin: 0.10,
 			vendasMin: 50
 		});
-		// busca SKIN1004: A, E
-		// categoria Cuidados Pele: A, E
-		// comissao >= 10%: A (15%), E (10%)
-		// vendas >= 50: A (200); E (0 sem dados, passa)
 		expect(r).toHaveLength(2);
 	});
 
 	it('só fonte Quedas + comissaoMin', () => {
 		const r = filtrar({ fontes: { curadoria: false, quedas: true, novos: false, favoritos: false }, comissaoMin: 0.10 });
-		// D tem comissao 12% — passa
 		expect(r).toHaveLength(1);
 		expect(r[0].id).toBe('D');
 	});
