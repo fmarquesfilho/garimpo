@@ -1,0 +1,82 @@
+id: T-0036
+titulo: "Avaliar migração de scripts bash para Taskfile ou mise"
+epic: E-001
+status: backlog
+prioridade: media
+estimativa: M
+sprint: ""
+criado_em: "2026-07-02"
+valor: |
+  Os scripts check-*.sh na pasta /scripts cresceram para 8+ arquivos bash
+  com duplicação de padrões (cores, resultado, grep). A manutenção está
+  frágil: heredocs bugam, variáveis não escapadas, e cada script reinventa
+  o boilerplate. Migrar para um task runner moderno (Taskfile.dev ou mise)
+  daria configurabilidade, documentação automática, e melhor DX.
+descricao: |
+  ## Contexto
+
+  Hoje temos:
+  - Makefile (docs, proto, build, test, lint, docker compose)
+  - 8 scripts check-*.sh independentes (pre-push + CI)
+  - pre-push-check.sh orquestrando tudo em paralelo
+
+  Problemas:
+  - Duplicação de boilerplate (cores, echo, resultado)
+  - Bash é frágil (heredocs, quoting, portabilidade macOS/Linux)
+  - Difícil descobrir quais checks existem sem ler os scripts
+  - Sem dependências declarativas entre tasks
+  - Makefile tem targets sem documentação (help parcial)
+
+  ## Opções a avaliar
+
+  ### Taskfile (taskfile.dev)
+  - YAML, binário Go único, sem deps
+  - Dependências entre tasks, paralelismo nativo
+  - `task --list` para discovery
+  - Suporta includes para modularizar
+  - Usado por projetos Go e polyglot
+
+  ### mise (mise.jdx.dev)
+  - Tasks + gerenciamento de versões de runtime
+  - Monorepo tasks com target path syntax
+  - Extensão VS Code disponível
+  - Substitui asdf + Makefile + scripts
+  - Mais opinativo mas mais completo
+
+  ### Earthly
+  - Containerized builds (Dockerfile + Makefile)
+  - Overkill para checks de contrato (não precisa container)
+  - Bom para docker builds reproduzíveis
+  - Mais relevante para o job de deploy no CI
+
+  ### Dagger
+  - Pipeline-as-code em Go/Python/TypeScript
+  - CI local idêntico ao remoto
+  - Curva de aprendizado maior
+  - Melhor para pipelines complexas (não o caso atual)
+
+  ## Critérios de avaliação
+
+  1. Tempo para migrar os 8 scripts existentes
+  2. DX local (quanto melhora o onboarding)
+  3. Compatibilidade com CI (GitHub Actions)
+  4. Manutenção de longo prazo (comunidade, releases)
+  5. Cross-platform (macOS arm64 + Linux amd64 CI)
+
+  ## Escopo
+
+  - [ ] Instalar Taskfile e mise localmente para PoC
+  - [ ] Portar 2-3 scripts simples (ex: check-file-size, check-stale-refs)
+  - [ ] Medir DX: `task checks` vs `./scripts/pre-push-check.sh`
+  - [ ] Decidir: Taskfile, mise, ou manter bash (registrar em ADR)
+  - [ ] Se aprovado: migrar todos os scripts e Makefile targets
+  - [ ] Atualizar CI e pre-push hook para usar o runner escolhido
+
+criterios_aceite:
+  - PoC com pelo menos 2 scripts portados
+  - Comparação documentada (DX, performance, manutenção)
+  - ADR registrando a decisão final
+  - Se migrar: CI + pre-push funcionando com o novo runner
+
+dependencias:
+  - T-0035

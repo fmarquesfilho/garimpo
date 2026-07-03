@@ -51,8 +51,10 @@ descricao: |
 
   ## Melhorias a aplicar
 
-  - Deploy automático do backend (CI → Artifact Registry → Cloud Run)
+  - Deploy automático do backend (CI → Artifact Registry → Cloud Run) ✅
   - Validar que Renovate está agrupando PRs corretamente
+  - Contratos de serviço entre API ↔ Publisher ↔ Frontend ✅ (ADR-0020)
+  - T-0034 status → done (se filtros funcionarem end-to-end)
   - T-0034 status → done (se filtros funcionarem end-to-end)
 
 criterios_aceite:
