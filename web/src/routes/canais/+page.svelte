@@ -124,14 +124,14 @@
 	<title>Configurações — Garimpei</title>
 </svelte:head>
 
-<section class="config-page">
-	<h1>⚙️ Configurações</h1>
+<section class="max-w-[900px]">
+	<h1 class="text-2xl mb-6">⚙️ Configurações</h1>
 
 	{#if !$usuario}
-		<div class="aviso">Faça login para gerenciar configurações.</div>
+		<div class="py-3 px-4 rounded-sm text-sm mb-4 bg-porcelana text-tinta-suave">Faça login para gerenciar configurações.</div>
 	{:else}
-		<h2>📡 Destinos de publicação</h2>
-		<p class="subtitulo">
+		<h2 class="text-lg mb-2">📡 Destinos de publicação</h2>
+		<p class="text-tinta-suave text-sm mb-5">
 			Configure os grupos e canais onde o Garimpei publica. Cada destino usa o bot configurado para o tipo (Telegram,
 			WhatsApp). Adicione o bot como admin do grupo.
 		</p>
@@ -145,25 +145,25 @@
 
 		<!-- Form novo destino -->
 		<form
-			class="form-destino"
+			class="flex flex-wrap gap-3 items-end mb-5 p-4 border border-border rounded-md bg-porcelana"
 			onsubmit={(e) => {
 				e.preventDefault();
 				adicionar();
 			}}
 		>
-			<div class="campo">
-				<label for="tipo">Tipo</label>
+			<div class="flex-1 min-w-[140px] flex flex-col gap-1">
+				<label for="tipo" class="text-xs font-semibold text-tinta-suave">Tipo</label>
 				<select id="tipo" bind:value={tipo} onchange={aoMudarTipo}>
 					<option value="telegram">✈️ Telegram</option>
 					<option value="whatsapp">💬 WhatsApp</option>
 				</select>
 			</div>
-			<div class="campo">
-				<label for="nome">Nome</label>
-				<input id="nome" bind:value={nome} placeholder="ex.: Ofertas Beleza" required />
+			<div class="flex-1 min-w-[140px] flex flex-col gap-1">
+				<label for="nome" class="text-xs font-semibold text-tinta-suave">Nome</label>
+				<input id="nome" class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={nome} placeholder="ex.: Ofertas Beleza" required />
 			</div>
-			<div class="campo">
-				<label for="config">Destino ({tipoLabel[tipo]})</label>
+			<div class="flex-1 min-w-[140px] flex flex-col gap-1">
+				<label for="config" class="text-xs font-semibold text-tinta-suave">Destino ({tipoLabel[tipo]})</label>
 				{#if tipo === 'whatsapp'}
 					<SeletorGrupo
 						grupos={gruposWA}
@@ -174,7 +174,7 @@
 						}}
 					/>
 				{:else}
-					<input id="config" bind:value={config} placeholder="@meucanal ou -1001234567890" required />
+					<input id="config" class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={config} placeholder="@meucanal ou -1001234567890" required />
 				{/if}
 			</div>
 			<Button type="submit" disabled={salvando || !nome.trim() || !config.trim()}>
@@ -184,24 +184,24 @@
 
 		<!-- Lista -->
 		{#if carregando}
-			<p class="loading">Carregando…</p>
+			<p class="text-tinta-suave text-sm">Carregando…</p>
 		{:else if destinos.length === 0}
-			<p class="vazio">Nenhum destino cadastrado. Adicione o primeiro acima.</p>
+			<p class="text-tinta-suave text-sm">Nenhum destino cadastrado. Adicione o primeiro acima.</p>
 		{:else}
-			<div class="lista">
+			<div class="flex flex-col gap-3">
 				{#each destinos as d (d.id)}
 					{#if editandoId === d.id}
 						<!-- Modo edição -->
-						<div class="card-destino editando">
-							<div class="edit-form">
-								<div class="campo-edit">
-									<label
+						<div class="flex items-center justify-between p-3 px-4 border border-ouro rounded-sm bg-ouro-fundo">
+							<div class="w-full flex flex-col gap-3">
+								<div class="flex flex-col gap-1">
+									<label class="text-xs font-semibold text-tinta-suave"
 										>Nome
-										<input bind:value={editNome} placeholder="Nome do destino" />
+										<input class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={editNome} placeholder="Nome do destino" />
 									</label>
 								</div>
-								<div class="campo-edit">
-									<span class="campo-edit-label">Grupos</span>
+								<div class="flex flex-col gap-1">
+									<span class="text-xs font-semibold text-tinta-suave">Grupos</span>
 									{#if d.tipo === 'whatsapp'}
 										<SeletorGrupo
 											grupos={gruposWA}
@@ -213,10 +213,10 @@
 											inicial={editConfig}
 										/>
 									{:else}
-										<input bind:value={editConfig} placeholder="@canal ou chat_id" />
+										<input class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={editConfig} placeholder="@canal ou chat_id" />
 									{/if}
 								</div>
-								<div class="edit-acoes">
+								<div class="flex gap-2">
 									<Button
 										size="sm"
 										onclick={() => salvarEdicao(d)}
@@ -230,29 +230,29 @@
 						</div>
 					{:else}
 						<!-- Modo visualização -->
-						<div class="card-destino">
-							<div class="info">
-								<span class="tipo-badge">{tipoIcone[d.tipo] ?? '📤'} {tipoLabel[d.tipo] ?? d.tipo}</span>
-								<strong>{d.nome}</strong>
+						<div class="flex items-center justify-between p-3 px-4 border border-border rounded-sm bg-[var(--branco)]">
+							<div class="flex flex-col gap-0.5">
+								<span class="text-xs font-semibold text-tinta-suave">{tipoIcone[d.tipo] ?? '📤'} {tipoLabel[d.tipo] ?? d.tipo}</span>
+								<strong class="text-sm">{d.nome}</strong>
 								{#if d.tipo === 'whatsapp' && gruposWA.length > 0}
-									<div class="grupos-lista">
+									<div class="flex flex-col gap-0.5 mt-0.5">
 										{#each d.config.split(',') as gid (gid)}
 											{@const grupo = gruposWA.find((g) => g.id === gid.trim())}
-											<span class="grupo-nome">{grupo?.nome ?? gid.trim()}</span>
+											<span class="text-xs text-tinta-suave px-1.5 bg-sucesso-fundo rounded border border-sucesso-borda">{grupo?.nome ?? gid.trim()}</span>
 										{/each}
 									</div>
 								{:else}
-									<code>{d.config}</code>
+									<code class="text-xs text-tinta-suave">{d.config}</code>
 								{/if}
 							</div>
-							<div class="card-acoes">
+							<div class="flex gap-1">
 								<DropdownMenu
 									items={[
 										{ label: '✎ Editar', onclick: () => iniciarEdicao(d) },
 										{ label: '✕ Remover', onclick: () => pedirRemocao(d), destructive: true }
 									]}
 								>
-									<button class="btn-menu" aria-label="Ações">⋮</button>
+									<button class="bg-transparent border border-border rounded-sm w-8 h-8 flex items-center justify-center cursor-pointer text-tinta-suave text-lg hover:border-ouro hover:text-ouro" aria-label="Ações">⋮</button>
 								</DropdownMenu>
 							</div>
 						</div>
@@ -265,7 +265,7 @@
 	<Dialog bind:open={dialogRemover} title="Remover destino" description="Tem certeza que quer remover este destino?">
 		{#if destinoParaRemover}
 			<p>O destino <strong>{destinoParaRemover.nome}</strong> será removido permanentemente.</p>
-			<div class="dialog-acoes">
+			<div class="flex gap-3 mt-4">
 				<Button variant="danger" onclick={() => remover(destinoParaRemover.id)}>Remover</Button>
 				<Button
 					variant="ghost"
@@ -277,178 +277,3 @@
 		{/if}
 	</Dialog>
 </section>
-
-<style>
-	.config-page {
-		max-width: 900px;
-	}
-	h1 {
-		font-size: 1.5rem;
-		margin-bottom: var(--r6);
-	}
-	h2 {
-		font-size: 1.1rem;
-		margin: 0 0 var(--r2);
-	}
-	.subtitulo {
-		color: var(--tinta-suave);
-		font-size: 0.88rem;
-		margin-bottom: var(--r5);
-	}
-
-	.aviso {
-		padding: var(--r3) var(--r4);
-		border-radius: var(--raio-sm);
-		font-size: 0.88rem;
-		margin-bottom: var(--r4);
-		background: var(--porcelana);
-		color: var(--tinta-suave);
-	}
-
-	.form-destino {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--r3);
-		align-items: flex-end;
-		margin-bottom: var(--r5);
-		padding: var(--r4);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		background: var(--porcelana);
-	}
-	.campo {
-		flex: 1;
-		min-width: 140px;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-	.campo label {
-		font-size: 0.78rem;
-		font-weight: 600;
-		color: var(--tinta-suave);
-	}
-	.campo :global(input) {
-		padding: 8px 12px;
-		border: 1px solid var(--linha);
-		border-radius: 8px;
-		font-size: 0.9rem;
-	}
-	.campo :global(input:focus) {
-		outline: 2px solid var(--ouro);
-		outline-offset: 1px;
-	}
-	.loading,
-	.vazio {
-		color: var(--tinta-suave);
-		font-size: 0.9rem;
-	}
-	.lista {
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-	.card-destino {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: var(--r3) var(--r4);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		background: var(--branco);
-	}
-	.card-destino.editando {
-		border-color: var(--ouro);
-		background: var(--ouro-fundo);
-	}
-	.card-destino .info {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.card-destino strong {
-		font-size: 0.92rem;
-	}
-	.card-destino code {
-		font-size: 0.8rem;
-		color: var(--tinta-suave);
-	}
-	.tipo-badge {
-		font-size: 0.72rem;
-		font-weight: 600;
-		color: var(--tinta-suave);
-	}
-
-	.card-acoes {
-		display: flex;
-		gap: 4px;
-	}
-	.btn-menu {
-		background: none;
-		border: 1px solid var(--linha);
-		border-radius: var(--raio-sm);
-		width: 32px;
-		height: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		color: var(--tinta-suave);
-		font-size: var(--text-lg);
-	}
-	.btn-menu:hover {
-		border-color: var(--ouro);
-		color: var(--ouro);
-	}
-
-	.edit-form {
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		gap: var(--r3);
-	}
-	.campo-edit {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-	.campo-edit label {
-		font-size: 0.78rem;
-		font-weight: 600;
-		color: var(--tinta-suave);
-	}
-	.campo-edit input {
-		padding: 8px 12px;
-		border: 1px solid var(--linha);
-		border-radius: 8px;
-		font-size: 0.9rem;
-	}
-	.campo-edit input:focus {
-		outline: 2px solid var(--ouro);
-		outline-offset: 1px;
-	}
-	.edit-acoes {
-		display: flex;
-		gap: var(--r2);
-	}
-
-	.grupos-lista {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		margin-top: 2px;
-	}
-	.grupo-nome {
-		font-size: 0.78rem;
-		color: var(--tinta-suave);
-		padding: 1px 6px;
-		background: var(--sucesso-fundo);
-		border-radius: 4px;
-		border: 1px solid var(--sucesso-borda);
-	}
-	.dialog-acoes {
-		display: flex;
-		gap: var(--r3);
-		margin-top: var(--r4);
-	}
-</style>

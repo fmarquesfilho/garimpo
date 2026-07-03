@@ -72,16 +72,16 @@
 	});
 </script>
 
-<section class="intro">
+<section class="max-w-[42rem] mb-8">
 	<p class="rotulo">monitoramento</p>
-	<h1>Coletas</h1>
-	<p class="sub">
+	<h1 class="text-[clamp(2rem,6vw,3rem)] my-2 mb-4">Coletas</h1>
+	<p class="text-tinta-suave mb-4">
 		Histórico de coletas executadas e status das buscas agendadas. Cada coleta grava um snapshot dos top produtos do
 		momento.
 	</p>
-	<label class="janela">
+	<label class="text-sm text-tinta-suave">
 		janela:
-		<select bind:value={dias} onchange={carregar} class="dado">
+		<select bind:value={dias} onchange={carregar} class="dado font-mono py-1.5 px-2.5 rounded-lg border border-border bg-porcelana ml-1.5">
 			<option value={7}>7 dias</option>
 			<option value={30}>30 dias</option>
 			<option value={90}>90 dias</option>
@@ -90,34 +90,34 @@
 </section>
 
 {#if carregando}
-	<p class="aviso">Carregando histórico…</p>
+	<p class="text-tinta-suave italic">Carregando histórico…</p>
 {:else if erro}
-	<div class="erro">
+	<div class="bg-nevoa border border-border rounded-md p-8 text-center">
 		<p><strong>Não consegui carregar as coletas.</strong></p>
 		<p>{erro}</p>
 	</div>
 {:else}
 	<!-- Buscas agendadas -->
 	{#if buscas.length > 0}
-		<section class="secao">
-			<h2>Buscas agendadas</h2>
-			<div class="cards-agendadas">
+		<section class="mb-8">
+			<h2 class="text-xl mb-2">Buscas agendadas</h2>
+			<div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4 mt-3">
 				{#each buscas as b (b.id)}
-					<div class="card-agendada">
-						<div class="card-topo">
-							<span class="card-id">{b.id}</span>
+					<div class="bg-nevoa border border-border rounded-md py-3 px-4 flex flex-col gap-2">
+						<div class="flex justify-between items-center">
+							<span class="font-bold text-sm">{b.id}</span>
 							{#if b.cron}
-								<span class="badge-cron">⏱ {b.cron}</span>
+								<span class="text-[0.7rem] font-mono py-0.5 px-2 rounded-full bg-ouro-fundo text-ouro-escuro">⏱ {b.cron}</span>
 							{:else}
-								<span class="badge-manual">manual</span>
+								<span class="text-[0.7rem] py-0.5 px-2 rounded-full bg-porcelana text-tinta-suave border border-border">manual</span>
 							{/if}
 						</div>
-						<div class="card-kws">
+						<div class="flex flex-wrap gap-1">
 							{#each b.keywords ?? [] as kw}
-								<span class="kw-tag">{kw}</span>
+								<span class="text-xs font-semibold py-0.5 px-2 rounded-full bg-porcelana border border-border text-tinta">{kw}</span>
 							{/each}
 						</div>
-						<div class="card-info">
+						<div class="text-xs text-tinta-suave">
 							<span>{b.estrategia}</span> · <span>{b.categoria}</span> · <span>top {b.top}</span>
 						</div>
 					</div>
@@ -128,11 +128,11 @@
 
 	<!-- Resumo por keyword -->
 	{#if resumoPorKeyword().length > 0}
-		<section class="secao">
-			<h2>Resumo por keyword</h2>
-			<p class="sub-secao">Quantas coletas cada keyword teve na janela de {dias} dias.</p>
-			<div class="tabela">
-				<div class="cab">
+		<section class="mb-8">
+			<h2 class="text-xl mb-2">Resumo por keyword</h2>
+			<p class="text-tinta-suave text-sm mb-4">Quantas coletas cada keyword teve na janela de {dias} dias.</p>
+			<div class="border border-border rounded-md overflow-hidden bg-nevoa">
+				<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] gap-2 py-3 px-4 items-center bg-[color-mix(in_srgb,var(--porcelana)_70%,white)] text-[0.7rem] font-semibold tracking-wide uppercase text-tinta-suave border-b border-border max-md:hidden">
 					<span>keyword</span>
 					<span>categoria</span>
 					<span>coletas</span>
@@ -140,12 +140,12 @@
 					<span>última coleta</span>
 				</div>
 				{#each resumoPorKeyword() as r (r.keyword)}
-					<div class="linha">
-						<span class="kw-cell">{r.keyword}</span>
+					<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] max-md:grid-cols-[1fr_1fr] gap-2 max-md:gap-1 py-3 px-4 items-center border-t border-border first:border-t-0 text-sm">
+						<span class="font-semibold text-rosa">{r.keyword}</span>
 						<span class="dado">{r.categoria || '—'}</span>
 						<span class="dado">{r.total}</span>
 						<span class="dado">{r.produtosTotal}</span>
-						<span class="dado tempo">{tempoAtras(r.ultimaColeta)}</span>
+						<span class="dado font-mono text-xs">{tempoAtras(r.ultimaColeta)}</span>
 					</div>
 				{/each}
 			</div>
@@ -153,17 +153,17 @@
 	{/if}
 
 	<!-- Histórico detalhado -->
-	<section class="secao">
-		<h2>Histórico de execuções</h2>
+	<section class="mb-8">
+		<h2 class="text-xl mb-2">Histórico de execuções</h2>
 		{#if coletas.length === 0}
-			<div class="vazio">
+			<div class="bg-nevoa border border-border rounded-md p-8 text-center">
 				<p>Nenhuma coleta encontrada nesta janela.</p>
-				<p class="dica">As coletas acontecem nos horários agendados (cron) ou quando disparadas manualmente.</p>
+				<p class="text-tinta-suave text-sm">As coletas acontecem nos horários agendados (cron) ou quando disparadas manualmente.</p>
 			</div>
 		{:else}
-			<p class="sub-secao">{coletas.length} execuções nos últimos {dias} dias.</p>
-			<div class="tabela">
-				<div class="cab">
+			<p class="text-tinta-suave text-sm mb-4">{coletas.length} execuções nos últimos {dias} dias.</p>
+			<div class="border border-border rounded-md overflow-hidden bg-nevoa">
+				<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] gap-2 py-3 px-4 items-center bg-[color-mix(in_srgb,var(--porcelana)_70%,white)] text-[0.7rem] font-semibold tracking-wide uppercase text-tinta-suave border-b border-border max-md:hidden">
 					<span>quando</span>
 					<span>keyword</span>
 					<span>categoria</span>
@@ -171,183 +171,15 @@
 					<span>produtos</span>
 				</div>
 				{#each coletas as c, i (i)}
-					<div class="linha">
-						<span class="dado tempo">{dataHora(c.coletado_em)}</span>
-						<span class="kw-cell">{c.keyword || '—'}</span>
+					<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] max-md:grid-cols-[1fr_1fr] gap-2 max-md:gap-1 py-3 px-4 items-center border-t border-border first:border-t-0 text-sm">
+						<span class="dado font-mono text-xs">{dataHora(c.coletado_em)}</span>
+						<span class="font-semibold text-rosa">{c.keyword || '—'}</span>
 						<span class="dado">{c.categoria || '—'}</span>
 						<span class="dado">{c.estrategia}</span>
-						<span class="dado produtos">{c.produtos}</span>
+						<span class="dado font-bold text-ouro">{c.produtos}</span>
 					</div>
 				{/each}
 			</div>
 		{/if}
 	</section>
 {/if}
-
-<style>
-	.intro {
-		max-width: 42rem;
-		margin-bottom: var(--r8);
-	}
-	h1 {
-		font-size: clamp(2rem, 6vw, 3rem);
-		margin: var(--r2) 0 var(--r4);
-	}
-	h2 {
-		font-size: 1.3rem;
-		margin: 0 0 var(--r2);
-	}
-	.sub {
-		color: var(--tinta-suave);
-		margin: 0 0 var(--r4);
-	}
-	.sub-secao {
-		color: var(--tinta-suave);
-		font-size: 0.85rem;
-		margin: 0 0 var(--r4);
-	}
-	.secao {
-		margin-bottom: var(--r8);
-	}
-	.janela {
-		font-size: 0.85rem;
-		color: var(--tinta-suave);
-	}
-	.janela select {
-		font-family: var(--mono);
-		padding: 6px 10px;
-		border-radius: 8px;
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		margin-left: 6px;
-	}
-
-	/* Cards agendadas */
-	.cards-agendadas {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-		gap: var(--r4);
-		margin-top: var(--r3);
-	}
-	.card-agendada {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r3) var(--r4);
-		display: flex;
-		flex-direction: column;
-		gap: var(--r2);
-	}
-	.card-topo {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	.card-id {
-		font-weight: 700;
-		font-size: 0.92rem;
-	}
-	.badge-cron {
-		font-size: 0.7rem;
-		font-family: var(--mono);
-		padding: 2px 8px;
-		border-radius: var(--raio-full);
-		background: var(--ouro-fundo);
-		color: var(--ouro-escuro);
-	}
-	.badge-manual {
-		font-size: 0.7rem;
-		padding: 2px 8px;
-		border-radius: var(--raio-full);
-		background: var(--porcelana);
-		color: var(--tinta-suave);
-		border: 1px solid var(--linha);
-	}
-	.card-kws {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4px;
-	}
-	.kw-tag {
-		font-size: 0.78rem;
-		font-weight: 600;
-		padding: 2px 8px;
-		border-radius: var(--raio-full);
-		background: var(--porcelana);
-		border: 1px solid var(--linha);
-		color: var(--tinta);
-	}
-	.card-info {
-		font-size: 0.75rem;
-		color: var(--tinta-suave);
-	}
-
-	/* Tabela */
-	.tabela {
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		overflow: hidden;
-		background: var(--nevoa);
-	}
-	.cab,
-	.linha {
-		display: grid;
-		grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.8fr;
-		gap: var(--r2);
-		padding: var(--r3) var(--r4);
-		align-items: center;
-	}
-	.cab {
-		background: color-mix(in srgb, var(--porcelana) 70%, white);
-		font-size: 0.7rem;
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: var(--tinta-suave);
-		border-bottom: 1px solid var(--linha);
-	}
-	.linha {
-		border-top: 1px solid var(--linha);
-		font-size: 0.88rem;
-	}
-	.linha:first-of-type {
-		border-top: none;
-	}
-	.kw-cell {
-		font-weight: 600;
-		color: var(--rosa);
-	}
-	.tempo {
-		font-family: var(--mono);
-		font-size: 0.8rem;
-	}
-	.produtos {
-		font-weight: 700;
-		color: var(--ouro);
-	}
-	.aviso {
-		color: var(--tinta-suave);
-		font-style: italic;
-	}
-	.vazio,
-	.erro {
-		background: var(--nevoa);
-		border: 1px solid var(--linha);
-		border-radius: var(--raio);
-		padding: var(--r8);
-		text-align: center;
-	}
-	.dica {
-		color: var(--tinta-suave);
-		font-size: 0.85rem;
-	}
-	@media (max-width: 720px) {
-		.cab {
-			display: none;
-		}
-		.linha {
-			grid-template-columns: 1fr 1fr;
-			gap: 4px;
-		}
-	}
-</style>
