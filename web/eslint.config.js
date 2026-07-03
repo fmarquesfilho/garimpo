@@ -27,8 +27,7 @@ export default [
 		files: ['**/*.svelte'],
 		rules: {
 			// Svelte-specific complexity
-			// style limit temporarily at 400 during Tailwind migration — will tighten after
-			'svelte/max-lines-per-block': ['warn', { script: 180, style: 400, template: 300 }],
+			'svelte/max-lines-per-block': ['warn', { script: 180, style: 80, template: 300 }],
 		}
 	},
 	{
