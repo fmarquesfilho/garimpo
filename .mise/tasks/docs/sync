@@ -38,6 +38,48 @@ cp docs/componentes.md "$DEST/frontend/componentes.md"
 cp docs/linting.md "$DEST/frontend/linting.md"
 cp docs/impacto-migracao-ui.md "$DEST/frontend/impacto-migracao-ui.md"
 
+# ── Docs gerados (board, roadmap, entidades, env) ────────────────────────────
+mkdir -p "$DEST/gerado"
+for f in docs/gerado/*.md; do
+  [ -f "$f" ] && cp "$f" "$DEST/gerado/"
+done
+
+# ── Guias ─────────────────────────────────────────────────────────────────────
+if [ -d "docs/guias" ] && [ "$(ls docs/guias/*.md 2>/dev/null)" ]; then
+  mkdir -p "$DEST/guias"
+  for f in docs/guias/*.md; do
+    [ -f "$f" ] && cp "$f" "$DEST/guias/"
+  done
+fi
+
+# ── Sprint atual (backlog) ────────────────────────────────────────────────────
+if [ -f "backlog/sprint.txt" ]; then
+  mkdir -p "$DEST/projeto"
+  {
+    echo "# Sprint Atual"
+    echo ""
+    echo "> Gerado a partir de \`backlog/sprint.txt\`"
+    echo ""
+    SPRINT_ID=$(head -1 backlog/sprint.txt)
+    echo "**Sprint:** $SPRINT_ID"
+    echo ""
+    echo "## Tasks da Sprint"
+    echo ""
+    tail -n +2 backlog/sprint.txt | while read -r task_id; do
+      [ -z "$task_id" ] && continue
+      TASK_FILE="backlog/tasks/${task_id}-*.yaml"
+      # shellcheck disable=SC2086
+      if ls $TASK_FILE 1>/dev/null 2>&1; then
+        TITULO=$(grep "^titulo:" $TASK_FILE | head -1 | sed 's/titulo: *"//' | sed 's/"$//')
+        STATUS=$(grep "^status:" $TASK_FILE | head -1 | sed 's/status: *//')
+        echo "- **${task_id}** — ${TITULO} (\`${STATUS}\`)"
+      else
+        echo "- **${task_id}**"
+      fi
+    done
+  } > "$DEST/projeto/sprint.md"
+fi
+
 # ── Index page ────────────────────────────────────────────────────────────────
 cat > "$DEST/index.md" << 'EOF'
 # Garimpei
@@ -53,17 +95,41 @@ rastreamento de conversão.
 
 ## Navegação
 
+### Documentação principal
+
 - [Visão e Negócio](/visao-e-negocio) — O quê e pra quem
 - [Arquitetura](/arquitetura) — Como roda (Cloud Run, gRPC, BigQuery)
 - [Fluxos e Modelo](/fluxos-e-modelo) — Entidades e regras de negócio
+- [Operação Shopee](/operacao-shopee) — Integração com API de afiliados
+- [Manual do Usuário](/manual-do-usuario) — Como usar o app
 - [Qualidade e Testes](/qualidade-e-testes) — CI, fitness functions, drift checks
-- [Decisões (ADRs)](/decisoes/0001-nome-garimpei) — Registro de decisões arquiteturais
+- [Dados e IA](/dados-e-ia) — BigQuery, scoring, recomendações
 
 ### Frontend
 
 - [Componentes UI](/frontend/componentes) — Biblioteca de componentes (Bits UI + tokens)
 - [Linting & Qualidade](/frontend/linting) — Ferramentas e pipeline
 - [Impacto da Migração](/frontend/impacto-migracao-ui) — Métricas de dívida técnica
+
+### Projeto
+
+- [Quadro Kanban](/gerado/BOARD) — Sprint atual (tarefas por status)
+- [Roadmap](/gerado/ROADMAP) — Now / Next / Later
+- [Sprint Atual](/projeto/sprint) — Tasks da sprint corrente
+- [Entidades (ER)](/gerado/ENTIDADES) — Schema BigQuery
+- [Variáveis de Ambiente](/gerado/env-vars) — Configs dos serviços
+
+### Decisões Arquiteturais (ADRs)
+
+- [Todas as decisões](/decisoes/0001-nome-garimpei) — 22 ADRs registrados
+
+### Guias
+
+- [Configurar WhatsApp Meta](/guias/configurar-whatsapp-meta) — Setup do canal WhatsApp
+
+### Referência
+
+- [API Reference](/api) — OpenAPI 3.1
 
 ## Links
 
@@ -110,7 +176,7 @@ sedi() {
   fi
 }
 
-for f in "$DEST"/*.md "$DEST"/decisoes/*.md "$DEST"/frontend/*.md; do
+for f in "$DEST"/*.md "$DEST"/decisoes/*.md "$DEST"/frontend/*.md "$DEST"/gerado/*.md "$DEST"/guias/*.md "$DEST"/projeto/*.md; do
   [ -f "$f" ] || continue
   sedi 's|(/docs/decisoes/\([^/)]*\)/)|(/decisoes/\1)|g' "$f"
   sedi 's|(/docs/decisoes/\([^)]*\))|(/decisoes/\1)|g' "$f"
