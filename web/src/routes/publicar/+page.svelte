@@ -41,26 +41,35 @@
 
 	async function carregarDestinosETemplates() {
 		try {
-			const [rd, rt] = await Promise.all([
-				listarDestinos().catch(() => ({ destinos: [] })),
-				listarTemplates().catch(() => ({ templates: [] }))
-			]);
+			const timeout = (ms) => new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+			const buscar = async () => {
+				const [rd, rt] = await Promise.all([
+					Promise.race([listarDestinos(), timeout(15000)]).catch(() => null),
+					Promise.race([listarTemplates(), timeout(15000)]).catch(() => null)
+				]);
+				return { rd, rt };
+			};
+			let { rd, rt } = await buscar();
+			// Retry: token pode não estar pronto na primeira tentativa
+			if (!rd && !rt) { await new Promise(r => setTimeout(r, 1500)); ({ rd, rt } = await buscar()); }
 			destinos = rd?.destinos ?? [];
 			templates = rt?.templates ?? [];
-			if (templates.length > 0 && !templates.find(t => t.id === templateId)) {
-				templateId = templates[0].id;
-			}
+			if (templates.length > 0 && !templates.find(t => t.id === templateId)) templateId = templates[0].id;
 		} catch (e) { erro = e.message; }
 		finally { carregando = false; }
 	}
 
 	onMount(async () => {
+		// Safety: garante que a página sai de "Carregando" mesmo se algo travar
+		const safety = setTimeout(() => { if (carregando) carregando = false; }, 20000);
+
 		const dados = $page.url.searchParams.get('dados');
 		if (dados) { try { produto = JSON.parse(decodeURIComponent(dados)); } catch { /* */ } }
 		if (!produto) produto = { id: '', nome: '', preco: 0, categoria: '', link: '', imagem: '' };
 
 		await resolverDadosProduto();
 		await carregarDestinosETemplates();
+		clearTimeout(safety);
 		gerarLegenda();
 	});
 

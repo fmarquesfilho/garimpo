@@ -72,5 +72,14 @@ export async function logout() {
 /** Retorna o ID token JWT do usuário logado (para enviar ao backend). */
 export async function getIdToken() {
 	if (!auth?.currentUser) return null;
-	return auth.currentUser.getIdToken();
+	try {
+		// Timeout de 5s para evitar que token refresh pendure a UI
+		const token = await Promise.race([
+			auth.currentUser.getIdToken(),
+			new Promise((_, reject) => setTimeout(() => reject(new Error('token timeout')), 5000))
+		]);
+		return token;
+	} catch {
+		return null;
+	}
 }
