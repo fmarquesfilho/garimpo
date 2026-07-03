@@ -10,7 +10,7 @@ function luminance(hex) {
 	const r = parseInt(hex.slice(1, 3), 16) / 255;
 	const g = parseInt(hex.slice(3, 5), 16) / 255;
 	const b = parseInt(hex.slice(5, 7), 16) / 255;
-	const toLinear = (c) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+	const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 	return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }
 
@@ -55,7 +55,7 @@ const PAIRS = [
 	{ text: '--ouro-escuro', bg: '--ouro-fundo', label: 'gold text on gold bg' },
 	{ text: '--sucesso-texto', bg: '--sucesso-fundo', label: 'success text on success bg' },
 	{ text: '--erro-texto', bg: '--erro-fundo', label: 'error text on error bg' },
-	{ text: '--aviso-texto', bg: '--aviso-fundo', label: 'warning text on warning bg' },
+	{ text: '--aviso-texto', bg: '--aviso-fundo', label: 'warning text on warning bg' }
 ];
 
 describe('WCAG AA Contrast Compliance', () => {
@@ -72,7 +72,10 @@ describe('WCAG AA Contrast Compliance', () => {
 				const bgColor = tokens[pair.bg];
 				if (!textColor || !bgColor) return; // skip if token not found as hex
 				const ratio = contrastRatio(textColor, bgColor);
-				expect(ratio, `${pair.text}(${textColor}) on ${pair.bg}(${bgColor}) = ${ratio.toFixed(2)}`).toBeGreaterThanOrEqual(minRatio);
+				expect(
+					ratio,
+					`${pair.text}(${textColor}) on ${pair.bg}(${bgColor}) = ${ratio.toFixed(2)}`
+				).toBeGreaterThanOrEqual(minRatio);
 			});
 		}
 	});
@@ -87,7 +90,10 @@ describe('WCAG AA Contrast Compliance', () => {
 				const bgColor = tokens[pair.bg];
 				if (!textColor || !bgColor) return; // skip if token not found as hex
 				const ratio = contrastRatio(textColor, bgColor);
-				expect(ratio, `${pair.text}(${textColor}) on ${pair.bg}(${bgColor}) = ${ratio.toFixed(2)}`).toBeGreaterThanOrEqual(minRatio);
+				expect(
+					ratio,
+					`${pair.text}(${textColor}) on ${pair.bg}(${bgColor}) = ${ratio.toFixed(2)}`
+				).toBeGreaterThanOrEqual(minRatio);
 			});
 		}
 	});

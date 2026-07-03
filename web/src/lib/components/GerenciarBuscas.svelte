@@ -9,7 +9,7 @@
 	import BuscaCard from './BuscaCard.svelte';
 	import { Button } from '$lib/components/ui';
 
-	let buscasKw = $derived(($buscasSalvas ?? []).filter(b => !b.shop_ids?.length));
+	let buscasKw = $derived(($buscasSalvas ?? []).filter((b) => !b.shop_ids?.length));
 
 	let mostrarForm = $state(false);
 	let keywordsNovas = $state([]);
@@ -19,7 +19,9 @@
 	let fontes = $state({ curadoria: true, quedas: false, novos: false });
 
 	let fontesArray = $derived(
-		Object.entries(fontes).filter(([, v]) => v).map(([k]) => k)
+		Object.entries(fontes)
+			.filter(([, v]) => v)
+			.map(([k]) => k)
 	);
 
 	function salvar() {
@@ -84,7 +86,10 @@
 			<AgendadorBusca bind:value={cronNova} />
 
 			<div class="form-acoes">
-				<Button onclick={salvar} disabled={keywordsNovas.length === 0 && categoriasNovas.length === 0 && fontesArray.length === 0}>
+				<Button
+					onclick={salvar}
+					disabled={keywordsNovas.length === 0 && categoriasNovas.length === 0 && fontesArray.length === 0}
+				>
 					Salvar busca
 				</Button>
 			</div>
@@ -103,25 +108,84 @@
 </div>
 
 <style>
-	.gerenciar-buscas { margin-bottom: var(--r6); }
-	.cabecalho { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r3); }
-	h2 { font-size: 1.1rem; margin: 0; color: var(--tinta); }
+	.gerenciar-buscas {
+		margin-bottom: var(--r6);
+	}
+	.cabecalho {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: var(--r3);
+	}
+	h2 {
+		font-size: 1.1rem;
+		margin: 0;
+		color: var(--tinta);
+	}
 	.form-nova {
-		background: var(--nevoa); border: 1px solid var(--linha);
-		border-radius: var(--raio); padding: var(--r4);
-		display: flex; flex-direction: column; gap: var(--r4); margin-bottom: var(--r4);
+		background: var(--nevoa);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio);
+		padding: var(--r4);
+		display: flex;
+		flex-direction: column;
+		gap: var(--r4);
+		margin-bottom: var(--r4);
 	}
-	.fontes-config { display: flex; flex-direction: column; gap: 6px; }
-	.fontes-config .rotulo { font-size: 0.82rem; font-weight: 600; color: var(--tinta); }
-	.fontes-toggles { display: flex; flex-wrap: wrap; gap: var(--r3); }
+	.fontes-config {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.fontes-config .rotulo {
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--tinta);
+	}
+	.fontes-toggles {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--r3);
+	}
 	.fontes-toggles label {
-		font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer;
+		font-size: 0.85rem;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		cursor: pointer;
 	}
-	.fontes-toggles input { accent-color: var(--ouro); }
-	.campo-dias { display: flex; flex-wrap: wrap; align-items: center; gap: var(--r2); }
-	.campo-dias label { font-size: 0.82rem; font-weight: 600; color: var(--tinta); }
-	.campo-dias select { padding: 6px 10px; border: 1px solid var(--linha); border-radius: 8px; font-size: 0.85rem; }
-	.form-acoes { display: flex; justify-content: flex-end; }
-	.buscas-lista { display: flex; flex-direction: column; gap: var(--r3); }
-	.vazio { font-size: 0.85rem; color: var(--tinta-suave); font-style: italic; }
+	.fontes-toggles input {
+		accent-color: var(--ouro);
+	}
+	.campo-dias {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--r2);
+	}
+	.campo-dias label {
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--tinta);
+	}
+	.campo-dias select {
+		padding: 6px 10px;
+		border: 1px solid var(--linha);
+		border-radius: 8px;
+		font-size: 0.85rem;
+	}
+	.form-acoes {
+		display: flex;
+		justify-content: flex-end;
+	}
+	.buscas-lista {
+		display: flex;
+		flex-direction: column;
+		gap: var(--r3);
+	}
+	.vazio {
+		font-size: 0.85rem;
+		color: var(--tinta-suave);
+		font-style: italic;
+	}
 </style>

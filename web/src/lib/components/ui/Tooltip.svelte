@@ -7,12 +7,7 @@
 	 */
 	import { Tooltip } from 'bits-ui';
 
-	let {
-		content = '',
-		side = /** @type {'top'|'bottom'|'left'|'right'} */ ('top'),
-		children,
-		...rest
-	} = $props();
+	let { content = '', side = /** @type {'top'|'bottom'|'left'|'right'} */ ('top'), children, ...rest } = $props();
 </script>
 
 <Tooltip.Root {...rest}>
@@ -20,7 +15,11 @@
 		{@render children()}
 	</Tooltip.Trigger>
 	<Tooltip.Portal>
-		<Tooltip.Content {side} class="z-50 max-w-[240px] rounded-sm bg-foreground px-2 py-1 text-xs text-background shadow-md animate-in fade-in-0 zoom-in-95" sideOffset={4}>
+		<Tooltip.Content
+			{side}
+			class="z-50 max-w-[240px] rounded-sm bg-foreground px-2 py-1 text-xs text-background shadow-md animate-in fade-in-0 zoom-in-95"
+			sideOffset={4}
+		>
 			{content}
 		</Tooltip.Content>
 	</Tooltip.Portal>

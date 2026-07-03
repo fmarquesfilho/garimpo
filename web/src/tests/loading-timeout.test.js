@@ -103,11 +103,11 @@ describe('Publicações: timeout de conversões reais', () => {
 	});
 
 	it('passa o resultado normalmente quando a Shopee responde', async () => {
-		const shopeeOk = () => Promise.resolve({ total: 3, comissao_total: 15.50, conversoes: [] });
+		const shopeeOk = () => Promise.resolve({ total: 3, comissao_total: 15.5, conversoes: [] });
 		const { data, erro } = await buscarComTimeout(shopeeOk, 20000);
 
 		expect(erro).toBeNull();
 		expect(data.total).toBe(3);
-		expect(data.comissao_total).toBe(15.50);
+		expect(data.comissao_total).toBe(15.5);
 	});
 });

@@ -48,9 +48,12 @@ export const test = base.extend({
 			await garantirUsuarioNoEmulator(emulatorHost);
 
 			// 2. Injetar variável para firebase.js conectar ao emulator
-			await page.addInitScript(({ host }) => {
-				window.__FIREBASE_AUTH_EMULATOR_HOST__ = host;
-			}, { host: emulatorHost });
+			await page.addInitScript(
+				({ host }) => {
+					window.__FIREBASE_AUTH_EMULATOR_HOST__ = host;
+				},
+				{ host: emulatorHost }
+			);
 		}
 
 		// 3. Navegar para a app
@@ -59,14 +62,13 @@ export const test = base.extend({
 
 		if (emulatorHost) {
 			// 4. Esperar __TEST_SIGN_IN__ ficar disponível e logar
-			await page.waitForFunction(
-				() => typeof window.__TEST_SIGN_IN__ === 'function',
-				{},
-				{ timeout: 10000 }
+			await page.waitForFunction(() => typeof window.__TEST_SIGN_IN__ === 'function', {}, { timeout: 10000 });
+			await page.evaluate(
+				async ({ email, password }) => {
+					await window.__TEST_SIGN_IN__(email, password);
+				},
+				{ email: TEST_EMAIL, password: TEST_PASSWORD }
 			);
-			await page.evaluate(async ({ email, password }) => {
-				await window.__TEST_SIGN_IN__(email, password);
-			}, { email: TEST_EMAIL, password: TEST_PASSWORD });
 		}
 
 		// 5. Esperar o conteúdo autenticado

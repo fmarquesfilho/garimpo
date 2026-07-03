@@ -49,15 +49,21 @@
 		}
 	});
 
-	function toggleBold() { editor?.chain().focus().toggleBold().run(); }
-	function toggleItalic() { editor?.chain().focus().toggleItalic().run(); }
+	function toggleBold() {
+		editor?.chain().focus().toggleBold().run();
+	}
+	function toggleItalic() {
+		editor?.chain().focus().toggleItalic().run();
+	}
 	function setLink() {
 		const url = prompt('URL do link:');
 		if (url) {
 			editor?.chain().focus().setLink({ href: url }).run();
 		}
 	}
-	function removeLink() { editor?.chain().focus().unsetLink().run(); }
+	function removeLink() {
+		editor?.chain().focus().unsetLink().run();
+	}
 </script>
 
 <div class="rich-editor">
@@ -107,8 +113,15 @@
 		font-size: 0.85rem;
 		color: var(--tinta-suave);
 	}
-	.tb-btn:hover { background: white; color: var(--tinta); }
-	.tb-btn.ativo { background: var(--ouro-fundo); color: var(--ouro-escuro); border-color: var(--ouro); }
+	.tb-btn:hover {
+		background: white;
+		color: var(--tinta);
+	}
+	.tb-btn.ativo {
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
+		border-color: var(--ouro);
+	}
 
 	.editor-content {
 		min-height: 120px;

@@ -3,7 +3,15 @@
 // SDK identificar o projeto no client. A segurança está na validação do token
 // no servidor (Firebase Admin SDK / verificação de ID token).
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, connectAuthEmulator, signInWithEmailAndPassword } from 'firebase/auth';
+import {
+	getAuth,
+	GoogleAuthProvider,
+	signInWithPopup,
+	signOut,
+	onAuthStateChanged,
+	connectAuthEmulator,
+	signInWithEmailAndPassword
+} from 'firebase/auth';
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 

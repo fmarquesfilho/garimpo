@@ -2,16 +2,13 @@
 // Centraliza lógica de formatação para evitar duplicação.
 
 /** Formata valor em BRL (ex.: R$ 89,90). */
-export const brl = (v) =>
-	(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+export const brl = (v) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 /** Formata fração como porcentagem (ex.: 0.15 → "15%"). */
-export const pct = (v) =>
-	`${((v ?? 0) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+export const pct = (v) => `${((v ?? 0) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
 
 /** Formata número com separador de milhar, sem decimais. */
-export const num = (v) =>
-	(v ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+export const num = (v) => (v ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 
 /** Formata porcentagem com sinal (ex.: 0.05 → "+5.0%", -0.2 → "-20.0%"). */
 export const pctSinal = (v) => {
@@ -25,8 +22,11 @@ export const dataHora = (v) => {
 	const d = new Date(v);
 	if (isNaN(d.getTime())) return v;
 	return d.toLocaleString('pt-BR', {
-		day: '2-digit', month: '2-digit', year: '2-digit',
-		hour: '2-digit', minute: '2-digit'
+		day: '2-digit',
+		month: '2-digit',
+		year: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit'
 	});
 };
 
@@ -36,8 +36,11 @@ export const dataHoraCompleta = (v) => {
 	const d = new Date(v);
 	if (isNaN(d.getTime())) return v;
 	return d.toLocaleString('pt-BR', {
-		day: '2-digit', month: '2-digit', year: 'numeric',
-		hour: '2-digit', minute: '2-digit'
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
 	});
 };
 

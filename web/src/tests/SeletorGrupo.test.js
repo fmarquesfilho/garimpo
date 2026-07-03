@@ -56,9 +56,7 @@ describe('SeletorGrupo — seleção múltipla', () => {
 		await fireEvent.focus(input2);
 		await fireEvent.click(screen.getByText('#08 AVANÇADO VOE'));
 
-		expect(onselect).toHaveBeenLastCalledWith(
-			'120363430000000000@g.us,120363410893012870@g.us'
-		);
+		expect(onselect).toHaveBeenLastCalledWith('120363430000000000@g.us,120363410893012870@g.us');
 	});
 
 	it('grupo já selecionado não aparece na lista', async () => {
@@ -73,8 +71,8 @@ describe('SeletorGrupo — seleção múltipla', () => {
 		await fireEvent.focus(input2);
 
 		// Garimpo Hoje não deve estar na lista
-		const items = screen.queryAllByRole('button').filter(b => b.closest('ul'));
-		const nomes = items.map(b => b.textContent);
+		const items = screen.queryAllByRole('button').filter((b) => b.closest('ul'));
+		const nomes = items.map((b) => b.textContent);
 		expect(nomes).not.toContain('#1 Garimpo Hoje');
 		expect(nomes).toContain('#08 AVANÇADO VOE');
 	});
@@ -107,18 +105,16 @@ describe('SeletorGrupo — seleção múltipla', () => {
 	it('limita a 5 grupos', async () => {
 		const onselect = vi.fn();
 		// Cria 6 grupos para testar o limite
-		const muitos = [
-			...gruposMock,
-			{ id: '999@g.us', nome: 'Grupo Extra' }
-		];
+		const muitos = [...gruposMock, { id: '999@g.us', nome: 'Grupo Extra' }];
 		render(SeletorGrupo, { props: { grupos: muitos, onselect } });
 
 		// Seleciona 5 grupos
 		for (let i = 0; i < 5; i++) {
-			const inp = screen.queryByPlaceholderText('Digite para buscar um grupo…')
-				|| screen.queryByPlaceholderText('Adicionar outro grupo…');
+			const inp =
+				screen.queryByPlaceholderText('Digite para buscar um grupo…') ||
+				screen.queryByPlaceholderText('Adicionar outro grupo…');
 			await fireEvent.focus(inp);
-			const items = screen.getAllByRole('button').filter(b => b.closest('ul'));
+			const items = screen.getAllByRole('button').filter((b) => b.closest('ul'));
 			await fireEvent.click(items[0]);
 		}
 
@@ -135,7 +131,7 @@ describe('SeletorGrupo — filtro', () => {
 		await fireEvent.focus(input);
 		await fireEvent.input(input, { target: { value: 'pipa' } });
 
-		const items = screen.getAllByRole('button').filter(b => b.closest('ul'));
+		const items = screen.getAllByRole('button').filter((b) => b.closest('ul'));
 		expect(items.length).toBe(1);
 		expect(items[0].textContent).toBe('Famílias da Pipa');
 	});

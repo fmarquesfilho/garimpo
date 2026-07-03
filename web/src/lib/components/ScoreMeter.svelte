@@ -21,7 +21,12 @@
 	const partes = $derived(
 		Object.entries(componentes)
 			.filter(([k]) => k !== 'multiplicador_nicho')
-			.map(([k, v]) => ({ chave: k, rotulo: rotulos[k] ?? k, valor: Math.max(0, v), cor: cores[k] ?? 'var(--tinta-suave)' }))
+			.map(([k, v]) => ({
+				chave: k,
+				rotulo: rotulos[k] ?? k,
+				valor: Math.max(0, v),
+				cor: cores[k] ?? 'var(--tinta-suave)'
+			}))
 	);
 	const somaPartes = $derived(partes.reduce((s, p) => s + p.valor, 0) || 1);
 	const mult = $derived(componentes.multiplicador_nicho);
@@ -31,11 +36,8 @@
 <div class="teor">
 	<div class="cabeca">
 		<span class="rotulo">teor</span>
-		<button
-			class="ajuda"
-			type="button"
-			aria-label="O que é o teor?"
-			onclick={() => (mostraAjuda = !mostraAjuda)}>?</button
+		<button class="ajuda" type="button" aria-label="O que é o teor?" onclick={() => (mostraAjuda = !mostraAjuda)}
+			>?</button
 		>
 		<span class="valor dado">{score.toFixed(3)}</span>
 		{#if mult && mult > 1}
@@ -53,29 +55,35 @@
 			<ul>
 				<li><strong>comissão</strong> — quanto da venda volta pra você;</li>
 				<li>
-					<strong>valor esperado</strong> — comissão × preço × vendas: o retorno provável, não só a
-					porcentagem;
+					<strong>valor esperado</strong> — comissão × preço × vendas: o retorno provável, não só a porcentagem;
 				</li>
 				<li><strong>avaliação</strong> — a nota, como sinal de confiança.</li>
 			</ul>
 			<p>
-				Na estratégia <strong>nicho</strong>, produtos de cosméticos/perfumaria/bem-estar ganham um
-				bônus (o <span class="dado">×nicho</span>). A barra colorida abaixo mostra o peso de cada
-				sinal nesta pepita.
+				Na estratégia <strong>nicho</strong>, produtos de cosméticos/perfumaria/bem-estar ganham um bônus (o
+				<span class="dado">×nicho</span>). A barra colorida abaixo mostra o peso de cada sinal nesta pepita.
 			</p>
 			<button class="fechar-pop" type="button" onclick={() => (mostraAjuda = false)}>entendi</button>
 		</div>
 	{/if}
 
 	<div class="trilho" role="meter" aria-valuemin="0" aria-valuemax="1" aria-valuenow={score} aria-label="teor">
-		<div class="ouro" class:animar style="
+		<div
+			class="ouro"
+			class:animar
+			style="
 
---w: {largura}%"></div>
+--w: {largura}%"
+		></div>
 	</div>
 
 	<div class="quebra" aria-hidden="true">
 		{#each partes as p}
-			<span class="seg" style="flex: {p.valor / somaPartes}; background: {p.cor}" title="{p.rotulo}: {p.valor.toFixed(3)}"></span>
+			<span
+				class="seg"
+				style="flex: {p.valor / somaPartes}; background: {p.cor}"
+				title="{p.rotulo}: {p.valor.toFixed(3)}"
+			></span>
 		{/each}
 	</div>
 	<ul class="legenda">

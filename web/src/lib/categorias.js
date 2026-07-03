@@ -62,7 +62,7 @@ function parsearCategorias(data) {
 export function filtrarCategorias(categorias, termo) {
 	if (!termo?.trim()) return categorias;
 	const t = termo.trim().toLowerCase();
-	return categorias.filter(c => c.nome.toLowerCase().includes(t));
+	return categorias.filter((c) => c.nome.toLowerCase().includes(t));
 }
 
 /**
@@ -88,6 +88,6 @@ function getFallback() {
 		{ id: 100001, nome: 'Alimentos', slug: 'alimentos', marketplace: 'shopee' },
 		{ id: 100658, nome: 'Manicure & Pedicure', slug: 'manicure-pedicure', marketplace: 'shopee' },
 		{ id: 100633, nome: 'Acessórios & Bolsas', slug: 'acessorios-bolsas', marketplace: 'shopee' },
-		{ id: 100009, nome: 'Celulares', slug: 'celulares', marketplace: 'shopee' },
+		{ id: 100009, nome: 'Celulares', slug: 'celulares', marketplace: 'shopee' }
 	];
 }

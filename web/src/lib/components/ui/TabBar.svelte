@@ -9,10 +9,7 @@
 
 <nav class="tab-bar">
 	{#each tabs as tab (tab.id)}
-		<button
-			class:ativa={active === tab.id}
-			onclick={() => (active = tab.id)}
-		>
+		<button class:ativa={active === tab.id} onclick={() => (active = tab.id)}>
 			{tab.label}
 			{#if tab.badge}
 				<span class="badge-tab" class:alerta={tab.badgeVariant === 'alert'}>
@@ -50,7 +47,9 @@
 		color: var(--tinta);
 		border-bottom-color: var(--ouro);
 	}
-	button:hover:not(.ativa) { color: var(--tinta); }
+	button:hover:not(.ativa) {
+		color: var(--tinta);
+	}
 	.badge-tab {
 		font-size: var(--text-xs);
 		background: var(--ouro-fundo);
@@ -59,9 +58,15 @@
 		border-radius: var(--raio-full);
 		font-weight: var(--font-bold);
 	}
-	.badge-tab.alerta { background: var(--erro-fundo); color: var(--erro-texto); }
+	.badge-tab.alerta {
+		background: var(--erro-fundo);
+		color: var(--erro-texto);
+	}
 
 	@media (max-width: 600px) {
-		button { padding: 8px 12px; font-size: 0.8rem; }
+		button {
+			padding: 8px 12px;
+			font-size: 0.8rem;
+		}
 	}
 </style>

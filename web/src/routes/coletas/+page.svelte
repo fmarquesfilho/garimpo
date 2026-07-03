@@ -12,8 +12,11 @@
 		if (!v) return '—';
 		const d = new Date(v);
 		return d.toLocaleString('pt-BR', {
-			day: '2-digit', month: '2-digit', year: '2-digit',
-			hour: '2-digit', minute: '2-digit'
+			day: '2-digit',
+			month: '2-digit',
+			year: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit'
 		});
 	};
 
@@ -32,10 +35,7 @@
 		carregando = true;
 		erro = null;
 		try {
-			const [c, b] = await Promise.all([
-				buscarColetas({ dias }),
-				listarBuscasServidor()
-			]);
+			const [c, b] = await Promise.all([buscarColetas({ dias }), listarBuscasServidor()]);
 			coletas = c?.coletas ?? [];
 			buscas = b?.buscas ?? [];
 		} catch (e) {
@@ -53,7 +53,13 @@
 		for (const c of coletas) {
 			const key = c.keyword || '(sem keyword)';
 			if (!mapa.has(key)) {
-				mapa.set(key, { keyword: key, categoria: c.categoria, total: 0, ultimaColeta: c.coletado_em, produtosTotal: 0 });
+				mapa.set(key, {
+					keyword: key,
+					categoria: c.categoria,
+					total: 0,
+					ultimaColeta: c.coletado_em,
+					produtosTotal: 0
+				});
 			}
 			const r = mapa.get(key);
 			r.total++;
@@ -70,8 +76,8 @@
 	<p class="rotulo">monitoramento</p>
 	<h1>Coletas</h1>
 	<p class="sub">
-		Histórico de coletas executadas e status das buscas agendadas.
-		Cada coleta grava um snapshot dos top produtos do momento.
+		Histórico de coletas executadas e status das buscas agendadas. Cada coleta grava um snapshot dos top produtos do
+		momento.
 	</p>
 	<label class="janela">
 		janela:
@@ -179,75 +185,169 @@
 {/if}
 
 <style>
-	.intro { max-width: 42rem; margin-bottom: var(--r8); }
-	h1 { font-size: clamp(2rem, 6vw, 3rem); margin: var(--r2) 0 var(--r4); }
-	h2 { font-size: 1.3rem; margin: 0 0 var(--r2); }
-	.sub { color: var(--tinta-suave); margin: 0 0 var(--r4); }
-	.sub-secao { color: var(--tinta-suave); font-size: 0.85rem; margin: 0 0 var(--r4); }
-	.secao { margin-bottom: var(--r8); }
-	.janela { font-size: 0.85rem; color: var(--tinta-suave); }
+	.intro {
+		max-width: 42rem;
+		margin-bottom: var(--r8);
+	}
+	h1 {
+		font-size: clamp(2rem, 6vw, 3rem);
+		margin: var(--r2) 0 var(--r4);
+	}
+	h2 {
+		font-size: 1.3rem;
+		margin: 0 0 var(--r2);
+	}
+	.sub {
+		color: var(--tinta-suave);
+		margin: 0 0 var(--r4);
+	}
+	.sub-secao {
+		color: var(--tinta-suave);
+		font-size: 0.85rem;
+		margin: 0 0 var(--r4);
+	}
+	.secao {
+		margin-bottom: var(--r8);
+	}
+	.janela {
+		font-size: 0.85rem;
+		color: var(--tinta-suave);
+	}
 	.janela select {
-		font-family: var(--mono); padding: 6px 10px; border-radius: 8px;
-		border: 1px solid var(--linha); background: var(--porcelana); margin-left: 6px;
+		font-family: var(--mono);
+		padding: 6px 10px;
+		border-radius: 8px;
+		border: 1px solid var(--linha);
+		background: var(--porcelana);
+		margin-left: 6px;
 	}
 
 	/* Cards agendadas */
 	.cards-agendadas {
-		display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-		gap: var(--r4); margin-top: var(--r3);
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: var(--r4);
+		margin-top: var(--r3);
 	}
 	.card-agendada {
-		background: var(--nevoa); border: 1px solid var(--linha);
-		border-radius: var(--raio); padding: var(--r3) var(--r4);
-		display: flex; flex-direction: column; gap: var(--r2);
+		background: var(--nevoa);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio);
+		padding: var(--r3) var(--r4);
+		display: flex;
+		flex-direction: column;
+		gap: var(--r2);
 	}
-	.card-topo { display: flex; justify-content: space-between; align-items: center; }
-	.card-id { font-weight: 700; font-size: 0.92rem; }
+	.card-topo {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.card-id {
+		font-weight: 700;
+		font-size: 0.92rem;
+	}
 	.badge-cron {
-		font-size: 0.7rem; font-family: var(--mono);
-		padding: 2px 8px; border-radius: var(--raio-full);
-		background: var(--ouro-fundo); color: var(--ouro-escuro);
+		font-size: 0.7rem;
+		font-family: var(--mono);
+		padding: 2px 8px;
+		border-radius: var(--raio-full);
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
 	}
 	.badge-manual {
-		font-size: 0.7rem; padding: 2px 8px; border-radius: var(--raio-full);
-		background: var(--porcelana); color: var(--tinta-suave); border: 1px solid var(--linha);
+		font-size: 0.7rem;
+		padding: 2px 8px;
+		border-radius: var(--raio-full);
+		background: var(--porcelana);
+		color: var(--tinta-suave);
+		border: 1px solid var(--linha);
 	}
-	.card-kws { display: flex; flex-wrap: wrap; gap: 4px; }
+	.card-kws {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
 	.kw-tag {
-		font-size: 0.78rem; font-weight: 600; padding: 2px 8px;
-		border-radius: var(--raio-full); background: var(--porcelana);
-		border: 1px solid var(--linha); color: var(--tinta);
+		font-size: 0.78rem;
+		font-weight: 600;
+		padding: 2px 8px;
+		border-radius: var(--raio-full);
+		background: var(--porcelana);
+		border: 1px solid var(--linha);
+		color: var(--tinta);
 	}
-	.card-info { font-size: 0.75rem; color: var(--tinta-suave); }
+	.card-info {
+		font-size: 0.75rem;
+		color: var(--tinta-suave);
+	}
 
 	/* Tabela */
 	.tabela {
-		border: 1px solid var(--linha); border-radius: var(--raio);
-		overflow: hidden; background: var(--nevoa);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio);
+		overflow: hidden;
+		background: var(--nevoa);
 	}
-	.cab, .linha {
-		display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.8fr;
-		gap: var(--r2); padding: var(--r3) var(--r4); align-items: center;
+	.cab,
+	.linha {
+		display: grid;
+		grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.8fr;
+		gap: var(--r2);
+		padding: var(--r3) var(--r4);
+		align-items: center;
 	}
 	.cab {
 		background: color-mix(in srgb, var(--porcelana) 70%, white);
-		font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
-		text-transform: uppercase; color: var(--tinta-suave);
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--tinta-suave);
 		border-bottom: 1px solid var(--linha);
 	}
-	.linha { border-top: 1px solid var(--linha); font-size: 0.88rem; }
-	.linha:first-of-type { border-top: none; }
-	.kw-cell { font-weight: 600; color: var(--rosa); }
-	.tempo { font-family: var(--mono); font-size: 0.8rem; }
-	.produtos { font-weight: 700; color: var(--ouro); }
-	.aviso { color: var(--tinta-suave); font-style: italic; }
-	.vazio, .erro {
-		background: var(--nevoa); border: 1px solid var(--linha);
-		border-radius: var(--raio); padding: var(--r8); text-align: center;
+	.linha {
+		border-top: 1px solid var(--linha);
+		font-size: 0.88rem;
 	}
-	.dica { color: var(--tinta-suave); font-size: 0.85rem; }
+	.linha:first-of-type {
+		border-top: none;
+	}
+	.kw-cell {
+		font-weight: 600;
+		color: var(--rosa);
+	}
+	.tempo {
+		font-family: var(--mono);
+		font-size: 0.8rem;
+	}
+	.produtos {
+		font-weight: 700;
+		color: var(--ouro);
+	}
+	.aviso {
+		color: var(--tinta-suave);
+		font-style: italic;
+	}
+	.vazio,
+	.erro {
+		background: var(--nevoa);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio);
+		padding: var(--r8);
+		text-align: center;
+	}
+	.dica {
+		color: var(--tinta-suave);
+		font-size: 0.85rem;
+	}
 	@media (max-width: 720px) {
-		.cab { display: none; }
-		.linha { grid-template-columns: 1fr 1fr; gap: 4px; }
+		.cab {
+			display: none;
+		}
+		.linha {
+			grid-template-columns: 1fr 1fr;
+			gap: 4px;
+		}
 	}
 </style>

@@ -2,26 +2,39 @@ import { test, expect } from '@playwright/test';
 
 // Mock das APIs necessárias para a página funcionar
 async function mockAPIs(page) {
-	await page.route('**/api/admin/me', route =>
+	await page.route('**/api/admin/me', (route) =>
 		route.fulfill({ json: { uid: 'test', email: 'test@test.com', admin: false } })
 	);
-	await page.route('**/api/destinos', route =>
-		route.fulfill({ json: { destinos: [{ id: 'beleza', nome: 'Ofertas Beleza', tipo: 'telegram', config: '@beleza' }] } })
+	await page.route('**/api/destinos', (route) =>
+		route.fulfill({
+			json: { destinos: [{ id: 'beleza', nome: 'Ofertas Beleza', tipo: 'telegram', config: '@beleza' }] }
+		})
 	);
-	await page.route('**/api/templates', route =>
-		route.fulfill({ json: { templates: [
-			{ id: 'padrao', nome: 'Padrão', corpo: '✨ <b>{{nome}}</b>\n💸 {{preco}}', com_foto: false },
-			{ id: 'foto', nome: 'Com foto', corpo: '✨ <b>{{nome}}</b>\n💸 {{preco}}', com_foto: true }
-		] } })
+	await page.route('**/api/templates', (route) =>
+		route.fulfill({
+			json: {
+				templates: [
+					{ id: 'padrao', nome: 'Padrão', corpo: '✨ <b>{{nome}}</b>\n💸 {{preco}}', com_foto: false },
+					{ id: 'foto', nome: 'Com foto', corpo: '✨ <b>{{nome}}</b>\n💸 {{preco}}', com_foto: true }
+				]
+			}
+		})
 	);
-	await page.route('**/api/templates/preview', route =>
+	await page.route('**/api/templates/preview', (route) =>
 		route.fulfill({ json: { preview: '✨ <b>Sérum Vitamina C</b>\n💸 R$ 49.90', com_foto: false, imagem: '' } })
 	);
-	await page.route('**/api/publicacoes', route =>
+	await page.route('**/api/publicacoes', (route) =>
 		route.fulfill({ json: { publicacao: { id: 'test-123', status: 'enviada', detalhe: 'telegram_nicho_20260623' } } })
 	);
-	await page.route('**/api/resolver-link', route =>
-		route.fulfill({ json: { url_final: 'https://shopee.com.br/Sérum-Vitamina-C-30ml-i.123.456', nome: 'Sérum Vitamina C 30ml', shop_id: '123', item_id: '456' } })
+	await page.route('**/api/resolver-link', (route) =>
+		route.fulfill({
+			json: {
+				url_final: 'https://shopee.com.br/Sérum-Vitamina-C-30ml-i.123.456',
+				nome: 'Sérum Vitamina C 30ml',
+				shop_id: '123',
+				item_id: '456'
+			}
+		})
 	);
 }
 
@@ -39,7 +52,7 @@ const produtoExemplo = {
 	id: 'P1',
 	nome: 'Sérum Vitamina C',
 	categoria: 'Beleza',
-	preco: 49.90,
+	preco: 49.9,
 	comissao: 0.15,
 	link: 'https://shope.ee/abc123',
 	imagem: 'https://cf.shopee.com.br/file/img.jpg',
@@ -87,7 +100,7 @@ test.describe('Página Publicar — renderização de elementos', () => {
 
 	test('não há erros JS ao carregar a página', async ({ page }) => {
 		const errors = [];
-		page.on('pageerror', err => errors.push(err.message));
+		page.on('pageerror', (err) => errors.push(err.message));
 		await page.goto('/publicar');
 		await page.waitForTimeout(1000);
 		expect(errors).toHaveLength(0);
@@ -95,7 +108,7 @@ test.describe('Página Publicar — renderização de elementos', () => {
 
 	test('não há erros JS ao carregar com dados de produto', async ({ page }) => {
 		const errors = [];
-		page.on('pageerror', err => errors.push(err.message));
+		page.on('pageerror', (err) => errors.push(err.message));
 		await mockAPIs(page);
 		await irParaPublicar(page, produtoExemplo);
 		await page.waitForTimeout(1000);
@@ -106,16 +119,18 @@ test.describe('Página Publicar — renderização de elementos', () => {
 test.describe('Página Publicar — link curto resolver (mock API)', () => {
 	test('resolver-link é chamado com a URL correta quando link curto', async ({ page }) => {
 		let chamado = false;
-		await page.route('**/api/resolver-link', async route => {
+		await page.route('**/api/resolver-link', async (route) => {
 			chamado = true;
 			const body = JSON.parse(route.request().postData());
 			expect(body.url).toBe('https://s.shopee.com.br/3g1Xfnp7fU');
-			await route.fulfill({ json: {
-				url_final: 'https://shopee.com.br/Sérum-i.123.456',
-				nome: 'Sérum',
-				shop_id: '123',
-				item_id: '456'
-			}});
+			await route.fulfill({
+				json: {
+					url_final: 'https://shopee.com.br/Sérum-i.123.456',
+					nome: 'Sérum',
+					shop_id: '123',
+					item_id: '456'
+				}
+			});
 		});
 
 		await page.goto('/publicar');
@@ -151,7 +166,7 @@ test.describe('Resolver link — integração (preview server contra mock)', () 
 			const urls = [
 				{ url: 'https://s.shopee.com.br/3g1Xfnp7fU', expected: true },
 				{ url: 'https://shope.ee/abc123', expected: true },
-				{ url: 'https://shopee.com.br/Produto-i.123.456', expected: false },
+				{ url: 'https://shopee.com.br/Produto-i.123.456', expected: false }
 			];
 			return urls.map(({ url, expected }) => {
 				const isShort = /s\.shopee|shope\.ee/i.test(url) && !url.includes('-i.');
@@ -168,7 +183,7 @@ test.describe('Geração de legenda — lógica client-side', () => {
 	test('legendaLocal gera texto com nome, categoria e preço', async ({ page }) => {
 		await page.goto('/');
 		const resultado = await page.evaluate(() => {
-			const produto = { nome: 'Sérum Vitamina C', categoria: 'Beleza', preco: 49.90, estrategia: 'nicho' };
+			const produto = { nome: 'Sérum Vitamina C', categoria: 'Beleza', preco: 49.9, estrategia: 'nicho' };
 			let txt = '';
 			if (produto.nome) txt += `✨ <b>${produto.nome}</b>\n`;
 			if (produto.categoria) txt += `📂 <i>${produto.categoria}</i>\n`;
@@ -213,16 +228,18 @@ test.describe('Geração de legenda — lógica client-side', () => {
 test.describe('Fluxo aplicarLink → gerarLegenda (mock completo)', () => {
 	test('após resolver link, legenda é gerada com dados do produto', async ({ page }) => {
 		// Mock do resolver-link
-		await page.route('**/api/resolver-link', route =>
-			route.fulfill({ json: {
-				url_final: 'https://shopee.com.br/Creme-Hidratante-50ml-i.111.222',
-				nome: 'Creme Hidratante 50ml',
-				shop_id: '111',
-				item_id: '222'
-			}})
+		await page.route('**/api/resolver-link', (route) =>
+			route.fulfill({
+				json: {
+					url_final: 'https://shopee.com.br/Creme-Hidratante-50ml-i.111.222',
+					nome: 'Creme Hidratante 50ml',
+					shop_id: '111',
+					item_id: '222'
+				}
+			})
 		);
 		// Mock do template preview (simula que template não existe)
-		await page.route('**/api/templates/preview', route =>
+		await page.route('**/api/templates/preview', (route) =>
 			route.fulfill({ status: 404, json: { erro: 'template não encontrado' } })
 		);
 

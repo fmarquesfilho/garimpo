@@ -23,11 +23,7 @@
 	let sugestoes = $derived(filtrarCategorias(todasCategorias, catInput));
 
 	// Conta filtros ativos (para badge)
-	let filtrosAtivos = $derived(
-		(comissaoMin > 0.07 ? 1 : 0) +
-		(vendasMin > 0 ? 1 : 0) +
-		(categoria !== '' ? 1 : 0)
-	);
+	let filtrosAtivos = $derived((comissaoMin > 0.07 ? 1 : 0) + (vendasMin > 0 ? 1 : 0) + (categoria !== '' ? 1 : 0));
 
 	onMount(async () => {
 		todasCategorias = await buscarCategorias();
@@ -45,7 +41,7 @@
 
 	// Sync catInput → categoria quando o usuário digita (e o valor bate com uma sugestão)
 	$effect(() => {
-		const match = todasCategorias.find(c => c.nome.toLowerCase() === catInput.trim().toLowerCase());
+		const match = todasCategorias.find((c) => c.nome.toLowerCase() === catInput.trim().toLowerCase());
 		if (match) {
 			categoria = match.nome;
 		} else if (!catInput.trim()) {
@@ -64,7 +60,12 @@
 					bind:value={busca}
 					placeholder="🔍 Buscar produto… (ex: sérum, perfume, batom)"
 					class="busca-input"
-					onkeydown={(e) => { if (e.key === 'Escape') { busca = ''; /** @type {HTMLInputElement} */ (e.target).blur(); } else if (e.key === 'Enter') /** @type {HTMLInputElement} */ (e.target).blur(); }}
+					onkeydown={(e) => {
+						if (e.key === 'Escape') {
+							busca = '';
+							/** @type {HTMLInputElement} */ (e.target).blur();
+						} else if (e.key === 'Enter') /** @type {HTMLInputElement} */ (e.target).blur();
+					}}
 				/>
 				{#if busca}
 					<button class="btn-limpar" onclick={() => (busca = '')} type="button" aria-label="Limpar busca">✕</button>
@@ -98,7 +99,9 @@
 						autocomplete="off"
 					/>
 					{#if categoria}
-						<button class="btn-limpar-cat" onclick={limparCategoria} type="button" aria-label="Limpar categoria">✕</button>
+						<button class="btn-limpar-cat" onclick={limparCategoria} type="button" aria-label="Limpar categoria"
+							>✕</button
+						>
 					{/if}
 				</div>
 				{#if catInput && sugestoes.length > 0 && catInput.toLowerCase() !== categoria.toLowerCase()}
@@ -160,7 +163,10 @@
 		border-color: var(--ouro);
 		box-shadow: 0 0 0 3px var(--ouro-fundo);
 	}
-	.busca-input::placeholder { color: var(--tinta-suave); opacity: 0.6; }
+	.busca-input::placeholder {
+		color: var(--tinta-suave);
+		opacity: 0.6;
+	}
 	.btn-limpar {
 		position: absolute;
 		right: 10px;
@@ -178,7 +184,10 @@
 		align-items: center;
 		justify-content: center;
 	}
-	.btn-limpar:hover { background: var(--linha); color: var(--tinta); }
+	.btn-limpar:hover {
+		background: var(--linha);
+		color: var(--tinta);
+	}
 
 	.btn-avancado {
 		display: flex;
@@ -194,8 +203,15 @@
 		cursor: pointer;
 		white-space: nowrap;
 	}
-	.btn-avancado:hover { border-color: var(--ouro); color: var(--tinta); }
-	.btn-avancado.ativo { border-color: var(--ouro); background: var(--ouro-fundo); color: var(--ouro-escuro); }
+	.btn-avancado:hover {
+		border-color: var(--ouro);
+		color: var(--tinta);
+	}
+	.btn-avancado.ativo {
+		border-color: var(--ouro);
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
+	}
 	.filtro-badge {
 		font-size: 0.65rem;
 		background: var(--ouro);
@@ -221,44 +237,109 @@
 		border: 1px solid var(--linha);
 		border-radius: var(--raio-sm);
 	}
-	.campo { display: flex; flex-direction: column; gap: 4px; position: relative; }
+	.campo {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		position: relative;
+	}
 	.entrada {
-		font-family: var(--ui); font-size: var(--text-base); padding: 8px 12px;
-		border-radius: var(--raio-sm); border: 1px solid var(--linha);
-		background: var(--porcelana); color: var(--tinta); width: 100%;
+		font-family: var(--ui);
+		font-size: var(--text-base);
+		padding: 8px 12px;
+		border-radius: var(--raio-sm);
+		border: 1px solid var(--linha);
+		background: var(--porcelana);
+		color: var(--tinta);
+		width: 100%;
 	}
-	.entrada::placeholder { color: var(--tinta-suave); opacity: 0.7; }
-	.entrada.num { font-family: var(--mono); width: 5.5rem; }
-	.cat-wrapper { position: relative; }
+	.entrada::placeholder {
+		color: var(--tinta-suave);
+		opacity: 0.7;
+	}
+	.entrada.num {
+		font-family: var(--mono);
+		width: 5.5rem;
+	}
+	.cat-wrapper {
+		position: relative;
+	}
 	.btn-limpar-cat {
-		position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-		border: none; background: var(--porcelana); color: var(--tinta-suave);
-		width: 20px; height: 20px; border-radius: 50%; font-size: 0.65rem;
-		cursor: pointer; display: flex; align-items: center; justify-content: center;
+		position: absolute;
+		right: 8px;
+		top: 50%;
+		transform: translateY(-50%);
+		border: none;
+		background: var(--porcelana);
+		color: var(--tinta-suave);
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		font-size: 0.65rem;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
-	.btn-limpar-cat:hover { background: var(--linha); color: var(--tinta); }
+	.btn-limpar-cat:hover {
+		background: var(--linha);
+		color: var(--tinta);
+	}
 	.cat-sugestoes {
-		position: absolute; z-index: 20; top: 100%; left: 0; right: 0;
-		margin: 4px 0 0; padding: 4px; list-style: none;
-		background: var(--branco); border: 1px solid var(--linha);
-		border-radius: var(--raio-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-		max-height: 200px; overflow-y: auto;
+		position: absolute;
+		z-index: 20;
+		top: 100%;
+		left: 0;
+		right: 0;
+		margin: 4px 0 0;
+		padding: 4px;
+		list-style: none;
+		background: var(--branco);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio-sm);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+		max-height: 200px;
+		overflow-y: auto;
 	}
 	.cat-opcao {
-		width: 100%; padding: 8px 10px; border: none; background: none;
-		text-align: left; font-size: var(--text-sm); color: var(--tinta);
-		cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
+		width: 100%;
+		padding: 8px 10px;
+		border: none;
+		background: none;
+		text-align: left;
+		font-size: var(--text-sm);
+		color: var(--tinta);
+		cursor: pointer;
+		border-radius: 4px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
-	.cat-opcao:hover { background: var(--ouro-fundo); color: var(--ouro-escuro); }
-	.cat-mp { font-size: 0.65rem; color: var(--tinta-suave); text-transform: uppercase; }
+	.cat-opcao:hover {
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
+	}
+	.cat-mp {
+		font-size: 0.65rem;
+		color: var(--tinta-suave);
+		text-transform: uppercase;
+	}
 	select {
-		font-family: var(--mono); font-size: var(--text-sm); padding: 8px 12px;
-		border-radius: var(--raio-sm); border: 1px solid var(--linha);
-		background: var(--porcelana); color: var(--tinta);
+		font-family: var(--mono);
+		font-size: var(--text-sm);
+		padding: 8px 12px;
+		border-radius: var(--raio-sm);
+		border: 1px solid var(--linha);
+		background: var(--porcelana);
+		color: var(--tinta);
 	}
 
 	@media (max-width: 480px) {
-		.busca-row { flex-direction: column; }
-		.btn-avancado { justify-content: center; }
+		.busca-row {
+			flex-direction: column;
+		}
+		.btn-avancado {
+			justify-content: center;
+		}
 	}
 </style>

@@ -355,9 +355,7 @@ export function listarBuscasServidor() {
 /** Salva (sync) um perfil de busca no servidor. Best-effort. */
 export async function sincronizarBusca(busca, { remover = false } = {}) {
 	const qs = remover ? '?remover' : '';
-	const corpo = remover
-		? { id: busca.id, keywords: busca.keywords ?? [] }
-		: busca;
+	const corpo = remover ? { id: busca.id, keywords: busca.keywords ?? [] } : busca;
 	const headers = { 'Content-Type': 'application/json', ...(await authHeaders()) };
 	return fetch(`${BASE}/api/buscas${qs}`, {
 		method: 'POST',

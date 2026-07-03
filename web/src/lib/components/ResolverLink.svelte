@@ -47,7 +47,9 @@
 
 		linkColado = '';
 		linkAplicado = true;
-		setTimeout(() => { linkAplicado = false; }, 4000);
+		setTimeout(() => {
+			linkAplicado = false;
+		}, 4000);
 		if (onresolvido) onresolvido(resultado);
 	}
 
@@ -55,7 +57,9 @@
 		try {
 			const texto = await navigator.clipboard.readText();
 			if (texto?.trim()) linkColado = texto.trim();
-		} catch { /* permissão negada */ }
+		} catch {
+			/* permissão negada */
+		}
 		if (linkColado.trim()) aplicarLink();
 	}
 </script>
@@ -82,21 +86,56 @@
 </div>
 
 <style>
-	.campo-pub { display: flex; flex-direction: column; gap: 8px; }
-	.campo-pub label { font-weight: 600; font-size: 0.88rem; }
-	.link-input { display: flex; gap: var(--r2); flex-wrap: wrap; }
+	.campo-pub {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.campo-pub label {
+		font-weight: 600;
+		font-size: 0.88rem;
+	}
+	.link-input {
+		display: flex;
+		gap: var(--r2);
+		flex-wrap: wrap;
+	}
 	.link-input input {
-		flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid var(--linha);
-		border-radius: var(--raio-sm); font-size: 0.9rem; background: var(--porcelana);
+		flex: 1;
+		min-width: 200px;
+		padding: 10px 14px;
+		border: 1px solid var(--linha);
+		border-radius: var(--raio-sm);
+		font-size: 0.9rem;
+		background: var(--porcelana);
 	}
 	.btn-colar {
-		padding: 10px 18px; background: var(--ouro); border: 1px solid var(--ouro);
-		color: white; font-weight: 600; font-size: 0.85rem;
-		border-radius: var(--raio-sm); cursor: pointer; white-space: nowrap;
+		padding: 10px 18px;
+		background: var(--ouro);
+		border: 1px solid var(--ouro);
+		color: white;
+		font-weight: 600;
+		font-size: 0.85rem;
+		border-radius: var(--raio-sm);
+		cursor: pointer;
+		white-space: nowrap;
 	}
-	.btn-colar:hover:not(:disabled) { background: var(--ouro-escuro); }
-	.btn-colar:disabled { opacity: 0.5; cursor: not-allowed; }
-	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin: 0; }
-	.sucesso-msg { color: var(--sucesso-texto); }
-	.loading-msg { color: var(--ouro); }
+	.btn-colar:hover:not(:disabled) {
+		background: var(--ouro-escuro);
+	}
+	.btn-colar:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.dica {
+		font-size: 0.82rem;
+		color: var(--tinta-suave);
+		margin: 0;
+	}
+	.sucesso-msg {
+		color: var(--sucesso-texto);
+	}
+	.loading-msg {
+		color: var(--ouro);
+	}
 </style>

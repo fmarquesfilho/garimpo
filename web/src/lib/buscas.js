@@ -10,16 +10,17 @@ const CHAVE = 'garimpo:buscas:v2';
 
 /** Gera um ID slug a partir de uma string (mesma lógica do Go). */
 export function slugificar(s) {
-	return (s ?? '')
-		.toLowerCase()
-		.trim()
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '') // remove acentos
-		.replace(/[^a-z0-9\s-]/g, '')
-		.replace(/[\s_]+/g, '-')
-		.replace(/-+/g, '-')
-		.replace(/^-|-$/g, '')
-		|| 'busca';
+	return (
+		(s ?? '')
+			.toLowerCase()
+			.trim()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '') // remove acentos
+			.replace(/[^a-z0-9\s-]/g, '')
+			.replace(/[\s_]+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '') || 'busca'
+	);
 }
 
 function inicial() {

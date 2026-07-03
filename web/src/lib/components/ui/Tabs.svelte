@@ -9,15 +9,11 @@
 	import { cn } from '$lib/utils';
 	import Badge from './Badge.svelte';
 
-	let {
-		tabs = [],
-		active = $bindable(''),
-		children,
-		class: className = '',
-		...rest
-	} = $props();
+	let { tabs = [], active = $bindable(''), children, class: className = '', ...rest } = $props();
 
-	$effect(() => { if (!active && tabs.length > 0) active = tabs[0].id; });
+	$effect(() => {
+		if (!active && tabs.length > 0) active = tabs[0].id;
+	});
 </script>
 
 <Tabs.Root bind:value={active} class={cn('w-full', className)} {...rest}>

@@ -14,12 +14,7 @@
 		outline: 'border-border text-foreground'
 	};
 
-	let {
-		variant = 'default',
-		class: className = '',
-		children,
-		...rest
-	} = $props();
+	let { variant = 'default', class: className = '', children, ...rest } = $props();
 </script>
 
 <span

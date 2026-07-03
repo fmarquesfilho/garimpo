@@ -13,9 +13,10 @@
 					type="button"
 					class="kw-btn"
 					class:kw-ativa={buscaAtiva === kw}
-					onclick={() => onaplicar?.({ ...busca, keywords: busca.keywords.slice(i).concat(busca.keywords.slice(0, i)) })}
-					title="Aplicar filtros com '{kw}'"
-				>{kw}</button>
+					onclick={() =>
+						onaplicar?.({ ...busca, keywords: busca.keywords.slice(i).concat(busca.keywords.slice(0, i)) })}
+					title="Aplicar filtros com '{kw}'">{kw}</button
+				>
 			{/each}
 		</div>
 		<div class="cartao-acoes">
@@ -28,7 +29,9 @@
 	<div class="cartao-meta">
 		{#if busca.fontes?.length}
 			{#each busca.fontes as f}
-				<Badge variant="gold">{f === 'curadoria' ? '🔍' : f === 'quedas' ? '📉' : f === 'novos' ? '🆕' : '⭐'} {f}</Badge>
+				<Badge variant="gold"
+					>{f === 'curadoria' ? '🔍' : f === 'quedas' ? '📉' : f === 'novos' ? '🆕' : '⭐'} {f}</Badge
+				>
 			{/each}
 		{:else}
 			<Badge>{busca.estrategia ?? 'nicho'}</Badge>
@@ -84,9 +87,12 @@
 		padding: var(--r1) var(--r3);
 		border-radius: var(--raio-full);
 		cursor: pointer;
-		transition: background 0.15s ease, border-color 0.15s ease;
+		transition:
+			background 0.15s ease,
+			border-color 0.15s ease;
 	}
-	.kw-btn:hover, .kw-btn.kw-ativa {
+	.kw-btn:hover,
+	.kw-btn.kw-ativa {
 		background: var(--ouro-fundo);
 		border-color: var(--ouro);
 		color: var(--ouro-escuro);
@@ -104,6 +110,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.kw-btn { transition-duration: 0ms; }
+		.kw-btn {
+			transition-duration: 0ms;
+		}
 	}
 </style>

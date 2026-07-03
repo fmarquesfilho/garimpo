@@ -46,7 +46,10 @@ function criarQuadro() {
 					.flat()
 					.some((c) => c.id === candidato.id);
 				if (jaExiste) return estado;
-				return { ...estado, selecionados: [{ ...candidato, estrategia: candidato.estrategia ?? null }, ...estado.selecionados] };
+				return {
+					...estado,
+					selecionados: [{ ...candidato, estrategia: candidato.estrategia ?? null }, ...estado.selecionados]
+				};
 			});
 		},
 		/** Move um card de uma coluna para outra. */

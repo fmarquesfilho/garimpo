@@ -9,8 +9,8 @@
 	let formatDefault = (v) => String(v);
 	let { pontos = [], altura = 40, formatValor = formatDefault, ...rest } = $props();
 
-	let max = $derived(Math.max(...pontos.map(p => p.valor), 1));
-	let min = $derived(Math.min(...pontos.map(p => p.valor), 0));
+	let max = $derived(Math.max(...pontos.map((p) => p.valor), 1));
+	let min = $derived(Math.min(...pontos.map((p) => p.valor), 0));
 	let range = $derived(max - min || 1);
 </script>
 
@@ -20,8 +20,8 @@
 			{@const h = ((ponto.valor - min) / range) * 100}
 			<div
 				class="bar"
-				class:down={i > 0 && ponto.valor < pontos[i-1].valor}
-				class:up={i > 0 && ponto.valor > pontos[i-1].valor}
+				class:down={i > 0 && ponto.valor < pontos[i - 1].valor}
+				class:up={i > 0 && ponto.valor > pontos[i - 1].valor}
 				style="height: {Math.max(h, 8)}%"
 				title="{ponto.data}: {formatValor(ponto.valor)}"
 			></div>
@@ -48,8 +48,12 @@
 		min-height: 3px;
 		transition: height 0.2s ease;
 	}
-	.bar.down { background: var(--sucesso-texto); }
-	.bar.up { background: var(--erro-texto); }
+	.bar.down {
+		background: var(--sucesso-texto);
+	}
+	.bar.up {
+		background: var(--erro-texto);
+	}
 	.labels {
 		display: flex;
 		justify-content: space-between;
@@ -65,6 +69,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.bar { transition-duration: 0ms; }
+		.bar {
+			transition-duration: 0ms;
+		}
 	}
 </style>

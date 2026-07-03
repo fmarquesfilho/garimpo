@@ -10,10 +10,54 @@ import { test, expect } from './fixtures.js';
 // ── Dados mock da API ─────────────────────────────────────────────────────
 
 const mockCandidatos = [
-	{ id: '1', nome: 'Sérum Vitamina C', preco: 89.9, comissao: 0.15, vendas: 200, avaliacao: 4.9, loja: 'SKIN1004', categoria: 'Cuidados com a Pele', imagem: '', link: '' },
-	{ id: '2', nome: 'Perfume Kenzo 50ml', preco: 299.9, comissao: 0.08, vendas: 80, avaliacao: 4.6, loja: 'Perfumaria JP', categoria: 'Perfumaria', imagem: '', link: '' },
-	{ id: '3', nome: 'Tônico BHA COSRX', preco: 59.9, comissao: 0.12, vendas: 500, avaliacao: 4.8, loja: 'COSRX Store', categoria: 'Cuidados com a Pele', imagem: '', link: '' },
-	{ id: '4', nome: 'Batom Matte Ruby', preco: 25, comissao: 0.05, vendas: 30, avaliacao: 3.5, loja: 'Loja X', categoria: 'Maquiagem', imagem: '', link: '' }
+	{
+		id: '1',
+		nome: 'Sérum Vitamina C',
+		preco: 89.9,
+		comissao: 0.15,
+		vendas: 200,
+		avaliacao: 4.9,
+		loja: 'SKIN1004',
+		categoria: 'Cuidados com a Pele',
+		imagem: '',
+		link: ''
+	},
+	{
+		id: '2',
+		nome: 'Perfume Kenzo 50ml',
+		preco: 299.9,
+		comissao: 0.08,
+		vendas: 80,
+		avaliacao: 4.6,
+		loja: 'Perfumaria JP',
+		categoria: 'Perfumaria',
+		imagem: '',
+		link: ''
+	},
+	{
+		id: '3',
+		nome: 'Tônico BHA COSRX',
+		preco: 59.9,
+		comissao: 0.12,
+		vendas: 500,
+		avaliacao: 4.8,
+		loja: 'COSRX Store',
+		categoria: 'Cuidados com a Pele',
+		imagem: '',
+		link: ''
+	},
+	{
+		id: '4',
+		nome: 'Batom Matte Ruby',
+		preco: 25,
+		comissao: 0.05,
+		vendas: 30,
+		avaliacao: 3.5,
+		loja: 'Loja X',
+		categoria: 'Maquiagem',
+		imagem: '',
+		link: ''
+	}
 ];
 
 function respondCandidatos(candidatos) {
@@ -30,10 +74,11 @@ async function interceptarAPIs(page) {
 		let filtered = mockCandidatos;
 		if (keyword) {
 			const kw = keyword.toLowerCase();
-			filtered = mockCandidatos.filter(c =>
-				c.nome.toLowerCase().includes(kw) ||
-				c.categoria.toLowerCase().includes(kw) ||
-				c.loja.toLowerCase().includes(kw)
+			filtered = mockCandidatos.filter(
+				(c) =>
+					c.nome.toLowerCase().includes(kw) ||
+					c.categoria.toLowerCase().includes(kw) ||
+					c.loja.toLowerCase().includes(kw)
 			);
 		}
 		await route.fulfill({ status: 200, contentType: 'application/json', body: respondCandidatos(filtered) });
@@ -45,10 +90,30 @@ async function interceptarAPIs(page) {
 			contentType: 'application/json',
 			body: JSON.stringify({
 				variacoes: [
-					{ produto_id: 'V1', nome: 'Tônico Queda Preço', preco_atual: 49, preco_anterior: 69, variacao_pct: -0.29, detectado_em: '2026-07-01', imagem: '', link: '', comissao: 0.1, vendas: 100 }
+					{
+						produto_id: 'V1',
+						nome: 'Tônico Queda Preço',
+						preco_atual: 49,
+						preco_anterior: 69,
+						variacao_pct: -0.29,
+						detectado_em: '2026-07-01',
+						imagem: '',
+						link: '',
+						comissao: 0.1,
+						vendas: 100
+					}
 				],
 				produtos_novos: [
-					{ produto_id: 'N1', nome: 'Retinol Novo Lançamento', preco: 45, comissao: 0.1, vendas: 0, detectado_em: '2026-07-02', imagem: '', link: '' }
+					{
+						produto_id: 'N1',
+						nome: 'Retinol Novo Lançamento',
+						preco: 45,
+						comissao: 0.1,
+						vendas: 0,
+						detectado_em: '2026-07-02',
+						imagem: '',
+						link: ''
+					}
 				]
 			})
 		});
@@ -76,7 +141,11 @@ async function interceptarAPIs(page) {
 	});
 
 	await page.route('**/api/admin/me', async (route) => {
-		await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ admin: false, email: 'teste-e2e@garimpo.dev' }) });
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({ admin: false, email: 'teste-e2e@garimpo.dev' })
+		});
 	});
 }
 
@@ -221,7 +290,7 @@ test.describe('Descobrir — Filtros e resultados', () => {
 		const count = await fontes.count();
 		for (let i = 0; i < count; i++) {
 			const btn = fontes.nth(i);
-			if (await btn.evaluate(el => el.classList.contains('ativa'))) {
+			if (await btn.evaluate((el) => el.classList.contains('ativa'))) {
 				await btn.click();
 			}
 		}

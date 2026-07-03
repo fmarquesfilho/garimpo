@@ -39,7 +39,13 @@
 		text-transform: uppercase;
 		font-weight: var(--font-semi);
 	}
-	.gold .metrica-valor { color: var(--ouro); }
-	.green .metrica-valor { color: var(--sucesso-texto); }
-	.red .metrica-valor { color: var(--erro-texto); }
+	.gold .metrica-valor {
+		color: var(--ouro);
+	}
+	.green .metrica-valor {
+		color: var(--sucesso-texto);
+	}
+	.red .metrica-valor {
+		color: var(--erro-texto);
+	}
 </style>

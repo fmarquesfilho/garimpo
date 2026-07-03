@@ -18,7 +18,7 @@
 {:else}
 	<div class="grade-produtos">
 		{#each produtos as p (p.id)}
-			<ProductCard produto={p} layout="compact" onpublicar={onpublicar} />
+			<ProductCard produto={p} layout="compact" {onpublicar} />
 		{/each}
 	</div>
 {/if}

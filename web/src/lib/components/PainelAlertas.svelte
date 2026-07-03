@@ -25,7 +25,9 @@
 				alertaThreshold = String(Math.round((alertasConfig.threshold ?? 0.15) * 100));
 				alertaApenasQuedas = alertasConfig.apenas_quedas ?? true;
 			}
-		} catch { /* sem alertas configurados */ }
+		} catch {
+			/* sem alertas configurados */
+		}
 	});
 
 	async function handleSalvar() {
@@ -61,7 +63,7 @@
 </script>
 
 <div class="painel-alertas">
-	<button class="btn-toggle-alertas" onclick={() => mostraAlertas = !mostraAlertas}>
+	<button class="btn-toggle-alertas" onclick={() => (mostraAlertas = !mostraAlertas)}>
 		🔔 Alertas Telegram
 		{#if alertasConfig?.ativo}
 			<Badge variant="green">Ativo</Badge>
@@ -80,13 +82,7 @@
 			<span class="hint">ID do grupo onde os alertas serão enviados. Use @BotFather para criar o bot.</span>
 
 			<div class="campo-alerta">
-				<Input
-					bind:value={alertaThreshold}
-					type="number"
-					label="Threshold de variação (%)"
-					variant="mono"
-					size="sm"
-				/>
+				<Input bind:value={alertaThreshold} type="number" label="Threshold de variação (%)" variant="mono" size="sm" />
 				<span class="hint">Alerta se preço variar mais que {alertaThreshold}%.</span>
 			</div>
 
@@ -177,9 +173,13 @@
 	}
 
 	@media (max-width: 600px) {
-		.alertas-acoes { flex-direction: column; }
+		.alertas-acoes {
+			flex-direction: column;
+		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.btn-toggle-alertas { transition-duration: 0ms; }
+		.btn-toggle-alertas {
+			transition-duration: 0ms;
+		}
 	}
 </style>

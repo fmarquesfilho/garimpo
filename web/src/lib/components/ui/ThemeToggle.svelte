@@ -17,7 +17,9 @@
 	let current = $state('system');
 
 	onMount(() => {
-		const unsub = theme.subscribe((value) => { current = value; });
+		const unsub = theme.subscribe((value) => {
+			current = value;
+		});
 		return unsub;
 	});
 

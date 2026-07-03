@@ -4,7 +4,7 @@
    da pepita. Estética editorial de beleza (nicho cosmético).
    ============================================================ */
 
-@import "tailwindcss";
+@import 'tailwindcss';
 @import '$lib/components/ui/tokens.css';
 
 /* ── Dark mode: usa data-theme ao invés de .dark ───────────── */
@@ -151,7 +151,10 @@ button {
 
 /* ── Theme transitions (desabilitada no load, ativada via JS) ──── */
 html:not(.no-transitions) * {
-	transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+	transition:
+		background-color 200ms ease,
+		color 200ms ease,
+		border-color 200ms ease;
 }
 html.no-transitions * {
 	transition: none !important;
@@ -206,6 +209,13 @@ html.no-transitions * {
 	padding: var(--r4);
 }
 
-.cor-sucesso { color: var(--sucesso-texto); }
-.cor-erro { color: var(--erro-texto); }
-.cor-ouro { color: var(--ouro); font-weight: 700; }
+.cor-sucesso {
+	color: var(--sucesso-texto);
+}
+.cor-erro {
+	color: var(--erro-texto);
+}
+.cor-ouro {
+	color: var(--ouro);
+	font-weight: 700;
+}

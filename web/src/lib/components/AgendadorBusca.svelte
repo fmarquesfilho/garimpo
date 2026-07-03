@@ -12,7 +12,7 @@
 		{ label: '2× por dia (8h e 18h)', cron: '0 8,18 * * *' },
 		{ label: 'Seg e Qui às 9h', cron: '0 9 * * 1,4' },
 		{ label: 'Segunda-feira às 8h', cron: '0 8 * * 1' },
-		{ label: 'Todo sábado às 9h', cron: '0 9 * * 6' },
+		{ label: 'Todo sábado às 9h', cron: '0 9 * * 6' }
 	];
 
 	// Modo: 'atalho' (padrão) ou 'avancado' (campo livre)
@@ -34,16 +34,8 @@
 	<div class="topo">
 		<span class="rotulo-secao">coleta automática</span>
 		<div class="modo-toggle">
-			<button
-				class:ativo={modo === 'atalho'}
-				onclick={() => (modo = 'atalho')}
-				type="button"
-			>Atalhos</button>
-			<button
-				class:ativo={modo === 'avancado'}
-				onclick={() => (modo = 'avancado')}
-				type="button"
-			>Avançado</button>
+			<button class:ativo={modo === 'atalho'} onclick={() => (modo = 'atalho')} type="button">Atalhos</button>
+			<button class:ativo={modo === 'avancado'} onclick={() => (modo = 'avancado')} type="button">Avançado</button>
 		</div>
 	</div>
 
@@ -70,8 +62,8 @@
 				spellcheck="false"
 			/>
 			<p class="dica">
-				Formato: <code>minuto hora dia-do-mês mês dia-da-semana</code>.
-				Exemplos: <code>0 8 * * *</code> = todo dia às 8h;
+				Formato: <code>minuto hora dia-do-mês mês dia-da-semana</code>. Exemplos: <code>0 8 * * *</code> = todo dia às
+				8h;
 				<code>0 9 * * 1,4</code> = segunda e quinta às 9h.
 			</p>
 		</div>

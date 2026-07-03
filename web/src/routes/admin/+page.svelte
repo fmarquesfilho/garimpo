@@ -30,27 +30,27 @@
 			<h2>Status do sistema</h2>
 			<table>
 				<tbody>
-				<tr><td>Backend</td><td><strong>{health.backend ?? 'unknown'}</strong></td></tr>
-				<tr><td>Status</td><td>{health.status}</td></tr>
-				<tr><td>Store</td><td>{health.store ?? '-'}</td></tr>
-				<tr><td>Fonte</td><td>{health.fonte ?? '-'}</td></tr>
+					<tr><td>Backend</td><td><strong>{health.backend ?? 'unknown'}</strong></td></tr>
+					<tr><td>Status</td><td>{health.status}</td></tr>
+					<tr><td>Store</td><td>{health.store ?? '-'}</td></tr>
+					<tr><td>Fonte</td><td>{health.fonte ?? '-'}</td></tr>
 				</tbody>
 			</table>
 		</section>
 
 		{#if health.quality}
-		<section class="status-card">
-			<h2>Qualidade de código</h2>
-			<table>
-				<tbody>
-				<tr><td>Go lint</td><td>{health.quality.lint_go}</td></tr>
-				<tr><td>Python lint</td><td>{health.quality.lint_python}</td></tr>
-				<tr><td>C# lint</td><td>{health.quality.lint_csharp}</td></tr>
-				<tr><td>Testes C#</td><td>{health.quality.tests_csharp} testes</td></tr>
-				<tr><td>Pre-push checks</td><td>{health.quality.pre_push_checks} checks</td></tr>
-				</tbody>
-			</table>
-		</section>
+			<section class="status-card">
+				<h2>Qualidade de código</h2>
+				<table>
+					<tbody>
+						<tr><td>Go lint</td><td>{health.quality.lint_go}</td></tr>
+						<tr><td>Python lint</td><td>{health.quality.lint_python}</td></tr>
+						<tr><td>C# lint</td><td>{health.quality.lint_csharp}</td></tr>
+						<tr><td>Testes C#</td><td>{health.quality.tests_csharp} testes</td></tr>
+						<tr><td>Pre-push checks</td><td>{health.quality.pre_push_checks} checks</td></tr>
+					</tbody>
+				</table>
+			</section>
 		{/if}
 
 		<section class="links">
@@ -61,7 +61,9 @@
 				<li><a href="https://app.codacy.com" target="_blank">🔍 Codacy (Code Quality)</a></li>
 				<li><a href="https://github.com/fmarquesfilho/garimpo/actions" target="_blank">⚙️ GitHub Actions (CI)</a></li>
 				<li><a href="https://github.com/fmarquesfilho/garimpo/pulls" target="_blank">🔀 Pull Requests</a></li>
-				<li><a href="https://console.cloud.google.com/run?project=garimpo-500114" target="_blank">☁️ Cloud Run Console</a></li>
+				<li>
+					<a href="https://console.cloud.google.com/run?project=garimpo-500114" target="_blank">☁️ Cloud Run Console</a>
+				</li>
 				<li><a href="https://console.neon.tech" target="_blank">🐘 Neon (PostgreSQL)</a></li>
 				<li><a href="https://dash.cloudflare.com" target="_blank">🌐 Cloudflare Dashboard</a></li>
 			</ul>
@@ -70,14 +72,42 @@
 </main>
 
 <style>
-	.admin { max-width: 600px; margin: 0 auto; padding: var(--r5); }
-	h1 { margin-bottom: var(--r4); }
-	.status-card { background: var(--nevoa); padding: var(--r4); border-radius: var(--raio); margin-bottom: var(--r4); }
-	table { width: 100%; }
-	td { padding: 6px 0; }
-	td:first-child { font-weight: 500; color: var(--texto-secundario); }
-	.links ul { list-style: none; padding: 0; }
-	.links li { margin: 8px 0; }
-	.links a { color: var(--ouro); text-decoration: none; }
-	.links a:hover { text-decoration: underline; }
+	.admin {
+		max-width: 600px;
+		margin: 0 auto;
+		padding: var(--r5);
+	}
+	h1 {
+		margin-bottom: var(--r4);
+	}
+	.status-card {
+		background: var(--nevoa);
+		padding: var(--r4);
+		border-radius: var(--raio);
+		margin-bottom: var(--r4);
+	}
+	table {
+		width: 100%;
+	}
+	td {
+		padding: 6px 0;
+	}
+	td:first-child {
+		font-weight: 500;
+		color: var(--texto-secundario);
+	}
+	.links ul {
+		list-style: none;
+		padding: 0;
+	}
+	.links li {
+		margin: 8px 0;
+	}
+	.links a {
+		color: var(--ouro);
+		text-decoration: none;
+	}
+	.links a:hover {
+		text-decoration: underline;
+	}
 </style>

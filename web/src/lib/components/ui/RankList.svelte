@@ -40,7 +40,9 @@
 		padding: var(--r2) 0;
 		border-bottom: 1px solid var(--linha);
 	}
-	.item:last-child { border-bottom: none; }
+	.item:last-child {
+		border-bottom: none;
+	}
 	.pos {
 		font-size: var(--text-xs);
 		font-weight: var(--font-bold);

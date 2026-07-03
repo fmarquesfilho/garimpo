@@ -37,9 +37,9 @@
 	onMount(carregar);
 
 	// Derivados
-	let lojas = $derived((buscas ?? []).filter(b => b.shop_ids?.length > 0));
-	let pubEnviadas = $derived((publicacoes ?? []).filter(p => p.status === 'enviada'));
-	let pubErros = $derived((publicacoes ?? []).filter(p => p.status === 'erro'));
+	let lojas = $derived((buscas ?? []).filter((b) => b.shop_ids?.length > 0));
+	let pubEnviadas = $derived((publicacoes ?? []).filter((p) => p.status === 'enviada'));
+	let pubErros = $derived((publicacoes ?? []).filter((p) => p.status === 'erro'));
 	let taxaSucesso = $derived(
 		pubEnviadas.length + pubErros.length > 0
 			? Math.round((pubEnviadas.length / (pubEnviadas.length + pubErros.length)) * 100)
@@ -101,12 +101,16 @@
 						<div class="evo-bloco">
 							<div class="evo-header">
 								<span class="evo-nome">{loja.busca_id}</span>
-								<span class="evo-var" class:verde={loja.variacao_media_pct < 0} class:vermelho={loja.variacao_media_pct > 0}>
+								<span
+									class="evo-var"
+									class:verde={loja.variacao_media_pct < 0}
+									class:vermelho={loja.variacao_media_pct > 0}
+								>
 									{pctSinal(loja.variacao_media_pct)}
 								</span>
 							</div>
 							<MiniChart
-								pontos={loja.pontos?.map(p => ({ data: p.data, valor: p.preco_medio })) ?? []}
+								pontos={loja.pontos?.map((p) => ({ data: p.data, valor: p.preco_medio })) ?? []}
 								formatValor={brl}
 							/>
 						</div>
@@ -120,7 +124,9 @@
 </div>
 
 <style>
-	.dashboard { max-width: 900px; }
+	.dashboard {
+		max-width: 900px;
+	}
 
 	.dash-header {
 		display: flex;
@@ -128,7 +134,10 @@
 		justify-content: space-between;
 		margin-bottom: var(--r6);
 	}
-	.dash-header h1 { font-size: 1.5rem; margin: 0; }
+	.dash-header h1 {
+		font-size: 1.5rem;
+		margin: 0;
+	}
 	.periodo {
 		font-family: var(--mono);
 		padding: 6px 12px;
@@ -151,22 +160,45 @@
 		gap: var(--r4);
 	}
 
-	.evo-bloco { margin-bottom: var(--r4); }
-	.evo-bloco:last-child { margin-bottom: 0; }
+	.evo-bloco {
+		margin-bottom: var(--r4);
+	}
+	.evo-bloco:last-child {
+		margin-bottom: 0;
+	}
 	.evo-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: var(--r2);
 	}
-	.evo-nome { font-size: var(--text-sm); font-weight: 600; }
-	.evo-var { font-size: var(--text-sm); font-weight: 700; }
-	.verde { color: var(--sucesso-texto); }
-	.vermelho { color: var(--erro-texto); }
-	.vazio { font-size: var(--text-sm); color: var(--tinta-suave); font-style: italic; margin: 0; }
+	.evo-nome {
+		font-size: var(--text-sm);
+		font-weight: 600;
+	}
+	.evo-var {
+		font-size: var(--text-sm);
+		font-weight: 700;
+	}
+	.verde {
+		color: var(--sucesso-texto);
+	}
+	.vermelho {
+		color: var(--erro-texto);
+	}
+	.vazio {
+		font-size: var(--text-sm);
+		color: var(--tinta-suave);
+		font-style: italic;
+		margin: 0;
+	}
 
 	@media (max-width: 600px) {
-		.grid-metricas { grid-template-columns: repeat(2, 1fr); }
-		.grid-paineis { grid-template-columns: 1fr; }
+		.grid-metricas {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.grid-paineis {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

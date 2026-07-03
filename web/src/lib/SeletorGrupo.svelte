@@ -14,8 +14,11 @@
 	// Inicializa com grupos pré-selecionados (modo edição)
 	$effect(() => {
 		if (inicial && grupos.length > 0 && selecionados.length === 0) {
-			const ids = inicial.split(',').map(id => id.trim()).filter(Boolean);
-			const encontrados = ids.map(id => grupos.find(g => g.id === id)).filter(Boolean);
+			const ids = inicial
+				.split(',')
+				.map((id) => id.trim())
+				.filter(Boolean);
+			const encontrados = ids.map((id) => grupos.find((g) => g.id === id)).filter(Boolean);
 			if (encontrados.length > 0) {
 				selecionados = encontrados;
 			}
@@ -23,11 +26,11 @@
 	});
 
 	function filtrados() {
-		const idsJaSelecionados = new Set(selecionados.map(g => g.id));
-		let lista = grupos.filter(g => !idsJaSelecionados.has(g.id));
+		const idsJaSelecionados = new Set(selecionados.map((g) => g.id));
+		let lista = grupos.filter((g) => !idsJaSelecionados.has(g.id));
 		if (busca) {
 			const lower = busca.toLowerCase();
-			lista = lista.filter(g => g.nome.toLowerCase().includes(lower));
+			lista = lista.filter((g) => g.nome.toLowerCase().includes(lower));
 		}
 		return lista;
 	}
@@ -41,13 +44,13 @@
 	}
 
 	function removerGrupo(id) {
-		selecionados = selecionados.filter(g => g.id !== id);
+		selecionados = selecionados.filter((g) => g.id !== id);
 		emitir();
 	}
 
 	function emitir() {
 		// Emite os IDs separados por vírgula (formato do config)
-		const ids = selecionados.map(g => g.id).join(',');
+		const ids = selecionados.map((g) => g.id).join(',');
 		onselect(ids);
 	}
 
@@ -62,7 +65,9 @@
 	function onBlur(e) {
 		const container = e.target.closest('.seletor-container');
 		if (container && container.contains(e.relatedTarget)) return;
-		setTimeout(() => { aberto = false; }, 150);
+		setTimeout(() => {
+			aberto = false;
+		}, 150);
 	}
 </script>
 
@@ -73,7 +78,7 @@
 {:else if erro}
 	<div class="erro-inline">{erro}</div>
 	<input
-		value={selecionados.map(g => g.id).join(',')}
+		value={selecionados.map((g) => g.id).join(',')}
 		oninput={(e) => onselect(/** @type {HTMLInputElement} */ (e.target).value)}
 		placeholder="IDs dos grupos separados por vírgula"
 	/>
@@ -146,7 +151,10 @@
 		font-size: 0.9rem;
 		width: 100%;
 	}
-	input:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
+	input:focus {
+		outline: 2px solid var(--ouro);
+		outline-offset: 1px;
+	}
 	.chips {
 		display: flex;
 		flex-wrap: wrap;
@@ -173,7 +181,9 @@
 		padding: 0 2px;
 		line-height: 1;
 	}
-	.chip button:hover { color: var(--erro-texto); }
+	.chip button:hover {
+		color: var(--erro-texto);
+	}
 	.limite {
 		font-size: 0.78rem;
 		color: var(--tinta-suave);
@@ -189,7 +199,7 @@
 		background: white;
 		border: 1px solid var(--linha);
 		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		margin: 4px 0 0;
 		padding: 4px;
 		list-style: none;
@@ -214,5 +224,9 @@
 		color: var(--tinta-suave);
 		font-size: 0.85rem;
 	}
-	.erro-inline { font-size: 0.8rem; color: var(--erro-texto); margin-bottom: 4px; }
+	.erro-inline {
+		font-size: 0.8rem;
+		color: var(--erro-texto);
+		margin-bottom: 4px;
+	}
 </style>

@@ -9,10 +9,12 @@
 export function encontrarLojaPorNome(termo, buscasComLojas) {
 	if (!termo) return null;
 	const t = termo.toLowerCase();
-	return buscasComLojas.find(b => {
-		const nome = (b.nome || b.id || '').toLowerCase();
-		return nome.includes(t) || t.includes(nome);
-	}) ?? null;
+	return (
+		buscasComLojas.find((b) => {
+			const nome = (b.nome || b.id || '').toLowerCase();
+			return nome.includes(t) || t.includes(nome);
+		}) ?? null
+	);
 }
 
 /**
@@ -28,36 +30,43 @@ export function encontrarLojaPorNome(termo, buscasComLojas) {
  * @param {number} [opts.comissaoMin]
  * @param {number} [opts.vendasMin]
  */
-export function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias, comissaoMin, vendasMin }) {
+export function montarResultados({
+	fontes,
+	dadosCuradoria,
+	dadosQuedas,
+	dadosNovos,
+	favoritos,
+	busca,
+	categorias,
+	comissaoMin,
+	vendasMin
+}) {
 	let todos = [];
 	if (fontes.curadoria) todos.push(...dadosCuradoria);
 	if (fontes.quedas) todos.push(...dadosQuedas);
 	if (fontes.novos) todos.push(...dadosNovos);
 	if (fontes.favoritos) {
-		const favs = (favoritos ?? []).map(f => ({ ...f, id: f.produto_id, _fonte: 'favorito' }));
+		const favs = (favoritos ?? []).map((f) => ({ ...f, id: f.produto_id, _fonte: 'favorito' }));
 		todos.push(...favs);
 	}
 
 	const termo = (busca ?? '').trim().toLowerCase();
 	if (termo) {
-		todos = todos.filter(r =>
-			(r.nome ?? '').toLowerCase().includes(termo) ||
-			(r.loja ?? '').toLowerCase().includes(termo)
+		todos = todos.filter(
+			(r) => (r.nome ?? '').toLowerCase().includes(termo) || (r.loja ?? '').toLowerCase().includes(termo)
 		);
 	}
 
-	const cats = (categorias ?? []).map(c => c.toLowerCase());
+	const cats = (categorias ?? []).map((c) => c.toLowerCase());
 	if (cats.length > 0) {
-		todos = todos.filter(r =>
-			!r.categoria || cats.some(c => (r.categoria ?? '').toLowerCase().includes(c))
-		);
+		todos = todos.filter((r) => !r.categoria || cats.some((c) => (r.categoria ?? '').toLowerCase().includes(c)));
 	}
 
 	if (comissaoMin > 0) {
-		todos = todos.filter(r => !r.comissao || r.comissao >= comissaoMin);
+		todos = todos.filter((r) => !r.comissao || r.comissao >= comissaoMin);
 	}
 	if (vendasMin > 0) {
-		todos = todos.filter(r => !r.vendas || r.vendas >= vendasMin);
+		todos = todos.filter((r) => !r.vendas || r.vendas >= vendasMin);
 	}
 
 	return todos;

@@ -7,13 +7,7 @@
 	 */
 	import { cn } from '$lib/utils';
 
-	let {
-		label = '',
-		error = '',
-		class: className = '',
-		value = $bindable(''),
-		...rest
-	} = $props();
+	let { label = '', error = '', class: className = '', value = $bindable(''), ...rest } = $props();
 </script>
 
 <div class="flex flex-col gap-1">

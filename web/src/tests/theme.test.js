@@ -7,7 +7,7 @@ function mockMatchMedia(matches = false) {
 		matches,
 		media: query,
 		addEventListener: vi.fn(),
-		removeEventListener: vi.fn(),
+		removeEventListener: vi.fn()
 	}));
 }
 

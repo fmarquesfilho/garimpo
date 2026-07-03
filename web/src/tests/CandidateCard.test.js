@@ -17,7 +17,7 @@ const candidatoBase = {
 	link: 'https://shope.ee/aff123',
 	imagem: 'https://img.shopee.com/thumb.jpg',
 	componentes: { comissao: 0.3, vendas: 0.25, nota: 0.2 },
-	suspeito: false,
+	suspeito: false
 };
 
 describe('CandidateCard — renderização básica', () => {
@@ -83,7 +83,7 @@ describe('CandidateCard — badge de origem', () => {
 
 describe('CandidateCard — badge de desconto', () => {
 	it('mostra badge 🔥 30% OFF quando desconto=0.30', () => {
-		const c = { ...candidatoBase, desconto: 0.30 };
+		const c = { ...candidatoBase, desconto: 0.3 };
 		render(CandidateCard, { props: { candidato: c } });
 		expect(screen.getByText(/🔥 30% OFF/)).toBeInTheDocument();
 	});

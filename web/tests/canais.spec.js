@@ -21,7 +21,7 @@ test.describe('Página Canais — carregamento', () => {
 
 	test('não há erros JS ao carregar', async ({ page }) => {
 		const errors = [];
-		page.on('pageerror', err => errors.push(err.message));
+		page.on('pageerror', (err) => errors.push(err.message));
 		await page.goto('/canais');
 		await page.waitForTimeout(1000);
 		expect(errors).toHaveLength(0);
@@ -30,7 +30,7 @@ test.describe('Página Canais — carregamento', () => {
 
 test.describe('Página Canais — API de destinos (mock)', () => {
 	test('POST /api/destinos com tipo whatsapp é aceito', async ({ page }) => {
-		await page.route('**/api/destinos', async route => {
+		await page.route('**/api/destinos', async (route) => {
 			if (route.request().method() === 'POST') {
 				const body = JSON.parse(route.request().postData());
 				if (!body.nome || !body.config) {
@@ -65,7 +65,7 @@ test.describe('Página Canais — API de destinos (mock)', () => {
 	});
 
 	test('POST /api/destinos sem nome retorna erro 400', async ({ page }) => {
-		await page.route('**/api/destinos', async route => {
+		await page.route('**/api/destinos', async (route) => {
 			if (route.request().method() === 'POST') {
 				const body = JSON.parse(route.request().postData());
 				if (!body.nome) {
@@ -95,9 +95,7 @@ test.describe('Página Canais — API de destinos (mock)', () => {
 			{ id: '120363430000000000@g.us', nome: '#1 Garimpo Hoje' },
 			{ id: '120363410893012870@g.us', nome: '#08 AVANÇADO VOE' }
 		];
-		await page.route('**/api/whatsapp/grupos', route =>
-			route.fulfill({ json: { grupos: gruposMock } })
-		);
+		await page.route('**/api/whatsapp/grupos', (route) => route.fulfill({ json: { grupos: gruposMock } }));
 
 		await page.goto('/canais');
 

@@ -41,7 +41,13 @@
 		font-family: var(--mono);
 		font-variant-numeric: tabular-nums;
 	}
-	.positive { color: var(--sucesso-texto); }
-	.negative { color: var(--erro-texto); }
-	.gold { color: var(--ouro); }
+	.positive {
+		color: var(--sucesso-texto);
+	}
+	.negative {
+		color: var(--erro-texto);
+	}
+	.gold {
+		color: var(--ouro);
+	}
 </style>

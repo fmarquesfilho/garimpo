@@ -41,7 +41,12 @@
 			class="tag-entrada"
 			bind:value={valor}
 			{placeholder}
-			onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionar(); } }}
+			onkeydown={(e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					adicionar();
+				}
+			}}
 		/>
 		<button type="button" class="tag-add" onclick={adicionar} aria-label="Adicionar tag">+</button>
 	</div>
@@ -49,7 +54,8 @@
 		<div class="tag-list">
 			{#each tags as tag (tag)}
 				<Badge variant={badgeVariant}>
-					{#if variant === 'shop'}🏪{/if} {tag}
+					{#if variant === 'shop'}🏪{/if}
+					{tag}
 					<button type="button" class="tag-x" onclick={() => remover(tag)} aria-label="Remover {tag}">✕</button>
 				</Badge>
 			{/each}
@@ -127,6 +133,9 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.tag-entrada, .tag-add { transition-duration: 0ms; }
+		.tag-entrada,
+		.tag-add {
+			transition-duration: 0ms;
+		}
 	}
 </style>

@@ -5,19 +5,9 @@
 	 */
 	import { cn } from '$lib/utils';
 
-	let {
-		class: className = '',
-		children,
-		...rest
-	} = $props();
+	let { class: className = '', children, ...rest } = $props();
 </script>
 
-<div
-	class={cn(
-		'rounded-md border border-border bg-card text-card-foreground shadow-sm',
-		className
-	)}
-	{...rest}
->
+<div class={cn('rounded-md border border-border bg-card text-card-foreground shadow-sm', className)} {...rest}>
 	{@render children()}
 </div>

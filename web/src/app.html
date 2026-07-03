@@ -5,13 +5,13 @@
 		<script>
 			// FOUC prevention: resolve theme before first paint.
 			// Sync, no imports, no async. Mirrors logic in theme.js.
-			(function() {
+			(function () {
 				try {
 					var s = localStorage.getItem('theme');
 					var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
 					var t = s === 'dark' ? 'dark' : s === 'light' ? 'light' : d ? 'dark' : 'light';
 					document.documentElement.setAttribute('data-theme', t);
-				} catch(e) {
+				} catch (e) {
 					document.documentElement.setAttribute('data-theme', 'light');
 				}
 			})();

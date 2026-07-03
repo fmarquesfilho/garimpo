@@ -30,7 +30,9 @@
 			origemPadrao = '';
 			await buscasSalvas.sincronizarDoServidor();
 			if (onadicionada) onadicionada(r);
-			setTimeout(() => { sucessoAdicionar = null; }, 2000);
+			setTimeout(() => {
+				sucessoAdicionar = null;
+			}, 2000);
 		} catch (e) {
 			erroAdicionar = e.message;
 		} finally {
@@ -41,18 +43,19 @@
 
 <Card padding="md">
 	<h2 class="form-titulo">Adicionar loja</h2>
-	<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+	<form
+		onsubmit={(e) => {
+			e.preventDefault();
+			handleSubmit();
+		}}
+	>
 		<div class="form-row">
 			<Input
 				bind:value={inputLoja}
 				placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"
 				disabled={adicionando}
 			/>
-			<Button
-				type="submit"
-				disabled={adicionando || !inputLoja.trim()}
-				size="md"
-			>
+			<Button type="submit" disabled={adicionando || !inputLoja.trim()} size="md">
 				{adicionando ? '⏳' : '➕'} Adicionar
 			</Button>
 		</div>

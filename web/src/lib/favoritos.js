@@ -11,7 +11,9 @@ function carregarLocal() {
 	if (typeof localStorage === 'undefined') return [];
 	try {
 		return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-	} catch { return []; }
+	} catch {
+		return [];
+	}
 }
 
 function salvarLocal(favoritos) {
@@ -38,7 +40,7 @@ async function sincronizar() {
 /** Verifica se um produto está favoritado (por produto_id ou id). */
 function isFavorito(produtoId) {
 	const lista = get({ subscribe });
-	return lista.some(f => f.produto_id === produtoId || f.id === produtoId);
+	return lista.some((f) => f.produto_id === produtoId || f.id === produtoId);
 }
 
 /** Adiciona um produto aos favoritos. */
@@ -56,8 +58,8 @@ async function adicionar(produto) {
 	};
 
 	// Otimista: adiciona localmente primeiro
-	update(lista => {
-		const existe = lista.some(f => f.produto_id === fav.produto_id);
+	update((lista) => {
+		const existe = lista.some((f) => f.produto_id === fav.produto_id);
 		if (existe) return lista;
 		return [{ ...fav, salvo_em: new Date().toISOString() }, ...lista];
 	});
@@ -73,7 +75,7 @@ async function adicionar(produto) {
 /** Remove um produto dos favoritos. */
 async function remover(produtoId) {
 	// Otimista: remove localmente primeiro
-	update(lista => lista.filter(f => f.produto_id !== produtoId && f.id !== produtoId));
+	update((lista) => lista.filter((f) => f.produto_id !== produtoId && f.id !== produtoId));
 
 	// Sync com servidor (best-effort)
 	try {

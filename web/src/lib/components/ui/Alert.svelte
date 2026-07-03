@@ -13,13 +13,7 @@
 		error: 'border-erro-borda bg-erro-fundo text-erro'
 	};
 
-	let {
-		variant = 'info',
-		inline = false,
-		class: className = '',
-		children,
-		...rest
-	} = $props();
+	let { variant = 'info', inline = false, class: className = '', children, ...rest } = $props();
 </script>
 
 <div

@@ -30,7 +30,16 @@ test.describe('Landing page (não logado)', () => {
 });
 
 test.describe('Páginas protegidas (sem login)', () => {
-	const rotas = ['/lojas', '/publicar', '/publicacoes', '/coletas', '/estatisticas', '/canais', '/admin', '/oportunidades'];
+	const rotas = [
+		'/lojas',
+		'/publicar',
+		'/publicacoes',
+		'/coletas',
+		'/estatisticas',
+		'/canais',
+		'/admin',
+		'/oportunidades'
+	];
 
 	for (const rota of rotas) {
 		test(`${rota} não mostra conteúdo sem login`, async ({ page }) => {

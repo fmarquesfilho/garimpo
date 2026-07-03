@@ -49,7 +49,10 @@
 					<span class="loja">🏪 {candidato.loja}</span>
 				{/if}
 				{#if candidato.origem}
-					<span class="selo origem">{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{:else if candidato.origem === 'China'}🇨🇳{/if} {candidato.origem}</span>
+					<span class="selo origem"
+						>{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{:else if candidato.origem === 'China'}🇨🇳{/if}
+						{candidato.origem}</span
+					>
 				{/if}
 				{#if candidato.desconto > 0 && candidato.desconto <= 1}
 					<span class="selo desconto">🔥 {Math.round(candidato.desconto * 100)}% OFF</span>
@@ -57,13 +60,21 @@
 					<span class="selo desconto">🔥 {Math.round(candidato.desconto)}% OFF</span>
 				{/if}
 				{#if candidato.oferta_expira}
-					<span class="selo expira" title="Oferta de afiliado expira em {new Date(candidato.oferta_expira).toLocaleDateString('pt-BR')}">⏳ {tempoRestante(candidato.oferta_expira)}</span>
+					<span
+						class="selo expira"
+						title="Oferta de afiliado expira em {new Date(candidato.oferta_expira).toLocaleDateString('pt-BR')}"
+						>⏳ {tempoRestante(candidato.oferta_expira)}</span
+					>
 				{/if}
 				{#if candidato.categoria}
 					<span class="cat">{candidato.categoria}</span>
 				{/if}
 				{#if candidato.suspeito}
-					<span class="selo alerta" title="Comissão alta com poucas vendas — pode ser produto sem tração real. Avalie antes de publicar.">⚠ suspeito</span>
+					<span
+						class="selo alerta"
+						title="Comissão alta com poucas vendas — pode ser produto sem tração real. Avalie antes de publicar."
+						>⚠ suspeito</span
+					>
 				{/if}
 			</div>
 		</header>
@@ -99,7 +110,9 @@
 		border-radius: var(--raio);
 		overflow: hidden;
 		box-shadow: var(--sombra);
-		transition: transform 0.15s ease, box-shadow 0.15s ease;
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease;
 	}
 	.cartao:hover {
 		transform: translateY(-2px);
@@ -144,7 +157,8 @@
 		line-height: 1.3;
 		margin: 0;
 		display: -webkit-box;
-		-webkit-line-clamp: 2; line-clamp: 2;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}
@@ -227,7 +241,12 @@
 	}
 
 	@media (max-width: 420px) {
-		.thumb { height: 140px; }
-		.dados { flex-direction: column; gap: 4px; }
+		.thumb {
+			height: 140px;
+		}
+		.dados {
+			flex-direction: column;
+			gap: 4px;
+		}
 	}
 </style>

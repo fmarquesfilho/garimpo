@@ -95,7 +95,10 @@
 	let periodoInicial = true;
 	$effect(() => {
 		diasReais; // track
-		if (periodoInicial) { periodoInicial = false; return; }
+		if (periodoInicial) {
+			periodoInicial = false;
+			return;
+		}
 		tentouReais = false;
 		carregarReais();
 	});
@@ -113,220 +116,425 @@
 		<div class="aviso">Faça login para ver publicações.</div>
 	{:else}
 		<Tabs tabs={abasPrincipais} bind:active={aba}>
-		{#if aba === 'historico'}
-			<!-- Filtros de status -->
-			<nav class="filtros-pub">
-				<button class:ativa={filtro === ''} onclick={() => (filtro = '')}>Todas</button>
-				<button class:ativa={filtro === 'agendada'} onclick={() => (filtro = 'agendada')}>⏱ Agendadas</button>
-				<button class:ativa={filtro === 'enviada'} onclick={() => (filtro = 'enviada')}>✓ Enviadas</button>
-				<button class:ativa={filtro === 'erro'} onclick={() => (filtro = 'erro')}>✕ Erros</button>
-			</nav>
+			{#if aba === 'historico'}
+				<!-- Filtros de status -->
+				<nav class="filtros-pub">
+					<button class:ativa={filtro === ''} onclick={() => (filtro = '')}>Todas</button>
+					<button class:ativa={filtro === 'agendada'} onclick={() => (filtro = 'agendada')}>⏱ Agendadas</button>
+					<button class:ativa={filtro === 'enviada'} onclick={() => (filtro = 'enviada')}>✓ Enviadas</button>
+					<button class:ativa={filtro === 'erro'} onclick={() => (filtro = 'erro')}>✕ Erros</button>
+				</nav>
 
-			{#if erro}
-				<ErrorMessage {erro} onretry={carregar} />
-			{/if}
+				{#if erro}
+					<ErrorMessage {erro} onretry={carregar} />
+				{/if}
 
-			{#if carregando}
-				<Loading mensagem="Carregando…" />
-			{:else if publicacoes.length === 0}
-				<p class="vazio">Nenhuma publicação {filtro ? `com status "${filtro}"` : ''} encontrada.</p>
-			{:else}
-				<div class="lista">
-					{#each publicacoes as p (p.id)}
-						<div class="card-pub {statusClass[p.status] ?? ''}">
-							<div class="pub-principal">
-								<span class="status-badge">{statusIcon[p.status] ?? '?'} {p.status}</span>
-								<strong class="pub-nome">{p.nome || '(sem título)'}</strong>
-								{#if p.preco > 0}
-									<span class="pub-preco">R$ {p.preco?.toFixed(2)}</span>
+				{#if carregando}
+					<Loading mensagem="Carregando…" />
+				{:else if publicacoes.length === 0}
+					<p class="vazio">Nenhuma publicação {filtro ? `com status "${filtro}"` : ''} encontrada.</p>
+				{:else}
+					<div class="lista">
+						{#each publicacoes as p (p.id)}
+							<div class="card-pub {statusClass[p.status] ?? ''}">
+								<div class="pub-principal">
+									<span class="status-badge">{statusIcon[p.status] ?? '?'} {p.status}</span>
+									<strong class="pub-nome">{p.nome || '(sem título)'}</strong>
+									{#if p.preco > 0}
+										<span class="pub-preco">R$ {p.preco?.toFixed(2)}</span>
+									{/if}
+								</div>
+								<div class="pub-meta">
+									{#if p.destino_id}<span>📡 {p.destino_id}</span>{/if}
+									{#if p.estrategia}<span>🎯 {p.estrategia}</span>{/if}
+									{#if p.agendada_em}<span>⏱ Agendada: {dataHoraCompleta(p.agendada_em)}</span>{/if}
+									{#if p.enviada_em}<span>✓ Enviada: {dataHoraCompleta(p.enviada_em)}</span>{/if}
+									{#if !p.enviada_em && p.criada_em}<span>📅 Criada: {dataHoraCompleta(p.criada_em)}</span>{/if}
+								</div>
+								{#if p.detalhe && p.status === 'erro'}
+									<p class="pub-detalhe erro-txt">{p.detalhe}</p>
+								{:else if p.detalhe && p.status === 'enviada'}
+									{@const canal = canalDoDetalhe(p.detalhe)}
+									{#if canal}
+										<p class="pub-detalhe">{canal} · {estrategiaDoDetalhe(p.detalhe)}</p>
+									{/if}
 								{/if}
 							</div>
-							<div class="pub-meta">
-								{#if p.destino_id}<span>📡 {p.destino_id}</span>{/if}
-								{#if p.estrategia}<span>🎯 {p.estrategia}</span>{/if}
-								{#if p.agendada_em}<span>⏱ Agendada: {dataHoraCompleta(p.agendada_em)}</span>{/if}
-								{#if p.enviada_em}<span>✓ Enviada: {dataHoraCompleta(p.enviada_em)}</span>{/if}
-								{#if !p.enviada_em && p.criada_em}<span>📅 Criada: {dataHoraCompleta(p.criada_em)}</span>{/if}
-							</div>
-							{#if p.detalhe && p.status === 'erro'}
-								<p class="pub-detalhe erro-txt">{p.detalhe}</p>
-							{:else if p.detalhe && p.status === 'enviada'}
-								{@const canal = canalDoDetalhe(p.detalhe)}
-								{#if canal}
-									<p class="pub-detalhe">{canal} · {estrategiaDoDetalhe(p.detalhe)}</p>
-								{/if}
-							{/if}
+						{/each}
+					</div>
+				{/if}
+			{:else if aba === 'desempenho'}
+				<div class="desemp-header">
+					<PeriodSelector bind:value={diasReais} options={[7, 30, 90]} />
+					<Button
+						variant="secondary"
+						size="sm"
+						onclick={() => {
+							tentouReais = false;
+							carregarReais();
+						}}
+						disabled={carregandoReais}
+					>
+						{carregandoReais ? '⏳' : '🔄'} Sincronizar
+					</Button>
+				</div>
+
+				{#if erroReais}
+					<ErrorMessage erro={erroReais} onretry={carregarReais} />
+				{:else if carregandoReais}
+					<div class="loading-desemp">
+						<Loading mensagem="Consultando relatório de conversões da Shopee…" />
+						<p class="loading-sub">Isso pode levar até 15 segundos. Se não responder, tente "Sincronizar" novamente.</p>
+					</div>
+				{:else if !conversoesReais || conversoesReais.total === 0}
+					<div class="info-desempenho">
+						<h3>📊 Nenhuma conversão nos últimos {diasReais} dias</h3>
+						<p>Quando alguém comprar pelo seu link de afiliado, a venda aparece aqui com:</p>
+						<ul class="lista-info">
+							<li>📦 Nome do <strong>produto</strong> vendido</li>
+							<li>🏪 <strong>Loja</strong> que vendeu</li>
+							<li>💰 <strong>Comissão</strong> real recebida</li>
+							<li>📡 <strong>Canal</strong> da publicação (sub_id)</li>
+							<li>📅 Data da <strong>compra</strong></li>
+							<li>⏳ <strong>Status</strong> (pendente ou confirmada)</li>
+						</ul>
+						<p class="dica">💡 O sistema consulta os últimos {diasReais} dias do relatório de conversões da Shopee.</p>
+					</div>
+				{:else}
+					<!-- Resumo -->
+					<div class="resumo-conversoes">
+						<div class="resumo-card destaque">
+							<span class="resumo-num">R$ {conversoesReais.comissao_total?.toFixed(2)}</span>
+							<span class="resumo-label">Comissão total</span>
 						</div>
-					{/each}
-				</div>
-			{/if}
+						<div class="resumo-card">
+							<span class="resumo-num">{conversoesReais.total}</span>
+							<span class="resumo-label">Conversões</span>
+						</div>
+						<div class="resumo-card">
+							<span class="resumo-num">{conversoesReais.confirmadas}</span>
+							<span class="resumo-label">Confirmadas</span>
+						</div>
+						<div class="resumo-card">
+							<span class="resumo-num">{conversoesReais.pendentes}</span>
+							<span class="resumo-label">Pendentes</span>
+						</div>
+					</div>
 
-		{:else if aba === 'desempenho'}
-			<div class="desemp-header">
-				<PeriodSelector bind:value={diasReais} options={[7, 30, 90]} />
-				<Button variant="secondary" size="sm" onclick={() => { tentouReais = false; carregarReais(); }} disabled={carregandoReais}>
-					{carregandoReais ? '⏳' : '🔄'} Sincronizar
-				</Button>
-			</div>
-
-			{#if erroReais}
-				<ErrorMessage erro={erroReais} onretry={carregarReais} />
-			{:else if carregandoReais}
-				<div class="loading-desemp">
-					<Loading mensagem="Consultando relatório de conversões da Shopee…" />
-					<p class="loading-sub">Isso pode levar até 15 segundos. Se não responder, tente "Sincronizar" novamente.</p>
-				</div>
-			{:else if !conversoesReais || conversoesReais.total === 0}
-				<div class="info-desempenho">
-					<h3>📊 Nenhuma conversão nos últimos {diasReais} dias</h3>
-					<p>Quando alguém comprar pelo seu link de afiliado, a venda aparece aqui com:</p>
-					<ul class="lista-info">
-						<li>📦 Nome do <strong>produto</strong> vendido</li>
-						<li>🏪 <strong>Loja</strong> que vendeu</li>
-						<li>💰 <strong>Comissão</strong> real recebida</li>
-						<li>📡 <strong>Canal</strong> da publicação (sub_id)</li>
-						<li>📅 Data da <strong>compra</strong></li>
-						<li>⏳ <strong>Status</strong> (pendente ou confirmada)</li>
-					</ul>
-					<p class="dica">💡 O sistema consulta os últimos {diasReais} dias do relatório de conversões da Shopee.</p>
-				</div>
-			{:else}
-				<!-- Resumo -->
-				<div class="resumo-conversoes">
-					<div class="resumo-card destaque">
-						<span class="resumo-num">R$ {conversoesReais.comissao_total?.toFixed(2)}</span>
-						<span class="resumo-label">Comissão total</span>
-					</div>
-					<div class="resumo-card">
-						<span class="resumo-num">{conversoesReais.total}</span>
-						<span class="resumo-label">Conversões</span>
-					</div>
-					<div class="resumo-card">
-						<span class="resumo-num">{conversoesReais.confirmadas}</span>
-						<span class="resumo-label">Confirmadas</span>
-					</div>
-					<div class="resumo-card">
-						<span class="resumo-num">{conversoesReais.pendentes}</span>
-						<span class="resumo-label">Pendentes</span>
-					</div>
-				</div>
-
-				<!-- Tabela detalhada -->
-				<div class="tabela-desemp">
-					<table>
-						<thead>
-							<tr>
-								<th>Produto</th>
-								<th>Loja</th>
-								<th>Comissão</th>
-								<th>Status</th>
-								<th>Canal (sub_id)</th>
-								<th>Compra em</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each conversoesReais.conversoes as c (c.conversion_id)}
+					<!-- Tabela detalhada -->
+					<div class="tabela-desemp">
+						<table>
+							<thead>
 								<tr>
-									<td class="nome-col">{c.product_name || '—'}</td>
-									<td class="loja-col">{c.shop_name || '—'}</td>
-									<td class="num comissao-val">R$ {c.total_commission?.toFixed(2)}</td>
-									<td>
-										<span class="status-badge-conv" class:pendente={c.status === 'PENDING' || c.status === 'UNPAID'} class:confirmada={c.status === 'COMPLETED' || c.status === 'PAID'} class:cancelada={c.status === 'CANCELLED'}>
-											{c.status}
-										</span>
-									</td>
-									<td class="sub-id-col">{c.utm_content || '—'}</td>
-									<td class="data">{dataHoraCompleta(c.purchase_time)}</td>
+									<th>Produto</th>
+									<th>Loja</th>
+									<th>Comissão</th>
+									<th>Status</th>
+									<th>Canal (sub_id)</th>
+									<th>Compra em</th>
 								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
+							</thead>
+							<tbody>
+								{#each conversoesReais.conversoes as c (c.conversion_id)}
+									<tr>
+										<td class="nome-col">{c.product_name || '—'}</td>
+										<td class="loja-col">{c.shop_name || '—'}</td>
+										<td class="num comissao-val">R$ {c.total_commission?.toFixed(2)}</td>
+										<td>
+											<span
+												class="status-badge-conv"
+												class:pendente={c.status === 'PENDING' || c.status === 'UNPAID'}
+												class:confirmada={c.status === 'COMPLETED' || c.status === 'PAID'}
+												class:cancelada={c.status === 'CANCELLED'}
+											>
+												{c.status}
+											</span>
+										</td>
+										<td class="sub-id-col">{c.utm_content || '—'}</td>
+										<td class="data">{dataHoraCompleta(c.purchase_time)}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
 			{/if}
-		{/if}
 		</Tabs>
 	{/if}
 </section>
 
 <style>
-	.publicacoes-page { max-width: 900px; }
-	h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
-	.subtitulo { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: var(--r5); }
+	.publicacoes-page {
+		max-width: 900px;
+	}
+	h1 {
+		font-size: 1.5rem;
+		margin-bottom: 0.25rem;
+	}
+	.subtitulo {
+		color: var(--tinta-suave);
+		font-size: 0.9rem;
+		margin-bottom: var(--r5);
+	}
 
 	.filtros-pub {
-		display: flex; gap: 2px; margin-bottom: var(--r5);
+		display: flex;
+		gap: 2px;
+		margin-bottom: var(--r5);
 		border-bottom: 2px solid var(--linha);
 	}
 	.filtros-pub button {
-		padding: 8px 16px; border: none; background: transparent;
-		font-weight: 600; font-size: 0.85rem; color: var(--tinta-suave);
-		cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+		padding: 8px 16px;
+		border: none;
+		background: transparent;
+		font-weight: 600;
+		font-size: 0.85rem;
+		color: var(--tinta-suave);
+		cursor: pointer;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -2px;
 	}
-	.filtros-pub button.ativa { color: var(--tinta); border-bottom-color: var(--ouro); }
+	.filtros-pub button.ativa {
+		color: var(--tinta);
+		border-bottom-color: var(--ouro);
+	}
 
-	.aviso { padding: var(--r3) var(--r4); border-radius: 8px; font-size: 0.88rem; background: var(--porcelana); color: var(--tinta-suave); }
-	.vazio { color: var(--tinta-suave); font-size: 0.9rem; }
+	.aviso {
+		padding: var(--r3) var(--r4);
+		border-radius: 8px;
+		font-size: 0.88rem;
+		background: var(--porcelana);
+		color: var(--tinta-suave);
+	}
+	.vazio {
+		color: var(--tinta-suave);
+		font-size: 0.9rem;
+	}
 
-	.lista { display: flex; flex-direction: column; gap: var(--r3); }
+	.lista {
+		display: flex;
+		flex-direction: column;
+		gap: var(--r3);
+	}
 	.card-pub {
-		padding: var(--r3) var(--r4); border: 1px solid var(--linha);
-		border-radius: var(--raio-sm); background: var(--branco); border-left: 3px solid var(--linha);
+		padding: var(--r3) var(--r4);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio-sm);
+		background: var(--branco);
+		border-left: 3px solid var(--linha);
 	}
-	.card-pub.enviada { border-left-color: var(--sucesso-texto); }
-	.card-pub.agendada { border-left-color: var(--ouro); }
-	.card-pub.erro { border-left-color: var(--erro-texto); }
+	.card-pub.enviada {
+		border-left-color: var(--sucesso-texto);
+	}
+	.card-pub.agendada {
+		border-left-color: var(--ouro);
+	}
+	.card-pub.erro {
+		border-left-color: var(--erro-texto);
+	}
 
-	.pub-principal { display: flex; align-items: center; gap: var(--r3); flex-wrap: wrap; }
-	.status-badge {
-		font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
-		border-radius: var(--raio-full); background: var(--porcelana);
+	.pub-principal {
+		display: flex;
+		align-items: center;
+		gap: var(--r3);
+		flex-wrap: wrap;
 	}
-	.pub-nome { font-size: 0.92rem; flex: 1; }
-	.pub-preco { font-weight: 700; color: var(--ouro); font-size: 0.88rem; }
+	.status-badge {
+		font-size: 0.72rem;
+		font-weight: 700;
+		padding: 2px 8px;
+		border-radius: var(--raio-full);
+		background: var(--porcelana);
+	}
+	.pub-nome {
+		font-size: 0.92rem;
+		flex: 1;
+	}
+	.pub-preco {
+		font-weight: 700;
+		color: var(--ouro);
+		font-size: 0.88rem;
+	}
 
 	.pub-meta {
-		display: flex; flex-wrap: wrap; gap: var(--r2); margin-top: 4px;
-		font-size: 0.78rem; color: var(--tinta-suave);
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--r2);
+		margin-top: 4px;
+		font-size: 0.78rem;
+		color: var(--tinta-suave);
 	}
-	.pub-detalhe { font-size: 0.78rem; margin: 4px 0 0; color: var(--tinta-suave); }
-	.erro-txt { color: var(--erro-texto); }
-	.dica { font-size: 0.82rem; color: var(--tinta-suave); margin-top: var(--r2); }
+	.pub-detalhe {
+		font-size: 0.78rem;
+		margin: 4px 0 0;
+		color: var(--tinta-suave);
+	}
+	.erro-txt {
+		color: var(--erro-texto);
+	}
+	.dica {
+		font-size: 0.82rem;
+		color: var(--tinta-suave);
+		margin-top: var(--r2);
+	}
 
 	/* Desempenho */
-	.desemp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--r4); flex-wrap: wrap; gap: var(--r3); }
-	.loading-desemp { margin: var(--r4) 0; }
-	.loading-sub { color: var(--tinta-suave); font-size: 0.82rem; margin-top: 4px; }
-	.btn-sync { padding: 6px 14px; border: 1px solid var(--ouro); background: var(--ouro-fundo); color: var(--ouro-escuro); border-radius: var(--raio-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-	.btn-sync:hover:not(:disabled) { background: var(--ouro-claro); }
-	.btn-sync:disabled { opacity: 0.5; }
+	.desemp-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: var(--r4);
+		flex-wrap: wrap;
+		gap: var(--r3);
+	}
+	.loading-desemp {
+		margin: var(--r4) 0;
+	}
+	.loading-sub {
+		color: var(--tinta-suave);
+		font-size: 0.82rem;
+		margin-top: 4px;
+	}
+	.btn-sync {
+		padding: 6px 14px;
+		border: 1px solid var(--ouro);
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
+		border-radius: var(--raio-sm);
+		font-size: 0.82rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.btn-sync:hover:not(:disabled) {
+		background: var(--ouro-claro);
+	}
+	.btn-sync:disabled {
+		opacity: 0.5;
+	}
 
 	.info-desempenho {
-		background: var(--nevoa); border: 1px solid var(--linha);
-		border-radius: var(--raio); padding: var(--r5);
+		background: var(--nevoa);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio);
+		padding: var(--r5);
 	}
-	.info-desempenho h3 { font-size: 1.1rem; margin: 0 0 var(--r3); }
-	.info-desempenho p { margin: var(--r2) 0; font-size: var(--text-base); }
-	.lista-info { padding-left: var(--r5); margin: var(--r3) 0; }
-	.lista-info li { margin: var(--r2) 0; font-size: var(--text-base); }
+	.info-desempenho h3 {
+		font-size: 1.1rem;
+		margin: 0 0 var(--r3);
+	}
+	.info-desempenho p {
+		margin: var(--r2) 0;
+		font-size: var(--text-base);
+	}
+	.lista-info {
+		padding-left: var(--r5);
+		margin: var(--r3) 0;
+	}
+	.lista-info li {
+		margin: var(--r2) 0;
+		font-size: var(--text-base);
+	}
 
-	.resumo-conversoes { display: flex; gap: var(--r3); margin-bottom: var(--r5); flex-wrap: wrap; }
-	.resumo-card { display: flex; flex-direction: column; align-items: center; padding: var(--r4); border: 1px solid var(--linha); border-radius: var(--raio-sm); min-width: 100px; }
-	.resumo-card.destaque { background: var(--sucesso-fundo); border-color: var(--sucesso-texto); }
-	.resumo-num { font-size: 1.3rem; font-weight: 700; font-family: var(--mono); }
-	.resumo-label { font-size: 0.7rem; color: var(--tinta-suave); text-transform: uppercase; margin-top: 2px; }
+	.resumo-conversoes {
+		display: flex;
+		gap: var(--r3);
+		margin-bottom: var(--r5);
+		flex-wrap: wrap;
+	}
+	.resumo-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: var(--r4);
+		border: 1px solid var(--linha);
+		border-radius: var(--raio-sm);
+		min-width: 100px;
+	}
+	.resumo-card.destaque {
+		background: var(--sucesso-fundo);
+		border-color: var(--sucesso-texto);
+	}
+	.resumo-num {
+		font-size: 1.3rem;
+		font-weight: 700;
+		font-family: var(--mono);
+	}
+	.resumo-label {
+		font-size: 0.7rem;
+		color: var(--tinta-suave);
+		text-transform: uppercase;
+		margin-top: 2px;
+	}
 
-	.tabela-desemp { overflow-x: auto; }
-	.tabela-desemp table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-	.tabela-desemp th { text-align: left; font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--linha); font-size: 0.78rem; text-transform: uppercase; color: var(--tinta-suave); }
-	.tabela-desemp td { padding: 8px 10px; border-bottom: 1px solid var(--linha); }
-	.comissao-val { color: var(--sucesso-texto); }
-	.status-badge-conv { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: var(--raio-full); }
-	.status-badge-conv.pendente { background: var(--ouro-fundo); color: var(--ouro-escuro); }
-	.status-badge-conv.confirmada { background: var(--sucesso-fundo); color: var(--sucesso-texto); }
-	.status-badge-conv.cancelada { background: var(--erro-fundo); color: var(--erro-texto); }
-	.sub-id-col { font-size: 0.72rem; font-family: var(--mono); max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
-	.loja-col { font-size: 0.82rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-	.nome-col { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-	.num { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
-	.data { font-size: 0.78rem; color: var(--tinta-suave); }
+	.tabela-desemp {
+		overflow-x: auto;
+	}
+	.tabela-desemp table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.85rem;
+	}
+	.tabela-desemp th {
+		text-align: left;
+		font-weight: 600;
+		padding: 8px 10px;
+		border-bottom: 2px solid var(--linha);
+		font-size: 0.78rem;
+		text-transform: uppercase;
+		color: var(--tinta-suave);
+	}
+	.tabela-desemp td {
+		padding: 8px 10px;
+		border-bottom: 1px solid var(--linha);
+	}
+	.comissao-val {
+		color: var(--sucesso-texto);
+	}
+	.status-badge-conv {
+		font-size: 0.72rem;
+		font-weight: 700;
+		padding: 2px 8px;
+		border-radius: var(--raio-full);
+	}
+	.status-badge-conv.pendente {
+		background: var(--ouro-fundo);
+		color: var(--ouro-escuro);
+	}
+	.status-badge-conv.confirmada {
+		background: var(--sucesso-fundo);
+		color: var(--sucesso-texto);
+	}
+	.status-badge-conv.cancelada {
+		background: var(--erro-fundo);
+		color: var(--erro-texto);
+	}
+	.sub-id-col {
+		font-size: 0.72rem;
+		font-family: var(--mono);
+		max-width: 150px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.loja-col {
+		font-size: 0.82rem;
+		max-width: 120px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.nome-col {
+		max-width: 200px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.num {
+		text-align: right;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+	.data {
+		font-size: 0.78rem;
+		color: var(--tinta-suave);
+	}
 </style>

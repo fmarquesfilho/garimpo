@@ -8,12 +8,7 @@
 
 <div class="periodo-selector" role="radiogroup" aria-label="Período">
 	{#each options as dias}
-		<button
-			class:ativo={value === dias}
-			onclick={() => (value = dias)}
-			role="radio"
-			aria-checked={value === dias}
-		>
+		<button class:ativo={value === dias} onclick={() => (value = dias)} role="radio" aria-checked={value === dias}>
 			{dias === 1 ? 'Hoje' : `${dias} dias`}
 		</button>
 	{/each}
@@ -38,7 +33,10 @@
 		font-weight: var(--font-semi);
 		color: var(--tinta-suave);
 		cursor: pointer;
-		transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+		transition:
+			background 0.15s ease,
+			color 0.15s ease,
+			box-shadow 0.15s ease;
 	}
 	button:focus-visible {
 		outline: 2px solid var(--ouro);
@@ -54,6 +52,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		button { transition-duration: 0ms; }
+		button {
+			transition-duration: 0ms;
+		}
 	}
 </style>
