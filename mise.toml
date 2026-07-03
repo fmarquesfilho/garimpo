@@ -47,9 +47,22 @@ description = "Testes Go"
 run = "go test ./..."
 
 [tasks."test:csharp"]
-description = "Testes C#"
+description = "Testes C# (sobe PostgreSQL via Docker se necessário)"
 depends = ["build:csharp"]
-run = "dotnet test --nologo --no-build src/Garimpei.sln"
+run = """
+# Garante que PostgreSQL está rodando
+if ! docker compose ps postgres 2>/dev/null | grep -q "running"; then
+  echo "🐘 Iniciando PostgreSQL..."
+  docker compose up -d postgres
+  sleep 3
+fi
+# Aplica migrations pendentes
+CONNECTION_STRING="Host=localhost;Port=5432;Database=garimpei;Username=garimpei;Password=garimpei_dev" \
+  dotnet ef database update --project src/Garimpei.Infrastructure --startup-project src/Garimpei.Api --no-build 2>/dev/null || true
+# Roda testes
+ConnectionStrings__PostgreSQL="Host=localhost;Port=5432;Database=garimpei;Username=garimpei;Password=garimpei_dev" \
+  dotnet test --nologo --no-build src/Garimpei.sln
+"""
 
 # ── Lint ──────────────────────────────────────────────────────────────────────
 
@@ -136,11 +149,11 @@ run = "docker compose logs -f"
 
 [tasks.ci]
 description = "Simula o CI completo localmente"
-depends = ["build", "test", "lint", "checks"]
+depends = ["build", "test", "lint", "checks", "check:file-size"]
 
 [tasks.prepush]
-description = "Verificação pré-push (equivalente ao hook)"
-depends = ["build", "test", "lint", "checks", "check:web"]
+description = "Verificação pré-push (rápido, ~1min)"
+depends = ["build", "test", "lint", "checks", "check:web", "check:file-size", "check:format"]
 
 # ── Frontend (tasks específicas) ──────────────────────────────────────────────
 
@@ -148,7 +161,51 @@ depends = ["build", "test", "lint", "checks", "check:web"]
 description = "svelte-check (tipos, props, a11y, CSS unused) — strict, zero tolerance"
 run = "cd web && npm run check"
 
+[tasks."check:file-size"]
+description = "Verifica tamanho máximo de arquivos (400 linhas prod, 900 testes)"
+run = "bash .mise/tasks/check/file-size 400"
+
+[tasks."check:format"]
+description = "Verifica formatação Prettier (sem alterar arquivos)"
+run = "cd web && npx prettier --check src/ tests/"
+
 [tasks."test:web"]
 description = "Vitest (unit + contrast + theme) no frontend"
 run = "cd web && npx vitest run"
+
+[tasks."test:e2e"]
+description = "Playwright E2E com Firebase Auth Emulator (inicia automaticamente)"
+run = """
+cd web && npm run build
+
+# Inicia emulator se não estiver rodando
+EMULATOR_STARTED=0
+if ! curl -s http://localhost:9099/ > /dev/null 2>&1; then
+  echo "🔥 Iniciando Firebase Auth Emulator..."
+  firebase emulators:start --only auth --project garimpo-500114 &
+  EMULATOR_PID=$!
+  EMULATOR_STARTED=1
+  # Aguarda ficar pronto
+  for i in $(seq 1 15); do
+    curl -s http://localhost:9099/ > /dev/null 2>&1 && break
+    sleep 1
+  done
+  if ! curl -s http://localhost:9099/ > /dev/null 2>&1; then
+    echo "⚠️  Emulator não iniciou (firebase CLI instalado?). Pulando E2E."
+    kill $EMULATOR_PID 2>/dev/null || true
+    exit 0
+  fi
+fi
+
+echo "✅ Emulator pronto. Rodando E2E..."
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test
+EXIT_CODE=$?
+
+# Para o emulator se nós o iniciamos
+if [ $EMULATOR_STARTED -eq 1 ]; then
+  kill $EMULATOR_PID 2>/dev/null || true
+fi
+
+exit $EXIT_CODE
+"""
 
