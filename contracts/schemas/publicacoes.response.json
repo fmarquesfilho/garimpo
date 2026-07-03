@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /api/publicacoes response",
+  "type": "object",
+  "properties": {
+    "publicacao": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "status": { "type": "string", "enum": ["enviada", "agendada", "pendente", "erro"] },
+        "detalhe": { "type": "string" },
+        "criada_em": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "status"]
+    }
+  },
+  "required": ["publicacao"],
+  "x-naming": "snake_case"
+}

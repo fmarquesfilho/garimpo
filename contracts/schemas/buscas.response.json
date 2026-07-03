@@ -1,0 +1,51 @@
+{
+  "title": "GET /api/buscas response",
+  "type": "object",
+  "properties": {
+    "buscas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "description": "SEMPRE array. Nunca string unica ou comma-separated."
+          },
+          "ativo": {
+            "type": "boolean"
+          },
+          "criado_em": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sort_by": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "keywords"
+        ]
+      }
+    },
+    "total": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "buscas",
+    "total"
+  ],
+  "x-naming": "snake_case"
+}

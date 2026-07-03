@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /api/publicar request",
+  "description": "Publicação imediata (endpoint legado). Resolve destino_id -> chat_id antes de chamar gRPC.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "nome": { "type": "string" },
+    "categoria": { "type": ["string", "null"] },
+    "preco": { "type": "number", "minimum": 0 },
+    "comissao": { "type": "number" },
+    "link": { "type": ["string", "null"] },
+    "imagem": { "type": ["string", "null"] },
+    "estrategia": { "type": ["string", "null"] },
+    "destino_id": {
+      "type": ["string", "null"],
+      "description": "UUID do destino OU chat_id direto. API resolve se for UUID."
+    },
+    "template_id": { "type": ["string", "null"] }
+  },
+  "x-naming": "snake_case"
+}

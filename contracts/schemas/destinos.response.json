@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GET /api/destinos response",
+  "type": "object",
+  "properties": {
+    "destinos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "nome": { "type": "string" },
+          "tipo": { "type": "string", "enum": ["telegram", "whatsapp"] },
+          "config": { "type": "string", "description": "Chat ID ou telefone. Valor usado como group_id no gRPC." },
+          "ativo": { "type": "boolean" }
+        },
+        "required": ["id", "nome", "tipo", "config"]
+      }
+    },
+    "total": { "type": "integer" }
+  },
+  "required": ["destinos", "total"],
+  "x-naming": "snake_case"
+}

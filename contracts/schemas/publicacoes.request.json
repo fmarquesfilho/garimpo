@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /api/publicacoes request",
+  "description": "Agenda ou envia imediatamente uma publicação. Se agendada_em estiver ausente/vazio, o envio é imediato via gRPC Publisher.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "ID do produto (legado)" },
+    "produto_id": { "type": "string", "description": "ID do produto" },
+    "nome": { "type": "string" },
+    "categoria": { "type": ["string", "null"] },
+    "preco": { "type": "number", "minimum": 0 },
+    "comissao": { "type": "number" },
+    "link": { "type": ["string", "null"] },
+    "imagem": { "type": ["string", "null"], "format": "uri" },
+    "estrategia": { "type": ["string", "null"] },
+    "destino_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID do destino no PostgreSQL. A API resolve para chat_id antes de enviar ao Publisher."
+    },
+    "template_id": { "type": ["string", "null"] },
+    "agendada_em": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Se preenchido, publicação é agendada. Se vazio/null, envio imediato via gRPC."
+    },
+    "legenda_custom": {
+      "type": ["string", "null"],
+      "description": "HTML da legenda editada pelo usuário. Enviada no campo Description do gRPC."
+    }
+  },
+  "required": ["destino_id"],
+  "x-naming": "snake_case"
+}

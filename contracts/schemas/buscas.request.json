@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST /api/buscas request",
+  "description": "Sincroniza um perfil de busca. keywords DEVE ser array.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "keyword": { "type": "string", "description": "Legado: keyword única (preferir keywords[])" },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Array de palavras-chave. Formato canônico."
+    },
+    "sort_by": { "type": "string", "enum": ["relevance", "sales", "price_asc", "price_desc"] },
+    "limit": { "type": "integer", "minimum": 1, "maximum": 200 }
+  },
+  "x-naming": "snake_case"
+}
