@@ -45,7 +45,7 @@ descricao: |
 
   ### Documentação
   - docs/componentes.md: guia de uso com exemplos
-  - docs/adr/ADR-0001-component-library.md
+  - docs/decisoes/0022-component-library-bits-ui.md
   - docs/linting.md: ferramentas de qualidade
   - .kiro/specs/component-library-refactor/: requirements + design + tasks
 

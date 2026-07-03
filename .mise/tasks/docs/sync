@@ -32,6 +32,12 @@ for adr in docs/decisoes/*.md; do
   [ -f "$adr" ] && cp "$adr" "$DEST/decisoes/"
 done
 
+# ── Docs de frontend (componentes, linting, impacto) ─────────────────────────
+mkdir -p "$DEST/frontend"
+cp docs/componentes.md "$DEST/frontend/componentes.md"
+cp docs/linting.md "$DEST/frontend/linting.md"
+cp docs/impacto-migracao-ui.md "$DEST/frontend/impacto-migracao-ui.md"
+
 # ── Index page ────────────────────────────────────────────────────────────────
 cat > "$DEST/index.md" << 'EOF'
 # Garimpei
@@ -52,6 +58,12 @@ rastreamento de conversão.
 - [Fluxos e Modelo](/fluxos-e-modelo) — Entidades e regras de negócio
 - [Qualidade e Testes](/qualidade-e-testes) — CI, fitness functions, drift checks
 - [Decisões (ADRs)](/decisoes/0001-nome-garimpei) — Registro de decisões arquiteturais
+
+### Frontend
+
+- [Componentes UI](/frontend/componentes) — Biblioteca de componentes (Bits UI + tokens)
+- [Linting & Qualidade](/frontend/linting) — Ferramentas e pipeline
+- [Impacto da Migração](/frontend/impacto-migracao-ui) — Métricas de dívida técnica
 
 ## Links
 
@@ -89,7 +101,6 @@ Firebase Auth JWT no header `Authorization: Bearer <token>`.
 EOF
 
 # ── Corrigir links internos ───────────────────────────────────────────────────
-# Links nos docs originais usam /docs/decisoes/XXXX/ — no Rspress é /decisoes/XXXX
 # sed -i portável (macOS BSD sed vs GNU sed)
 sedi() {
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -99,7 +110,7 @@ sedi() {
   fi
 }
 
-for f in "$DEST"/*.md "$DEST"/decisoes/*.md; do
+for f in "$DEST"/*.md "$DEST"/decisoes/*.md "$DEST"/frontend/*.md; do
   [ -f "$f" ] || continue
   sedi 's|(/docs/decisoes/\([^/)]*\)/)|(/decisoes/\1)|g' "$f"
   sedi 's|(/docs/decisoes/\([^)]*\))|(/decisoes/\1)|g' "$f"
