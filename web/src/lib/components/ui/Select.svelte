@@ -31,7 +31,7 @@
 	{#if label}
 		<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
 	{/if}
-	<Select.Root type="single" bind:value {disabled}>
+	<Select.Root type="single" {value} onValueChange={(v) => (value = v)} {disabled}>
 		<Select.Trigger
 			class={cn(
 				'inline-flex w-full items-center justify-between gap-2 rounded-sm border border-input bg-background font-sans transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=open]:border-ring data-[state=open]:ring-2 data-[state=open]:ring-ring/20',

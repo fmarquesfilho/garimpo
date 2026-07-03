@@ -150,9 +150,9 @@
 			const payload = {
 				...produto,
 				produto_id: produto.id,
-				destino_id: destinoId || undefined,
-				template_id: templateId || undefined,
-				legenda_custom: legenda || undefined
+				destino_id: destinoId || null,
+				template_id: templateId || null,
+				legenda_custom: legenda || null
 			};
 			// Só inclui agendada_em se tem valor (evita enviar string vazia ao backend)
 			if (agendamento) payload.agendada_em = new Date(agendamento).toISOString();
