@@ -17,6 +17,16 @@ export function encontrarLojaPorNome(termo, buscasComLojas) {
 
 /**
  * Monta a lista final de resultados aplicando todos os filtros client-side.
+ * @param {Object} opts
+ * @param {{curadoria: boolean, quedas: boolean, novos: boolean, favoritos: boolean}} opts.fontes
+ * @param {any[]} opts.dadosCuradoria
+ * @param {any[]} opts.dadosQuedas
+ * @param {any[]} opts.dadosNovos
+ * @param {any[]} [opts.favoritos]
+ * @param {string} [opts.busca]
+ * @param {string[]} [opts.categorias]
+ * @param {number} [opts.comissaoMin]
+ * @param {number} [opts.vendasMin]
  */
 export function montarResultados({ fontes, dadosCuradoria, dadosQuedas, dadosNovos, favoritos, busca, categorias, comissaoMin, vendasMin }) {
 	let todos = [];

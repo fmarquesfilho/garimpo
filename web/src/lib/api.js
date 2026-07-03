@@ -22,7 +22,22 @@ async function pegar(caminho) {
 	return resp.json();
 }
 
-/** Lista priorizada de uma estratégia. */
+/**
+ * Lista priorizada de uma estratégia.
+ * @param {Object} opts
+ * @param {string} [opts.estrategia]
+ * @param {number} [opts.top]
+ * @param {string} [opts.keyword]
+ * @param {string} [opts.categoria]
+ * @param {string} [opts.cat]
+ * @param {number} [opts.comissaoMin]
+ * @param {number} [opts.vendasMin]
+ * @param {number} [opts.notaMin]
+ * @param {boolean} [opts.exploracao]
+ * @param {string} [opts.fonte]
+ * @param {string|string[]} [opts.shopIds]
+ * @param {boolean} [opts.semFiltro]
+ */
 export function buscarCandidatos({
 	estrategia = 'nicho',
 	top = 10,
@@ -67,6 +82,7 @@ async function postar(caminho, corpo) {
 /**
  * Parseia uma resposta de erro no formato RFC 9457 (Problem Details).
  * Retorna um Error enriquecido com campos úteis para o frontend.
+ * @returns {Promise<Error & {status: number, problem: object, retry: boolean, code: string, endpoint: string}>}
  */
 async function parseProblem(resp, caminho) {
 	let problem = {};
@@ -79,6 +95,7 @@ async function parseProblem(resp, caminho) {
 	// Mensagem amigável: prefere detail > erro > title > status text
 	const mensagem = problem.detail || problem.erro || problem.title || `Erro ${resp.status}`;
 
+	/** @type {any} */
 	const err = new Error(mensagem);
 	err.status = resp.status;
 	err.problem = problem; // RFC 9457 completo
@@ -88,7 +105,13 @@ async function parseProblem(resp, caminho) {
 	return err;
 }
 
-/** Publica a oferta no canal (Telegram/WhatsApp/Mock) e devolve o Resultado. */
+/**
+ * Publica a oferta no canal (Telegram/WhatsApp/Mock) e devolve o Resultado.
+ * @param {Object} candidato
+ * @param {Object} [opts]
+ * @param {string} [opts.destinoId]
+ * @param {string} [opts.templateId]
+ */
 export function publicar(candidato, { destinoId, templateId } = {}) {
 	const corpo = { ...candidato };
 	if (destinoId) corpo.destino_id = destinoId;
@@ -191,13 +214,23 @@ export function buscarAlertasConfig() {
 	return pegar('/api/alertas');
 }
 
-/** Envia um alerta de teste (verifica bot + chat_id). */
+/**
+ * Envia um alerta de teste (verifica bot + chat_id).
+ * @param {Object} [opts]
+ * @param {string} [opts.buscaId]
+ */
 export function testarAlertas({ buscaId } = {}) {
 	const corpo = buscaId ? { busca_id: buscaId } : {};
 	return postar('/api/alertas/testar', corpo);
 }
 
-/** Atualiza configuração de alertas em runtime. */
+/**
+ * Atualiza configuração de alertas em runtime.
+ * @param {Object} opts
+ * @param {string} [opts.chatId]
+ * @param {number} [opts.threshold]
+ * @param {boolean} [opts.apenasQuedas]
+ */
 export function configurarAlertas({ chatId, threshold, apenasQuedas } = {}) {
 	const corpo = {};
 	if (chatId != null) corpo.chat_id = chatId;
@@ -206,8 +239,14 @@ export function configurarAlertas({ chatId, threshold, apenasQuedas } = {}) {
 	return postar('/api/alertas/configurar', corpo);
 }
 
-/** Adiciona uma loja ao monitoramento (aceita URL ou ID numérico). */
-export function adicionarLoja({ input, cron, origemPadrao } = {}) {
+/**
+ * Adiciona uma loja ao monitoramento (aceita URL ou ID numérico).
+ * @param {Object} opts
+ * @param {string} opts.input
+ * @param {string} [opts.cron]
+ * @param {string} [opts.origemPadrao]
+ */
+export function adicionarLoja({ input, cron, origemPadrao }) {
 	const corpo = { input };
 	if (cron) corpo.cron = cron;
 	if (origemPadrao) corpo.origem_padrao = origemPadrao;
@@ -254,13 +293,25 @@ export function onboardingShopee({ appId, secret }) {
 	return postar('/api/onboarding/shopee', { app_id: appId, secret });
 }
 
-/** Step 3: Configurar Telegram (ou pular). */
+/**
+ * Step 3: Configurar Telegram (ou pular).
+ * @param {Object} opts
+ * @param {string} [opts.token]
+ * @param {string} [opts.chatId]
+ * @param {boolean} [opts.pular]
+ */
 export function onboardingTelegram({ token, chatId, pular = false } = {}) {
 	if (pular) return postar('/api/onboarding/telegram', { pular: true });
 	return postar('/api/onboarding/telegram', { token, chat_id: chatId });
 }
 
-/** Step 3 (alternativo): Configurar WhatsApp Meta (ou pular). */
+/**
+ * Step 3 (alternativo): Configurar WhatsApp Meta (ou pular).
+ * @param {Object} opts
+ * @param {string} [opts.phoneNumberId]
+ * @param {string} [opts.accessToken]
+ * @param {boolean} [opts.pular]
+ */
 export function onboardingWhatsapp({ phoneNumberId, accessToken, pular = false } = {}) {
 	if (pular) return postar('/api/onboarding/whatsapp', { pular: true });
 	return postar('/api/onboarding/whatsapp', { phone_number_id: phoneNumberId, access_token: accessToken });

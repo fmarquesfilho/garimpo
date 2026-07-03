@@ -22,7 +22,8 @@ export async function carregarCuradoria({ busca, comissaoMin, categorias, buscas
 				estrategia: 'nicho', top: 50,
 				fonte: 'shopee-shop',
 				shopIds: lojaMatch.shop_ids.join(','),
-				semFiltro: true
+				semFiltro: true,
+				categoria: categorias?.length > 0 ? categorias[0] : undefined
 			};
 		} else {
 			// Se não há keyword mas há categoria, usa a categoria como keyword
@@ -30,10 +31,10 @@ export async function carregarCuradoria({ busca, comissaoMin, categorias, buscas
 			params = {
 				estrategia: 'nicho', top: 20,
 				keyword: keywordEfetiva || undefined,
-				comissaoMin: comissaoMin > 0 ? comissaoMin : undefined
+				comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
+				categoria: categorias?.length > 0 ? categorias[0] : undefined
 			};
 		}
-		if (categorias?.length > 0) params.categoria = categorias[0];
 		const r = await buscarCandidatos(params);
 		return (r.candidatos ?? []).map(c => ({ ...c, _fonte: 'curadoria' }));
 	} catch {

@@ -18,7 +18,7 @@ describe('HeroProduto — renderização', () => {
 
 	it('mostra imagem do produto', () => {
 		render(HeroProduto, { props: { produto } });
-		const img = screen.getByAltText('Sérum Vitamina C');
+		const img = /** @type {HTMLImageElement} */ (screen.getByAltText('Sérum Vitamina C'));
 		expect(img).toBeInTheDocument();
 		expect(img.src).toBe('https://img.test/thumb.jpg');
 	});
@@ -30,7 +30,7 @@ describe('HeroProduto — renderização', () => {
 
 	it('mostra input com nome editável', () => {
 		render(HeroProduto, { props: { produto } });
-		const input = screen.getByPlaceholderText('Nome do produto');
+		const input = /** @type {HTMLInputElement} */ (screen.getByPlaceholderText('Nome do produto'));
 		expect(input.value).toBe('Sérum Vitamina C');
 	});
 

@@ -74,7 +74,7 @@
 	<div class="erro-inline">{erro}</div>
 	<input
 		value={selecionados.map(g => g.id).join(',')}
-		oninput={(e) => onselect(e.target.value)}
+		oninput={(e) => onselect(/** @type {HTMLInputElement} */ (e.target).value)}
 		placeholder="IDs dos grupos separados por vírgula"
 	/>
 {:else if grupos.length === 0}

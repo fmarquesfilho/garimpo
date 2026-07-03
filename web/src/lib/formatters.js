@@ -23,7 +23,7 @@ export const pctSinal = (v) => {
 export const dataHora = (v) => {
 	if (!v) return '—';
 	const d = new Date(v);
-	if (isNaN(d)) return v;
+	if (isNaN(d.getTime())) return v;
 	return d.toLocaleString('pt-BR', {
 		day: '2-digit', month: '2-digit', year: '2-digit',
 		hour: '2-digit', minute: '2-digit'
@@ -34,7 +34,7 @@ export const dataHora = (v) => {
 export const dataHoraCompleta = (v) => {
 	if (!v) return '';
 	const d = new Date(v);
-	if (isNaN(d)) return v;
+	if (isNaN(d.getTime())) return v;
 	return d.toLocaleString('pt-BR', {
 		day: '2-digit', month: '2-digit', year: 'numeric',
 		hour: '2-digit', minute: '2-digit'

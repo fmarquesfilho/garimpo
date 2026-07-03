@@ -62,7 +62,7 @@
 				r.ultimaColeta = c.coletado_em;
 			}
 		}
-		return [...mapa.values()].sort((a, b) => new Date(b.ultimaColeta) - new Date(a.ultimaColeta));
+		return [...mapa.values()].sort((a, b) => new Date(b.ultimaColeta).getTime() - new Date(a.ultimaColeta).getTime());
 	});
 </script>
 

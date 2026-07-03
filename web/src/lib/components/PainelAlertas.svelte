@@ -12,7 +12,7 @@
 	let alertasConfig = $state(null);
 	let mostraAlertas = $state(false);
 	let alertaChatId = $state('');
-	let alertaThreshold = $state(15);
+	let alertaThreshold = $state('15');
 	let alertaApenasQuedas = $state(true);
 	let salvandoAlerta = $state(false);
 	let testandoAlerta = $state(false);
@@ -22,7 +22,7 @@
 		try {
 			alertasConfig = await buscarAlertasConfig();
 			if (alertasConfig) {
-				alertaThreshold = Math.round((alertasConfig.threshold ?? 0.15) * 100);
+				alertaThreshold = String(Math.round((alertasConfig.threshold ?? 0.15) * 100));
 				alertaApenasQuedas = alertasConfig.apenas_quedas ?? true;
 			}
 		} catch { /* sem alertas configurados */ }
@@ -34,7 +34,7 @@
 		try {
 			await configurarAlertas({
 				chatId: alertaChatId || undefined,
-				threshold: alertaThreshold / 100,
+				threshold: Number(alertaThreshold) / 100,
 				apenasQuedas: alertaApenasQuedas
 			});
 			alertasConfig = await buscarAlertasConfig();

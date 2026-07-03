@@ -3,9 +3,11 @@
 	 * MiniChart — gráfico de barras compacto para séries temporais.
 	 * @prop pontos — array de { data, valor }
 	 * @prop altura — altura em px (default 40)
-	 * @prop formatValor — função para formatar tooltip (default: String)
+	 * @prop formatValor — função para formatar tooltip
 	 */
-	let { pontos = [], altura = 40, formatValor = String, ...rest } = $props();
+	/** @type {(v: number) => string} */
+	let formatDefault = (v) => String(v);
+	let { pontos = [], altura = 40, formatValor = formatDefault, ...rest } = $props();
 
 	let max = $derived(Math.max(...pontos.map(p => p.valor), 1));
 	let min = $derived(Math.min(...pontos.map(p => p.valor), 0));

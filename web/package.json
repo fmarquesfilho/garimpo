@@ -15,7 +15,7 @@
     "lint:a11y": "svelte-check --tsconfig ./tsconfig.json --threshold warning --compiler-warnings 'a11y-*'",
     "audit:ui": "bash scripts/audit-ui-coverage.sh",
     "lint": "npm run check && npm run lint:css && npm run lint:js",
-    "precheck": "npm run lint:css && npm run lint:js && npm run lint:dead && npm run build && npm run test:unit",
+    "precheck": "npm run check && npm run lint:css && npm run lint:js && npm run lint:dead && npm run build && npm run test:unit",
     "test": "playwright test",
     "test:unit": "vitest run",
     "test:ui": "playwright test --ui"

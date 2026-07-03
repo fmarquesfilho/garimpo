@@ -64,7 +64,7 @@
 					bind:value={busca}
 					placeholder="🔍 Buscar produto… (ex: sérum, perfume, batom)"
 					class="busca-input"
-					onkeydown={(e) => { if (e.key === 'Escape') { busca = ''; e.target.blur(); } else if (e.key === 'Enter') e.target.blur(); }}
+					onkeydown={(e) => { if (e.key === 'Escape') { busca = ''; /** @type {HTMLInputElement} */ (e.target).blur(); } else if (e.key === 'Enter') /** @type {HTMLInputElement} */ (e.target).blur(); }}
 				/>
 				{#if busca}
 					<button class="btn-limpar" onclick={() => (busca = '')} type="button" aria-label="Limpar busca">✕</button>

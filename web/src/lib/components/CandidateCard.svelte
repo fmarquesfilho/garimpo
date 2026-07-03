@@ -9,7 +9,7 @@
 
 	function tempoRestante(iso) {
 		if (!iso) return '';
-		const diff = new Date(iso) - new Date();
+		const diff = new Date(iso).getTime() - Date.now();
 		if (diff <= 0) return 'expirado';
 		const horas = Math.floor(diff / 3600000);
 		if (horas < 24) return `${horas}h`;
