@@ -52,6 +52,14 @@ if [ -d "docs/guias" ] && [ "$(ls docs/guias/*.md 2>/dev/null)" ]; then
   done
 fi
 
+# ── Sessões de desenvolvimento (legado) ───────────────────────────────────────
+if [ -d "docs/legado" ] && [ "$(ls docs/legado/*.md 2>/dev/null)" ]; then
+  mkdir -p "$DEST/sessoes"
+  for f in docs/legado/*.md; do
+    [ -f "$f" ] && cp "$f" "$DEST/sessoes/"
+  done
+fi
+
 # ── Sprint atual (backlog) ────────────────────────────────────────────────────
 if [ -f "backlog/sprint.txt" ]; then
   mkdir -p "$DEST/projeto"
@@ -202,7 +210,7 @@ generate_sidebar() {
       [ -f "$f" ] || continue
       local basename=$(basename "$f" .md)
       [ "$basename" = "index" ] && continue
-      local title=$(head -1 "$f" | sed 's/^#* *//' | sed 's/^ *//')
+      local title=$(head -1 "$f" | sed 's/^#* *//' | sed 's/^ *//' | sed 's/"/\\"/g')
       [ -z "$title" ] && title="$basename"
       $first || printf ","
       first=false
@@ -239,7 +247,7 @@ ENDJSON
   for f in "$dest/gerado"/*.md; do
     [ -f "$f" ] || continue
     local bn=$(basename "$f" .md)
-    local t=$(head -1 "$f" | sed 's/^#* *//')
+    local t=$(head -1 "$f" | sed 's/^#* *//' | sed 's/"/\\"/g')
     [ -z "$t" ] && t="$bn"
     $proj_first || printf "," >> "$json"
     proj_first=false
@@ -269,6 +277,13 @@ ENDJSON
   if [ -d "$dest/guias" ]; then
     printf '  {"text":"Guias","items":[' >> "$json"
     dir_items "$dest/guias" "guias" >> "$json"
+    printf ']},\n' >> "$json"
+  fi
+
+  # Sessões de desenvolvimento (dinâmico)
+  if [ -d "$dest/sessoes" ]; then
+    printf '  {"text":"Sessões","items":[' >> "$json"
+    dir_items "$dest/sessoes" "sessoes" >> "$json"
     printf ']},\n' >> "$json"
   fi
 

@@ -1,4 +1,4 @@
-# Sessão 2026-07-03 — Bugfix: Página Publicar Travada em "Carregando…"
+# Sessão 2026-07-03 — Bugfix: Página Publicar Travada em Carregando
 
 ## Problema
 
