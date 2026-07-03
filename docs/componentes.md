@@ -265,19 +265,26 @@ Os seguintes componentes de `$lib/components/` foram atualizados para usar os pr
 | `FormAdicionarLoja` | Card, Button, Input, Alert |
 | `TagInput` | Badge |
 | `PeriodSelector` | Tokens (+ ARIA radiogroup) |
+| `NavDrawer` | Button |
+| `PainelAlertas` | Button, Badge, Alert, Input |
+| `ListaProdutosLoja` | Alert |
+| `BuscaCard` | Badge, Button |
+| `ScoreMeter` | Tokens (sem hex) |
 
-### Padrão de composição
+### Páginas migradas
 
-```svelte
-<script>
-  import { Card, Button, Alert } from '$lib/components/ui';
-</script>
+| Rota | Primitivos usados |
+|---|---|
+| `/configurar` | Button, Alert, Input, Card |
 
-<Card padding="md">
-  <!-- business logic usando primitivos UI -->
-  <Button onclick={handle}>Ação</Button>
-  {#if erro}
-    <Alert variant="error" inline>{erro}</Alert>
-  {/if}
-</Card>
-```
+### Progresso da migração
+
+| Padrão legado | Antes | Agora | Meta |
+|---|---|---|---|
+| `<button>` inline | 75 | 62 | 0 (todos via `<Button>`) |
+| `<input>` inline | 30 | 28 | 0 (todos via `<Input>`) |
+| Badge utility class | 25 | 16 | 0 (todos via `<Badge>`) |
+| msg-erro/sucesso class | 6 | 2 | 0 (todos via `<Alert>`) |
+| Hex colors hardcoded | 50 | 46 | 0 (todos via tokens) |
+
+Os restantes estão em componentes complexos como `ProductCard` (multi-layout), `FilterBar` (autocomplete), e pages com lógica de form. A migração continua nas próximas sessões.
