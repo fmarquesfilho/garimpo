@@ -1,0 +1,295 @@
+version: "1.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Contract Registry — Garimpei
+# ═══════════════════════════════════════════════════════════════════════════════
+# Declaração centralizada de todos os serviços, fronteiras de integração e
+# fluxos de orquestração. Validado automaticamente pelo CI via
+# scripts/check-service-contracts.sh.
+#
+# Para adicionar uma nova fronteira, veja contracts/README.md.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  - id: csharp-api
+    name: "Garimpei API (C#)"
+    runtime: cloud-run
+    port: 8080
+
+  - id: publisher
+    name: "Publisher (Go)"
+    runtime: cloud-run-sidecar
+    port: 50052
+    proto: protos/publisher/v1/publisher.proto
+
+  - id: collector
+    name: "Collector (Go)"
+    runtime: cloud-run-sidecar
+    port: 50051
+    proto: protos/collector/v1/collector.proto
+
+  - id: alerter
+    name: "Alerter (Go)"
+    runtime: cloud-run-sidecar
+    port: 50053
+    proto: protos/alerter/v1/alerter.proto
+
+  - id: scheduler
+    name: "Scheduler (Go)"
+    runtime: cloud-run-sidecar
+    port: 50054
+    proto: protos/scheduler/v1/scheduler.proto
+
+  - id: analyzer
+    name: "Analyzer (Python)"
+    runtime: cloud-run-sidecar
+    port: 8060
+
+  - id: frontend
+    name: "Frontend (Svelte)"
+    runtime: cloudflare-pages
+
+# ── Fronteiras (boundaries) ───────────────────────────────────────────────────
+# Cada entrada é um ponto de comunicação entre dois serviços.
+# O validador verifica que o path/method existe no código correspondente.
+
+boundaries:
+  # ── Frontend → C# API (HTTP/JSON) ──────────────────────────────────────────
+  - id: fe-publicacoes-post
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: POST
+    path: /api/publicacoes
+    request_schema: contracts/schemas/publicacoes.request.json
+    response_schema: contracts/schemas/publicacoes.response.json
+    notes: |
+      Envio imediato (sem agendada_em) DEVE triggerar gRPC Publish.
+      Agendamento apenas salva no banco com status "agendada".
+
+  - id: fe-publicacoes-get
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/publicacoes
+
+  - id: fe-publicar
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: POST
+    path: /api/publicar
+    request_schema: contracts/schemas/publicar.request.json
+    notes: "Envio imediato legacy. Resolve destino_id → chat_id antes de chamar gRPC."
+
+  - id: fe-buscas-get
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/buscas
+    response_schema: contracts/schemas/buscas.response.json
+    notes: "keywords DEVE ser array JSON, nunca string única ou comma-separated."
+
+  - id: fe-buscas-post
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: POST
+    path: /api/buscas
+    request_schema: contracts/schemas/buscas.request.json
+    notes: "keywords aceita array de strings."
+
+  - id: fe-destinos-get
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/destinos
+    response_schema: contracts/schemas/destinos.response.json
+
+  - id: fe-destinos-post
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: POST
+    path: /api/destinos
+
+  - id: fe-templates-get
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/templates
+
+  - id: fe-favoritos-get
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/favoritos
+
+  - id: fe-lojas-post
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: POST
+    path: /api/lojas
+
+  - id: fe-candidatos
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/candidatos
+
+  - id: fe-categorias
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/categorias
+
+  - id: fe-alertas
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/alertas
+
+  - id: fe-onboarding
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/onboarding/status
+
+  - id: fe-conversoes
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: GET
+    path: /api/conversoes/reais
+
+  - id: fe-resolver-link
+    source: frontend
+    target: csharp-api
+    protocol: http
+    method: POST
+    path: /api/resolver-link
+
+  # ── C# API → Go Sidecars (gRPC) ────────────────────────────────────────────
+  - id: api-publisher-publish
+    source: csharp-api
+    target: publisher
+    protocol: grpc
+    service: publisher.v1.PublisherService
+    method: Publish
+    notes: |
+      group_id DEVE ser o chat_id resolvido (ex: @mileseleciona, -1001234).
+      NUNCA um UUID do PostgreSQL. A resolução acontece via GroupId_Resolution
+      no C# antes de chamar o gRPC.
+
+  - id: api-publisher-list
+    source: csharp-api
+    target: publisher
+    protocol: grpc
+    service: publisher.v1.PublisherService
+    method: ListGroups
+
+  - id: api-collector-fetch
+    source: csharp-api
+    target: collector
+    protocol: grpc
+    service: collector.v1.CollectorService
+    method: Fetch
+
+  # ── C# API → Python Analyzer (HTTP) ────────────────────────────────────────
+  - id: api-analyzer-candidatos
+    source: csharp-api
+    target: analyzer
+    protocol: http
+    method: GET
+    path: /candidatos
+    notes: "Curadoria/scoring de produtos."
+
+  - id: api-analyzer-estatisticas
+    source: csharp-api
+    target: analyzer
+    protocol: http
+    method: GET
+    path: /estatisticas
+
+  - id: api-analyzer-novidades
+    source: csharp-api
+    target: analyzer
+    protocol: http
+    method: GET
+    path: /novidades
+
+  # ── Scheduler → Sidecars ───────────────────────────────────────────────────
+  - id: scheduler-collector-fetch
+    source: scheduler
+    target: collector
+    protocol: grpc
+    service: collector.v1.CollectorService
+    method: Fetch
+
+  - id: scheduler-analyzer-detect
+    source: scheduler
+    target: analyzer
+    protocol: http
+    method: POST
+    path: /detect-coupons
+
+# ── Fluxos de orquestração ────────────────────────────────────────────────────
+# Cada fluxo documenta o caminho end-to-end de um processo de negócio.
+# O validador verifica que os boundary IDs referenciados existem acima.
+
+flows:
+  publish:
+    name: "Publicação de Oferta"
+    steps:
+      - boundary: fe-publicacoes-post
+        action: "Frontend envia produto + destino_id (UUID) + legenda HTML"
+      - boundary: api-publisher-publish
+        action: "API resolve destino_id → chat_id (GroupId_Resolution), chama Publisher.Publish via gRPC"
+      - action: "Publisher envia para Telegram/WhatsApp via Bot API"
+    invariants:
+      - "destino_id (UUID do PostgreSQL) é resolvido para chat_id ANTES do gRPC"
+      - "Se envio imediato (sem agendada_em), DEVE chamar gRPC Publisher"
+      - "Se agendamento, salva com status 'agendada' sem chamar gRPC"
+      - "Legenda HTML é passada no campo Description do gRPC (detectada por conter '<')"
+
+  collection:
+    name: "Coleta de Produtos"
+    steps:
+      - boundary: scheduler-collector-fetch
+        action: "Scheduler dispara Fetch por keyword/loja com cron configurado"
+      - action: "Collector busca na Shopee API e grava snapshots no BigQuery"
+      - boundary: scheduler-analyzer-detect
+        action: "Scheduler chama Analyzer para detectar novidades/cupons"
+    invariants:
+      - "Coleta falha gracefully por marketplace (não aborta tudo)"
+      - "Collector e Analyzer são independentes — falha de um não bloqueia outro"
+
+  alerting:
+    name: "Alertas de Preço"
+    steps:
+      - action: "Analyzer detecta queda de preço significativa nos snapshots"
+      - action: "Alerter envia notificação via Telegram (token próprio)"
+    invariants:
+      - "Alerter usa ALERTAS_TELEGRAM_TOKEN (não o TELEGRAM_BOT_TOKEN do Publisher)"
+      - "Threshold configurável por usuário via /api/alertas/configurar"
+
+  sync-buscas:
+    name: "Sincronização de Buscas"
+    steps:
+      - boundary: fe-buscas-post
+        action: "Frontend salva busca com array de keywords"
+      - boundary: fe-buscas-get
+        action: "Frontend carrega buscas do servidor (substituindo localStorage)"
+    invariants:
+      - "keywords é SEMPRE array no request e no response"
+      - "Servidor é fonte de verdade; localStorage é cache"
