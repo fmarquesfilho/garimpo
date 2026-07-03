@@ -121,17 +121,42 @@ test('página Descobrir sem violações a11y', async ({ page }) => {
 
 ## Integração com CI
 
-O lint completo roda no CI via mise. Ordem recomendada:
+O lint completo roda no CI via GitHub Actions (job `frontend`). Ordem de execução:
 
 ```yaml
+# .github/workflows/ci.yml — job: frontend
 steps:
-  - npm run check        # svelte-check (tipos + a11y compile-time)
-  - npm run lint:css     # stylelint (protege tokens)
-  - npm run lint:js      # eslint
-  - npm run build        # build production
-  - npm run test:unit    # vitest + axe-core
-  - npm run test         # playwright + @axe-core/playwright
+  - npm ci
+  - npm run check              # svelte-check (tipos + a11y compile-time)
+  - npm run build              # build production
+  - npm run lint:css           # stylelint (protege tokens)
+  - npm run lint:js            # eslint
+  - mise run check:ui-coverage -- --strict  # bloqueia se hex hardcoded
+  - npx vitest run             # unit tests + axe-core
+  - npx playwright test        # e2e + @axe-core/playwright
 ```
+
+### Mise Tasks
+
+O projeto usa [mise](https://mise.jdx.dev) para orquestrar tarefas. Tasks relevantes:
+
+| Task | Comando | Comportamento no CI |
+|---|---|---|
+| `check:ui-coverage` | `mise run check:ui-coverage` | Relatório de cobertura UI. Com `--strict`: **falha se hex colors > 0** |
+| `check:file-size` | `mise run check:file-size` | Bloqueia arquivos > 400 linhas |
+| `check:config-consistency` | `mise run check:config-consistency` | Verifica configs sincronizadas |
+
+### Modos da auditoria UI
+
+```bash
+# Relatório completo (não bloqueia CI)
+mise run check:ui-coverage
+
+# Modo strict — falha se hex colors encontrados (usado no CI)
+mise run check:ui-coverage -- --strict
+```
+
+O modo `--strict` bloqueia o merge se algum componente introduzir hex colors hardcoded. Os demais indicadores (buttons inline, utility classes) são informativos — servem para medir progresso sprint a sprint.
 
 ## Fluxo de Desenvolvimento
 
@@ -195,6 +220,7 @@ Gera relatório com:
 
 ### Quando rodar
 
+- **CI (automático)**: `mise run check:ui-coverage -- --strict` roda em todo PR e push para main
 - **Antes de cada PR de migração** — para medir progresso
 - **Ao planejar a próxima sprint** — para priorizar quais componentes atacar
 - **Após cada fase concluída** — para atualizar o score de cobertura
