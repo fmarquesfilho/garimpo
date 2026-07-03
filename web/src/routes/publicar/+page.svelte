@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { listarDestinos, listarTemplates, agendarPublicacao, previewTemplate, resolverLinkShopee } from '$lib/api.js';
+	import { recuperarProduto } from '$lib/publicar-store.js';
 	import RichEditor from '$lib/components/RichEditor.svelte';
 	import ResolverLink from '$lib/components/ResolverLink.svelte';
 	import HeroProduto from '$lib/components/HeroProduto.svelte';
@@ -60,11 +60,9 @@
 	}
 
 	onMount(async () => {
-		// Safety: garante que a página sai de "Carregando" mesmo se algo travar
 		const safety = setTimeout(() => { if (carregando) carregando = false; }, 20000);
 
-		const dados = $page.url.searchParams.get('dados');
-		if (dados) { try { produto = JSON.parse(decodeURIComponent(dados)); } catch { /* */ } }
+		produto = recuperarProduto();
 		if (!produto) produto = { id: '', nome: '', preco: 0, categoria: '', link: '', imagem: '' };
 
 		await resolverDadosProduto();

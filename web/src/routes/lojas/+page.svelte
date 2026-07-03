@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { buscarCandidatos, buscarNovidades, removerLoja } from '$lib/api.js';
 	import { buscasSalvas } from '$lib/buscas.js';
+	import { prepararPublicacao } from '$lib/publicar-store.js';
 	import { usuario } from '$lib/firebase.js';
 	import { brl, pct } from '$lib/formatters.js';
 	import { Tabs, Loading, Alert } from '$lib/components/ui/index.js';
@@ -109,8 +110,7 @@
 	}
 
 	function irParaPublicar(c) {
-		const dados = encodeURIComponent(JSON.stringify(c));
-		goto(`/publicar?dados=${dados}`);
+		goto(prepararPublicacao(c));
 	}
 </script>
 

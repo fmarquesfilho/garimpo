@@ -1,13 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-// Mock de autenticação — injeta usuário fake para bypassar a landing page
-async function mockAuth(page) {
-	await page.addInitScript(() => {
-		// Simula o store de usuário logado
-		window.__MOCK_USER = { uid: 'test', email: 'test@test.com', nome: 'Test User' };
-	});
-}
-
 // Mock das APIs necessárias para a página funcionar
 async function mockAPIs(page) {
 	await page.route('**/api/admin/me', route =>
@@ -33,10 +25,14 @@ async function mockAPIs(page) {
 	);
 }
 
-// Helper: navega para /publicar com produto mockado via query
-function publicarURL(produto) {
-	const dados = encodeURIComponent(JSON.stringify(produto));
-	return `/publicar?dados=${dados}`;
+// Helper: navega para /publicar com produto via sessionStorage (como o app real faz)
+async function irParaPublicar(page, produto) {
+	// Navega primeiro para garantir acesso ao sessionStorage da origin
+	await page.goto('/');
+	await page.evaluate((p) => {
+		sessionStorage.setItem('garimpei:publicar:produto', JSON.stringify(p));
+	}, produto);
+	await page.goto('/publicar');
 }
 
 const produtoExemplo = {
@@ -75,7 +71,7 @@ test.describe('Página Publicar — com produto via query', () => {
 			window.__TEST_FORCE_AUTH = true;
 		});
 
-		await page.goto(publicarURL(produtoExemplo));
+		await irParaPublicar(page, produtoExemplo);
 
 		// Como o Firebase real não está logado, a landing page vai aparecer
 		// Isso confirma que a proteção funciona — em produção o user estará logado
@@ -101,7 +97,7 @@ test.describe('Página Publicar — renderização de elementos', () => {
 		const errors = [];
 		page.on('pageerror', err => errors.push(err.message));
 		await mockAPIs(page);
-		await page.goto(publicarURL(produtoExemplo));
+		await irParaPublicar(page, produtoExemplo);
 		await page.waitForTimeout(1000);
 		expect(errors).toHaveLength(0);
 	});

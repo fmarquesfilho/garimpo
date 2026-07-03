@@ -5,6 +5,7 @@
 	import { favoritos } from '$lib/favoritos.js';
 	import { carregarCuradoria, carregarOportunidades } from '$lib/descobrir.js';
 	import { montarResultados } from '$lib/descobrir-logic.js';
+	import { prepararPublicacao } from '$lib/publicar-store.js';
 	import ProductCard from '$lib/components/ProductCard.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import { Loading, EmptyState, Button } from '$lib/components/ui/index.js';
@@ -91,7 +92,7 @@
 
 	// ── Ações ─────────────────────────────────────────────────────────────────
 	function publicar(c) {
-		goto(`/publicar?dados=${encodeURIComponent(JSON.stringify(c))}`);
+		goto(prepararPublicacao(c));
 	}
 
 	function aplicarBuscaSalva(b) {
