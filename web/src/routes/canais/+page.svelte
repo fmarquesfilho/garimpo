@@ -128,7 +128,9 @@
 	<h1 class="text-2xl mb-6">⚙️ Configurações</h1>
 
 	{#if !$usuario}
-		<div class="py-3 px-4 rounded-sm text-sm mb-4 bg-porcelana text-tinta-suave">Faça login para gerenciar configurações.</div>
+		<div class="py-3 px-4 rounded-sm text-sm mb-4 bg-porcelana text-tinta-suave">
+			Faça login para gerenciar configurações.
+		</div>
 	{:else}
 		<h2 class="text-lg mb-2">📡 Destinos de publicação</h2>
 		<p class="text-tinta-suave text-sm mb-5">
@@ -160,7 +162,13 @@
 			</div>
 			<div class="flex-1 min-w-[140px] flex flex-col gap-1">
 				<label for="nome" class="text-xs font-semibold text-tinta-suave">Nome</label>
-				<input id="nome" class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={nome} placeholder="ex.: Ofertas Beleza" required />
+				<input
+					id="nome"
+					class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1"
+					bind:value={nome}
+					placeholder="ex.: Ofertas Beleza"
+					required
+				/>
 			</div>
 			<div class="flex-1 min-w-[140px] flex flex-col gap-1">
 				<label for="config" class="text-xs font-semibold text-tinta-suave">Destino ({tipoLabel[tipo]})</label>
@@ -174,7 +182,13 @@
 						}}
 					/>
 				{:else}
-					<input id="config" class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={config} placeholder="@meucanal ou -1001234567890" required />
+					<input
+						id="config"
+						class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1"
+						bind:value={config}
+						placeholder="@meucanal ou -1001234567890"
+						required
+					/>
 				{/if}
 			</div>
 			<Button type="submit" disabled={salvando || !nome.trim() || !config.trim()}>
@@ -197,7 +211,11 @@
 								<div class="flex flex-col gap-1">
 									<label class="text-xs font-semibold text-tinta-suave"
 										>Nome
-										<input class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={editNome} placeholder="Nome do destino" />
+										<input
+											class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1"
+											bind:value={editNome}
+											placeholder="Nome do destino"
+										/>
 									</label>
 								</div>
 								<div class="flex flex-col gap-1">
@@ -213,7 +231,11 @@
 											inicial={editConfig}
 										/>
 									{:else}
-										<input class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1" bind:value={editConfig} placeholder="@canal ou chat_id" />
+										<input
+											class="px-3 py-2 border border-border rounded-lg text-sm focus:outline-2 focus:outline-ouro focus:outline-offset-1"
+											bind:value={editConfig}
+											placeholder="@canal ou chat_id"
+										/>
 									{/if}
 								</div>
 								<div class="flex gap-2">
@@ -232,13 +254,17 @@
 						<!-- Modo visualização -->
 						<div class="flex items-center justify-between p-3 px-4 border border-border rounded-sm bg-[var(--branco)]">
 							<div class="flex flex-col gap-0.5">
-								<span class="text-xs font-semibold text-tinta-suave">{tipoIcone[d.tipo] ?? '📤'} {tipoLabel[d.tipo] ?? d.tipo}</span>
+								<span class="text-xs font-semibold text-tinta-suave"
+									>{tipoIcone[d.tipo] ?? '📤'} {tipoLabel[d.tipo] ?? d.tipo}</span
+								>
 								<strong class="text-sm">{d.nome}</strong>
 								{#if d.tipo === 'whatsapp' && gruposWA.length > 0}
 									<div class="flex flex-col gap-0.5 mt-0.5">
 										{#each d.config.split(',') as gid (gid)}
 											{@const grupo = gruposWA.find((g) => g.id === gid.trim())}
-											<span class="text-xs text-tinta-suave px-1.5 bg-sucesso-fundo rounded border border-sucesso-borda">{grupo?.nome ?? gid.trim()}</span>
+											<span class="text-xs text-tinta-suave px-1.5 bg-sucesso-fundo rounded border border-sucesso-borda"
+												>{grupo?.nome ?? gid.trim()}</span
+											>
 										{/each}
 									</div>
 								{:else}
@@ -252,7 +278,10 @@
 										{ label: '✕ Remover', onclick: () => pedirRemocao(d), destructive: true }
 									]}
 								>
-									<button class="bg-transparent border border-border rounded-sm w-8 h-8 flex items-center justify-center cursor-pointer text-tinta-suave text-lg hover:border-ouro hover:text-ouro" aria-label="Ações">⋮</button>
+									<button
+										class="bg-transparent border border-border rounded-sm w-8 h-8 flex items-center justify-center cursor-pointer text-tinta-suave text-lg hover:border-ouro hover:text-ouro"
+										aria-label="Ações">⋮</button
+									>
 								</DropdownMenu>
 							</div>
 						</div>

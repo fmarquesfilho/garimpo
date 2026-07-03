@@ -140,51 +140,73 @@
 
 <section class="max-w-[900px]">
 	<h1 class="text-[clamp(1.8rem,5vw,2.5rem)] mb-2">O que publicar hoje?</h1>
-	<p class="text-tinta-suave text-[0.95rem] mb-5">Encontre produtos para divulgar — por busca, oportunidades ou favoritos.</p>
+	<p class="text-tinta-suave text-[0.95rem] mb-5">
+		Encontre produtos para divulgar — por busca, oportunidades ou favoritos.
+	</p>
 
 	<FilterBar bind:busca bind:categoria bind:comissaoMin bind:vendasMin mostrarBusca={true} />
 
 	<!-- Fontes -->
 	<div class="flex flex-wrap gap-1.5 mb-6">
 		<button
-			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.curadoria ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.curadoria
+				? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro'
+				: ''}"
 			onclick={() => {
 				fontes.curadoria = !fontes.curadoria;
 			}}
 			type="button"
 			title="Busca por palavra-chave na API de afiliados Shopee"
 		>
-			🔍 Busca {#if fontes.curadoria && contagemCuradoria > 0}<span class="text-[0.65rem] bg-ouro text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{contagemCuradoria}</span>{/if}
+			🔍 Busca {#if fontes.curadoria && contagemCuradoria > 0}<span
+					class="text-[0.65rem] bg-ouro text-white w-4 h-4 rounded-full flex items-center justify-center font-bold"
+					>{contagemCuradoria}</span
+				>{/if}
 		</button>
 		<button
-			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.quedas ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.quedas
+				? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro'
+				: ''}"
 			onclick={() => {
 				fontes.quedas = !fontes.quedas;
 			}}
 			type="button"
 			title="Produtos que caíram de preço nas lojas monitoradas"
 		>
-			📉 Quedas {#if contagemQuedas > 0}<span class="text-[0.65rem] bg-sucesso text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{contagemQuedas}</span>{/if}
+			📉 Quedas {#if contagemQuedas > 0}<span
+					class="text-[0.65rem] bg-sucesso text-white w-4 h-4 rounded-full flex items-center justify-center font-bold"
+					>{contagemQuedas}</span
+				>{/if}
 		</button>
 		<button
-			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.novos ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.novos
+				? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro'
+				: ''}"
 			onclick={() => {
 				fontes.novos = !fontes.novos;
 			}}
 			type="button"
 			title="Produtos novos detectados nas lojas monitoradas"
 		>
-			🆕 Novos {#if contagemNovos > 0}<span class="text-[0.65rem] bg-rosa text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{contagemNovos}</span>{/if}
+			🆕 Novos {#if contagemNovos > 0}<span
+					class="text-[0.65rem] bg-rosa text-white w-4 h-4 rounded-full flex items-center justify-center font-bold"
+					>{contagemNovos}</span
+				>{/if}
 		</button>
 		<button
-			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.favoritos ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
+			class="py-[7px] px-3.5 border border-border rounded-full bg-porcelana text-tinta-suave text-[0.82rem] font-semibold cursor-pointer flex items-center gap-1 transition-[border-color,background] duration-150 hover:border-ouro hover:text-foreground {fontes.favoritos
+				? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro'
+				: ''}"
 			onclick={() => {
 				fontes.favoritos = !fontes.favoritos;
 			}}
 			type="button"
 			title="Produtos que você salvou como favorito"
 		>
-			⭐ Favoritos {#if $favoritos.length > 0}<span class="text-[0.65rem] bg-ouro text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">{$favoritos.length}</span>{/if}
+			⭐ Favoritos {#if $favoritos.length > 0}<span
+					class="text-[0.65rem] bg-ouro text-white w-4 h-4 rounded-full flex items-center justify-center font-bold"
+					>{$favoritos.length}</span
+				>{/if}
 		</button>
 	</div>
 	{#if !fontes.curadoria && !fontes.quedas && !fontes.novos && !fontes.favoritos}
@@ -203,18 +225,21 @@
 					{#if b.fontes?.includes('novos')}<span class="text-xs text-ouro" title="Monitora novos">🆕</span>{/if}
 					{#each b.keywords ?? [] as kw}
 						<button
-							class="py-[5px] px-3 border border-border rounded-full bg-porcelana text-foreground text-[0.82rem] font-semibold cursor-pointer hover:border-ouro hover:text-ouro-escuro {busca === kw ? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro' : ''}"
+							class="py-[5px] px-3 border border-border rounded-full bg-porcelana text-foreground text-[0.82rem] font-semibold cursor-pointer hover:border-ouro hover:text-ouro-escuro {busca ===
+							kw
+								? 'bg-ouro-fundo border-ouro-claro text-ouro-escuro'
+								: ''}"
 							onclick={() => aplicarBuscaSalva(b)}
-							type="button"
-						>{kw}</button>
+							type="button">{kw}</button
+						>
 					{/each}
 					{#if (b.keywords ?? []).length === 0 && b.categorias?.length}
 						{#each b.categorias as cat}
 							<button
 								class="py-[5px] px-3 border rounded-full bg-porcelana text-rosa border-[color-mix(in_srgb,var(--rosa)_30%,var(--linha))] text-[0.82rem] font-semibold cursor-pointer hover:border-ouro hover:text-ouro-escuro"
 								onclick={() => aplicarBuscaSalva(b)}
-								type="button"
-							>{cat}</button>
+								type="button">{cat}</button
+							>
 						{/each}
 					{/if}
 				</div>
@@ -226,7 +251,9 @@
 	{#if carregando}
 		<Loading mensagem="Buscando produtos…" />
 	{:else if erro}
-		<div class="bg-card border border-[color-mix(in_srgb,var(--erro-texto)_30%,var(--linha))] rounded-md p-5 text-center">
+		<div
+			class="bg-card border border-[color-mix(in_srgb,var(--erro-texto)_30%,var(--linha))] rounded-md p-5 text-center"
+		>
 			<p class="my-2"><strong>😕 {erro.message ?? erro}</strong></p>
 			<Button size="sm" onclick={carregar}>🔄 Tentar novamente</Button>
 		</div>
@@ -247,7 +274,10 @@
 						: 'Ative "Busca" e digite um termo, ou monitore lojas para ver oportunidades.'}
 		/>
 	{:else}
-		<p class="text-[0.82rem] text-tinta-suave mb-4">{resultados.length} {resultados.length === 1 ? 'produto' : 'produtos'}</p>
+		<p class="text-[0.82rem] text-tinta-suave mb-4">
+			{resultados.length}
+			{resultados.length === 1 ? 'produto' : 'produtos'}
+		</p>
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
 			{#each resultados as produto, i (produto.id || produto.produto_id || i)}
 				<ProductCard

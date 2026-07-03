@@ -75,7 +75,12 @@
 			onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
 			class="min-w-[200px] flex-1 rounded-sm border border-border bg-porcelana px-3.5 py-2.5 text-[0.9rem]"
 		/>
-		<button type="button" class="whitespace-nowrap rounded-sm border border-ouro bg-[var(--ouro)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-ouro-escuro disabled:cursor-not-allowed disabled:opacity-50" onclick={colarDoClipboard} disabled={resolvendoLink}>
+		<button
+			type="button"
+			class="whitespace-nowrap rounded-sm border border-ouro bg-[var(--ouro)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-ouro-escuro disabled:cursor-not-allowed disabled:opacity-50"
+			onclick={colarDoClipboard}
+			disabled={resolvendoLink}
+		>
 			{resolvendoLink ? '⏳ Resolvendo…' : '📋 Colar e aplicar'}
 		</button>
 	</div>

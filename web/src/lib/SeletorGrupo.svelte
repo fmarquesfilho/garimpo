@@ -73,7 +73,11 @@
 
 {#if carregando}
 	<div class="seletor-container relative w-full">
-		<input disabled placeholder="Carregando grupos…" class="w-full rounded-lg border border-border px-3 py-2 text-[0.9rem]" />
+		<input
+			disabled
+			placeholder="Carregando grupos…"
+			class="w-full rounded-lg border border-border px-3 py-2 text-[0.9rem]"
+		/>
 	</div>
 {:else if erro}
 	<div class="mb-1 text-xs text-[var(--erro-texto)]">{erro}</div>
@@ -85,16 +89,27 @@
 	/>
 {:else if grupos.length === 0}
 	<div class="seletor-container relative w-full">
-		<input disabled placeholder="Nenhum grupo encontrado" class="w-full rounded-lg border border-border px-3 py-2 text-[0.9rem]" />
+		<input
+			disabled
+			placeholder="Nenhum grupo encontrado"
+			class="w-full rounded-lg border border-border px-3 py-2 text-[0.9rem]"
+		/>
 	</div>
 {:else}
 	<div class="seletor-container relative w-full">
 		{#if selecionados.length > 0}
 			<div class="mb-1.5 flex flex-wrap gap-1">
 				{#each selecionados as g (g.id)}
-					<span class="inline-flex items-center gap-1 rounded-md border border-[var(--sucesso-borda)] bg-[var(--sucesso-fundo)] px-2 py-0.5 text-xs text-[var(--sucesso-texto)]">
+					<span
+						class="inline-flex items-center gap-1 rounded-md border border-[var(--sucesso-borda)] bg-[var(--sucesso-fundo)] px-2 py-0.5 text-xs text-[var(--sucesso-texto)]"
+					>
 						{g.nome}
-						<button type="button" class="cursor-pointer border-none bg-transparent p-0 px-0.5 text-xs leading-none text-[var(--sucesso-texto)] hover:text-[var(--erro-texto)]" onclick={() => removerGrupo(g.id)} title="Remover">✕</button>
+						<button
+							type="button"
+							class="cursor-pointer border-none bg-transparent p-0 px-0.5 text-xs leading-none text-[var(--sucesso-texto)] hover:text-[var(--erro-texto)]"
+							onclick={() => removerGrupo(g.id)}
+							title="Remover">✕</button
+						>
 					</span>
 				{/each}
 			</div>
@@ -115,17 +130,26 @@
 			{#if aberto}
 				{@const lista = filtrados()}
 				{#if lista.length > 0}
-					<ul class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.1)]" onpointerdown={(e) => e.preventDefault()}>
+					<ul
+						class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+						onpointerdown={(e) => e.preventDefault()}
+					>
 						{#each lista as g (g.id)}
 							<li>
-								<button type="button" class="block w-full cursor-pointer rounded-md border-none bg-transparent px-3 py-2 text-left text-[0.88rem] hover:bg-porcelana" onclick={() => selecionar(g)}>
+								<button
+									type="button"
+									class="block w-full cursor-pointer rounded-md border-none bg-transparent px-3 py-2 text-left text-[0.88rem] hover:bg-porcelana"
+									onclick={() => selecionar(g)}
+								>
 									{g.nome}
 								</button>
 							</li>
 						{/each}
 					</ul>
 				{:else}
-					<ul class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+					<ul
+						class="absolute top-full right-0 left-0 z-100 mt-1 max-h-[200px] list-none overflow-y-auto rounded-lg border border-border bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+					>
 						<li class="px-3 py-2 text-sm text-tinta-suave">Nenhum grupo encontrado</li>
 					</ul>
 				{/if}

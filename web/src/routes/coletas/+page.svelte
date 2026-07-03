@@ -81,7 +81,11 @@
 	</p>
 	<label class="text-sm text-tinta-suave">
 		janela:
-		<select bind:value={dias} onchange={carregar} class="dado font-mono py-1.5 px-2.5 rounded-lg border border-border bg-porcelana ml-1.5">
+		<select
+			bind:value={dias}
+			onchange={carregar}
+			class="dado font-mono py-1.5 px-2.5 rounded-lg border border-border bg-porcelana ml-1.5"
+		>
 			<option value={7}>7 dias</option>
 			<option value={30}>30 dias</option>
 			<option value={90}>90 dias</option>
@@ -107,14 +111,21 @@
 						<div class="flex justify-between items-center">
 							<span class="font-bold text-sm">{b.id}</span>
 							{#if b.cron}
-								<span class="text-[0.7rem] font-mono py-0.5 px-2 rounded-full bg-ouro-fundo text-ouro-escuro">⏱ {b.cron}</span>
+								<span class="text-[0.7rem] font-mono py-0.5 px-2 rounded-full bg-ouro-fundo text-ouro-escuro"
+									>⏱ {b.cron}</span
+								>
 							{:else}
-								<span class="text-[0.7rem] py-0.5 px-2 rounded-full bg-porcelana text-tinta-suave border border-border">manual</span>
+								<span class="text-[0.7rem] py-0.5 px-2 rounded-full bg-porcelana text-tinta-suave border border-border"
+									>manual</span
+								>
 							{/if}
 						</div>
 						<div class="flex flex-wrap gap-1">
 							{#each b.keywords ?? [] as kw}
-								<span class="text-xs font-semibold py-0.5 px-2 rounded-full bg-porcelana border border-border text-tinta">{kw}</span>
+								<span
+									class="text-xs font-semibold py-0.5 px-2 rounded-full bg-porcelana border border-border text-tinta"
+									>{kw}</span
+								>
 							{/each}
 						</div>
 						<div class="text-xs text-tinta-suave">
@@ -132,7 +143,9 @@
 			<h2 class="text-xl mb-2">Resumo por keyword</h2>
 			<p class="text-tinta-suave text-sm mb-4">Quantas coletas cada keyword teve na janela de {dias} dias.</p>
 			<div class="border border-border rounded-md overflow-hidden bg-nevoa">
-				<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] gap-2 py-3 px-4 items-center bg-[color-mix(in_srgb,var(--porcelana)_70%,white)] text-[0.7rem] font-semibold tracking-wide uppercase text-tinta-suave border-b border-border max-md:hidden">
+				<div
+					class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] gap-2 py-3 px-4 items-center bg-[color-mix(in_srgb,var(--porcelana)_70%,white)] text-[0.7rem] font-semibold tracking-wide uppercase text-tinta-suave border-b border-border max-md:hidden"
+				>
 					<span>keyword</span>
 					<span>categoria</span>
 					<span>coletas</span>
@@ -140,7 +153,9 @@
 					<span>última coleta</span>
 				</div>
 				{#each resumoPorKeyword() as r (r.keyword)}
-					<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] max-md:grid-cols-[1fr_1fr] gap-2 max-md:gap-1 py-3 px-4 items-center border-t border-border first:border-t-0 text-sm">
+					<div
+						class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] max-md:grid-cols-[1fr_1fr] gap-2 max-md:gap-1 py-3 px-4 items-center border-t border-border first:border-t-0 text-sm"
+					>
 						<span class="font-semibold text-rosa">{r.keyword}</span>
 						<span class="dado">{r.categoria || '—'}</span>
 						<span class="dado">{r.total}</span>
@@ -158,12 +173,16 @@
 		{#if coletas.length === 0}
 			<div class="bg-nevoa border border-border rounded-md p-8 text-center">
 				<p>Nenhuma coleta encontrada nesta janela.</p>
-				<p class="text-tinta-suave text-sm">As coletas acontecem nos horários agendados (cron) ou quando disparadas manualmente.</p>
+				<p class="text-tinta-suave text-sm">
+					As coletas acontecem nos horários agendados (cron) ou quando disparadas manualmente.
+				</p>
 			</div>
 		{:else}
 			<p class="text-tinta-suave text-sm mb-4">{coletas.length} execuções nos últimos {dias} dias.</p>
 			<div class="border border-border rounded-md overflow-hidden bg-nevoa">
-				<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] gap-2 py-3 px-4 items-center bg-[color-mix(in_srgb,var(--porcelana)_70%,white)] text-[0.7rem] font-semibold tracking-wide uppercase text-tinta-suave border-b border-border max-md:hidden">
+				<div
+					class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] gap-2 py-3 px-4 items-center bg-[color-mix(in_srgb,var(--porcelana)_70%,white)] text-[0.7rem] font-semibold tracking-wide uppercase text-tinta-suave border-b border-border max-md:hidden"
+				>
 					<span>quando</span>
 					<span>keyword</span>
 					<span>categoria</span>
@@ -171,7 +190,9 @@
 					<span>produtos</span>
 				</div>
 				{#each coletas as c, i (i)}
-					<div class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] max-md:grid-cols-[1fr_1fr] gap-2 max-md:gap-1 py-3 px-4 items-center border-t border-border first:border-t-0 text-sm">
+					<div
+						class="grid grid-cols-[1.4fr_1.2fr_1fr_1fr_0.8fr] max-md:grid-cols-[1fr_1fr] gap-2 max-md:gap-1 py-3 px-4 items-center border-t border-border first:border-t-0 text-sm"
+					>
 						<span class="dado font-mono text-xs">{dataHora(c.coletado_em)}</span>
 						<span class="font-semibold text-rosa">{c.keyword || '—'}</span>
 						<span class="dado">{c.categoria || '—'}</span>

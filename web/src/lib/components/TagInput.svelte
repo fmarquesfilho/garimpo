@@ -48,7 +48,12 @@
 				}
 			}}
 		/>
-		<button type="button" class="shrink-0 rounded-sm border border-border bg-ouro-fundo px-4 text-lg font-bold text-ouro-escuro transition-[border-color] duration-150 ease-linear hover:border-ouro motion-reduce:transition-none" onclick={adicionar} aria-label="Adicionar tag">+</button>
+		<button
+			type="button"
+			class="shrink-0 rounded-sm border border-border bg-ouro-fundo px-4 text-lg font-bold text-ouro-escuro transition-[border-color] duration-150 ease-linear hover:border-ouro motion-reduce:transition-none"
+			onclick={adicionar}
+			aria-label="Adicionar tag">+</button
+		>
 	</div>
 	{#if tags.length > 0}
 		<div class="flex flex-wrap gap-2">
@@ -56,7 +61,12 @@
 				<Badge variant={badgeVariant}>
 					{#if variant === 'shop'}🏪{/if}
 					{tag}
-					<button type="button" class="cursor-pointer border-none bg-transparent px-1 py-0.5 text-xs text-inherit opacity-70 hover:opacity-100" onclick={() => remover(tag)} aria-label="Remover {tag}">✕</button>
+					<button
+						type="button"
+						class="cursor-pointer border-none bg-transparent px-1 py-0.5 text-xs text-inherit opacity-70 hover:opacity-100"
+						onclick={() => remover(tag)}
+						aria-label="Remover {tag}">✕</button
+					>
 				</Badge>
 			{/each}
 		</div>

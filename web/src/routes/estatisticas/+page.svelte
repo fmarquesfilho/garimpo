@@ -69,7 +69,11 @@
 <div class="max-w-[900px]">
 	<header class="mb-6 flex items-center justify-between">
 		<h1 class="m-0 text-2xl">📊 Dashboard</h1>
-		<select bind:value={dias} onchange={carregar} class="rounded-sm border border-border bg-porcelana px-3 py-1.5 font-mono text-sm">
+		<select
+			bind:value={dias}
+			onchange={carregar}
+			class="rounded-sm border border-border bg-porcelana px-3 py-1.5 font-mono text-sm"
+		>
 			<option value={7}>7 dias</option>
 			<option value={30}>30 dias</option>
 			<option value={90}>90 dias</option>

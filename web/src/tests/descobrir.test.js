@@ -25,7 +25,7 @@ const favoritos = [{ produto_id: 'F1', nome: 'Meu Favorito Perfume', preco: 150,
 // ── Cenários de fonte ─────────────────────────────────────────────────────
 
 // eslint-disable-next-line max-lines-per-function
-	describe('Descobrir — Fontes de dados', () => {
+describe('Descobrir — Fontes de dados', () => {
 	it('cenário 1: Busca com keyword retorna curadoria', () => {
 		const r = montarResultados({
 			fontes: { curadoria: true, quedas: false, novos: false, favoritos: false },

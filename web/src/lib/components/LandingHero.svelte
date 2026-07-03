@@ -31,5 +31,8 @@
 			<span>Rastreamento de conversões por destino</span>
 		</div>
 	</div>
-	<button class="cursor-pointer rounded-md border-none bg-[var(--ouro)] px-9 py-3.5 text-base font-bold text-white shadow-[0_4px_12px_rgba(184,142,58,0.3)] hover:bg-[var(--ouro-hover)] hover:shadow-[0_6px_20px_rgba(184,142,58,0.4)]" onclick={login}>Entrar com Google</button>
+	<button
+		class="cursor-pointer rounded-md border-none bg-[var(--ouro)] px-9 py-3.5 text-base font-bold text-white shadow-[0_4px_12px_rgba(184,142,58,0.3)] hover:bg-[var(--ouro-hover)] hover:shadow-[0_6px_20px_rgba(184,142,58,0.4)]"
+		onclick={login}>Entrar com Google</button
+	>
 </section>

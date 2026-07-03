@@ -153,7 +153,10 @@
 				{#each buscasComLojas as b (b.id)}
 					<div class="relative">
 						<button
-							class="border border-border bg-card rounded-sm px-4 py-3 pr-8 cursor-pointer text-left flex flex-col gap-0.5 hover:border-ouro {buscaSelecionada?.id === b.id ? 'border-ouro bg-ouro-fundo' : ''}"
+							class="border border-border bg-card rounded-sm px-4 py-3 pr-8 cursor-pointer text-left flex flex-col gap-0.5 hover:border-ouro {buscaSelecionada?.id ===
+							b.id
+								? 'border-ouro bg-ouro-fundo'
+								: ''}"
 							onclick={() => selecionarBusca(b)}
 						>
 							<strong class="text-sm">{b.nome || b.id}</strong>
@@ -164,8 +167,8 @@
 						<button
 							class="absolute top-1 right-1 w-[22px] h-[22px] rounded-full border-none bg-transparent text-tinta-suave text-xs cursor-pointer flex items-center justify-center hover:bg-erro-fundo hover:text-erro"
 							onclick={() => handleRemoverLoja(b)}
-							title="Remover monitoramento"
-						>✕</button>
+							title="Remover monitoramento">✕</button
+						>
 					</div>
 				{/each}
 			</div>
@@ -185,7 +188,9 @@
 						{:else if erroNovidades}
 							<Alert variant="error">{erroNovidades}</Alert>
 						{:else if !novidades || novidades.produtos_novos?.length === 0}
-							<p class="text-sm text-tinta-suave py-4">Nenhum produto novo detectado nos últimos {novidades?.dias_janela ?? 7} dias.</p>
+							<p class="text-sm text-tinta-suave py-4">
+								Nenhum produto novo detectado nos últimos {novidades?.dias_janela ?? 7} dias.
+							</p>
 						{:else}
 							<p class="text-sm mb-4">
 								<strong>{novidades.produtos_novos.length}</strong> produto(s) novo(s) detectado(s) nos últimos {novidades.dias_janela}
@@ -193,7 +198,9 @@
 							</p>
 							<div class="flex flex-col gap-3">
 								{#each novidades.produtos_novos as p (p.produto_id)}
-									<div class="flex gap-3 px-4 py-3 border border-sucesso-borda border-l-[3px] border-l-sucesso rounded-sm bg-sucesso-fundo">
+									<div
+										class="flex gap-3 px-4 py-3 border border-sucesso-borda border-l-[3px] border-l-sucesso rounded-sm bg-sucesso-fundo"
+									>
 										<div class="text-xl">🆕</div>
 										<div class="flex-1">
 											<strong class="text-sm">{p.nome}</strong>
@@ -223,29 +230,59 @@
 								<table class="w-full border-collapse text-[0.85rem]">
 									<thead>
 										<tr>
-											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Produto</th>
-											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Antes</th>
-											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Agora</th>
-											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Variação</th>
-											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave">Detectado</th>
-											<th class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"></th>
+											<th
+												class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"
+												>Produto</th
+											>
+											<th
+												class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"
+												>Antes</th
+											>
+											<th
+												class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"
+												>Agora</th
+											>
+											<th
+												class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"
+												>Variação</th
+											>
+											<th
+												class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"
+												>Detectado</th
+											>
+											<th
+												class="text-left font-semibold px-2.5 py-2 border-b-2 border-border text-xs uppercase text-tinta-suave"
+											></th>
 										</tr>
 									</thead>
 									<tbody>
 										{#each novidades.variacoes as v (v.produto_id)}
 											<tr>
-												<td class="px-2.5 py-2 border-b border-border max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{v.nome}</td>
+												<td
+													class="px-2.5 py-2 border-b border-border max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap"
+													>{v.nome}</td
+												>
 												<td class="px-2.5 py-2 border-b border-border">{brl(v.preco_anterior)}</td>
-												<td class="px-2.5 py-2 border-b border-border font-bold {v.variacao_pct < 0 ? 'text-sucesso' : v.variacao_pct > 0 ? 'text-erro' : ''}">{brl(v.preco_atual)}</td>
+												<td
+													class="px-2.5 py-2 border-b border-border font-bold {v.variacao_pct < 0
+														? 'text-sucesso'
+														: v.variacao_pct > 0
+															? 'text-erro'
+															: ''}">{brl(v.preco_atual)}</td
+												>
 												<td class="px-2.5 py-2 border-b border-border font-bold">
 													<span
-														class="inline-block px-2 py-0.5 rounded-full text-xs font-bold {v.variacao_pct < 0 ? 'bg-sucesso-fundo text-sucesso' : 'bg-erro-fundo text-erro'}"
+														class="inline-block px-2 py-0.5 rounded-full text-xs font-bold {v.variacao_pct < 0
+															? 'bg-sucesso-fundo text-sucesso'
+															: 'bg-erro-fundo text-erro'}"
 													>
 														{v.variacao_pct < 0 ? '↓' : '↑'}
 														{Math.abs(v.variacao_pct * 100).toFixed(1)}%
 													</span>
 												</td>
-												<td class="px-2.5 py-2 border-b border-border text-xs text-tinta-suave">{v.detectado_em?.split('T')[0]}</td>
+												<td class="px-2.5 py-2 border-b border-border text-xs text-tinta-suave"
+													>{v.detectado_em?.split('T')[0]}</td
+												>
 												<td class="px-2.5 py-2 border-b border-border">
 													<button
 														class="border border-border bg-porcelana rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-base shrink-0 hover:border-rosa hover:bg-[color-mix(in_srgb,var(--rosa)_8%,white)]"

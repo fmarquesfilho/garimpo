@@ -72,7 +72,9 @@
 				size="sm"
 				placeholder="Selecione origem"
 			/>
-			<span class="mt-0.5 block text-xs text-tinta-suave">Se a loja vende só produtos de um país, marque aqui para badge automático.</span>
+			<span class="mt-0.5 block text-xs text-tinta-suave"
+				>Se a loja vende só produtos de um país, marque aqui para badge automático.</span
+			>
 		</div>
 		{#if erroAdicionar}
 			<Alert variant="error" inline>{erroAdicionar}</Alert>

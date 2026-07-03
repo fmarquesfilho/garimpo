@@ -13,10 +13,11 @@
 </script>
 
 <div class="rounded-sm border border-border bg-card px-4 py-3 text-center" {...rest}>
-	<span class="block font-mono text-2xl font-bold leading-tight tabular-nums"
+	<span
+		class="block font-mono text-2xl font-bold leading-tight tabular-nums"
 		class:text-ouro={resolvedVariant === 'gold'}
 		class:text-[var(--sucesso-texto)]={resolvedVariant === 'green'}
-		class:text-[var(--erro-texto)]={resolvedVariant === 'red'}
-	>{valor}</span>
+		class:text-[var(--erro-texto)]={resolvedVariant === 'red'}>{valor}</span
+	>
 	<span class="text-xs font-semibold uppercase text-tinta-suave">{label}</span>
 </div>

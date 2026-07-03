@@ -17,7 +17,11 @@
 		>
 			{tab.label}
 			{#if tab.badge}
-				<span class="rounded-full bg-ouro-fundo px-2 py-px text-xs font-bold text-ouro-escuro" class:!bg-[var(--erro-fundo)]={tab.badgeVariant === 'alert'} class:!text-[var(--erro-texto)]={tab.badgeVariant === 'alert'}>
+				<span
+					class="rounded-full bg-ouro-fundo px-2 py-px text-xs font-bold text-ouro-escuro"
+					class:!bg-[var(--erro-fundo)]={tab.badgeVariant === 'alert'}
+					class:!text-[var(--erro-texto)]={tab.badgeVariant === 'alert'}
+				>
 					{tab.badge}
 				</span>
 			{/if}

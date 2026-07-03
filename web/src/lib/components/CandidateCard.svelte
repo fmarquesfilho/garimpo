@@ -30,10 +30,18 @@
 	}
 </script>
 
-<article class="overflow-hidden rounded-md border border-border bg-card shadow-sm transition-[transform,box-shadow] duration-150 ease-linear hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(46,34,38,0.2)]" class:!border-[var(--ouro-claro)]={destaque}>
+<article
+	class="overflow-hidden rounded-md border border-border bg-card shadow-sm transition-[transform,box-shadow] duration-150 ease-linear hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(46,34,38,0.2)]"
+	class:!border-[var(--ouro-claro)]={destaque}
+>
 	{#if candidato.imagem}
 		<a href={candidato.link || '#'} target="_blank" rel="noopener" class="block no-underline">
-			<img src={candidato.imagem} alt={candidato.nome} class="block h-[180px] w-full bg-porcelana object-cover max-sm:h-[140px]" loading="lazy" />
+			<img
+				src={candidato.imagem}
+				alt={candidato.nome}
+				class="block h-[180px] w-full bg-porcelana object-cover max-sm:h-[140px]"
+				loading="lazy"
+			/>
 		</a>
 	{/if}
 
@@ -49,15 +57,22 @@
 					<span class="max-w-[140px] truncate text-xs font-semibold text-tinta-suave">🏪 {candidato.loja}</span>
 				{/if}
 				{#if candidato.origem}
-					<span class="rounded-full bg-[var(--sucesso-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--sucesso-texto)]"
+					<span
+						class="rounded-full bg-[var(--sucesso-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--sucesso-texto)]"
 						>{#if candidato.origem === 'Coreia'}🇰🇷{:else if candidato.origem === 'Japão'}🇯🇵{:else if candidato.origem === 'China'}🇨🇳{/if}
 						{candidato.origem}</span
 					>
 				{/if}
 				{#if candidato.desconto > 0 && candidato.desconto <= 1}
-					<span class="rounded-full bg-[var(--erro-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--erro-texto)]">🔥 {Math.round(candidato.desconto * 100)}% OFF</span>
+					<span
+						class="rounded-full bg-[var(--erro-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--erro-texto)]"
+						>🔥 {Math.round(candidato.desconto * 100)}% OFF</span
+					>
 				{:else if candidato.desconto > 1 && candidato.desconto <= 100}
-					<span class="rounded-full bg-[var(--erro-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--erro-texto)]">🔥 {Math.round(candidato.desconto)}% OFF</span>
+					<span
+						class="rounded-full bg-[var(--erro-fundo)] px-1.5 py-px text-[0.65rem] font-bold text-[var(--erro-texto)]"
+						>🔥 {Math.round(candidato.desconto)}% OFF</span
+					>
 				{/if}
 				{#if candidato.oferta_expira}
 					<span

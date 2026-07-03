@@ -148,7 +148,9 @@
 
 <section class="max-w-[700px]">
 	<h1 class="text-2xl mb-1">⚙️ Configurar Conta</h1>
-	<p class="text-tinta-suave text-sm mb-6">Configure suas credenciais para usar o Garimpei com sua conta de afiliado.</p>
+	<p class="text-tinta-suave text-sm mb-6">
+		Configure suas credenciais para usar o Garimpei com sua conta de afiliado.
+	</p>
 
 	{#if !$usuario}
 		<div class="bg-porcelana p-4 rounded-sm text-tinta-suave">Faça login para configurar sua conta.</div>
@@ -165,8 +167,20 @@
 		<!-- Progress bar -->
 		<div class="flex gap-3 mb-6 max-sm:flex-wrap">
 			{#each [1, 2, 3, 4] as s}
-				<div class="flex items-center gap-1.5 py-1.5 px-3 rounded-full text-sm font-semibold {step >= s ? 'bg-sucesso-fundo text-sucesso' : step === s - 1 ? 'bg-ouro-fundo text-ouro-escuro' : 'bg-porcelana text-tinta-suave'}">
-					<span class="w-5 h-5 rounded-full flex items-center justify-center text-[0.7rem] text-white {step >= s ? 'bg-sucesso' : step === s - 1 ? 'bg-ouro' : 'bg-tinta-suave'}">{s}</span>
+				<div
+					class="flex items-center gap-1.5 py-1.5 px-3 rounded-full text-sm font-semibold {step >= s
+						? 'bg-sucesso-fundo text-sucesso'
+						: step === s - 1
+							? 'bg-ouro-fundo text-ouro-escuro'
+							: 'bg-porcelana text-tinta-suave'}"
+				>
+					<span
+						class="w-5 h-5 rounded-full flex items-center justify-center text-[0.7rem] text-white {step >= s
+							? 'bg-sucesso'
+							: step === s - 1
+								? 'bg-ouro'
+								: 'bg-tinta-suave'}">{s}</span
+					>
 					<span>
 						{#if s === 1}Termos{:else if s === 2}Shopee{:else if s === 3}Telegram{:else}Validar{/if}
 					</span>
@@ -207,23 +221,38 @@
 					<p>Você precisa de um App ID e Secret do painel de afiliados da Shopee:</p>
 					<ol class="pl-5">
 						<li class="mb-1.5">
-							Acesse <a href="https://affiliate.shopee.com.br/open_api" target="_blank" rel="noopener" class="text-ouro underline"
-								>affiliate.shopee.com.br/open_api</a
+							Acesse <a
+								href="https://affiliate.shopee.com.br/open_api"
+								target="_blank"
+								rel="noopener"
+								class="text-ouro underline">affiliate.shopee.com.br/open_api</a
 							>
 						</li>
 						<li class="mb-1.5">Faça login com sua conta de afiliado</li>
-						<li class="mb-1.5">Na seção "Gerenciamento de API", copie o <strong>App ID</strong> e <strong>Secret</strong></li>
+						<li class="mb-1.5">
+							Na seção "Gerenciamento de API", copie o <strong>App ID</strong> e <strong>Secret</strong>
+						</li>
 						<li class="mb-1.5">Se não tiver acesso, solicite via Central de Ajuda (demora ~2 semanas)</li>
 					</ol>
 				</div>
 				<div class="flex flex-col gap-3 mb-4">
 					<label class="text-sm font-semibold flex flex-col gap-1">
 						App ID
-						<input type="text" class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]" bind:value={appId} placeholder="Ex: 18332030606" />
+						<input
+							type="text"
+							class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]"
+							bind:value={appId}
+							placeholder="Ex: 18332030606"
+						/>
 					</label>
 					<label class="text-sm font-semibold flex flex-col gap-1">
 						Secret
-						<input type="password" class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]" bind:value={secret} placeholder="Ex: MJS67QHU7HMCRX5..." />
+						<input
+							type="password"
+							class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]"
+							bind:value={secret}
+							placeholder="Ex: MJS67QHU7HMCRX5..."
+						/>
 					</label>
 				</div>
 				<Button onclick={salvarShopee} disabled={salvandoShopee}>
@@ -241,13 +270,17 @@
 				<!-- Seletor de canal -->
 				<div class="flex gap-2 mb-4">
 					<button
-						class="py-2 px-4 border rounded-lg text-sm font-semibold cursor-pointer {canalEscolhido === 'telegram' ? 'bg-ouro-fundo border-ouro text-ouro-escuro' : 'bg-[var(--branco)] border-border text-tinta-suave hover:border-tinta-suave'}"
+						class="py-2 px-4 border rounded-lg text-sm font-semibold cursor-pointer {canalEscolhido === 'telegram'
+							? 'bg-ouro-fundo border-ouro text-ouro-escuro'
+							: 'bg-[var(--branco)] border-border text-tinta-suave hover:border-tinta-suave'}"
 						onclick={() => (canalEscolhido = 'telegram')}
 					>
 						✈️ Telegram
 					</button>
 					<button
-						class="py-2 px-4 border rounded-lg text-sm font-semibold cursor-pointer {canalEscolhido === 'whatsapp' ? 'bg-ouro-fundo border-ouro text-ouro-escuro' : 'bg-[var(--branco)] border-border text-tinta-suave hover:border-tinta-suave'}"
+						class="py-2 px-4 border rounded-lg text-sm font-semibold cursor-pointer {canalEscolhido === 'whatsapp'
+							? 'bg-ouro-fundo border-ouro text-ouro-escuro'
+							: 'bg-[var(--branco)] border-border text-tinta-suave hover:border-tinta-suave'}"
 						onclick={() => (canalEscolhido = 'whatsapp')}
 					>
 						💬 WhatsApp
@@ -259,27 +292,45 @@
 						<p>Configure um bot para publicar ofertas no Telegram:</p>
 						<ol class="pl-5">
 							<li class="mb-1.5">
-								Abra o Telegram e converse com <a href="https://t.me/BotFather" target="_blank" rel="noopener" class="text-ouro underline"
-									>@BotFather</a
+								Abra o Telegram e converse com <a
+									href="https://t.me/BotFather"
+									target="_blank"
+									rel="noopener"
+									class="text-ouro underline">@BotFather</a
 								>
 							</li>
-							<li class="mb-1.5">Envie <code class="bg-porcelana px-1 py-px rounded text-sm">/newbot</code> e siga as instruções para criar um bot</li>
+							<li class="mb-1.5">
+								Envie <code class="bg-porcelana px-1 py-px rounded text-sm">/newbot</code> e siga as instruções para criar
+								um bot
+							</li>
 							<li class="mb-1.5">Copie o <strong>Token</strong> fornecido</li>
 							<li class="mb-1.5">Crie um grupo/canal, adicione o bot como admin</li>
 							<li class="mb-1.5">
 								Pegue o <strong>Chat ID</strong> (use
-								<a href="https://t.me/getmyid_bot" target="_blank" rel="noopener" class="text-ouro underline">@getmyid_bot</a>)
+								<a href="https://t.me/getmyid_bot" target="_blank" rel="noopener" class="text-ouro underline"
+									>@getmyid_bot</a
+								>)
 							</li>
 						</ol>
 					</div>
 					<div class="flex flex-col gap-3 mb-4">
 						<label class="text-sm font-semibold flex flex-col gap-1">
 							Token do Bot
-							<input type="password" class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]" bind:value={telegramToken} placeholder="Ex: 123456:ABC-DEF..." />
+							<input
+								type="password"
+								class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]"
+								bind:value={telegramToken}
+								placeholder="Ex: 123456:ABC-DEF..."
+							/>
 						</label>
 						<label class="text-sm font-semibold flex flex-col gap-1">
 							Chat ID do grupo/canal
-							<input type="text" class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]" bind:value={telegramChatId} placeholder="Ex: -1001234567890" />
+							<input
+								type="text"
+								class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]"
+								bind:value={telegramChatId}
+								placeholder="Ex: -1001234567890"
+							/>
 						</label>
 					</div>
 				{:else}
@@ -287,13 +338,18 @@
 						<p>Configure o WhatsApp Business via Meta Cloud API:</p>
 						<ol class="pl-5">
 							<li class="mb-1.5">
-								Acesse <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener" class="text-ouro underline"
-									>Meta for Developers</a
+								Acesse <a
+									href="https://developers.facebook.com/apps"
+									target="_blank"
+									rel="noopener"
+									class="text-ouro underline">Meta for Developers</a
 								>
 							</li>
 							<li class="mb-1.5">Crie um app do tipo "Business" → selecione "WhatsApp"</li>
 							<li class="mb-1.5">Em WhatsApp → Configuração da API, copie o <strong>Phone Number ID</strong></li>
-							<li class="mb-1.5">Gere um <strong>Access Token</strong> permanente (System User no Business Settings)</li>
+							<li class="mb-1.5">
+								Gere um <strong>Access Token</strong> permanente (System User no Business Settings)
+							</li>
 							<li class="mb-1.5">Registre o número de telefone e configure os templates de mensagem</li>
 						</ol>
 						<p class="text-sm text-tinta-suave bg-porcelana py-2 px-3 rounded-md mt-2">
@@ -303,11 +359,21 @@
 					<div class="flex flex-col gap-3 mb-4">
 						<label class="text-sm font-semibold flex flex-col gap-1">
 							Phone Number ID
-							<input type="text" class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]" bind:value={whatsappPhoneId} placeholder="Ex: 1234567890123456" />
+							<input
+								type="text"
+								class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]"
+								bind:value={whatsappPhoneId}
+								placeholder="Ex: 1234567890123456"
+							/>
 						</label>
 						<label class="text-sm font-semibold flex flex-col gap-1">
 							Access Token (Meta)
-							<input type="password" class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]" bind:value={whatsappToken} placeholder="Ex: EAAG..." />
+							<input
+								type="password"
+								class="py-2.5 px-3.5 border border-border rounded-lg text-sm focus:outline-none focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)]"
+								bind:value={whatsappToken}
+								placeholder="Ex: EAAG..."
+							/>
 						</label>
 					</div>
 				{/if}

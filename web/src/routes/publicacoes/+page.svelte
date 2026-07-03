@@ -119,21 +119,33 @@
 				<!-- Filtros de status -->
 				<nav class="flex gap-0.5 mb-5 border-b-2 border-border">
 					<button
-						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro === '' ? '!text-tinta !border-b-ouro' : ''}"
-						onclick={() => (filtro = '')}
-					>Todas</button>
+						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro ===
+						''
+							? '!text-tinta !border-b-ouro'
+							: ''}"
+						onclick={() => (filtro = '')}>Todas</button
+					>
 					<button
-						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro === 'agendada' ? '!text-tinta !border-b-ouro' : ''}"
-						onclick={() => (filtro = 'agendada')}
-					>⏱ Agendadas</button>
+						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro ===
+						'agendada'
+							? '!text-tinta !border-b-ouro'
+							: ''}"
+						onclick={() => (filtro = 'agendada')}>⏱ Agendadas</button
+					>
 					<button
-						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro === 'enviada' ? '!text-tinta !border-b-ouro' : ''}"
-						onclick={() => (filtro = 'enviada')}
-					>✓ Enviadas</button>
+						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro ===
+						'enviada'
+							? '!text-tinta !border-b-ouro'
+							: ''}"
+						onclick={() => (filtro = 'enviada')}>✓ Enviadas</button
+					>
 					<button
-						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro === 'erro' ? '!text-tinta !border-b-ouro' : ''}"
-						onclick={() => (filtro = 'erro')}
-					>✕ Erros</button>
+						class="py-2 px-4 border-none bg-transparent font-semibold text-sm text-tinta-suave cursor-pointer border-b-2 border-b-transparent -mb-0.5 {filtro ===
+						'erro'
+							? '!text-tinta !border-b-ouro'
+							: ''}"
+						onclick={() => (filtro = 'erro')}>✕ Erros</button
+					>
 				</nav>
 
 				{#if erro}
@@ -143,13 +155,26 @@
 				{#if carregando}
 					<Loading mensagem="Carregando…" />
 				{:else if publicacoes.length === 0}
-					<p class="text-tinta-suave text-sm">Nenhuma publicação {filtro ? `com status "${filtro}"` : ''} encontrada.</p>
+					<p class="text-tinta-suave text-sm">
+						Nenhuma publicação {filtro ? `com status "${filtro}"` : ''} encontrada.
+					</p>
 				{:else}
 					<div class="flex flex-col gap-3">
 						{#each publicacoes as p (p.id)}
-							<div class="py-3 px-4 border border-border rounded-sm bg-[var(--branco)] border-l-[3px] {p.status === 'enviada' ? 'border-l-sucesso' : p.status === 'agendada' ? 'border-l-ouro' : p.status === 'erro' ? 'border-l-erro' : 'border-l-border'}">
+							<div
+								class="py-3 px-4 border border-border rounded-sm bg-[var(--branco)] border-l-[3px] {p.status ===
+								'enviada'
+									? 'border-l-sucesso'
+									: p.status === 'agendada'
+										? 'border-l-ouro'
+										: p.status === 'erro'
+											? 'border-l-erro'
+											: 'border-l-border'}"
+							>
 								<div class="flex items-center gap-3 flex-wrap">
-									<span class="text-xs font-bold py-0.5 px-2 rounded-full bg-porcelana">{statusIcon[p.status] ?? '?'} {p.status}</span>
+									<span class="text-xs font-bold py-0.5 px-2 rounded-full bg-porcelana"
+										>{statusIcon[p.status] ?? '?'} {p.status}</span
+									>
 									<strong class="text-sm flex-1">{p.nome || '(sem título)'}</strong>
 									{#if p.preco > 0}
 										<span class="font-bold text-ouro text-sm">R$ {p.preco?.toFixed(2)}</span>
@@ -195,7 +220,9 @@
 				{:else if carregandoReais}
 					<div class="my-4">
 						<Loading mensagem="Consultando relatório de conversões da Shopee…" />
-						<p class="text-tinta-suave text-sm mt-1">Isso pode levar até 15 segundos. Se não responder, tente "Sincronizar" novamente.</p>
+						<p class="text-tinta-suave text-sm mt-1">
+							Isso pode levar até 15 segundos. Se não responder, tente "Sincronizar" novamente.
+						</p>
 					</div>
 				{:else if !conversoesReais || conversoesReais.total === 0}
 					<div class="bg-nevoa border border-border rounded-md p-5">
@@ -209,13 +236,21 @@
 							<li class="my-2 text-base">📅 Data da <strong>compra</strong></li>
 							<li class="my-2 text-base">⏳ <strong>Status</strong> (pendente ou confirmada)</li>
 						</ul>
-						<p class="text-sm text-tinta-suave mt-2">💡 O sistema consulta os últimos {diasReais} dias do relatório de conversões da Shopee.</p>
+						<p class="text-sm text-tinta-suave mt-2">
+							💡 O sistema consulta os últimos {diasReais} dias do relatório de conversões da Shopee.
+						</p>
 					</div>
 				{:else}
 					<!-- Resumo -->
 					<div class="flex gap-3 mb-5 flex-wrap">
-						<div class="flex flex-col items-center p-4 border border-sucesso-borda rounded-sm min-w-[100px] bg-sucesso-fundo">
-							<span class="text-xl font-bold font-mono">{conversoesReais.comissao_total?.toFixed(2) ? `R$ ${conversoesReais.comissao_total.toFixed(2)}` : 'R$ 0.00'}</span>
+						<div
+							class="flex flex-col items-center p-4 border border-sucesso-borda rounded-sm min-w-[100px] bg-sucesso-fundo"
+						>
+							<span class="text-xl font-bold font-mono"
+								>{conversoesReais.comissao_total?.toFixed(2)
+									? `R$ ${conversoesReais.comissao_total.toFixed(2)}`
+									: 'R$ 0.00'}</span
+							>
 							<span class="text-[0.7rem] text-tinta-suave uppercase mt-0.5">Comissão total</span>
 						</div>
 						<div class="flex flex-col items-center p-4 border border-border rounded-sm min-w-[100px]">
@@ -237,29 +272,67 @@
 						<table class="w-full border-collapse text-sm">
 							<thead>
 								<tr>
-									<th class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave">Produto</th>
-									<th class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave">Loja</th>
-									<th class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave">Comissão</th>
-									<th class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave">Status</th>
-									<th class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave">Canal (sub_id)</th>
-									<th class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave">Compra em</th>
+									<th
+										class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave"
+										>Produto</th
+									>
+									<th
+										class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave"
+										>Loja</th
+									>
+									<th
+										class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave"
+										>Comissão</th
+									>
+									<th
+										class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave"
+										>Status</th
+									>
+									<th
+										class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave"
+										>Canal (sub_id)</th
+									>
+									<th
+										class="text-left font-semibold py-2 px-2.5 border-b-2 border-border text-xs uppercase text-tinta-suave"
+										>Compra em</th
+									>
 								</tr>
 							</thead>
 							<tbody>
 								{#each conversoesReais.conversoes as c (c.conversion_id)}
 									<tr>
-										<td class="py-2 px-2.5 border-b border-border max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{c.product_name || '—'}</td>
-										<td class="py-2 px-2.5 border-b border-border text-sm max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{c.shop_name || '—'}</td>
-										<td class="py-2 px-2.5 border-b border-border text-right font-semibold tabular-nums text-sucesso">R$ {c.total_commission?.toFixed(2)}</td>
+										<td
+											class="py-2 px-2.5 border-b border-border max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap"
+											>{c.product_name || '—'}</td
+										>
+										<td
+											class="py-2 px-2.5 border-b border-border text-sm max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
+											>{c.shop_name || '—'}</td
+										>
+										<td class="py-2 px-2.5 border-b border-border text-right font-semibold tabular-nums text-sucesso"
+											>R$ {c.total_commission?.toFixed(2)}</td
+										>
 										<td class="py-2 px-2.5 border-b border-border">
 											<span
-												class="text-xs font-bold py-0.5 px-2 rounded-full {c.status === 'PENDING' || c.status === 'UNPAID' ? 'bg-ouro-fundo text-ouro-escuro' : c.status === 'COMPLETED' || c.status === 'PAID' ? 'bg-sucesso-fundo text-sucesso' : c.status === 'CANCELLED' ? 'bg-erro-fundo text-erro' : ''}"
+												class="text-xs font-bold py-0.5 px-2 rounded-full {c.status === 'PENDING' ||
+												c.status === 'UNPAID'
+													? 'bg-ouro-fundo text-ouro-escuro'
+													: c.status === 'COMPLETED' || c.status === 'PAID'
+														? 'bg-sucesso-fundo text-sucesso'
+														: c.status === 'CANCELLED'
+															? 'bg-erro-fundo text-erro'
+															: ''}"
 											>
 												{c.status}
 											</span>
 										</td>
-										<td class="py-2 px-2.5 border-b border-border text-xs font-mono max-w-[150px] overflow-hidden text-ellipsis">{c.utm_content || '—'}</td>
-										<td class="py-2 px-2.5 border-b border-border text-xs text-tinta-suave">{dataHoraCompleta(c.purchase_time)}</td>
+										<td
+											class="py-2 px-2.5 border-b border-border text-xs font-mono max-w-[150px] overflow-hidden text-ellipsis"
+											>{c.utm_content || '—'}</td
+										>
+										<td class="py-2 px-2.5 border-b border-border text-xs text-tinta-suave"
+											>{dataHoraCompleta(c.purchase_time)}</td
+										>
 									</tr>
 								{/each}
 							</tbody>

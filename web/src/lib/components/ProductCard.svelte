@@ -72,13 +72,20 @@
 
 {#if layout === 'full'}
 	<!-- ═══ LAYOUT FULL — card vertical com imagem grande ═══ -->
-	<article class={cn(
-		"bg-card border border-border rounded-md overflow-hidden shadow-sm transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(46,34,38,0.2)]",
-		destaque && "border-ouro-claro"
-	)}>
+	<article
+		class={cn(
+			'bg-card border border-border rounded-md overflow-hidden shadow-sm transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(46,34,38,0.2)]',
+			destaque && 'border-ouro-claro'
+		)}
+	>
 		{#if produto.imagem}
 			<a href={produto.link || '#'} target="_blank" rel="noopener" class="block no-underline hover:opacity-90">
-				<img src={produto.imagem} alt={produto.nome} class="w-full h-[180px] object-cover block bg-porcelana max-sm:h-[140px]" loading="lazy" />
+				<img
+					src={produto.imagem}
+					alt={produto.nome}
+					class="w-full h-[180px] object-cover block bg-porcelana max-sm:h-[140px]"
+					loading="lazy"
+				/>
 			</a>
 		{/if}
 		<div class="p-4 flex flex-col gap-3">
@@ -88,7 +95,10 @@
 			<header>
 				<h3 class="text-base font-semibold leading-tight m-0 line-clamp-2">{produto.nome}</h3>
 				<div class="flex items-center gap-1 gap-y-1 mt-1 flex-wrap">
-					{#if loja}<span class="text-xs font-semibold text-tinta-suave max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">🏪 {loja}</span>{/if}
+					{#if loja}<span
+							class="text-xs font-semibold text-tinta-suave max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap"
+							>🏪 {loja}</span
+						>{/if}
 					{#if produto.origem}
 						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-sucesso-fundo text-sucesso"
 							>{#if produto.origem === 'Coreia'}🇰🇷{:else if produto.origem === 'Japão'}🇯🇵{:else if produto.origem === 'China'}🇨🇳{/if}
@@ -96,12 +106,18 @@
 						>
 					{/if}
 					{#if produto.desconto > 0 && produto.desconto <= 1}
-						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-erro-fundo text-erro">🔥 {Math.round(produto.desconto * 100)}% OFF</span>
+						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-erro-fundo text-erro"
+							>🔥 {Math.round(produto.desconto * 100)}% OFF</span
+						>
 					{:else if produto.desconto > 1 && produto.desconto <= 100}
-						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-erro-fundo text-erro">🔥 {Math.round(produto.desconto)}% OFF</span>
+						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-erro-fundo text-erro"
+							>🔥 {Math.round(produto.desconto)}% OFF</span
+						>
 					{/if}
 					{#if produto.oferta_expira}
-						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-ouro-fundo text-ouro-escuro" title="Expira em {new Date(produto.oferta_expira).toLocaleDateString('pt-BR')}"
+						<span
+							class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-ouro-fundo text-ouro-escuro"
+							title="Expira em {new Date(produto.oferta_expira).toLocaleDateString('pt-BR')}"
 							>⏳ {tempoRestante(produto.oferta_expira)}</span
 						>
 					{/if}
@@ -130,18 +146,18 @@
 				{#if onpublicar}
 					<button
 						class="rounded-sm py-2 px-3.5 text-sm font-semibold border border-ouro-claro bg-ouro-fundo text-ouro-escuro flex-1 hover:bg-ouro-claro"
-						onclick={() => onpublicar(produto)}
-					>📤 Publicar</button>
+						onclick={() => onpublicar(produto)}>📤 Publicar</button
+					>
 				{/if}
 				{#if onfavoritar}
 					<button
 						class={cn(
-							"rounded-sm py-2 px-2.5 text-sm font-semibold border border-transparent bg-transparent text-tinta-suave hover:text-ouro",
-							isFav && "text-ouro"
+							'rounded-sm py-2 px-2.5 text-sm font-semibold border border-transparent bg-transparent text-tinta-suave hover:text-ouro',
+							isFav && 'text-ouro'
 						)}
 						onclick={() => onfavoritar(produto)}
-						title={isFav ? 'Remover dos favoritos' : 'Favoritar'}
-					>{isFav ? '★' : '☆'}</button>
+						title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button
+					>
 				{/if}
 				{#if exibirLink}
 					<button
@@ -175,45 +191,58 @@
 			{#if onfavoritar}
 				<button
 					class={cn(
-						"border border-border bg-porcelana rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-base hover:border-ouro",
-						isFav && "text-ouro border-ouro"
+						'border border-border bg-porcelana rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-base hover:border-ouro',
+						isFav && 'text-ouro border-ouro'
 					)}
 					onclick={() => onfavoritar(produto)}
-					title={isFav ? 'Remover dos favoritos' : 'Favoritar'}
-				>{isFav ? '★' : '☆'}</button>
+					title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button
+				>
 			{/if}
 			{#if onpublicar}
 				<button
 					class="border border-border bg-porcelana rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-base hover:border-ouro"
 					onclick={() => onpublicar(produto)}
-					title="Publicar"
-				>📤</button>
+					title="Publicar">📤</button
+				>
 			{/if}
 		</div>
 	</div>
 {:else if layout === 'feed'}
 	<!-- ═══ LAYOUT FEED — card com borda lateral (oportunidades) ═══ -->
-	<div class={cn(
-		"border border-border rounded-md p-4 bg-[var(--branco)] transition-[border-color] duration-150 hover:border-ouro-claro",
-		variacao?.tipo === 'queda' && "border-l-[3px] border-l-sucesso",
-		variacao?.tipo === 'alta' && "border-l-[3px] border-l-erro",
-		(!variacao?.tipo || variacao?.tipo === 'novo') && "border-l-[3px] border-l-ouro"
-	)}>
+	<div
+		class={cn(
+			'border border-border rounded-md p-4 bg-[var(--branco)] transition-[border-color] duration-150 hover:border-ouro-claro',
+			variacao?.tipo === 'queda' && 'border-l-[3px] border-l-sucesso',
+			variacao?.tipo === 'alta' && 'border-l-[3px] border-l-erro',
+			(!variacao?.tipo || variacao?.tipo === 'novo') && 'border-l-[3px] border-l-ouro'
+		)}
+	>
 		<div class="flex items-center gap-2 mb-1.5">
 			{#if variacao?.tipo === 'queda'}
-				<span class="px-2 py-0.5 rounded-full text-[0.72rem] font-bold bg-sucesso-fundo text-sucesso">↓ {Math.abs(variacao.pct * 100).toFixed(0)}%</span>
+				<span class="px-2 py-0.5 rounded-full text-[0.72rem] font-bold bg-sucesso-fundo text-sucesso"
+					>↓ {Math.abs(variacao.pct * 100).toFixed(0)}%</span
+				>
 			{:else if variacao?.tipo === 'alta'}
-				<span class="px-2 py-0.5 rounded-full text-[0.72rem] font-bold bg-erro-fundo text-erro">↑ {Math.abs(variacao.pct * 100).toFixed(0)}%</span>
+				<span class="px-2 py-0.5 rounded-full text-[0.72rem] font-bold bg-erro-fundo text-erro"
+					>↑ {Math.abs(variacao.pct * 100).toFixed(0)}%</span
+				>
 			{:else}
 				<span class="px-2 py-0.5 rounded-full text-[0.72rem] font-bold bg-ouro-fundo text-ouro-escuro">Novo</span>
 			{/if}
 			{#if loja}<span class="text-[0.72rem] text-tinta-suave bg-porcelana px-1.5 py-px rounded">{loja}</span>{/if}
-			{#if variacao?.detectado_em}<span class="text-[0.72rem] text-tinta-suave ml-auto">{tempoAtras(variacao.detectado_em)}</span>{/if}
+			{#if variacao?.detectado_em}<span class="text-[0.72rem] text-tinta-suave ml-auto"
+					>{tempoAtras(variacao.detectado_em)}</span
+				>{/if}
 		</div>
 
 		<div class="flex gap-3">
 			{#if produto.imagem}
-				<img src={produto.imagem} alt={produto.nome} class="w-16 h-16 rounded-lg object-cover shrink-0 max-sm:w-12 max-sm:h-12" loading="lazy" />
+				<img
+					src={produto.imagem}
+					alt={produto.nome}
+					class="w-16 h-16 rounded-lg object-cover shrink-0 max-sm:w-12 max-sm:h-12"
+					loading="lazy"
+				/>
 			{/if}
 			<div class="flex-1 min-w-0">
 				<h3 class="text-[0.95rem] font-semibold mb-2 leading-tight line-clamp-2">{produto.nome}</h3>
@@ -222,7 +251,9 @@
 						<span class="line-through text-tinta-suave">{brl(variacao.preco_anterior)}</span>
 						<span class="text-tinta-suave text-[0.8rem]">→</span>
 						<span class="font-bold text-sucesso">{brl(variacao.preco_atual)}</span>
-						<span class="text-xs text-sucesso font-semibold">(-{brl(variacao.preco_anterior - variacao.preco_atual)})</span>
+						<span class="text-xs text-sucesso font-semibold"
+							>(-{brl(variacao.preco_anterior - variacao.preco_atual)})</span
+						>
 					{:else if variacao?.tipo === 'alta'}
 						<span class="line-through text-tinta-suave">{brl(variacao.preco_anterior)}</span>
 						<span class="text-tinta-suave text-[0.8rem]">→</span>
@@ -240,18 +271,18 @@
 			{#if onpublicar}
 				<button
 					class="py-1.5 px-3.5 border border-ouro-claro bg-ouro-fundo text-ouro-escuro rounded-sm text-[0.82rem] font-semibold cursor-pointer hover:bg-ouro-claro"
-					onclick={() => onpublicar(produto)}
-				>📤 Publicar</button>
+					onclick={() => onpublicar(produto)}>📤 Publicar</button
+				>
 			{/if}
 			{#if onfavoritar}
 				<button
 					class={cn(
-						"py-1.5 px-2.5 border border-border bg-transparent rounded-sm cursor-pointer hover:border-ouro",
-						isFav && "text-ouro border-ouro"
+						'py-1.5 px-2.5 border border-border bg-transparent rounded-sm cursor-pointer hover:border-ouro',
+						isFav && 'text-ouro border-ouro'
 					)}
 					onclick={() => onfavoritar(produto)}
-					title={isFav ? 'Remover dos favoritos' : 'Favoritar'}
-				>{isFav ? '★' : '☆'}</button>
+					title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button
+				>
 			{/if}
 		</div>
 	</div>

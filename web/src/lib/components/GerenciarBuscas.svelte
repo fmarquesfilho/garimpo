@@ -62,17 +62,29 @@
 			<div class="flex flex-col gap-1.5">
 				<span class="text-sm font-semibold text-foreground">Fontes de dados:</span>
 				<div class="flex flex-wrap gap-3">
-					<label class="flex cursor-pointer items-center gap-1 text-sm"><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.curadoria} /> 🔍 Curadoria</label>
-					<label class="flex cursor-pointer items-center gap-1 text-sm"><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.quedas} /> 📉 Quedas de preço</label>
-					<label class="flex cursor-pointer items-center gap-1 text-sm"><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.novos} /> 🆕 Produtos novos</label>
+					<label class="flex cursor-pointer items-center gap-1 text-sm"
+						><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.curadoria} /> 🔍 Curadoria</label
+					>
+					<label class="flex cursor-pointer items-center gap-1 text-sm"
+						><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.quedas} /> 📉 Quedas de preço</label
+					>
+					<label class="flex cursor-pointer items-center gap-1 text-sm"
+						><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.novos} /> 🆕 Produtos novos</label
+					>
 				</div>
 			</div>
 
 			<!-- Dias janela (para novos) -->
 			{#if fontes.novos}
 				<div class="flex flex-wrap items-center gap-2">
-					<label for="dias-janela" class="text-sm font-semibold text-foreground">Considerar "novo" se apareceu nos últimos:</label>
-					<select id="dias-janela" class="rounded-lg border border-border px-2.5 py-1.5 text-sm" bind:value={diasJanela}>
+					<label for="dias-janela" class="text-sm font-semibold text-foreground"
+						>Considerar "novo" se apareceu nos últimos:</label
+					>
+					<select
+						id="dias-janela"
+						class="rounded-lg border border-border px-2.5 py-1.5 text-sm"
+						bind:value={diasJanela}
+					>
 						<option value={1}>1 dia</option>
 						<option value={2}>2 dias</option>
 						<option value={3}>3 dias</option>

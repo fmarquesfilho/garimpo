@@ -72,18 +72,23 @@
 						class="absolute right-2.5 top-1/2 -translate-y-1/2 border-none bg-porcelana text-tinta-suave w-6 h-6 rounded-full text-xs cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
 						onclick={() => (busca = '')}
 						type="button"
-						aria-label="Limpar busca"
-					>✕</button>
+						aria-label="Limpar busca">✕</button
+					>
 				{/if}
 			</div>
 			<button
-				class="flex items-center gap-1 py-2.5 px-3.5 border border-border rounded-sm bg-porcelana text-tinta-suave text-sm font-semibold cursor-pointer whitespace-nowrap hover:border-ouro hover:text-foreground max-[480px]:justify-center {avancadoAberto ? 'border-ouro bg-ouro-fundo text-ouro-escuro' : ''}"
+				class="flex items-center gap-1 py-2.5 px-3.5 border border-border rounded-sm bg-porcelana text-tinta-suave text-sm font-semibold cursor-pointer whitespace-nowrap hover:border-ouro hover:text-foreground max-[480px]:justify-center {avancadoAberto
+					? 'border-ouro bg-ouro-fundo text-ouro-escuro'
+					: ''}"
 				onclick={() => (avancadoAberto = !avancadoAberto)}
 				type="button"
 			>
 				⚙️ Filtros
 				{#if filtrosAtivos > 0 && !avancadoAberto}
-					<span class="text-[0.65rem] bg-ouro text-[var(--branco)] w-4 h-4 rounded-full flex items-center justify-center font-bold">{filtrosAtivos}</span>
+					<span
+						class="text-[0.65rem] bg-ouro text-[var(--branco)] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+						>{filtrosAtivos}</span
+					>
 				{/if}
 			</button>
 		</div>
@@ -107,12 +112,15 @@
 							class="absolute right-2 top-1/2 -translate-y-1/2 border-none bg-porcelana text-tinta-suave w-5 h-5 rounded-full text-[0.65rem] cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
 							onclick={limparCategoria}
 							type="button"
-							aria-label="Limpar categoria"
-						>✕</button>
+							aria-label="Limpar categoria">✕</button
+						>
 					{/if}
 				</div>
 				{#if catInput && sugestoes.length > 0 && catInput.toLowerCase() !== categoria.toLowerCase()}
-					<ul class="absolute z-20 top-full left-0 right-0 mt-1 p-1 list-none bg-[var(--branco)] border border-border rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.08)] max-h-[200px] overflow-y-auto" role="listbox">
+					<ul
+						class="absolute z-20 top-full left-0 right-0 mt-1 p-1 list-none bg-[var(--branco)] border border-border rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.08)] max-h-[200px] overflow-y-auto"
+						role="listbox"
+					>
 						{#each sugestoes.slice(0, 8) as cat (cat.id)}
 							<li role="option" aria-selected={categoria === cat.nome}>
 								<button
@@ -130,7 +138,10 @@
 			</label>
 			<label class="flex flex-col gap-1">
 				<span class="rotulo">comissão mín.</span>
-				<select bind:value={comissaoMin} class="dado font-mono text-sm py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground">
+				<select
+					bind:value={comissaoMin}
+					class="dado font-mono text-sm py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground"
+				>
 					<option value={0.05}>5%</option>
 					<option value={0.07}>7%</option>
 					<option value={0.1}>10%</option>

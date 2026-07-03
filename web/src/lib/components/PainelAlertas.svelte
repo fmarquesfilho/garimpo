@@ -63,7 +63,10 @@
 </script>
 
 <div class="mb-5">
-	<button class="flex w-full items-center gap-2 rounded-sm border border-border bg-card px-4 py-3 text-left font-[var(--ui)] font-semibold transition-[border-color] duration-150 ease-linear hover:border-ouro motion-reduce:transition-none" onclick={() => (mostraAlertas = !mostraAlertas)}>
+	<button
+		class="flex w-full items-center gap-2 rounded-sm border border-border bg-card px-4 py-3 text-left font-[var(--ui)] font-semibold transition-[border-color] duration-150 ease-linear hover:border-ouro motion-reduce:transition-none"
+		onclick={() => (mostraAlertas = !mostraAlertas)}
+	>
 		🔔 Alertas Telegram
 		{#if alertasConfig?.ativo}
 			<Badge variant="green">Ativo</Badge>
@@ -79,7 +82,9 @@
 				label="Chat ID do grupo Telegram"
 				placeholder={alertasConfig?.chat_id || 'Ex: -1001234567890'}
 			/>
-			<span class="text-xs text-tinta-suave">ID do grupo onde os alertas serão enviados. Use @BotFather para criar o bot.</span>
+			<span class="text-xs text-tinta-suave"
+				>ID do grupo onde os alertas serão enviados. Use @BotFather para criar o bot.</span
+			>
 
 			<div class="flex flex-col gap-1">
 				<Input bind:value={alertaThreshold} type="number" label="Threshold de variação (%)" variant="mono" size="sm" />
@@ -88,7 +93,11 @@
 
 			<div class="flex flex-col gap-1">
 				<label class="flex cursor-pointer items-center gap-2 text-sm">
-					<input type="checkbox" class="h-4 w-4 cursor-pointer accent-[var(--ouro)]" bind:checked={alertaApenasQuedas} />
+					<input
+						type="checkbox"
+						class="h-4 w-4 cursor-pointer accent-[var(--ouro)]"
+						bind:checked={alertaApenasQuedas}
+					/>
 					Alertar apenas quedas de preço (oportunidades)
 				</label>
 			</div>
