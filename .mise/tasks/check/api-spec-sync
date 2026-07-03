@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Valida endpoints do openapi.yaml contra servidor real (requer API rodando)"
 # check-api-spec-sync.sh — Valida que todos os endpoints documentados no openapi.yaml
 # existem no C# (não retornam 404). Evita drift entre spec e implementação.
 #

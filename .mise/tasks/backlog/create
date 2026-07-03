@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Cria uma nova tarefa no backlog"
 # scripts/task.sh — Cria uma nova tarefa no backlog.
 #
 # Uso: ./scripts/task.sh "Titulo da tarefa" [--epic nome] [--prioridade alta|media|baixa]

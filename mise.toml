@@ -55,8 +55,11 @@ description = "Roda todos os linters"
 depends = ["lint:go", "lint:python", "lint:web"]
 
 [tasks."lint:go"]
-description = "golangci-lint"
-run = "golangci-lint run ./..."
+description = "golangci-lint + arch-go"
+run = """
+golangci-lint run ./...
+arch-go
+"""
 
 [tasks."lint:python"]
 description = "Ruff lint no analyzer"
