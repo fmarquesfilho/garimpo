@@ -164,15 +164,15 @@ Ao trabalhar nos componentes UI:
 
 1. **`npm run check:watch`** — feedback contínuo de tipos e a11y
 2. **Ao commitar** — rodar `npm run lint` (check + css + js)
-3. **Antes de push** — `npm run precheck` (check + css + js + knip + build + unit tests)
+3. **Antes de push** — `npm run ci:local` (check + css + js + knip + build + unit tests)
 4. **Medir progresso** — `npm run audit:ui`
 
-### `npm run precheck` — Validação local completa
+### `npm run ci:local` — Validação local completa
 
 Executa todos os checks que o CI faria, na mesma ordem:
 
 ```bash
-npm run precheck
+npm run ci:local
 # Equivale a: check → lint:css → lint:js → lint:dead → build → test:unit
 ```
 
