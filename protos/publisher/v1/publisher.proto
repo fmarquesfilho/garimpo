@@ -14,14 +14,29 @@ service PublisherService {
 
 message PublishRequest {
   string owner_uid = 1;
-  string channel = 2; // telegram, whatsapp
+  string channel = 2; // "telegram" | "whatsapp"
+
+  // RESOLVED chat identifier for the target channel.
+  // For Telegram: "@channel_name" or numeric chat_id (e.g. "-1001234567890").
+  // For WhatsApp: phone number in E.164 format (e.g. "+5511999999999").
+  //
+  // ⚠️ NEVER pass a PostgreSQL UUID here. The C# API MUST resolve
+  // Destino.Config (from the destinos table) before calling this method.
+  // See: GroupId_Resolution in PublicacoesEndpoints.cs.
   string group_id = 3;
+
   PublishContent content = 4;
 }
 
 message PublishContent {
   string title = 1;
+
+  // When the user customizes the publication text (legenda), this field
+  // carries the HTML content. The Publisher detects HTML by checking for '<'.
+  // If empty or plain text (no '<'), the Publisher generates the default
+  // message from title + price + link.
   string description = 2;
+
   string image_url = 3;
   string product_url = 4;
   double price = 5;

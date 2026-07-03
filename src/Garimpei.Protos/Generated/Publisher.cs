@@ -129,7 +129,7 @@ namespace Publisher.V1 {
     public const int ChannelFieldNumber = 2;
     private string channel_ = "";
     /// <summary>
-    /// telegram, whatsapp
+    /// "telegram" | "whatsapp"
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -143,6 +143,15 @@ namespace Publisher.V1 {
     /// <summary>Field number for the "group_id" field.</summary>
     public const int GroupIdFieldNumber = 3;
     private string groupId_ = "";
+    /// <summary>
+    /// RESOLVED chat identifier for the target channel.
+    /// For Telegram: "@channel_name" or numeric chat_id (e.g. "-1001234567890").
+    /// For WhatsApp: phone number in E.164 format (e.g. "+5511999999999").
+    ///
+    /// ⚠️ NEVER pass a PostgreSQL UUID here. The C# API MUST resolve
+    /// Destino.Config (from the destinos table) before calling this method.
+    /// See: GroupId_Resolution in PublicacoesEndpoints.cs.
+    /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public string GroupId {
@@ -452,6 +461,12 @@ namespace Publisher.V1 {
     /// <summary>Field number for the "description" field.</summary>
     public const int DescriptionFieldNumber = 2;
     private string description_ = "";
+    /// <summary>
+    /// When the user customizes the publication text (legenda), this field
+    /// carries the HTML content. The Publisher detects HTML by checking for '&lt;'.
+    /// If empty or plain text (no '&lt;'), the Publisher generates the default
+    /// message from title + price + link.
+    /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public string Description {

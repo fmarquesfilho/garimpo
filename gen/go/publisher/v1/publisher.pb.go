@@ -22,11 +22,18 @@ const (
 )
 
 type PublishRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	OwnerUid      string                 `protobuf:"bytes,1,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
-	Channel       string                 `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"` // telegram, whatsapp
-	GroupId       string                 `protobuf:"bytes,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	Content       *PublishContent        `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	OwnerUid string                 `protobuf:"bytes,1,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
+	Channel  string                 `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"` // "telegram" | "whatsapp"
+	// RESOLVED chat identifier for the target channel.
+	// For Telegram: "@channel_name" or numeric chat_id (e.g. "-1001234567890").
+	// For WhatsApp: phone number in E.164 format (e.g. "+5511999999999").
+	//
+	// ⚠️ NEVER pass a PostgreSQL UUID here. The C# API MUST resolve
+	// Destino.Config (from the destinos table) before calling this method.
+	// See: GroupId_Resolution in PublicacoesEndpoints.cs.
+	GroupId       string          `protobuf:"bytes,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Content       *PublishContent `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -90,14 +97,18 @@ func (x *PublishRequest) GetContent() *PublishContent {
 }
 
 type PublishContent struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Title           string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description     string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	ImageUrl        string                 `protobuf:"bytes,3,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
-	ProductUrl      string                 `protobuf:"bytes,4,opt,name=product_url,json=productUrl,proto3" json:"product_url,omitempty"`
-	Price           float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
-	OriginalPrice   float64                `protobuf:"fixed64,6,opt,name=original_price,json=originalPrice,proto3" json:"original_price,omitempty"`
-	DiscountPercent float64                `protobuf:"fixed64,7,opt,name=discount_percent,json=discountPercent,proto3" json:"discount_percent,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Title string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// When the user customizes the publication text (legenda), this field
+	// carries the HTML content. The Publisher detects HTML by checking for '<'.
+	// If empty or plain text (no '<'), the Publisher generates the default
+	// message from title + price + link.
+	Description     string  `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	ImageUrl        string  `protobuf:"bytes,3,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	ProductUrl      string  `protobuf:"bytes,4,opt,name=product_url,json=productUrl,proto3" json:"product_url,omitempty"`
+	Price           float64 `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
+	OriginalPrice   float64 `protobuf:"fixed64,6,opt,name=original_price,json=originalPrice,proto3" json:"original_price,omitempty"`
+	DiscountPercent float64 `protobuf:"fixed64,7,opt,name=discount_percent,json=discountPercent,proto3" json:"discount_percent,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
