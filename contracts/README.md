@@ -75,6 +75,21 @@ Os contratos previnem essas falhas sendo verificados automaticamente pelo CI.
 - **IDs**: `destino_id` = UUID do PostgreSQL; `chat_id`/`group_id` = identificador do canal (resolvido)
 - **Breaking changes**: prefixe o commit com `BREAKING:` se remover campos ou mudar tipos
 
+### Breaking changes
+
+Quando uma mudança é incompatível com versões anteriores (remover campo obrigatório, mudar tipo, renomear campo no proto), o CI bloqueia o merge. Para prosseguir:
+
+1. Certifique-se que a mudança é intencional e necessária
+2. Coordene com os consumidores do contrato (ex: frontend precisa ser atualizado junto)
+3. Use o prefixo `BREAKING:` na mensagem de commit:
+   ```
+   BREAKING: remover campo legacy_id do schema de publicacoes
+   ```
+
+O CI detecta breaking changes via:
+- **Proto**: `buf breaking --against main` (renames, removals, type changes)
+- **JSON Schema**: diff de campos `required` removidos entre branches
+
 ## Validação local
 
 ```bash
