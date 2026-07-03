@@ -171,11 +171,10 @@ jobs:
       - run: mise run checks
 
   # ── Deploy Backend (Cloud Run) ──────────────────────────────────────────
-  # Builds + pushes all images, then deploys. No separate docker job needed.
   deploy-backend:
     name: Deploy backend
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     needs: [go, csharp, python, proto, frontend, contracts]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
@@ -199,53 +198,78 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      - name: Build & push garimpei-api
-        run: |
-          docker build --platform linux/amd64 --provenance=false \
-            -f src/Garimpei.Api/Dockerfile src/ \
-            -t ${{ env.REGISTRY }}/garimpei-api-v2:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/garimpei-api-v2:latest
-          docker push ${{ env.REGISTRY }}/garimpei-api-v2 --all-tags
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build & push collector
-        run: |
-          docker build --platform linux/amd64 --provenance=false \
-            -f services/collector/Dockerfile . \
-            -t ${{ env.REGISTRY }}/collector:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/collector:latest
-          docker push ${{ env.REGISTRY }}/collector --all-tags
+      - name: Detect changed paths
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'src/**'
+            go:
+              - 'go.mod'
+              - 'go.sum'
+              - 'internal/**'
+              - 'services/collector/**'
+              - 'services/publisher/**'
+              - 'services/alerter/**'
+              - 'services/scheduler/**'
+              - 'gen/**'
+            analyzer:
+              - 'services/analyzer/**'
 
-      - name: Build & push publisher
+      - name: Build & push images (parallel)
         run: |
-          docker build --platform linux/amd64 --provenance=false \
-            -f services/publisher/Dockerfile . \
-            -t ${{ env.REGISTRY }}/publisher:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/publisher:latest
-          docker push ${{ env.REGISTRY }}/publisher --all-tags
+          build_image() {
+            local name=$1 dockerfile=$2 context=$3
+            echo "::group::Building $name"
+            docker buildx build --platform linux/amd64 --provenance=false \
+              --cache-from type=gha,scope=$name \
+              --cache-to type=gha,mode=max,scope=$name \
+              -f "$dockerfile" "$context" \
+              -t ${{ env.REGISTRY }}/$name:${{ github.sha }} \
+              -t ${{ env.REGISTRY }}/$name:latest \
+              --push
+            echo "::endgroup::"
+          }
 
-      - name: Build & push alerter
-        run: |
-          docker build --platform linux/amd64 --provenance=false \
-            -f services/alerter/Dockerfile . \
-            -t ${{ env.REGISTRY }}/alerter:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/alerter:latest
-          docker push ${{ env.REGISTRY }}/alerter --all-tags
+          pids=()
 
-      - name: Build & push scheduler
-        run: |
-          docker build --platform linux/amd64 --provenance=false \
-            -f services/scheduler/Dockerfile . \
-            -t ${{ env.REGISTRY }}/scheduler:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/scheduler:latest
-          docker push ${{ env.REGISTRY }}/scheduler --all-tags
+          # C# API — build if src/ changed or first deploy
+          if [[ "${{ steps.changes.outputs.api }}" == "true" ]] || \
+             ! gcloud artifacts docker images describe ${{ env.REGISTRY }}/garimpei-api-v2:latest 2>/dev/null; then
+            build_image garimpei-api-v2 src/Garimpei.Api/Dockerfile src/ &
+            pids+=($!)
+          fi
 
-      - name: Build & push analyzer
-        run: |
-          docker build --platform linux/amd64 --provenance=false \
-            -f services/analyzer/Dockerfile services/analyzer/ \
-            -t ${{ env.REGISTRY }}/analyzer:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/analyzer:latest
-          docker push ${{ env.REGISTRY }}/analyzer --all-tags
+          # Go services — build if go code changed
+          if [[ "${{ steps.changes.outputs.go }}" == "true" ]] || \
+             ! gcloud artifacts docker images describe ${{ env.REGISTRY }}/collector:latest 2>/dev/null; then
+            build_image collector services/collector/Dockerfile . &
+            pids+=($!)
+            build_image publisher services/publisher/Dockerfile . &
+            pids+=($!)
+            build_image alerter services/alerter/Dockerfile . &
+            pids+=($!)
+            build_image scheduler services/scheduler/Dockerfile . &
+            pids+=($!)
+          fi
+
+          # Python analyzer — build if analyzer changed
+          if [[ "${{ steps.changes.outputs.analyzer }}" == "true" ]] || \
+             ! gcloud artifacts docker images describe ${{ env.REGISTRY }}/analyzer:latest 2>/dev/null; then
+            build_image analyzer services/analyzer/Dockerfile services/analyzer/ &
+            pids+=($!)
+          fi
+
+          # Wait for all parallel builds
+          failed=0
+          for pid in "${pids[@]}"; do
+            if ! wait $pid; then failed=1; fi
+          done
+          if [[ $failed -ne 0 ]]; then exit 1; fi
 
       - name: Deploy to Cloud Run
         run: |
