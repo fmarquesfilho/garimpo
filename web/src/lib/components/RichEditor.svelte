@@ -109,7 +109,10 @@
 			</Tooltip>
 		{/if}
 	</div>
-	<div class="min-h-[120px] bg-[var(--branco)] p-3 text-[0.92rem] leading-relaxed text-foreground" bind:this={element}></div>
+	<div
+		class="min-h-[120px] bg-[var(--branco)] p-3 text-[0.92rem] leading-relaxed text-foreground"
+		bind:this={element}
+	></div>
 </div>
 
 <style>

@@ -54,3 +54,4 @@
 - **T-0038** Migração UI fase 2: consumir compostos restantes · E-001 · M
 - **T-0039** Dark mode com tokens CSS e detecção automática · E-001 · M
 - **T-0040** Migrar frontend para shadcn-svelte + Tailwind CSS v4 · E-001 · G
+- **T-0042** Sistema de layout consistente + auditoria dark mode · E-001 · M

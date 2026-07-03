@@ -1,11 +1,12 @@
 id: T-0042
 titulo: "Sistema de layout consistente + auditoria dark mode"
 epic: E-001
-status: doing
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S27"
 criado_em: "2026-07-03"
+concluido_em: "2026-07-03"
 valor: |
   Após migração para Tailwind, espaçamento entre componentes é inconsistente
   (cada página usa valores arbitrários). Dark mode tem problemas de contraste
