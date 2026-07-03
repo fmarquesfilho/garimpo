@@ -9,7 +9,7 @@ import (
 
 // TestGenERMatchesCommitted verifica que a saída de gen-er bate com o arquivo commitado.
 // Se este teste falhar, significa que o schema mudou sem regenerar o ENTIDADES.md.
-// Resolução: rode `make docs-er` e commite o resultado.
+// Resolução: rode `mise run docs:er` e commite o resultado.
 func TestGenERMatchesCommitted(t *testing.T) {
 	// Navega para a raiz do projeto (2 níveis acima de cmd/gen-er)
 	root := "../../"
@@ -28,6 +28,6 @@ func TestGenERMatchesCommitted(t *testing.T) {
 
 	if strings.TrimSpace(string(output)) != strings.TrimSpace(string(committed)) {
 		t.Errorf("docs/gerado/ENTIDADES.md está desatualizado em relação ao schema.\n" +
-			"Rode: make docs-er && git add docs/gerado/ENTIDADES.md")
+			"Rode: mise run docs:er && git add docs/gerado/ENTIDADES.md")
 	}
 }

@@ -1,7 +1,7 @@
 // cmd/gen-board gera docs/gerado/BOARD.md e docs/gerado/ROADMAP.md a partir de backlog/tasks/*.yaml.
 //
 // Uso: go run ./cmd/gen-board
-// Ou via Makefile: make docs-board
+// Ou via Makefile: mise run docs:board
 package main
 
 import (
@@ -121,7 +121,7 @@ func generateBoard(path string, tasks []Task, sprint string) {
 	var buf strings.Builder
 
 	buf.WriteString(fmt.Sprintf("# Quadro — Sprint %s\n\n", sprint))
-	buf.WriteString("> Gerado automaticamente. Não edite — rode `make docs-board`.\n\n")
+	buf.WriteString("> Gerado automaticamente. Não edite — rode `mise run docs:board`.\n\n")
 
 	// Agrupar por status
 	grouped := map[string][]Task{}
@@ -198,7 +198,7 @@ func generateBoard(path string, tasks []Task, sprint string) {
 func generateRoadmap(path string, tasks []Task) {
 	var buf strings.Builder
 	buf.WriteString("# Roadmap\n\n")
-	buf.WriteString("> Gerado automaticamente. Não edite — rode `make docs-board`.\n\n")
+	buf.WriteString("> Gerado automaticamente. Não edite — rode `mise run docs:board`.\n\n")
 
 	// Now = doing + review
 	// Next = next

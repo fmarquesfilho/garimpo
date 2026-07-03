@@ -1,7 +1,7 @@
 // cmd/gen-er gera docs/gerado/ENTIDADES.md (Mermaid ER) a partir de deploy/bigquery_schema.sql.
 //
 // Uso: go run ./cmd/gen-er > docs/gerado/ENTIDADES.md
-// Ou via Makefile: make docs-er
+// Ou via Makefile: mise run docs:er
 package main
 
 import (
@@ -76,7 +76,7 @@ func main() {
 	fmt.Println("---")
 	fmt.Println()
 	fmt.Println(":::caution[Arquivo gerado]")
-	fmt.Println("Não edite manualmente. Rode `make docs-er` para regenerar.")
+	fmt.Println("Não edite manualmente. Rode `mise run docs:er` para regenerar.")
 	fmt.Println(":::")
 	fmt.Println()
 	fmt.Println("```mermaid")

@@ -8,7 +8,7 @@ import (
 )
 
 // TestGenBoardMatchesCommitted verifica que o board gerado bate com o commitado.
-// Se falhar: rode `make docs-board` e commite.
+// Se falhar: rode `mise run docs:board` e commite.
 func TestGenBoardMatchesCommitted(t *testing.T) {
 	root := "../../"
 	boardPath := root + "docs/gerado/BOARD.md"
@@ -35,7 +35,7 @@ func TestGenBoardMatchesCommitted(t *testing.T) {
 
 	if committedLines != regeneratedLines {
 		t.Errorf("docs/gerado/BOARD.md está desatualizado (diff ignorando datas).\n" +
-			"Rode: make docs-board && git add docs/gerado/")
+			"Rode: mise run docs:board && git add docs/gerado/")
 	}
 
 	// Restaurar o arquivo original para não sujar o working tree

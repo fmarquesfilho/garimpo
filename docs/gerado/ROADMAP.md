@@ -22,6 +22,7 @@
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
+- **T-0036** Avaliar migração de scripts bash para Taskfile ou mise · E-001 · M
 
 ## ✅ Concluídas
 

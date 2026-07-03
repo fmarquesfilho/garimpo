@@ -46,6 +46,7 @@ run = "go test ./..."
 
 [tasks."test:csharp"]
 description = "Testes C#"
+depends = ["build:csharp"]
 run = "dotnet test --nologo --no-build src/Garimpei.sln"
 
 # ── Lint ──────────────────────────────────────────────────────────────────────
