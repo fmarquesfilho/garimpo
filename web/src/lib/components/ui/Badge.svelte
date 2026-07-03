@@ -3,10 +3,14 @@
 	 * Badge — etiqueta/pílula de informação.
 	 * @prop variant — 'default' | 'gold' | 'pink' | 'green' | 'red'
 	 */
-	let { variant = 'default', children } = $props();
+	const VARIANTS = ['default', 'gold', 'pink', 'green', 'red'];
+
+	let { variant = 'default', children, ...rest } = $props();
+
+	let resolvedVariant = $derived(VARIANTS.includes(variant) ? variant : 'default');
 </script>
 
-<span class="badge {variant}">
+<span class="badge {resolvedVariant}" {...rest}>
 	{@render children()}
 </span>
 
@@ -14,18 +18,37 @@
 	.badge {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
-		font-size: 0.72rem;
-		font-weight: 700;
-		padding: 2px 8px;
-		border-radius: 999px;
-		border: 1px solid var(--linha);
-		background: var(--porcelana);
-		color: var(--tinta-suave);
+		gap: var(--r1);
+		font-size: var(--text-xs);
+		font-weight: var(--font-bold);
+		padding: 2px var(--r2);
+		border-radius: var(--raio-full);
 		white-space: nowrap;
 	}
-	.gold { background: var(--ouro-fundo); border-color: var(--ouro-claro); color: #7a5a1e; }
-	.pink { background: color-mix(in srgb, var(--rosa) 10%, var(--porcelana)); border-color: color-mix(in srgb, var(--rosa) 30%, var(--linha)); color: var(--rosa); }
-	.green { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-	.red { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+
+	.default {
+		background: var(--porcelana);
+		color: var(--tinta-suave);
+		border: 1px solid var(--linha);
+	}
+	.gold {
+		background: var(--ouro-fundo);
+		border: 1px solid var(--ouro-claro);
+		color: var(--ouro-escuro);
+	}
+	.pink {
+		background: var(--rosa-fundo);
+		border: 1px solid color-mix(in srgb, var(--rosa) 30%, var(--linha));
+		color: var(--rosa);
+	}
+	.green {
+		background: var(--sucesso-fundo);
+		border: 1px solid var(--sucesso-borda);
+		color: var(--sucesso-texto);
+	}
+	.red {
+		background: var(--erro-fundo);
+		border: 1px solid var(--erro-borda);
+		color: var(--erro-texto);
+	}
 </style>

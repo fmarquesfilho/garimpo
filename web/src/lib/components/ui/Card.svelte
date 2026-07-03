@@ -4,10 +4,16 @@
 	 * @prop variant — 'default' | 'highlight' | 'success' | 'error'
 	 * @prop padding — 'sm' | 'md' | 'lg'
 	 */
-	let { variant = 'default', padding = 'md', children } = $props();
+	const VARIANTS = ['default', 'highlight', 'success', 'error'];
+	const PADDINGS = ['sm', 'md', 'lg'];
+
+	let { variant = 'default', padding = 'md', children, ...rest } = $props();
+
+	let resolvedVariant = $derived(VARIANTS.includes(variant) ? variant : 'default');
+	let resolvedPadding = $derived(PADDINGS.includes(padding) ? padding : 'md');
 </script>
 
-<div class="card {variant} pad-{padding}">
+<div class="card {resolvedVariant} pad-{resolvedPadding}" {...rest}>
 	{@render children()}
 </div>
 
@@ -23,7 +29,16 @@
 	.pad-md { padding: var(--r4) var(--r6); }
 	.pad-lg { padding: var(--r6) var(--r8); }
 
-	.highlight { border-color: var(--ouro-claro); background: linear-gradient(180deg, #fffaf1, var(--nevoa)); }
-	.success { border-color: #bbf7d0; background: #f0fdf4; }
-	.error { border-color: #fecaca; background: #fef2f2; }
+	.highlight {
+		border-color: var(--ouro-claro);
+		background: linear-gradient(180deg, var(--ouro-fundo), var(--nevoa));
+	}
+	.success {
+		border-left: 3px solid var(--sucesso-texto);
+		background: var(--sucesso-fundo);
+	}
+	.error {
+		border-left: 3px solid var(--erro-texto);
+		background: var(--erro-fundo);
+	}
 </style>
