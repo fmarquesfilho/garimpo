@@ -1,11 +1,12 @@
 id: T-0035
 titulo: "Pós-migração: resolver bugs de deploy e garantir funcionalidade completa"
 epic: E-001
-status: doing
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S28"
 criado_em: "2026-07-02"
+concluido_em: "2026-07-03"
 valor: |
   Após a migração para C# + Cloudflare, vários endpoints não estão acessíveis
   em produção. O frontend está atualizado mas o backend no Cloud Run pode estar

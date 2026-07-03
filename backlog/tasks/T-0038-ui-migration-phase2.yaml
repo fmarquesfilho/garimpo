@@ -1,11 +1,12 @@
 id: T-0038
 titulo: "Migração UI fase 2: consumir compostos restantes"
 epic: E-001
-status: backlog
+status: done
 prioridade: media
 estimativa: M
-sprint: ""
+sprint: "2026-S27"
 criado_em: "2026-07-03"
+concluido_em: "2026-07-03"
 valor: |
   Os 5 compostos Bits UI estão implementados e cada um tem ao menos 1
   consumidor. Porém ainda há 51 buttons inline, 28 inputs inline, e 5

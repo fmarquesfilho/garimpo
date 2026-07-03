@@ -1,0 +1,78 @@
+id: T-0040
+titulo: "Migrar frontend para shadcn-svelte + Tailwind CSS v4"
+epic: E-001
+status: done
+prioridade: alta
+estimativa: G
+sprint: "2026-S27"
+criado_em: "2026-07-03"
+concluido_em: "2026-07-03"
+valor: |
+  Frontend com ~4500 linhas de CSS scoped artesanal, sem padrão visual
+  consistente, difícil manutenção (mudar cor = editar 50 arquivos),
+  sem formatação automática, sem class ordering. Alternativas DaisyUI
+  e Pico CSS descartadas — shadcn-svelte é incremental sobre Bits UI
+  (já em uso), copy-paste (sem lock-in), e usa Tailwind (utility-first).
+
+descricao: |
+  ## Entregue
+
+  ### Infraestrutura
+  - Tailwind CSS v4 com @tailwindcss/vite plugin
+  - @theme block mapeando tokens.css → Tailwind/shadcn semantic colors
+  - Dark mode via @variant dark com data-theme="dark" (preserva comportamento)
+  - cn() utility em $lib/utils.ts (tailwind-merge + clsx)
+  - components.json para shadcn-svelte CLI
+  - Prettier + prettier-plugin-svelte + prettier-plugin-tailwindcss
+  - Stylelint atualizado para Tailwind directives
+  - ESLint style block limit apertado (80 linhas)
+
+  ### Componentes migrados (shadcn-svelte pattern)
+  - Primitivos: Button, Alert, Badge, Card, Input (zero <style>, 100% Tailwind)
+  - Compostos (Bits UI + TW): Select, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
+  - Todos com API padronizada: variant, size, class, ...rest
+
+  ### Páginas migradas (100% Tailwind)
+  - publicar, canais, lojas, publicacoes, configurar, coletas, estatisticas, admin
+  - Página principal (curadoria/descobrir)
+  - Layout (+layout.svelte)
+
+  ### Componentes auxiliares migrados
+  - ProductCard (3 layouts: full/compact/feed)
+  - FilterBar, HeroProduto, PublicarPreview, ResolverLink, RichEditor
+  - NavDrawer, LandingHero, ScoreMeter, FormAdicionarLoja, GerenciarBuscas
+  - ListaProdutosLoja, PainelAlertas, ErrorMessage, PeriodSelector
+  - TagInput, AgendadorBusca, BuscaCard, CandidateCard, SeletorGrupo
+  - UI: DashPanel, EmptyState, Loading, MetricCard, MiniChart, PageHeader, RankList, StatCard, TabBar
+
+  ### Prettier
+  - .prettierrc configurado (tabs, singleQuote, printWidth 120, plugins)
+  - npm run format / format:check disponíveis
+  - Tailwind class sorting automático
+  - 100% dos arquivos src/ e tests/ formatados
+
+  ### Bugs corrigidos durante a migração
+  - Select mostrando UUID: corrigido com selectedLabel derivado
+  - Enviar publicação silenciosamente falhando: fix agendada_em string vazia
+  - Tooltip.Provider faltando no layout (causa raiz do "Carregando..." infinito)
+
+  ## Estatísticas
+  - CSS scoped removido: ~4500 linhas (-98%)
+  - Arquivos com <style>: 50 → 3 (apenas @keyframes e :global Tiptap)
+  - Arquivos 100% Tailwind: 47/50
+  - Prettier cobertura: 100% (zero exclusões)
+  - Alternativas avaliadas: DaisyUI (opiniões fortes, conflito tokens) e Pico CSS (muito simples, sem compostos)
+
+criterios_aceite:
+  - Zero <style> blocks com classes de layout/cor/espaçamento
+  - Prettier format:check passa em 100% dos arquivos
+  - Todos os 141 unit tests passando
+  - Todos os E2E smoke tests passando
+  - Build estático OK
+  - svelte-check 0 erros/warnings
+  - ESLint 0 warnings
+  - Stylelint 0 issues
+  - Documentação atualizada (docs/componentes.md + sessão)
+
+dependencias:
+  - T-0037

@@ -1,0 +1,47 @@
+id: T-0041
+titulo: "UI polish: format:check no CI + dark mode audit + Lighthouse"
+epic: qualidade
+status: next
+prioridade: media
+estimativa: P
+sprint: ""
+criado_em: "2026-07-03"
+valor: |
+  Após a migração para Tailwind/shadcn-svelte, faltam 3 integrações
+  para garantir qualidade contínua: formatação no CI, validação de
+  contraste no dark mode, e audit de performance pós-migração.
+
+descricao: |
+  ## Tarefas
+
+  ### 1. format:check no CI
+  - [ ] Adicionar step `npm run format:check` no job "frontend" do ci.yml
+  - [ ] Garantir que PRs não-formatados falham o CI
+  - [ ] Documentar em CONTRIBUTING.md (quando existir)
+
+  ### 2. Dark mode audit
+  - [ ] Revisar todas as páginas com data-theme="dark" ativo
+  - [ ] Verificar contraste WCAG AA (≥4.5:1 texto, ≥3:1 UI) nos tokens mapeados
+  - [ ] Corrigir eventuais regressões de cor no tema escuro
+  - [ ] Adicionar testes E2E com prefers-color-scheme: dark
+
+  ### 3. Lighthouse performance audit
+  - [ ] Rodar Lighthouse em produção (garimpei.app.br) — FCP, LCP, CLS, TBT
+  - [ ] Comparar com baseline pré-migração (se disponível)
+  - [ ] Identificar e resolver regressões de performance (se houver)
+  - [ ] Considerar: lazy-load do Bits UI bundle para reduzir JS inicial
+
+  ### 4. Componentes opcionais
+  - [ ] Avaliar: Accordion (para FAQ ou seções colapsáveis)
+  - [ ] Avaliar: Sheet (drawer lateral para mobile)
+  - [ ] Avaliar: Popover (para filtros avançados inline)
+  - [ ] Adicionar apenas se houver caso de uso real
+
+criterios_aceite:
+  - format:check no CI e passando
+  - Zero regressões de contraste no dark mode
+  - Lighthouse Performance ≥ 90 em produção
+  - Documentação dos resultados
+
+dependencias:
+  - T-0040

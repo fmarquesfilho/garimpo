@@ -5,7 +5,6 @@
 ## 🔵 Now (em andamento)
 
 - **T-0034** Descobrir: corrigir filtros + badge drift + remover nota mínima · E-001 · M
-- **T-0035** Pós-migração: resolver bugs de deploy e garantir funcionalidade completa · E-001 · M
 
 ## 🟡 Next (próximo sprint)
 
@@ -17,13 +16,13 @@
 - **T-0029** Deploy da nova API C# em produção (com endpoints portados) · migracao-arch · P
 - **T-0030** Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo · multi-tenant · M
 - **T-0033** Validar multi-marketplace + coupon monitoring com banco limpo · E-003 · M
+- **T-0041** UI polish: format:check no CI + dark mode audit + Lighthouse · qualidade · P
 
 ## ⚪ Later (radar)
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
 - **T-0036** Avaliar migração de scripts bash para Taskfile ou mise · E-001 · M
-- **T-0038** Migração UI fase 2: consumir compostos restantes · E-001 · M
 
 ## ✅ Concluídas
 
@@ -50,5 +49,8 @@
 - **T-0025** Serviço Analyzer Python (FastAPI + BigQuery) · migracao-arch · M
 - **T-0026** Portar endpoints restantes do Go legado para C# · migracao-arch · G
 - **T-0032** Migrar docs-site de Astro Starlight para Rspress · docs-migration · P
+- **T-0035** Pós-migração: resolver bugs de deploy e garantir funcionalidade completa · E-001 · M
 - **T-0037** Biblioteca de componentes UI com Bits UI + Design Tokens · E-001 · L
+- **T-0038** Migração UI fase 2: consumir compostos restantes · E-001 · M
 - **T-0039** Dark mode com tokens CSS e detecção automática · E-001 · M
+- **T-0040** Migrar frontend para shadcn-svelte + Tailwind CSS v4 · E-001 · G
