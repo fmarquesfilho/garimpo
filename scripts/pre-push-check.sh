@@ -98,7 +98,7 @@ block_checks() {
     fi
 
     local scripts_ok=true
-    for script in check-api-contract.sh check-config-consistency.sh check-schema-sync.sh check-data-ownership.sh check-stale-refs.sh; do
+    for script in check-api-contract.sh check-config-consistency.sh check-schema-sync.sh check-data-ownership.sh check-stale-refs.sh check-service-contracts.sh; do
         if [ -f "./scripts/$script" ]; then
             if ! "./scripts/$script" >> "$log" 2>&1; then
                 echo "  ✗ $script falhou" >> "$log"

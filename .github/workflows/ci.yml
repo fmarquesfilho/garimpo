@@ -209,6 +209,26 @@ jobs:
       - name: Check schema sync
         run: ./scripts/check-schema-sync.sh
 
+  # ── Service Contracts ───────────────────────────────────────────────────
+  service-contracts:
+    name: Service contracts check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/bin/yq
+
+      - name: Validate service contracts
+        run: ./scripts/check-service-contracts.sh
+
+      - name: Proto breaking changes
+        uses: bufbuild/buf-setup-action@v1
+      - run: cd protos && buf breaking --against '../.git#branch=main'
+        continue-on-error: true
+
   # ── Docker (build all images) ───────────────────────────────────────────
   docker:
     name: Docker builds
