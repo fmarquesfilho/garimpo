@@ -32,6 +32,9 @@ npm run lint:dead
 # Todos os linters juntos (check + css + js)
 npm run lint
 
+# Auditoria de cobertura da biblioteca UI
+npm run audit:ui
+
 # Testes unitários com axe-core
 npm run test:unit
 
@@ -150,3 +153,48 @@ Ao trabalhar nos componentes UI:
 | Import de componente deletado | svelte-check + build failure |
 | Export sem consumidor (legacy) | knip |
 | Prop sem `$bindable` usada com `bind:` | svelte-check |
+| Compostos Bits UI não adotados | `npm run audit:ui` |
+| `<select>` nativo ao invés de `<Select>` | `npm run audit:ui` |
+| Padrões reimplementados (modais, tabs) | `npm run audit:ui` |
+| Utility classes legadas (.btn, .badge) | `npm run audit:ui` |
+
+## Auditoria de Cobertura UI (`npm run audit:ui`)
+
+Script dedicado que mede o progresso da migração para a biblioteca de componentes:
+
+```bash
+npm run audit:ui
+```
+
+Gera relatório com:
+- **Componentes adotados** — quantas vezes cada componente UI é importado
+- **Compostos Bits UI não usados** — Dialog, Select, Tabs, Tooltip, DropdownMenu disponíveis mas sem consumidores
+- **Elementos nativos com equivalente** — `<button>`, `<input>`, `<select>` que poderiam ser `<Button>`, `<Input>`, `<Select>`
+- **Padrões reimplementados** — modais, tabs, tooltips, dropdowns que reimplementam o que Bits UI oferece
+- **Utility classes legadas** — `.badge`, `.msg-erro`, `.btn` que deveriam ser componentes
+- **Hex colors** — cores hardcoded (meta: zero)
+
+### Exemplo de output
+
+```
+✗ COMPOSTOS BITS UI DISPONÍVEIS MAS NÃO USADOS
+  ⚠  Dialog         → 0 consumidores
+  ⚠  Select         → 0 consumidores
+  ⚠  Tabs           → 0 consumidores
+
+⚡ ELEMENTOS NATIVOS COM EQUIVALENTE UI
+  <button> inline:  57  (equivalente: <Button>)
+  <input> inline:   28  (equivalente: <Input>)
+  <select> nativo:   8  (equivalente: <Select>)
+
+── RESUMO ──
+  Elementos nativos com equivalente:  93
+  Utility classes legadas:            49
+  Hex colors hardcoded:                0
+```
+
+### Quando rodar
+
+- **Antes de cada PR de migração** — para medir progresso
+- **Ao planejar a próxima sprint** — para priorizar quais componentes atacar
+- **Após cada fase concluída** — para atualizar o score de cobertura
