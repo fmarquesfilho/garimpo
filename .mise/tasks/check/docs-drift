@@ -54,7 +54,50 @@ else
   echo -e "${GREEN}   ✓ docs/sync executou com sucesso${NC}"
 fi
 
-# ── 4. Verificar links internos no index ──────────────────────────────────────
+# ── 4. Verificar que todos os docs esperados existem após sync ────────────────
+echo ""
+echo "🔍 Verificando completude do docs-site..."
+MISSING=0
+
+# Todas as ADRs devem ser copiadas
+ADR_SOURCE=$(ls docs/decisoes/*.md 2>/dev/null | wc -l | tr -d ' ')
+ADR_DEST=$(ls docs-site/docs/decisoes/*.md 2>/dev/null | wc -l | tr -d ' ')
+if [ "$ADR_SOURCE" -ne "$ADR_DEST" ]; then
+  echo -e "${RED}   ✗ ADRs: $ADR_SOURCE fontes vs $ADR_DEST no docs-site${NC}"
+  MISSING=$((MISSING + 1))
+else
+  echo -e "${GREEN}   ✓ $ADR_DEST ADRs sincronizadas${NC}"
+fi
+
+# Docs gerados devem existir
+for f in BOARD.md ROADMAP.md ENTIDADES.md env-vars.md; do
+  if [ ! -f "docs-site/docs/gerado/$f" ]; then
+    echo -e "${RED}   ✗ Faltando: gerado/$f${NC}"
+    MISSING=$((MISSING + 1))
+  fi
+done
+
+# Frontend docs devem existir
+for f in componentes.md linting.md impacto-migracao-ui.md; do
+  if [ ! -f "docs-site/docs/frontend/$f" ]; then
+    echo -e "${RED}   ✗ Faltando: frontend/$f${NC}"
+    MISSING=$((MISSING + 1))
+  fi
+done
+
+# Sprint
+if [ ! -f "docs-site/docs/projeto/sprint.md" ]; then
+  echo -e "${RED}   ✗ Faltando: projeto/sprint.md${NC}"
+  MISSING=$((MISSING + 1))
+fi
+
+if [ "$MISSING" -eq 0 ]; then
+  echo -e "${GREEN}   ✓ Todos os docs esperados presentes${NC}"
+else
+  ERRORS=$((ERRORS + MISSING))
+fi
+
+# ── 5. Verificar links internos no index ──────────────────────────────────────
 echo ""
 echo "🔍 Verificando links quebrados no docs-site..."
 BROKEN=0

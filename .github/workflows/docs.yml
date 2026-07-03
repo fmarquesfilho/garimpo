@@ -6,8 +6,9 @@ on:
     paths:
       - 'docs/**'
       - 'docs-site/**'
+      - 'backlog/**'
       - 'api/openapi.yaml'
-      - '.mise/tasks/docs/sync'
+      - '.mise/tasks/docs/**'
       - '.github/workflows/docs.yml'
 
 jobs:
