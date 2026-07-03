@@ -281,10 +281,11 @@ Os seguintes componentes de `$lib/components/` foram atualizados para usar os pr
 
 | Padrão legado | Antes | Agora | Redução |
 |---|---|---|---|
-| `<button>` inline | 75 | 56 | **-25%** |
+| `<button>` inline | 75 | 51 | **-32%** |
 | `<input>` inline | 30 | 28 | **-7%** |
 | `<select>` nativo | 8 | 5 | **-37%** |
 | Badge utility class | 25 | 16 | **-36%** |
+| `.btn` utility class | — | 26 | tracking |
 | msg-erro/sucesso class | 6 | 1 | **-83%** |
 | Hex colors hardcoded | 50 | **0** | **-100%** ✓ |
 
@@ -292,10 +293,12 @@ Os seguintes componentes de `$lib/components/` foram atualizados para usar os pr
 
 | Componente | Consumidores | Onde |
 |---|---|---|
-| Select | 3 | publicar, FormAdicionarLoja |
+| Select | 3 | publicar (2×), FormAdicionarLoja |
 | Tabs | 2 | lojas, publicacoes |
-| Dialog | 0 | (próximo: NavDrawer, confirmações) |
-| Tooltip | 0 | (próximo: tooltips em ProductCard, ScoreMeter) |
-| DropdownMenu | 0 | (próximo: ações de contexto) |
+| Dialog | 1 | canais (confirmação de remoção) |
+| Tooltip | 1 | RichEditor (toolbar) |
+| DropdownMenu | 1 | canais (ações editar/remover) |
+
+**Todos os 5 compostos Bits UI estão em uso.** ✓
 
 Os botões restantes (~56) são majoritariamente toggles estilizados por contexto (fontes na discovery, filtros de status) e buttons de ação em componentes multi-layout (ProductCard). A migração dos compostos restantes (Dialog, Tooltip, DropdownMenu) será feita nas próximas sprints.
