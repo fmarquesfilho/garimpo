@@ -23,6 +23,8 @@
 		class: className = '',
 		...rest
 	} = $props();
+
+	let selectedLabel = $derived(options.find(o => o.value === value)?.label ?? '');
 </script>
 
 <div class={cn('flex flex-col gap-1', className)} {...rest}>
@@ -34,7 +36,12 @@
 			'inline-flex w-full items-center justify-between gap-2 rounded-sm border border-input bg-background font-sans transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=open]:border-ring data-[state=open]:ring-2 data-[state=open]:ring-ring/20',
 			SIZES[size] ?? SIZES.md
 		)}>
-			<Select.Value {placeholder} />
+			{#if selectedLabel}
+				<span class="truncate">{selectedLabel}</span>
+			{:else}
+				<span class="text-muted-foreground">{placeholder}</span>
+			{/if}
+			<span class="text-muted-foreground text-xs">▾</span>
 		</Select.Trigger>
 		<Select.Portal>
 			<Select.Content class="z-50 max-h-72 overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-md animate-in fade-in-0 zoom-in-95">

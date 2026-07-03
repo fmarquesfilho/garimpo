@@ -7,7 +7,7 @@
 	import ResolverLink from '$lib/components/ResolverLink.svelte';
 	import HeroProduto from '$lib/components/HeroProduto.svelte';
 	import PublicarPreview from '$lib/components/PublicarPreview.svelte';
-	import { Select } from '$lib/components/ui';
+	import { Select, Button, Alert, Card } from '$lib/components/ui';
 
 	let produto = $state(null);
 	let destinos = $state([]);
@@ -36,7 +36,7 @@
 			if (r.imagem) produto = { ...produto, imagem: r.imagem };
 			if (r.nome && !produto.nome) produto = { ...produto, nome: r.nome };
 			if (r.preco && !produto.preco) produto = { ...produto, preco: r.preco };
-		} catch { /* timeout or network error — produto fica sem imagem */ }
+		} catch { /* timeout ou erro de rede */ }
 	}
 
 	async function carregarDestinosETemplates() {
@@ -50,7 +50,6 @@
 				return { rd, rt };
 			};
 			let { rd, rt } = await buscar();
-			// Retry: token pode não estar pronto na primeira tentativa
 			if (!rd && !rt) { await new Promise(r => setTimeout(r, 1500)); ({ rd, rt } = await buscar()); }
 			destinos = rd?.destinos ?? [];
 			templates = rt?.templates ?? [];
@@ -61,10 +60,8 @@
 
 	onMount(async () => {
 		const safety = setTimeout(() => { if (carregando) carregando = false; }, 20000);
-
 		produto = recuperarProduto();
 		if (!produto) produto = { id: '', nome: '', preco: 0, categoria: '', link: '', imagem: '' };
-
 		await resolverDadosProduto();
 		await carregarDestinosETemplates();
 		clearTimeout(safety);
@@ -94,7 +91,6 @@
 
 	let lastTemplateId = $state('padrao');
 	$effect(() => { if (templateId !== lastTemplateId) { lastTemplateId = templateId; legendaEditada = false; gerarLegenda(); } });
-
 	function onEditorChange(html) { if (!atualizandoLegenda) { legendaEditada = true; legenda = html; } }
 	function resetarLegenda() { legendaEditada = false; gerarLegenda(); }
 
@@ -106,7 +102,16 @@
 	async function enviarAgora() {
 		publicando = true; resultado = null; erro = null;
 		try {
-			const r = await agendarPublicacao({ ...produto, produto_id: produto.id, destino_id: destinoId || undefined, template_id: templateId || undefined, agendada_em: agendamento ? new Date(agendamento).toISOString() : '', legenda_custom: legenda || undefined });
+			const payload = {
+				...produto,
+				produto_id: produto.id,
+				destino_id: destinoId || undefined,
+				template_id: templateId || undefined,
+				legenda_custom: legenda || undefined
+			};
+			// Só inclui agendada_em se tem valor (evita enviar string vazia ao backend)
+			if (agendamento) payload.agendada_em = new Date(agendamento).toISOString();
+			const r = await agendarPublicacao(payload);
 			resultado = r.publicacao;
 		} catch (e) { erro = e.message; }
 		finally { publicando = false; }
@@ -115,13 +120,15 @@
 
 <svelte:head><title>Publicar — Garimpei</title></svelte:head>
 
-<section class="pub-page">
-	<button class="voltar" onclick={() => goto('/')}>← Voltar</button>
+<section class="max-w-xl">
+	<Button variant="ghost" size="sm" class="mb-4" onclick={() => goto('/')}>← Voltar</Button>
 
 	{#if carregando}
-		<p class="loading">Carregando…</p>
+		<p class="text-muted-foreground italic">Carregando…</p>
 	{:else if !produto}
-		<div class="aviso">{erro ?? 'Cole um link ou volte à curadoria para selecionar um produto.'}</div>
+		<Card class="p-4">
+			<p class="text-muted-foreground">{erro ?? 'Cole um link ou volte à curadoria para selecionar um produto.'}</p>
+		</Card>
 	{:else}
 		<!-- Produto (hero) -->
 		<HeroProduto bind:produto={produto} />
@@ -130,11 +137,11 @@
 		<ResolverLink onresolvido={handleLinkResolvido} />
 
 		<!-- Configuração -->
-		<div class="config-grid">
-			<div class="campo">
-				<label for="destino-sel">📡 Destino</label>
+		<div class="grid grid-cols-1 gap-4 my-5 sm:grid-cols-3">
+			<div class="flex flex-col gap-1.5">
+				<span class="text-xs font-semibold text-muted-foreground">📡 Destino</span>
 				{#if destinos.length === 0}
-					<p class="dica">Nenhum destino. <a href="/canais">Adicione</a>.</p>
+					<p class="text-xs text-muted-foreground">Nenhum destino. <a href="/canais" class="text-primary underline">Adicione</a>.</p>
 				{:else}
 					<Select
 						bind:value={destinoId}
@@ -143,10 +150,10 @@
 					/>
 				{/if}
 			</div>
-			<div class="campo">
-				<label for="template-sel">🎨 Template</label>
+			<div class="flex flex-col gap-1.5">
+				<span class="text-xs font-semibold text-muted-foreground">🎨 Template</span>
 				{#if templates.length === 0}
-					<p class="dica">Formatação padrão.</p>
+					<p class="text-xs text-muted-foreground">Formatação padrão.</p>
 				{:else}
 					<Select
 						bind:value={templateId}
@@ -154,18 +161,22 @@
 					/>
 				{/if}
 			</div>
-			<div class="campo">
-				<label for="agendar">⏱ Agendar (opcional)</label>
-				<input id="agendar" type="datetime-local" bind:value={agendamento} />
+			<div class="flex flex-col gap-1.5">
+				<span class="text-xs font-semibold text-muted-foreground">⏱ Agendar</span>
+				<input
+					type="datetime-local"
+					bind:value={agendamento}
+					class="h-9 rounded-sm border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				/>
 			</div>
 		</div>
 
 		<!-- Legenda -->
-		<div class="legenda-section">
-			<div class="legenda-header">
-				<span class="legenda-label" id="legenda-label">✏️ Legenda</span>
+		<div class="mb-5">
+			<div class="flex items-center justify-between mb-2">
+				<span class="text-sm font-semibold">✏️ Legenda</span>
 				{#if legendaEditada}
-					<button class="btn-reset" onclick={resetarLegenda} type="button">↺ Resetar</button>
+					<button class="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors" onclick={resetarLegenda} type="button">↺ Resetar</button>
 				{/if}
 			</div>
 			<RichEditor bind:content={legenda} placeholder="Legenda da publicação…" onchange={onEditorChange} />
@@ -175,63 +186,35 @@
 		<PublicarPreview imagem={produto.imagem} {legenda} link={produto.link} />
 
 		<!-- Ação -->
-		<div class="acao">
-			<button class="btn-enviar" onclick={enviarAgora} disabled={publicando || !destinoId}>
+		<div class="mb-5">
+			<Button
+				variant="danger"
+				size="lg"
+				class="w-full text-base"
+				onclick={enviarAgora}
+				disabled={publicando || !destinoId}
+			>
 				{#if publicando}Enviando…{:else if agendamento}⏱ Agendar{:else}🚀 Enviar agora{/if}
-			</button>
+			</Button>
 			{#if !destinoId && destinos.length > 0}
-				<p class="dica">Selecione um destino acima.</p>
+				<p class="text-xs text-muted-foreground mt-2">Selecione um destino acima.</p>
 			{/if}
 		</div>
 
 		{#if resultado}
-			<div class="resultado" class:ok={resultado.status !== 'erro'} class:falha={resultado.status === 'erro'}>
+			<Alert variant={resultado.status === 'erro' ? 'error' : 'success'}>
 				{#if resultado.status === 'erro'}
-					<p>✕ {resultado.detalhe}</p>
+					✕ {resultado.detalhe}
 				{:else}
-					<p>✓ {resultado.status === 'enviada' ? 'Publicado' : 'Agendado'} com sucesso</p>
-					{#if resultado.detalhe}<p class="subid"><code>{resultado.detalhe}</code></p>{/if}
+					✓ {resultado.status === 'enviada' ? 'Publicado' : 'Agendado'} com sucesso
+					{#if resultado.detalhe}
+						<code class="block mt-1 text-xs opacity-70">{resultado.detalhe}</code>
+					{/if}
 				{/if}
-			</div>
+			</Alert>
 		{/if}
-		{#if erro && produto}<div class="resultado falha"><p>✕ {erro}</p></div>{/if}
+		{#if erro && produto}
+			<Alert variant="error">✕ {erro}</Alert>
+		{/if}
 	{/if}
 </section>
-
-<style>
-	.pub-page { max-width: 600px; }
-	.voltar { border: 1px solid var(--linha); background: var(--porcelana); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--tinta-suave); margin-bottom: var(--r5); }
-	.voltar:hover { color: var(--tinta); border-color: var(--tinta-suave); }
-
-	/* Config grid */
-	.config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--r4); margin: var(--r5) 0; }
-	@media (max-width: 500px) { .config-grid { grid-template-columns: 1fr; } }
-	.campo { display: flex; flex-direction: column; gap: 6px; }
-	.campo label { font-weight: 600; font-size: 0.82rem; }
-	.campo input { padding: 9px 12px; border: 1px solid var(--linha); border-radius: var(--raio-sm); font-size: 0.88rem; background: var(--porcelana); }
-	.dica { font-size: 0.78rem; color: var(--tinta-suave); margin: 0; }
-	.dica a { color: var(--ouro); }
-
-	/* Legenda */
-	.legenda-section { margin-bottom: var(--r5); }
-	.legenda-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-	.legenda-header span { font-weight: 600; font-size: 0.88rem; }
-	.btn-reset { border: none; background: transparent; color: var(--tinta-suave); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-	.btn-reset:hover { color: var(--ouro); }
-
-	/* Ação */
-	.acao { margin-bottom: var(--r5); }
-	.btn-enviar { padding: 14px 32px; background: var(--rosa); color: white; font-weight: 700; font-size: 1rem; border: none; border-radius: var(--raio-sm); cursor: pointer; width: 100%; }
-	.btn-enviar:hover { background: var(--rosa-hover); }
-	.btn-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
-
-	/* Resultado */
-	.resultado { padding: var(--r3) var(--r4); border-radius: var(--raio-sm); font-size: 0.88rem; }
-	.resultado.ok { background: var(--sucesso-fundo); border: 1px solid var(--sucesso-borda); color: var(--sucesso-texto); }
-	.resultado.falha { background: var(--erro-fundo); border: 1px solid var(--erro-borda); color: var(--erro-texto); }
-	.resultado p { margin: 0; }
-	.subid { font-size: 0.75rem; margin-top: 4px !important; }
-	.subid code { font-size: 0.72rem; background: var(--sucesso-fundo); padding: 2px 6px; border-radius: 4px; }
-	.loading { color: var(--tinta-suave); }
-	.aviso { background: var(--porcelana); padding: var(--r4); border-radius: var(--raio-sm); color: var(--tinta-suave); }
-</style>
