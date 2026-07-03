@@ -39,7 +39,7 @@ Schemas JSON Schema 2020-12 para payloads HTTP críticos, enforçando:
 - Tipos corretos (UUID para `destino_id`, array para `keywords`)
 - Campos obrigatórios documentados
 
-### 3. Validador CI (`scripts/check-service-contracts.sh`)
+### 3. Validador CI (`.mise/tasks/check/service-contracts`)
 
 Script que valida automaticamente:
 - Fronteiras HTTP existem no código C#

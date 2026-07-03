@@ -83,7 +83,7 @@ Rodar: `dotnet test --filter Architecture`
 
 3 scripts que detectam inconsistências entre os diferentes stacks:
 
-#### `scripts/check-api-contract.sh`
+#### `.mise/tasks/check/api-contract`
 
 Extrai todas as chamadas `/api/*` do frontend (`web/src/lib/api.js`) e verifica
 que cada rota tem um endpoint correspondente no C# (`src/Garimpei.Api/Endpoints/`).
@@ -91,7 +91,7 @@ que cada rota tem um endpoint correspondente no C# (`src/Garimpei.Api/Endpoints/
 **Detecta:** endpoint adicionado no frontend sem implementação no backend (ou rota
 removida do backend que o frontend ainda usa).
 
-#### `scripts/check-config-consistency.sh`
+#### `.mise/tasks/check/config-consistency`
 
 Verifica consistência de configurações compartilhadas entre stacks:
 
@@ -104,7 +104,7 @@ Verifica consistência de configurações compartilhadas entre stacks:
 **Detecta:** alguém introduz um typo no nome do dataset, muda uma porta num lugar
 e esquece no outro.
 
-#### `scripts/check-schema-sync.sh`
+#### `.mise/tasks/check/schema-sync`
 
 Verifica sincronização de schemas entre os 3 datastores e os componentes:
 
@@ -167,9 +167,9 @@ cd src && dotnet test
 cd web && npx vitest run
 
 # Scripts de drift (sem dependências externas)
-./scripts/check-api-contract.sh
-./scripts/check-config-consistency.sh
-./scripts/check-schema-sync.sh
+./.mise/tasks/check/api-contract
+./.mise/tasks/check/config-consistency
+./.mise/tasks/check/schema-sync
 
 # TUDO de uma vez (mesmo script usado pelo pre-push hook)
 ./scripts/pre-push-check.sh

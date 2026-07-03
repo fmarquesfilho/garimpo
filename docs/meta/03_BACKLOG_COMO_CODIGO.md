@@ -163,7 +163,7 @@ Na CI, junto do `docs-check`:
   run: |
     go run ./cmd/gen-board
     git diff --exit-code docs/gerado/BOARD.md docs/gerado/ROADMAP.md \
-      || (echo "Board desatualizado: rode 'make docs-board' e commite"; exit 1)
+      || (echo "Board desatualizado: rode 'mise run docs-board' e commite"; exit 1)
 ```
 
 Efeito: **a cada build, o quadro reflete o YAML.** Para mover uma tarefa de coluna,
@@ -180,7 +180,7 @@ Planeja o sprint      → seta sprint: e status: next nos escolhidos
 Build/commit          → BOARD.md e ROADMAP.md regeneram
 ```
 
-Atalho opcional: um script `scripts/task.sh "Titulo" --epic dados-ia` que cria o
+Atalho opcional: um script `mise run backlog:create "Titulo" --epic dados-ia` que cria o
 YAML pré-preenchido com o próximo id e a data — reduz o atrito a um comando.
 
 ## 7. Sincronização com GitHub (opcional, Later)

@@ -121,7 +121,7 @@ Cada ADR: **contexto → decisão → consequências**, ~15 linhas. Isso dá ras
 
 ## 3. Integração com a CI/build (geração automática)
 
-Adicione um alvo `make docs` e um job na pipeline (que hoje já roda
+Adicione um alvo `mise run docs` e um job na pipeline (que hoje já roda
 go test → lint → vitest → playwright):
 
 ```makefile
@@ -135,7 +135,7 @@ docs-er:     ## gera o Mermaid ER do schema
 	go run ./cmd/gen-er > docs/gerado/ENTIDADES.md
 
 docs-env:    ## extrai variáveis de ambiente referenciadas no código
-	./scripts/gen-env-doc.sh > docs/gerado/env-vars.md
+	./.mise/tasks/docs/env > docs/gerado/env-vars.md
 
 docs-board:  ## gera o quadro Kanban do backlog (ver 03)
 	go run ./cmd/gen-board
@@ -145,7 +145,7 @@ docs-site:   ## build do site Starlight
 
 docs-check:  ## CI: falha se algo gerado estiver desatualizado
 	$(MAKE) docs-api docs-er docs-env
-	git diff --exit-code docs/gerado || (echo "Docs geradas desatualizadas: rode 'make docs'"; exit 1)
+	git diff --exit-code docs/gerado || (echo "Docs geradas desatualizadas: rode 'mise run docs'"; exit 1)
 ```
 
 Na CI (`deploy-gcp.yml`), depois dos testes:
@@ -159,11 +159,11 @@ Na CI (`deploy-gcp.yml`), depois dos testes:
       - name: Validar contrato OpenAPI
         run: npx @redocly/cli lint api/openapi.yaml
       - name: Conferir docs geradas (sem drift)
-        run: make docs-check
+        run: mise run docs:check
       - name: Verificar links quebrados
         run: npx lychee --no-progress 'docs/**/*.md'
       - name: Build do site
-        run: make docs-site
+        run: mise run docs-site
       - name: Publicar (GitHub Pages ou /docs no Cloud Run)
         run: ./scripts/publish-docs.sh
 ```

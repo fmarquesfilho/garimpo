@@ -55,7 +55,7 @@ Estas regras valem para qualquer sessão de trabalho na documentação a partir 
 ```
 1. Ler 01_INCONSISTENCIAS.md → conferir se a mudança resolve/cria inconsistência
 2. Editar a FONTE (código anotado, openapi.yaml, ou .md conceitual) — nunca a saída gerada
-3. Rodar `make docs` localmente (ver 02) → conferir que ER/API/board regeneram
+3. Rodar `mise run docs` localmente (ver 02) → conferir que ER/API/board regeneram
 4. Atualizar o changelog (este arquivo) se a estrutura mudou
 5. Abrir PR; a CI valida (openapi lint, links quebrados, drift de schema, file-size)
 ```
@@ -99,7 +99,7 @@ Mantenha no topo o mais recente. Formato: `versão — data — autor — resumo
   astro.config.mjs, 7 páginas + gerado + decisões).
 - **openapi.yaml promovido**: copiado para `api/openapi.yaml` (SSOT do contrato).
 - **Geração automática funcionando**: `cmd/gen-er` gera ER Mermaid do schema BQ,
-  `scripts/gen-env-doc.sh` extrai variáveis de ambiente. `make docs-check` na CI.
+  `.mise/tasks/docs/env` extrai variáveis de ambiente. `mise run docs:check` na CI.
 - **7 docs canônicos criados**: `01-visao-e-negocio` a `07-dados-e-ia` na raiz de `docs/`.
 - **ADRs extraídos**: 8 decisões canônicas em `docs/decisoes/0001-*.md` a `0008-*.md`.
 - **MELHORIAS_28_06.md arquivado** em `docs/legado/`.
