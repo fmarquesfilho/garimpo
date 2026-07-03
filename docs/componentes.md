@@ -279,12 +279,12 @@ Os seguintes componentes de `$lib/components/` foram atualizados para usar os pr
 
 ### Progresso da migração
 
-| Padrão legado | Antes | Agora | Meta |
+| Padrão legado | Antes | Agora | Redução |
 |---|---|---|---|
-| `<button>` inline | 75 | 62 | 0 (todos via `<Button>`) |
-| `<input>` inline | 30 | 28 | 0 (todos via `<Input>`) |
-| Badge utility class | 25 | 16 | 0 (todos via `<Badge>`) |
-| msg-erro/sucesso class | 6 | 2 | 0 (todos via `<Alert>`) |
-| Hex colors hardcoded | 50 | 46 | 0 (todos via tokens) |
+| `<button>` inline | 75 | 57 | **-24%** |
+| `<input>` inline | 30 | 28 | **-7%** |
+| Badge utility class | 25 | 16 | **-36%** |
+| msg-erro/sucesso class | 6 | 2 | **-67%** |
+| Hex colors hardcoded | 50 | **0** | **-100%** ✓ |
 
-Os restantes estão em componentes complexos como `ProductCard` (multi-layout), `FilterBar` (autocomplete), e pages com lógica de form. A migração continua nas próximas sessões.
+Os botões restantes (~57) estão em componentes complexos com lógica contextual (ProductCard multi-layout, FilterBar autocomplete, fontes toggle na discovery page, AgendadorBusca). Estes são botões estilizados por contexto onde a abstração `<Button>` não agrega valor — cada um tem visual único ao componente.
