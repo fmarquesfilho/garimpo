@@ -1,0 +1,80 @@
+id: T-0043
+titulo: "Fix: deploy Cloud Run não criava nova revision + binding JSON quebrado"
+epic: migracao-arch
+status: done
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+criado_em: "2026-07-03"
+concluido_em: "2026-07-03"
+valor: |
+  A publicação no Telegram via interface web estava permanentemente quebrada
+  em produção. Dois problemas distintos se combinaram para tornar o debug
+  extremamente difícil:
+  1. O campo destino_id não era deserializado (chegava null ao C#)
+  2. O Cloud Run não criava nova revision ao deployar (imagem desatualizada)
+
+descricao: |
+  ## Problema 1: JsonNamingPolicy não aplicada a requests
+
+  O `ConfigureHttpJsonOptions` com `SnakeCaseLower` configura a serialização
+  (output) corretamente mas NÃO garante a deserialização (input) em ASP.NET
+  Minimal APIs para todos os cenários. Campos como `destino_id`, `template_id`,
+  `legenda_custom` chegavam null ao backend.
+
+  ### Evidência
+  - `POST /api/publicar '{"destino_id":"@mileseleciona"}'` → publisher recebia GroupId vazio
+  - `POST /api/publicar '{"DestinoId":"@mileseleciona"}'` → funcionava (PascalCase)
+
+  ### Fix
+  Adicionar `[JsonPropertyName("destino_id")]` explícito em TODOS os campos
+  dos records `AgendarPublicacaoRequest` e `PublicarCompatRequest`.
+
+  ### Prevenção
+  Teste unitário `JsonBindingTests.cs` que deserializa JSON snake_case e valida
+  que os campos chegam corretamente — roda no prepush.
+
+  ## Problema 2: Cloud Run não criava nova revision
+
+  O `deploy/cloud-run-deploy-now.yaml` usa tag `:latest`. O Cloud Run compara
+  o **digest** da imagem — se `:latest` resolve para o mesmo digest que já está
+  deployado, NÃO cria nova revision. Resultado: código novo no Artifact Registry
+  mas a instância antiga continua rodando.
+
+  ### Evidência
+  - Imagem nova pushed às 18:54, mas revision mais recente era de 02/07
+  - `gcloud run services replace` retornava sucesso sem criar revision
+
+  ### Fix
+  No CI, substituir `:latest` por `:${{ github.sha }}` no YAML antes do deploy.
+  Cada push gera um digest único → sempre nova revision.
+
+  ### Prevenção
+  - Removido paths-filter no deploy (rebuilda sempre, cache torna rápido)
+  - Tags SHA garantem unicidade
+
+  ## Problema 3: Acesso à API de produção para debug
+
+  Não havia forma de testar a API autenticada de produção a partir da CLI.
+
+  ### Fix
+  Criado `scripts/prod-api.sh` que:
+  - Usa Firebase Admin SDK (service account key em ~/.config/garimpei/)
+  - Gera custom token → troca por ID token
+  - Cachea por 1h
+  - Permite chamar qualquer endpoint autenticado
+
+  ## Resumo de mudanças
+
+  - src/Garimpei.Api/Endpoints/PublicacoesEndpoints.cs: [JsonPropertyName] explícito
+  - src/Garimpei.Tests/Integration/JsonBindingTests.cs: 4 testes de regressão
+  - .github/workflows/ci.yml: SHA tags + deploy incondicional
+  - scripts/prod-api.sh: ferramenta de debug produção
+
+criterios_aceite:
+  - POST /api/publicacoes com destino_id snake_case → status "enviada"
+  - Deploy no CI sempre cria nova Cloud Run revision
+  - Testes de JSON binding passam no prepush
+  - scripts/prod-api.sh funciona contra produção
+
+dependencias: []

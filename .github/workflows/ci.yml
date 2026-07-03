@@ -180,25 +180,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Detect changed paths
-        id: changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            api:
-              - 'src/**'
-            go:
-              - 'go.mod'
-              - 'go.sum'
-              - 'internal/**'
-              - 'services/collector/**'
-              - 'services/publisher/**'
-              - 'services/alerter/**'
-              - 'services/scheduler/**'
-              - 'gen/**'
-            analyzer:
-              - 'services/analyzer/**'
-
       - name: Build & push images (parallel)
         run: |
           build_image() {
@@ -215,33 +196,18 @@ jobs:
           }
 
           pids=()
-
-          # C# API — build if src/ changed or first deploy
-          if [[ "${{ steps.changes.outputs.api }}" == "true" ]] || \
-             ! gcloud artifacts docker images describe ${{ env.REGISTRY }}/garimpei-api-v2:latest 2>/dev/null; then
-            build_image garimpei-api-v2 src/Garimpei.Api/Dockerfile src/ &
-            pids+=($!)
-          fi
-
-          # Go services — build if go code changed
-          if [[ "${{ steps.changes.outputs.go }}" == "true" ]] || \
-             ! gcloud artifacts docker images describe ${{ env.REGISTRY }}/collector:latest 2>/dev/null; then
-            build_image collector services/collector/Dockerfile . &
-            pids+=($!)
-            build_image publisher services/publisher/Dockerfile . &
-            pids+=($!)
-            build_image alerter services/alerter/Dockerfile . &
-            pids+=($!)
-            build_image scheduler services/scheduler/Dockerfile . &
-            pids+=($!)
-          fi
-
-          # Python analyzer — build if analyzer changed
-          if [[ "${{ steps.changes.outputs.analyzer }}" == "true" ]] || \
-             ! gcloud artifacts docker images describe ${{ env.REGISTRY }}/analyzer:latest 2>/dev/null; then
-            build_image analyzer services/analyzer/Dockerfile services/analyzer/ &
-            pids+=($!)
-          fi
+          build_image garimpei-api-v2 src/Garimpei.Api/Dockerfile src/ &
+          pids+=($!)
+          build_image collector services/collector/Dockerfile . &
+          pids+=($!)
+          build_image publisher services/publisher/Dockerfile . &
+          pids+=($!)
+          build_image alerter services/alerter/Dockerfile . &
+          pids+=($!)
+          build_image scheduler services/scheduler/Dockerfile . &
+          pids+=($!)
+          build_image analyzer services/analyzer/Dockerfile services/analyzer/ &
+          pids+=($!)
 
           # Wait for all parallel builds
           failed=0
@@ -252,6 +218,8 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
+          # Substitui :latest pelo SHA do commit para forçar nova revision
+          sed -i "s|:latest|:${{ github.sha }}|g" deploy/cloud-run-deploy-now.yaml
           gcloud run services replace deploy/cloud-run-deploy-now.yaml \
             --region=${{ env.REGION }} \
             --project=${{ env.PROJECT_ID }}

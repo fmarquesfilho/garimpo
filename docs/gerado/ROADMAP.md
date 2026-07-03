@@ -55,3 +55,4 @@
 - **T-0039** Dark mode com tokens CSS e detecção automática · E-001 · M
 - **T-0040** Migrar frontend para shadcn-svelte + Tailwind CSS v4 · E-001 · G
 - **T-0042** Sistema de layout consistente + auditoria dark mode · E-001 · M
+- **T-0043** Fix: deploy Cloud Run não criava nova revision + binding JSON quebrado · migracao-arch · M
