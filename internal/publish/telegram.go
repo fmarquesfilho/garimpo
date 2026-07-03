@@ -106,6 +106,10 @@ func (t *TelegramSender) Enviar(ctx context.Context, o Oferta, chatID string) (R
 
 // enviarFoto usa sendPhoto do Telegram (foto + caption + botão inline).
 func (t *TelegramSender) enviarFoto(ctx context.Context, o Oferta, chatID, caption string) (Resultado, error) {
+	// Timeout curto para sendPhoto — se falhar, faz fallback para sendMessage.
+	fotoCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
 	payload := map[string]any{
 		"chat_id":    chatID,
 		"photo":      o.Imagem,
@@ -117,17 +121,22 @@ func (t *TelegramSender) enviarFoto(ctx context.Context, o Oferta, chatID, capti
 	}
 
 	corpo, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/bot%s/sendPhoto", t.base(), t.token)
+	fotoURL := fmt.Sprintf("%s/bot%s/sendPhoto", t.base(), t.token)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(corpo))
+	req, err := http.NewRequestWithContext(fotoCtx, http.MethodPost, fotoURL, bytes.NewReader(corpo))
 	if err != nil {
-		return Resultado{}, fmt.Errorf("telegram foto criar request: %w", apperr.ErrTelegram)
+		semFoto := o
+		semFoto.Imagem = ""
+		return t.Enviar(ctx, semFoto, chatID)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := t.http.Do(req)
 	if err != nil {
-		return Resultado{Canal: "telegram", Enviado: false, Mensagem: caption, Detalhe: err.Error()}, fmt.Errorf("telegram foto enviar: %w", apperr.ErrTelegram)
+		// Timeout ou erro de rede — fallback para texto
+		semFoto := o
+		semFoto.Imagem = ""
+		return t.Enviar(ctx, semFoto, chatID)
 	}
 	defer resp.Body.Close()
 
@@ -137,8 +146,10 @@ func (t *TelegramSender) enviarFoto(ctx context.Context, o Oferta, chatID, capti
 	}
 	_ = json.NewDecoder(resp.Body).Decode(&r)
 	if !r.Ok {
-		return Resultado{Canal: "telegram", Enviado: false, Mensagem: caption, Detalhe: r.Description},
-			fmt.Errorf("telegram foto %s: %w", r.Description, apperr.ErrTelegram)
+		// Foto inacessível (CDN Shopee bloqueada) — fallback para texto
+		semFoto := o
+		semFoto.Imagem = ""
+		return t.Enviar(ctx, semFoto, chatID)
 	}
 	return Resultado{Canal: "telegram", Enviado: true, Mensagem: caption, Detalhe: "enviado com foto"}, nil
 }
