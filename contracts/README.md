@@ -107,4 +107,4 @@ mise run ci
 
 - `protos/` — Fonte de verdade para gRPC (buf lint + buf breaking)
 - `api/openapi.yaml` — Documentação externa da API (Scalar)
-- `scripts/check-api-contract.sh` — Verifica rotas frontend ↔ backend (complementar)
+- `mise run check:api-contract` — Verifica rotas frontend ↔ backend (complementar)

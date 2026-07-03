@@ -7,7 +7,7 @@ on:
       - 'docs/**'
       - 'docs-site/**'
       - 'api/openapi.yaml'
-      - 'scripts/sync-docs-to-site.sh'
+      - '.mise/tasks/docs/sync'
       - '.github/workflows/docs.yml'
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Install & build docs-site
         run: |
-          ./scripts/sync-docs-to-site.sh
+          .mise/tasks/docs/sync
           cd docs-site && npm ci && npm run build
 
       - name: Deploy to Cloudflare Pages

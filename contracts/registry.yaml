@@ -5,7 +5,7 @@ version: "1.0"
 # ═══════════════════════════════════════════════════════════════════════════════
 # Declaração centralizada de todos os serviços, fronteiras de integração e
 # fluxos de orquestração. Validado automaticamente pelo CI via
-# scripts/check-service-contracts.sh.
+# .mise/tasks/check/service-contracts.
 #
 # Para adicionar uma nova fronteira, veja contracts/README.md.
 # ═══════════════════════════════════════════════════════════════════════════════
