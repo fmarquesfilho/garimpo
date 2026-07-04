@@ -1,119 +1,138 @@
-# Próxima Sessão — Planejamento (Sprint 2026-S27)
+# Próxima Sessão — Testar Fluxo de Variação de Preços
 
-## Status atual (pós-sessão 2026-07-01/02)
-
-### Concluído ✅
-- [x] T-0026: Endpoints portados para C# (todos que o frontend usa)
-- [x] BigQuery resetado (8 tabelas truncadas, 0 linhas)
-- [x] PostgreSQL produção: migration aplicada (9 tabelas, 0 linhas)
-- [x] Scheduler: in-memory, sem state persistido (reinicia vazio)
-- [x] CI: 3 scripts de drift (api-contract, config-consistency, schema-sync)
-- [x] CI: 13 fitness functions (NetArchTest) validando Clean Architecture
-- [x] Docs: arquitetura e qualidade atualizados
-- [x] READMEs: root, src, web atualizados
-- [x] Dataset BigQuery corrigido em todo codebase (garimpei → garimpo)
-
-### Bloqueios para fase de testes
-1. **Publisher usa tokens globais** — não lê tokens do tenant (T-0027)
-2. **Scheduler sem crons** — após reset, precisa reconfigurar coletas (T-0028)
-3. **Deploy não feito** — imagem com endpoints novos ainda não está em produção (T-0029)
+**Data:** 2026-07-04
+**Prioridade:** Alta (feature core do produto)
 
 ---
 
-## Sprint S27 — Tasks
+## Objetivo
 
-| Task | Título | Prioridade | Estimativa |
-|------|--------|-----------|------------|
-| T-0027 | Publisher multi-tenant: tokens do tenant | Alta | M |
-| T-0028 | Configurar coleta no scheduler | Alta | M |
-| T-0029 | Deploy nova API em produção | Alta | P |
+Validar o fluxo completo de detecção de variações de preço: coleta de snapshots → comparação → detecção de quedas/altas → exibição na UI (página Lojas, aba "📉 Preços") → publicação de ofertas com preço antigo vs atual.
 
 ---
 
-## T-0027: Publisher multi-tenant tokens
+## Contexto
 
-### Problema
-O publisher Go lê `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` de env vars.
-Cada tenant configura seus tokens via onboarding (step 3), mas esses tokens
-ficam no PostgreSQL (`TenantConfig`) e nunca chegam ao publisher.
+O sistema monitora lojas Shopee via coletas agendadas (scheduler → collector). Cada coleta grava um snapshot no BigQuery com os preços atuais. O frontend compara snapshots para detectar variações e exibe na aba "Preços" da página Lojas.
 
-### Solução proposta
+### Fluxo esperado
 
-1. **Expandir o proto `publisher.v1.PublishRequest`:**
-   ```protobuf
-   message PublishRequest {
-     string channel = 1;
-     string group_id = 2;
-     PublishContent content = 3;
-     // NEW: per-tenant credentials (optional, overrides env vars)
-     string bot_token = 4;
-     string chat_id = 5;
-   }
-   ```
+```
+Scheduler (cron) → Collector (gRPC FetchShop) → BigQuery (snapshot)
+                                                       │
+Frontend (GET /api/lojas/novidades) ←── API C# ←──────┘
+    │                                    (compara snapshots, detecta diffs)
+    ▼
+Aba "📉 Preços" mostra variações
+    │ clique "📤 Publicar"
+    ▼
+Publicação com preço anterior vs atual
+```
 
-2. **C# API ao publicar:** ler `TenantConfig` do tenant e passar `bot_token` + `chat_id` no request gRPC
+### Serviços envolvidos
 
-3. **Publisher Go:** se `bot_token` vem no request → cria sender efêmero com esse token; se vazio → fallback para env var
-
-4. **Mesma abordagem para WhatsApp (Meta Cloud API):**
-   ```protobuf
-   string whatsapp_token = 6;       // Meta access token
-   string phone_number_id = 7;      // Meta phone number ID
-   ```
-
-### Frontend
-- Página `/canais` já permite cadastrar destinos (nome, tipo, config)
-- Adicionar campo de token no formulário quando tipo=telegram
-- Para WhatsApp: campo de phone_number_id e access_token Meta
+| Serviço | Porta | Responsabilidade |
+|---------|-------|-----------------|
+| Scheduler Go | :50054 | Orquestra coletas por cron |
+| Collector Go | :50051 | FetchShop → busca produtos da loja na Shopee |
+| API C# | :5000 | Endpoint /api/lojas/novidades (compara snapshots) |
+| BigQuery | — | Armazena snapshots históricos |
+| Frontend | :5173 | Exibe variações na aba Preços |
 
 ---
 
-## T-0028: Configurar coleta no scheduler
+## O que testar
 
-### Problema
-BigQuery está vazio. Precisa popular snapshots com coletas regulares para
-que variações de preço sejam detectáveis (mesmo produto_id em 2+ dias).
+### 1. Coleta de snapshots funciona?
+- O scheduler está disparando coletas?
+- O collector grava no BigQuery?
+- Verificar com: `./scripts/prod-api.sh GET /api/coletas`
 
-### Plano
-1. Usuário cria buscas via interface (/lojas ou /configurar)
-2. C# API chama `scheduler.SetSchedule` via gRPC para cada busca com cron
-3. Scheduler executa coleta no horário → collector busca → grava snapshot no BigQuery
-4. Após 2+ ciclos, analyzer detecta variações
+### 2. Endpoint de novidades retorna dados?
+- `./scripts/prod-api.sh GET '/api/lojas/novidades?busca_id=<id>&dias=7'`
+- Espera: `{ produtos_novos: [...], variacoes: [...], dias_janela: 7 }`
 
-### Validação
-```sql
--- Rodar após 2 dias de coleta:
-SELECT produto_id, COUNT(*) AS aparicoes
-FROM `garimpo-500114.garimpo.snapshots`
-GROUP BY produto_id
-HAVING aparicoes > 1
-LIMIT 10;
--- Se retorna linhas → pipeline funciona
+### 3. Frontend exibe variações?
+- Navegar para /lojas → selecionar loja → aba "📉 Preços"
+- Verificar se a tabela mostra: Produto, Antes, Agora, Variação%, Detectado
+
+### 4. Publicar a partir de variação funciona?
+- Clicar 📤 na linha da variação
+- Deve navegar para /publicar com `preco_atual` e `nome` preenchidos
+- Enviar → mensagem no Telegram
+
+### 5. Se não há snapshots (primeira coleta)
+- Como o sistema se comporta com zero histórico?
+- O scheduler precisa rodar pelo menos 2x para ter diff
+
+---
+
+## Setup necessário
+
+### Dev local (contra produção)
+```bash
+cd web && VITE_API_BASE=https://garimpei.app.br npm run dev
+# Login via Google no browser
+```
+
+### Testar APIs diretamente
+```bash
+./scripts/prod-api.sh GET /api/coletas
+./scripts/prod-api.sh GET '/api/lojas/novidades?busca_id=<ID_DA_BUSCA>&dias=30'
+./scripts/prod-api.sh GET /api/buscas   # lista perfis de busca com shop_ids
+```
+
+### Verificar BigQuery (snapshots)
+```bash
+# Via banco PostgreSQL (buscas salvas)
+PG_URL=<...>  # ver scripts/prod-api.sh para construir
+psql "$PG_URL" -c 'SELECT "Id", "Keywords", "ShopIds" FROM "Buscas" LIMIT 5;'
 ```
 
 ---
 
-## T-0029: Deploy em produção
+## Resultados da sessão anterior (2026-07-03)
 
-1. Build imagem: `docker build -f src/Garimpei.Api/Dockerfile src/`
-2. Push para Artifact Registry
-3. `gcloud run services replace deploy/cloud-run-deploy-now.yaml`
-4. Smoke test: `curl https://garimpei.app.br/api/health`
+### Bugs corrigidos
+- ✅ Página publicar travada em "Carregando..." (Tooltip.Provider faltando)
+- ✅ Select mostrando UUID ao invés de nome (selectedLabel derivado)
+- ✅ Envio Telegram falhando silenciosamente (sendPhoto fallback + JsonPropertyName)
+- ✅ Cloud Run não criava nova revision (SHA tags no deploy)
+- ✅ CORS para dev local
+
+### Migração UI concluída
+- ✅ shadcn-svelte + Tailwind CSS v4 em todos os 50 componentes
+- ✅ Prettier com Tailwind class sorting
+- ✅ Dark mode corrigido (contraste)
+- ✅ Layout padronizado (space-y-8)
+
+### Infra/DX
+- ✅ pre-push ~20s (sem E2E)
+- ✅ E2E disponível via `mise run test:e2e`
+- ✅ `scripts/prod-api.sh` para debug produção
+- ✅ PostgreSQL auto-start no `mise run test:csharp`
+- ✅ CI otimizado (mise@v4, buf binary direto, deploy com SHA)
+
+### Tasks concluídas
+- T-0035: Pós-migração bugs
+- T-0037: Bits UI + tokens
+- T-0038: UI fase 2
+- T-0040: shadcn-svelte + Tailwind
+- T-0041: format:check CI
+- T-0042: Dark mode + layout
+- T-0043: Deploy Cloud Run + JSON binding
+
+### Pendente (backlog)
+- T-0034: Descobrir filtros (badge drift)
+- T-0027: Publisher multi-tenant tokens
+- T-0028: Configurar coleta no scheduler (popular snapshots)
+- T-0002: Persistir conversões BigQuery
 
 ---
 
-## Ordem de execução
+## Decisões a tomar nesta sessão
 
-1. **T-0027** — Expandir proto + publisher + C# API (tokens multi-tenant)
-2. **T-0029** — Deploy em produção
-3. **T-0028** — Configurar coletas, validar pipeline
-
----
-
-## Melhorias identificadas (pós-testes)
-
-- [ ] Encriptação real de tokens no PostgreSQL (atualmente plain text nos campos `*Enc`)
-- [ ] Validação real de credenciais Shopee no onboarding/validar (atualmente stub)
-- [ ] Telegram Bot API: envio real de alertas de teste
-- [ ] WhatsApp Meta Cloud API: envio real (T-0024)
-- [ ] T-0005: Alertas automáticos (scheduler → alerter → Telegram quando queda detectada)
+1. O scheduler está configurado e rodando em produção? Ou precisa ser ativado?
+2. Há snapshots no BigQuery ou preciso popular manualmente?
+3. O endpoint `/api/lojas/novidades` está implementado no C# ou ainda aponta para o Go legado?
+4. As buscas com `shop_ids` estão configuradas no banco?
