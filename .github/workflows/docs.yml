@@ -29,6 +29,15 @@ jobs:
           .mise/tasks/docs/sync
           cd docs-site && npm ci && npm run build
 
+      - name: Validate build output
+        run: |
+          # Ensure Mermaid and sidebar scripts are injected
+          if ! grep -q "mermaid" docs-site/doc_build/fluxos-sequencia.html; then
+            echo "❌ Mermaid script not found in build output"
+            exit 1
+          fi
+          echo "✅ Build output validated"
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
