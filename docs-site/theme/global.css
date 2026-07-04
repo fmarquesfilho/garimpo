@@ -108,3 +108,122 @@ html.dark {
 	margin-top: 3rem;
 	padding-top: 1.5rem;
 }
+
+/* ── Mermaid diagram toggle (source ↔ rendered) ──────────────── */
+
+.mermaid-wrapper {
+	position: relative;
+	margin: 1rem 0;
+	border: 1px solid var(--rp-c-divider);
+	border-radius: 8px;
+	padding: 1rem;
+	background: var(--rp-c-bg-soft);
+}
+
+.mermaid-toggle {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	padding: 4px 10px;
+	font-size: 0.75rem;
+	font-family: 'Archivo', system-ui, sans-serif;
+	background: var(--rp-c-bg-mute);
+	border: 1px solid var(--rp-c-divider);
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--rp-c-text-2);
+	z-index: 10;
+	transition: background 0.15s, color 0.15s;
+}
+
+.mermaid-toggle:hover {
+	background: var(--rp-c-brand-lighter);
+	color: var(--rp-c-brand-dark);
+}
+
+.mermaid-wrapper .hidden {
+	display: none;
+}
+
+.mermaid-source pre {
+	margin: 0;
+	border-radius: 4px;
+}
+
+.mermaid-wrapper .mermaid {
+	display: flex;
+	justify-content: center;
+	overflow-x: auto;
+}
+
+.mermaid-wrapper .mermaid svg {
+	max-width: 100%;
+	height: auto;
+}
+
+/* ── Collapsible sidebar for tablets ─────────────────────────── */
+
+@media (max-width: 1024px) {
+	.rspress-sidebar {
+		position: fixed;
+		left: 0;
+		top: var(--rp-nav-height, 60px);
+		bottom: 0;
+		width: var(--rp-sidebar-width, 280px);
+		transform: translateX(-100%);
+		transition: transform 0.25s ease;
+		z-index: 100;
+		background: var(--rp-c-bg);
+		border-right: 1px solid var(--rp-c-divider);
+		overflow-y: auto;
+	}
+
+	.rspress-sidebar.open {
+		transform: translateX(0);
+	}
+
+	/* Overlay */
+	.sidebar-overlay {
+		display: none;
+		position: fixed;
+		inset: 0;
+		top: var(--rp-nav-height, 60px);
+		background: rgba(0, 0, 0, 0.4);
+		z-index: 99;
+	}
+
+	.sidebar-overlay.visible {
+		display: block;
+	}
+}
+
+/* Sidebar toggle button (tablet) */
+.sidebar-toggle-btn {
+	display: none;
+	position: fixed;
+	bottom: 20px;
+	left: 20px;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--rp-c-brand);
+	color: white;
+	font-size: 1.2rem;
+	border: none;
+	cursor: pointer;
+	z-index: 101;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	transition: transform 0.15s;
+}
+
+.sidebar-toggle-btn:hover {
+	transform: scale(1.1);
+}
+
+@media (max-width: 1024px) {
+	.sidebar-toggle-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+}
