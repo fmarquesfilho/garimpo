@@ -437,9 +437,10 @@ Request HTTP com JWT Firebase
 **Fluxo de alertas (pós-coleta):**
 ```
 Scheduler → Cloud Tasks (price-alerts queue, 1 msg/s, retry 5x)
-  → C# POST /internal/alerts/check
+  → C# POST /process-alert (proxy)
+  → Scheduler HTTP :8054 /process-alert (orquestração)
   → Analyzer GET /quedas (detecta variações)
-  → Publisher gRPC (envia Telegram/WhatsApp)
+  → Publisher gRPC Publish (envia Telegram/WhatsApp)
 ```
 
 ### analyzer (Python, REST :8060)
