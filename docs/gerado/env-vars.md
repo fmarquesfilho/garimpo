@@ -9,7 +9,6 @@ Não edite manualmente. Rode `mise run docs:env` para regenerar.
 
 | Variável | Arquivo | Linha |
 |---|---|---|
-| `ALERTER_ADDR` | `services/scheduler/main.go` | 36 |
 | `BQ_DATASET` | `internal/store/novo_gcp.go` | 15 |
 | `BQ_TABELA_SNAP` | `internal/store/novo_gcp.go` | 20 |
 | `BQ_TABELA` | `internal/store/novo_gcp.go` | 16 |
