@@ -203,21 +203,26 @@ html.dark {
 	position: fixed;
 	inset: 0;
 	z-index: 9999;
-	background: rgba(0, 0, 0, 0.85);
+	background: #ffffff;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 2rem;
+	padding: 0;
 }
 
 .mermaid-fullscreen-content {
 	background: #ffffff;
-	border-radius: 12px;
+	border-radius: 0;
 	padding: 2rem;
-	max-width: 95vw;
-	max-height: 90vh;
+	width: 100vw;
+	height: 100vh;
+	max-width: none;
+	max-height: none;
 	overflow: auto;
 	cursor: grab;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .mermaid-fullscreen-content:active {
@@ -225,17 +230,19 @@ html.dark {
 }
 
 .mermaid-fullscreen-content svg {
-	max-width: 100%;
+	max-width: 95vw;
+	max-height: 90vh;
 	height: auto;
 }
 
 .mermaid-fullscreen-close {
-	position: absolute;
+	position: fixed;
 	top: 16px;
 	right: 24px;
 	padding: 8px 16px;
 	font-size: 0.9rem;
-	background: white;
+	background: #1a1a1a;
+	color: #ffffff;
 	border: none;
 	border-radius: 6px;
 	cursor: pointer;
@@ -245,5 +252,5 @@ html.dark {
 }
 
 .mermaid-fullscreen-close:hover {
-	background: #f0f0f0;
+	background: #333333;
 }
