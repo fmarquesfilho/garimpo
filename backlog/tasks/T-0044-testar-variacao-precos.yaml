@@ -1,0 +1,95 @@
+id: T-0044
+titulo: "Testar fluxo de variação de preços end-to-end"
+epic: migracao-arch
+status: done
+prioridade: alta
+estimativa: M
+sprint: "2026-S27"
+criado_em: "2026-07-04"
+concluido_em: "2026-07-04"
+valor: |
+  Validar o fluxo completo de detecção de variações de preço em produção:
+  scheduler → collector → BigQuery snapshots → analyzer → API C# → frontend.
+  Feature core do produto — sem isso, a aba "Preços" fica permanentemente vazia.
+
+descricao: |
+  ## Contexto
+
+  O sistema monitora lojas Shopee via coletas agendadas. Cada coleta grava um
+  snapshot no BigQuery. O analyzer compara snapshots para detectar variações de
+  preço (quedas, altas, produtos novos) e expõe via REST. A API C# faz proxy
+  autenticado para o frontend.
+
+  ## Diagnóstico realizado
+
+  ### Produção (antes do fix)
+
+  | Componente | Status | Problema |
+  |---|---|---|
+  | API C# | ✅ Online | — |
+  | Collector | ✅ Deployado | — |
+  | Scheduler | ✅ Rodando | Jobs ativos coletando |
+  | Analyzer | ❌ Crashando | Query usava coluna `em` inexistente |
+  | BigQuery | ✅ 1576 snapshots | Dados reais de 2 lojas |
+
+  ### Bug encontrado
+
+  O analyzer usava `em` como nome da coluna timestamp nas queries, mas a tabela
+  em produção usa `coletado_em`. BigQuery retornava:
+  ```
+  BadRequest: 400 Unrecognized name: em at [10:13]
+  ```
+
+  A API C# capturava o erro 500 silenciosamente (graceful degradation) e
+  retornava arrays vazios para o frontend.
+
+  ### Fix aplicado
+
+  Renomear `em` → `coletado_em` em todas as queries:
+  - `routes/novidades.py`
+  - `routes/quedas.py`
+  - `routes/coletas.py`
+  - `routes/evolucao.py`
+  - `routes/estatisticas.py`
+
+  ### Dados reais verificados
+
+  ```
+  bq query: 2 quedas detectadas em produção
+    - NUMBUZIN Toner 300ml: R$145 → R$113,40 (📉 -22%)
+    - CELIMAX Noni Ampoule: R$40 → R$31,99 (📉 -20%)
+  ```
+
+  ## Cenário de teste local criado
+
+  Modo mock (`MOCK_DATA=true`) no analyzer com 6 produtos fictícios:
+  - 2 quedas (20%, 35%)
+  - 1 alta (10%)
+  - 2 sem variação
+  - 1 produto novo
+
+  Arquivos:
+  - `services/analyzer/mock_data.py` — dados fictícios
+  - `services/analyzer/config.py` — nova setting `mock_data`
+  - `scripts/seed-local-test.py` — seed para BQ emulator + PostgreSQL
+
+  ## Mudanças de infraestrutura
+
+  - `deploy/cloud-run-service.yaml` — analyzer adicionado como sidecar (template)
+  - `deploy/cloud-run-deploy-now.yaml` — `ANALYZER_URL` no scheduler
+  - `docker-compose.yml` — suporte a `MOCK_DATA` no analyzer
+
+  ## Validação
+
+  - ✅ Analyzer local (mock): retorna variações corretamente
+  - ✅ API C# local → analyzer: proxy funciona end-to-end
+  - ✅ BigQuery produção: query corrigida retorna 2 quedas reais
+  - ✅ Deploy: CI rebuilda analyzer com fix, aplica no Cloud Run
+
+criterios_aceite:
+  - GET /api/lojas/novidades retorna variações reais (não vazio)
+  - Analyzer não crasha com BadRequest no BigQuery
+  - Modo mock funciona localmente sem BigQuery
+  - Documentação do fluxo em docs/guias/
+
+dependencias: [T-0025]
