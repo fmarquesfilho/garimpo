@@ -70,7 +70,7 @@ Ver [ADR 0002](/docs/decisoes/0002-so-nicho/).
 
 ## Canais de publicação
 
-Ativos: **Telegram** e **WhatsApp** (Maytapi).
+Ativos: **Telegram** e **WhatsApp** (Meta Cloud API).
 
 > 🔮 Planejado: Instagram como canal de publicação (não implementado).
 > A Graph API permite publicar conteúdo mas não coloca link clicável em feed

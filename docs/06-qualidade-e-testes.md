@@ -32,10 +32,10 @@ Pushes que só tocam `docs/legado/**`, `docs/meta/**` ou `README.md` são ignora
 | Go (services) | go test | 12 | Validações + fluxos gRPC |
 | C# (Domain + Infra) | xUnit | 10 | Multi-tenant, persistence, isolation |
 | C# (Arquitetura) | xUnit + NetArchTest | 13 | Fitness functions (regras Clean Architecture) |
-| C# (Integração) | xUnit | 15 | Onboarding multi-tenant end-to-end |
-| Frontend (unit) | Vitest | 108 | Componentes, stores, utils, lógica filtros |
-| Frontend (E2E) | Playwright | 24 | Smoke + Descobrir (filtros, fontes, badges) |
-| Cross-stack (drift) | Shell scripts | 3 | API contract, config, schema sync |
+| C# (Integração) | xUnit | 38 | Onboarding, JSON binding, dedup, publish flow |
+| Frontend (unit) | Vitest | ~109 | Componentes, stores, utils, lógica filtros |
+| Frontend (E2E) | Playwright | ~36 | Smoke + Descobrir + Lojas/Preços |
+| Cross-stack (drift) | Shell scripts (mise) | 7 | Contracts, ownership, stale refs, schema sync |
 
 ### BDD (Behaviour-Driven Development)
 

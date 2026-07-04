@@ -201,7 +201,14 @@ generate_sidebar() {
       [ -f "$f" ] || continue
       local basename=$(basename "$f" .md)
       [ "$basename" = "index" ] && continue
-      local title=$(head -1 "$f" | sed 's/^#* *//' | sed 's/^ *//' | sed 's/"/\\"/g')
+      # Extract title: frontmatter title > first heading > filename
+      local title=""
+      if head -1 "$f" | grep -q "^---"; then
+        title=$(grep "^title:" "$f" | head -1 | sed 's/^title: *//' | sed 's/"/\\"/g')
+      fi
+      if [ -z "$title" ]; then
+        title=$(grep "^#" "$f" | head -1 | sed 's/^#* *//' | sed 's/"/\\"/g')
+      fi
       [ -z "$title" ] && title="$basename"
       $first || printf ","
       first=false
@@ -238,7 +245,13 @@ ENDJSON
   for f in "$dest/gerado"/*.md; do
     [ -f "$f" ] || continue
     local bn=$(basename "$f" .md)
-    local t=$(head -1 "$f" | sed 's/^#* *//' | sed 's/"/\\"/g')
+    local t=""
+    if head -1 "$f" | grep -q "^---"; then
+      t=$(grep "^title:" "$f" | head -1 | sed 's/^title: *//' | sed 's/"/\\"/g')
+    fi
+    if [ -z "$t" ]; then
+      t=$(grep "^#" "$f" | head -1 | sed 's/^#* *//' | sed 's/"/\\"/g')
+    fi
     [ -z "$t" ] && t="$bn"
     $proj_first || printf "," >> "$json"
     proj_first=false
