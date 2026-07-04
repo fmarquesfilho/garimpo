@@ -39,6 +39,7 @@ T-0034
 | | | | | T-0040 Migrar frontend para shadcn-svelte + Tailwind CSS v4 (G) |
 | | | | | T-0042 Sistema de layout consistente + auditoria dark mode (M) |
 | | | | | T-0043 Fix: deploy Cloud Run não criava nova revision + binding JSON quebrado (M) |
+| | | | | T-0044 Testar fluxo de variação de preços end-to-end (M) |
 
 ---
 
@@ -47,4 +48,4 @@ T-0034
 - ⏭️ next: 9
 - 🔨 doing: 1
 - 👀 review: 0
-- ✅ done: 30
+- ✅ done: 31
