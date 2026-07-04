@@ -22,64 +22,6 @@ export default defineConfig({
 		mdxRs: false,
 		checkDeadLinks: true
 	},
-	head: [
-		`<script type="module">
-			import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-			mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
-			function renderMermaidBlocks() {
-				document.querySelectorAll('pre code.language-mermaid').forEach(el => {
-					const pre = el.parentElement;
-					if (pre.dataset.mermaid) return;
-					pre.dataset.mermaid = 'true';
-					const source = el.textContent;
-					const wrapper = document.createElement('div');
-					wrapper.className = 'mermaid-wrapper';
-					const diagramDiv = document.createElement('div');
-					diagramDiv.className = 'mermaid';
-					diagramDiv.textContent = source;
-					const sourceDiv = document.createElement('div');
-					sourceDiv.className = 'mermaid-source hidden';
-					const sourcePre = pre.cloneNode(true);
-					delete sourcePre.dataset.mermaid;
-					sourceDiv.appendChild(sourcePre);
-					const toggle = document.createElement('button');
-					toggle.className = 'mermaid-toggle';
-					toggle.textContent = '</> Código';
-					toggle.addEventListener('click', () => {
-						const showingSource = sourceDiv.classList.contains('hidden');
-						sourceDiv.classList.toggle('hidden');
-						diagramDiv.classList.toggle('hidden');
-						toggle.textContent = showingSource ? '📊 Diagrama' : '</> Código';
-					});
-					wrapper.appendChild(toggle);
-					wrapper.appendChild(diagramDiv);
-					wrapper.appendChild(sourceDiv);
-					pre.replaceWith(wrapper);
-				});
-				mermaid.run();
-			}
-			const observer = new MutationObserver(() => renderMermaidBlocks());
-			observer.observe(document.body, { childList: true, subtree: true });
-			setTimeout(renderMermaidBlocks, 500);
-		</script>`,
-		`<script>
-			document.addEventListener('DOMContentLoaded', () => {
-				const sidebar = document.querySelector('.rspress-sidebar');
-				if (!sidebar) return;
-				const overlay = document.createElement('div');
-				overlay.className = 'sidebar-overlay';
-				document.body.appendChild(overlay);
-				const btn = document.createElement('button');
-				btn.className = 'sidebar-toggle-btn';
-				btn.innerHTML = '☰';
-				btn.setAttribute('aria-label', 'Toggle sidebar');
-				document.body.appendChild(btn);
-				btn.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('visible'); });
-				overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('visible'); });
-				sidebar.addEventListener('click', (e) => { if (e.target.closest('a')) { sidebar.classList.remove('open'); overlay.classList.remove('visible'); } });
-			});
-		</script>`
-	],
 	route: {
 		cleanUrls: true
 	},
@@ -112,5 +54,76 @@ export default defineConfig({
 			{ text: 'Roadmap', link: '/gerado/ROADMAP' }
 		]
 	},
-	globalStyles: path.join(__dirname, 'theme', 'global.css')
+	globalStyles: path.join(__dirname, 'theme', 'global.css'),
+	builderConfig: {
+		html: {
+			tags: [
+				{
+					tag: 'script',
+					attrs: { type: 'module' },
+					children: `
+						import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+						mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+						function renderMermaidBlocks() {
+							document.querySelectorAll('pre code.language-mermaid').forEach(el => {
+								const pre = el.parentElement;
+								if (pre.dataset.mermaid) return;
+								pre.dataset.mermaid = 'true';
+								const source = el.textContent;
+								const wrapper = document.createElement('div');
+								wrapper.className = 'mermaid-wrapper';
+								const diagramDiv = document.createElement('div');
+								diagramDiv.className = 'mermaid';
+								diagramDiv.textContent = source;
+								const sourceDiv = document.createElement('div');
+								sourceDiv.className = 'mermaid-source hidden';
+								const sourcePre = pre.cloneNode(true);
+								delete sourcePre.dataset.mermaid;
+								sourceDiv.appendChild(sourcePre);
+								const toggle = document.createElement('button');
+								toggle.className = 'mermaid-toggle';
+								toggle.textContent = '</> Código';
+								toggle.addEventListener('click', () => {
+									const showingSource = sourceDiv.classList.contains('hidden');
+									sourceDiv.classList.toggle('hidden');
+									diagramDiv.classList.toggle('hidden');
+									toggle.textContent = showingSource ? '📊 Diagrama' : '</> Código';
+								});
+								wrapper.appendChild(toggle);
+								wrapper.appendChild(diagramDiv);
+								wrapper.appendChild(sourceDiv);
+								pre.replaceWith(wrapper);
+							});
+							mermaid.run();
+						}
+						const observer = new MutationObserver(() => renderMermaidBlocks());
+						observer.observe(document.body, { childList: true, subtree: true });
+						setTimeout(renderMermaidBlocks, 500);
+					`,
+					append: true
+				},
+				{
+					tag: 'script',
+					children: `
+						document.addEventListener('DOMContentLoaded', function() {
+							var sidebar = document.querySelector('.rspress-sidebar');
+							if (!sidebar) return;
+							var overlay = document.createElement('div');
+							overlay.className = 'sidebar-overlay';
+							document.body.appendChild(overlay);
+							var btn = document.createElement('button');
+							btn.className = 'sidebar-toggle-btn';
+							btn.innerHTML = '☰';
+							btn.setAttribute('aria-label', 'Toggle sidebar');
+							document.body.appendChild(btn);
+							btn.addEventListener('click', function() { sidebar.classList.toggle('open'); overlay.classList.toggle('visible'); });
+							overlay.addEventListener('click', function() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); });
+							sidebar.addEventListener('click', function(e) { if (e.target.closest('a')) { sidebar.classList.remove('open'); overlay.classList.remove('visible'); } });
+						});
+					`,
+					append: true
+				}
+			]
+		}
+	}
 });
