@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Query
 
-import bq_client
+from config import settings
 
 router = APIRouter(tags=["Coletas"])
 
@@ -11,6 +11,11 @@ router = APIRouter(tags=["Coletas"])
 def get_coletas(
     dias: int = Query(30, ge=1, le=180),
 ):
+    if settings.mock_data:
+        from mock_data import COLETAS_RESPONSE
+        return {**COLETAS_RESPONSE, "dias_janela": dias}
+
+    import bq_client
     """Histórico de coletas executadas (snapshots agrupados por execução)."""
     ds = bq_client.dataset_ref()
 

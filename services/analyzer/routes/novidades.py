@@ -3,16 +3,20 @@
 from fastapi import APIRouter, Query
 
 from config import settings
-import bq_client
 
 router = APIRouter(tags=["Novidades"])
 
 
 @router.get("/novidades")
 def get_novidades(
-    busca_id: str = Query(..., description="ID da busca/loja"),
+    busca_id: str = Query("", description="ID da busca/loja"),
     dias: int = Query(7, ge=1, le=90),
 ):
+    if settings.mock_data:
+        from mock_data import NOVIDADES_RESPONSE
+        return {**NOVIDADES_RESPONSE, "busca_id": busca_id, "dias": dias}
+
+    import bq_client
     """Compara snapshots da janela para detectar produtos novos e variações."""
     ds = f"`{settings.bq_project}.{settings.bq_dataset}`"
 

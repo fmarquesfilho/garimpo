@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     # BigQuery emulator (dev local)
     bigquery_emulator_host: str = ""
 
+    # Mock mode: retorna dados fictícios sem BigQuery
+    mock_data: bool = False
+
     class Config:
         env_prefix = ""
         case_sensitive = False

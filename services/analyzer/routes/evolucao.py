@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Query
 
 from config import settings
-import bq_client
 
 router = APIRouter(tags=["Evolução"])
 
@@ -12,7 +11,12 @@ router = APIRouter(tags=["Evolução"])
 def get_evolucao(
     dias: int = Query(30, ge=1, le=180),
 ):
+    if settings.mock_data:
+        from mock_data import EVOLUCAO_RESPONSE
+        return {**EVOLUCAO_RESPONSE, "dias_janela": dias}
+
     """Série temporal de preço médio por dia, com resumo global e top variações."""
+    import bq_client
     ds = f"`{settings.bq_project}.{settings.bq_dataset}`"
 
     sql = f"""

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Query
 
-import bq_client
+from config import settings
 
 router = APIRouter(tags=["Conversões"])
 
@@ -11,6 +11,10 @@ router = APIRouter(tags=["Conversões"])
 def get_conversoes(
     dias: int = Query(30, ge=1, le=180),
 ):
+    if settings.mock_data:
+        return {"conversoes": [], "total": 0, "dias_janela": dias}
+
+    import bq_client
     """Conversões reais da Shopee (tabela conversoes, preenchida via webhook)."""
     ds = bq_client.dataset_ref()
 

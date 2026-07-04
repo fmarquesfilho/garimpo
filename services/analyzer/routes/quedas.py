@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Query
 
 from config import settings
-import bq_client
 
 router = APIRouter(tags=["Quedas"])
 
@@ -14,6 +13,11 @@ def get_quedas(
     threshold: float = Query(0.15, ge=0.01, le=0.99, description="Variação mínima (ex: 0.15 = 15%)"),
     limit: int = Query(50, ge=1, le=200),
 ):
+    if settings.mock_data:
+        from mock_data import QUEDAS_RESPONSE
+        return {**QUEDAS_RESPONSE, "dias": dias, "threshold": threshold}
+
+    import bq_client
     """Produtos com queda de preço acima do threshold na janela de dias."""
     ds = f"`{settings.bq_project}.{settings.bq_dataset}`"
 

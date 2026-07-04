@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Query
 
 from config import settings
-import bq_client
 
 router = APIRouter(tags=["Estatísticas"])
 
@@ -12,6 +11,11 @@ router = APIRouter(tags=["Estatísticas"])
 def get_estatisticas(
     dias: int = Query(30, ge=1, le=180),
 ):
+    if settings.mock_data:
+        from mock_data import ESTATISTICAS_RESPONSE
+        return {**ESTATISTICAS_RESPONSE, "dias_janela": dias}
+
+    import bq_client
     """Resumo por categoria: quantidade de produtos, preço médio, comissão média."""
     ds = f"`{settings.bq_project}.{settings.bq_dataset}`"
 

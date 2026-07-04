@@ -8,7 +8,6 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from config import settings
-import bq_client
 
 router = APIRouter(tags=["Cupons"])
 logger = logging.getLogger(__name__)

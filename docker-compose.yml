@@ -112,6 +112,7 @@ services:
       BQ_PROJECT: garimpei-dev
       BQ_DATASET: garimpo
       BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+      MOCK_DATA: "${MOCK_DATA:-false}"
     depends_on:
       - bigquery-emulator
 
