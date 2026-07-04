@@ -33,6 +33,8 @@ spec:
                   key: latest
             - name: Analyzer__BaseUrl
               value: "http://localhost:8060"
+            - name: Alerts__TelegramChatId
+              value: "-1003827989143"
             - name: Grpc__CollectorAddress
               value: "http://localhost:50051"
             - name: Grpc__PublisherAddress
