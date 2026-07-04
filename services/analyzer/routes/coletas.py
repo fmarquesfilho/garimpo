@@ -21,12 +21,12 @@ def get_coletas(
 
     sql = f"""
     SELECT
-      DATE(em) AS data,
+      DATE(coletado_em) AS data,
       keyword,
       COUNT(DISTINCT produto_id) AS produtos,
-      MIN(em) AS coletado_em
+      MIN(coletado_em) AS coletado_em
     FROM {ds}.snapshots
-    WHERE em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+    WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
     GROUP BY data, keyword
     ORDER BY data DESC
     LIMIT 100

@@ -23,9 +23,9 @@ def get_estatisticas(
     WITH ultimos AS (
       SELECT
         produto_id, nome, preco, comissao, vendas, nota,
-        ROW_NUMBER() OVER (PARTITION BY produto_id ORDER BY em DESC) AS rn
+        ROW_NUMBER() OVER (PARTITION BY produto_id ORDER BY coletado_em DESC) AS rn
       FROM {ds}.snapshots
-      WHERE em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+      WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
     )
     SELECT
       COUNT(DISTINCT produto_id) AS total_produtos,

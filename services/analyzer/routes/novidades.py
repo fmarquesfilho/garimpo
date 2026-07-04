@@ -24,12 +24,12 @@ def get_novidades(
     WITH recentes AS (
       SELECT
         produto_id, nome, preco, comissao, vendas, nota, imagem, link, loja,
-        DATE(em) AS dia,
-        ROW_NUMBER() OVER (PARTITION BY produto_id ORDER BY em DESC) AS rn_recent,
+        DATE(coletado_em) AS dia,
+        ROW_NUMBER() OVER (PARTITION BY produto_id ORDER BY coletado_em DESC) AS rn_recent,
         COUNT(*) OVER (PARTITION BY produto_id) AS aparicoes
       FROM {ds}.snapshots
       WHERE keyword LIKE @busca_id
-        AND em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+        AND coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
     ),
     primeiros AS (
       SELECT

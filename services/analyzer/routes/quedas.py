@@ -25,12 +25,12 @@ def get_quedas(
     WITH snapshots_janela AS (
       SELECT
         produto_id, nome, preco, comissao, imagem, link, loja,
-        em,
-        FIRST_VALUE(preco) OVER (PARTITION BY produto_id ORDER BY em ASC) AS preco_primeiro,
-        LAST_VALUE(preco) OVER (PARTITION BY produto_id ORDER BY em ASC
+        coletado_em,
+        FIRST_VALUE(preco) OVER (PARTITION BY produto_id ORDER BY coletado_em ASC) AS preco_primeiro,
+        LAST_VALUE(preco) OVER (PARTITION BY produto_id ORDER BY coletado_em ASC
           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS preco_atual
       FROM {ds}.snapshots
-      WHERE em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+      WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
     ),
     com_variacao AS (
       SELECT DISTINCT

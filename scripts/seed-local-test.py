@@ -199,7 +199,7 @@ def seed_bigquery():
     table_ref = f"{dataset_ref}.snapshots"
 
     schema = [
-        bigquery.SchemaField("em", "TIMESTAMP"),
+        bigquery.SchemaField("coletado_em", "TIMESTAMP"),
         bigquery.SchemaField("keyword", "STRING"),
         bigquery.SchemaField("produto_id", "STRING"),
         bigquery.SchemaField("nome", "STRING"),
@@ -224,7 +224,7 @@ def seed_bigquery():
     # Inserir snapshots dia 1 (3 dias atrás)
     rows_dia_1 = [
         {
-            "em": THREE_DAYS_AGO.isoformat(),
+            "coletado_em": THREE_DAYS_AGO.isoformat(),
             "keyword": BUSCA_KEYWORD,
             **p,
         }
@@ -234,7 +234,7 @@ def seed_bigquery():
     # Inserir snapshots dia 2 (hoje)
     rows_dia_2 = [
         {
-            "em": NOW.isoformat(),
+            "coletado_em": NOW.isoformat(),
             "keyword": BUSCA_KEYWORD,
             **p,
         }

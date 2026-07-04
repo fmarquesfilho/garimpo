@@ -43,6 +43,8 @@ def detect_coupons(req: DetectCouponsRequest):
     Compare coupon snapshots to detect newly_discovered, modified, and expired_or_removed coupons.
     After detection, POSTs results to C# API for alert evaluation.
     """
+    import bq_client
+
     ds = f"`{settings.bq_project}.{settings.bq_dataset}`"
 
     # First check if current snapshot has any data (R5-AC3 safety check)

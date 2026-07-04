@@ -21,14 +21,14 @@ def get_evolucao(
 
     sql = f"""
     SELECT
-      DATE(em) AS dia,
+      DATE(coletado_em) AS dia,
       keyword AS loja,
       AVG(preco) AS preco_medio,
       COUNT(DISTINCT produto_id) AS produtos,
       MIN(preco) AS preco_min,
       MAX(preco) AS preco_max
     FROM {ds}.snapshots
-    WHERE em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+    WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
     GROUP BY dia, loja
     ORDER BY dia DESC, loja
     """
