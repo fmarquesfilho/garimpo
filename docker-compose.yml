@@ -1,5 +1,5 @@
 # docker-compose.yml — Garimpei mono-repo (dev local)
-# Sobe: PostgreSQL, Web App C#, monólito Go (legado), BigQuery emulator
+# Sobe: PostgreSQL, Web App C#, BigQuery emulator, Analyzer Python
 
 services:
   # ── Dependências ─────────────────────────────────────────────────────────
@@ -39,19 +39,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
-  # ── Monólito Go (legado — mantido durante migração) ──────────────────────
-  garimpei-api-legacy:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      BQ_PROJECT: garimpei-dev
-      BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
-    depends_on:
-      - bigquery-emulator
 
   # ── Microserviços Go (gRPC) ───────────────────────────────────────────
   # Descomente conforme forem implementados:

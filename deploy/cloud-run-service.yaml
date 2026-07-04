@@ -5,7 +5,6 @@
 #   - garimpei-api (C#): main ingress container (HTTP :8080)
 #   - collector (Go): sidecar gRPC (:50051)
 #   - publisher (Go): sidecar gRPC (:50052)
-#   - alerter (Go): sidecar gRPC (:50053)
 #   - scheduler (Go): sidecar gRPC (:50054)
 #   - analyzer (Python): sidecar HTTP (:8060) — analytics/BigQuery
 #
@@ -24,7 +23,7 @@ spec:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "3"
         run.googleapis.com/execution-environment: gen2
-        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler","analyzer"]}'
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","scheduler","analyzer"]}'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -126,38 +125,6 @@ spec:
             grpc:
               port: 50052
               service: publisher.v1.PublisherService
-            periodSeconds: 5
-            failureThreshold: 5
-
-        # ── Sidecar: alerter (DEPRECATED — alert logic moved to C# API) ───
-        # Kept temporarily for backward compatibility.
-        # Alert flow now: Cloud Tasks → C# /internal/alerts/check → Publisher
-        # TODO: Remove alerter sidecar after confirming alerts work via publisher
-        - name: alerter
-          image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/alerter:latest
-          env:
-            - name: PORT
-              value: "50053"
-            - name: ALERTAS_TELEGRAM_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: ALERTAS_TELEGRAM_TOKEN
-                  key: latest
-            - name: ALERTAS_TELEGRAM_CHAT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: ALERTAS_TELEGRAM_CHAT_ID
-                  key: latest
-            - name: ALERTAS_THRESHOLD
-              value: "0.15"
-          resources:
-            limits:
-              cpu: "0.25"
-              memory: 128Mi
-          startupProbe:
-            grpc:
-              port: 50053
-              service: alerter.v1.AlerterService
             periodSeconds: 5
             failureThreshold: 5
 

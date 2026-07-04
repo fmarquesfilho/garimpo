@@ -202,8 +202,6 @@ jobs:
           pids+=($!)
           build_image publisher services/publisher/Dockerfile . &
           pids+=($!)
-          build_image alerter services/alerter/Dockerfile . &
-          pids+=($!)
           build_image scheduler services/scheduler/Dockerfile . &
           pids+=($!)
           build_image analyzer services/analyzer/Dockerfile services/analyzer/ &

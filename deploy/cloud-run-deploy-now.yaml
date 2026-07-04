@@ -11,7 +11,7 @@ spec:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "2"
         run.googleapis.com/execution-environment: gen2
-        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler","analyzer"]}'
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","scheduler","analyzer"]}'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -93,26 +93,6 @@ spec:
           startupProbe:
             tcpSocket:
               port: 50052
-            periodSeconds: 3
-            failureThreshold: 5
-
-        - name: alerter
-          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/alerter:latest
-          env:
-            - name: PORT
-              value: "50053"
-            - name: ALERTAS_TELEGRAM_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: ALERTAS_TELEGRAM_TOKEN
-                  key: latest
-          resources:
-            limits:
-              cpu: "0.25"
-              memory: 128Mi
-          startupProbe:
-            tcpSocket:
-              port: 50053
             periodSeconds: 3
             failureThreshold: 5
 
