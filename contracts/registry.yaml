@@ -243,48 +243,122 @@ boundaries:
 # O validador verifica que os boundary IDs referenciados existem acima.
 
 flows:
+  # ── Fluxos disparados pelo usuário ─────────────────────────────────────────
+
+  discover:
+    name: "Descobrir Produtos"
+    trigger: user
+    steps:
+      - boundary: fe-candidatos
+        action: "Usuário busca por keyword/categoria"
+      - boundary: api-collector-fetch
+        action: "C# chama Collector gRPC Fetch(keyword, marketplace)"
+      - action: "Collector consulta Shopee/Amazon API"
+      - action: "C# aplica ScoringService.Rank + eligibility filter"
+    data_flow: ["{none}"]
+
   publish:
-    name: "Publicação de Oferta"
+    name: "Publicar Oferta (Manual)"
+    trigger: user
     steps:
       - boundary: fe-publicacoes-post
-        action: "Frontend envia produto + destino_id (UUID) + legenda HTML"
+        action: "Frontend envia produto + destino_id + legenda"
+      - action: "C# resolve destino_id → chat_id via PostgreSQL"
       - boundary: api-publisher-publish
-        action: "API resolve destino_id → chat_id (GroupId_Resolution), chama Publisher.Publish via gRPC"
-      - action: "Publisher envia para Telegram/WhatsApp via Bot API"
-    invariants:
-      - "destino_id (UUID do PostgreSQL) é resolvido para chat_id ANTES do gRPC"
-      - "Se envio imediato (sem agendada_em), DEVE chamar gRPC Publisher"
-      - "Se agendamento, salva com status 'agendada' sem chamar gRPC"
-      - "Legenda HTML é passada no campo Description do gRPC (detectada por conter '<')"
+        action: "C# chama Publisher.Publish gRPC com chat_id resolvido"
+      - action: "Publisher envia via Telegram/WhatsApp"
+    data_flow: ["read:postgresql:Destinos", "write:postgresql:Publicacoes"]
 
-  collection:
-    name: "Coleta de Produtos"
+  monitor-shops:
+    name: "Monitorar Lojas (Novidades/Variações)"
+    trigger: user
     steps:
-      - boundary: scheduler-collector-fetch
-        action: "Scheduler dispara Fetch por keyword/loja com cron configurado"
-      - action: "Collector busca na Shopee API e grava snapshots no BigQuery"
-      - boundary: scheduler-analyzer-detect
-        action: "Scheduler chama Analyzer para detectar novidades/cupons"
-    invariants:
-      - "Coleta falha gracefully por marketplace (não aborta tudo)"
-      - "Collector e Analyzer são independentes — falha de um não bloqueia outro"
+      - boundary: api-analyzer-novidades
+        action: "C# proxy GET /novidades para Analyzer"
+      - action: "Analyzer query BigQuery snapshots (window functions)"
+    data_flow: ["read:bigquery:snapshots"]
 
-  alerting:
-    name: "Alertas de Preço"
+  publish-from-variation:
+    name: "Publicar a partir de Variação"
+    trigger: user
     steps:
-      - action: "Analyzer detecta queda de preço significativa nos snapshots"
-      - action: "Alerter envia notificação via Telegram (token próprio)"
-    invariants:
-      - "Alerter usa ALERTAS_TELEGRAM_TOKEN (não o TELEGRAM_BOT_TOKEN do Publisher)"
-      - "Threshold configurável por usuário via /api/alertas/configurar"
+      - action: "Frontend navega /publicar com preco_atual preenchido"
+      - boundary: fe-publicacoes-post
+        action: "Confirma e envia"
+      - boundary: api-publisher-publish
+        action: "C# resolve destino e chama Publisher"
+    data_flow: ["read:postgresql:Destinos", "write:postgresql:Publicacoes"]
+
+  onboarding:
+    name: "Onboarding Multi-Tenant"
+    trigger: user
+    steps:
+      - boundary: fe-onboarding
+        action: "Steps: termos → shopee → telegram → validar"
+    data_flow: ["write:postgresql:TenantConfigs"]
 
   sync-buscas:
     name: "Sincronização de Buscas"
+    trigger: user
     steps:
       - boundary: fe-buscas-post
-        action: "Frontend salva busca com array de keywords"
+        action: "Frontend salva busca"
       - boundary: fe-buscas-get
-        action: "Frontend carrega buscas do servidor (substituindo localStorage)"
-    invariants:
-      - "keywords é SEMPRE array no request e no response"
-      - "Servidor é fonte de verdade; localStorage é cache"
+        action: "Frontend carrega do servidor"
+    data_flow: ["read:postgresql:Buscas", "write:postgresql:Buscas"]
+
+  # ── Fluxos automáticos (scheduler/cron) ────────────────────────────────────
+
+  scheduled-collection:
+    name: "Coleta Agendada de Produtos"
+    trigger: cron
+    schedule: "a cada 8h"
+    steps:
+      - boundary: scheduler-collector-fetch
+        action: "Scheduler dispara Collector.Fetch por keyword/loja"
+      - action: "Collector grava snapshots no BigQuery (append-only)"
+    data_flow: ["write:bigquery:snapshots"]
+
+  price-alert:
+    name: "Alerta Automático de Preço"
+    trigger: post-collection
+    steps:
+      - action: "Scheduler cria Cloud Task (queue: price-alerts)"
+      - action: "Cloud Tasks despacha POST /process-alert (1 msg/s)"
+      - action: "Scheduler HTTP chama Analyzer GET /quedas"
+      - action: "Scheduler formata mensagem e chama Publisher gRPC"
+    data_flow: ["read:bigquery:snapshots"]
+
+  coupon-collection:
+    name: "Coleta de Cupons Multi-Marketplace"
+    trigger: cron
+    schedule: "a cada 2h"
+    steps:
+      - action: "Scheduler: Shopee → Amazon → ML (sequencial)"
+      - action: "Collector grava coupon_snapshots no BigQuery"
+      - boundary: scheduler-analyzer-detect
+        action: "Scheduler chama Analyzer POST /detect-coupons"
+      - action: "Analyzer diff snapshots e POST para C# /internal/coupon-alerts/evaluate"
+      - action: "C# aplica regras e dedup (CouponAlertRules + History)"
+    data_flow: ["write:bigquery:coupon_snapshots", "read:postgresql:CouponAlertRules", "write:postgresql:CouponAlertHistory"]
+
+  coupon-alert-evaluation:
+    name: "Avaliação de Alertas de Cupons"
+    trigger: event
+    steps:
+      - action: "Analyzer detecta cupons novos/modificados via BigQuery diff"
+      - action: "Analyzer POST /internal/coupon-alerts/evaluate no C# API"
+      - action: "C# verifica match com regras ativas do tenant"
+      - action: "C# aplica deduplicação (72h window)"
+      - action: "C# registra em CouponAlertHistory"
+    data_flow: ["read:bigquery:coupon_snapshots", "read:postgresql:CouponAlertRules", "write:postgresql:CouponAlertHistory"]
+
+  dashboard-analytics:
+    name: "Dashboard (Estatísticas e Evolução)"
+    trigger: user
+    steps:
+      - boundary: api-analyzer-estatisticas
+        action: "C# proxy → Analyzer (BigQuery agrupamentos)"
+      - action: "Analyzer GET /evolucao com total_quedas/total_altas"
+      - action: "C# query PostgreSQL → publicações recentes"
+    data_flow: ["read:bigquery:snapshots", "read:postgresql:Publicacoes"]

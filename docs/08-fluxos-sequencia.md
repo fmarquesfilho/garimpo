@@ -527,6 +527,16 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 
 ---
 
+## Fluxos Pendentes de Implementação
+
+| Fluxo | Status | Descrição |
+|---|---|---|
+| Publicações agendadas | ⬜ Não implementado | Usuário agenda para data futura; worker deveria enviar no horário. Hoje salva com `status="agendada"` mas nenhum cron processa. |
+| Sync buscas → scheduler | ⬜ Pendente (T-0028) | Quando usuário adiciona loja, scheduler deveria criar cron job automaticamente. |
+| Alertas de cupons → Telegram | ⬜ Parcial (T-0045) | Detecção funciona mas envio para Telegram do tenant ainda não wired. |
+
+---
+
 ## Princípios de Escalabilidade
 
 | Princípio | Como está implementado |
