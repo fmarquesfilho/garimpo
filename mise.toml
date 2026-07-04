@@ -50,6 +50,11 @@ run = "go test ./..."
 description = "Testes C# (sobe PostgreSQL via Docker se necessário)"
 depends = ["build:csharp"]
 run = """
+# Verifica se Docker está acessível
+if ! docker info &>/dev/null; then
+  echo "⚠️  Docker indisponível — pulando test:csharp (testes rodarão no CI)"
+  exit 0
+fi
 # Garante que PostgreSQL está rodando
 if ! docker compose ps postgres 2>/dev/null | grep -q "running"; then
   echo "🐘 Iniciando PostgreSQL..."
