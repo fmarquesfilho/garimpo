@@ -51,6 +51,7 @@ def get_estatisticas(
     row = rows[0]
     return {
         "dias": dias,
+        "total_amostras": row.get("total_produtos", 0),
         "resumo": {
             "total_produtos": row.get("total_produtos", 0),
             "preco_medio": round(row.get("preco_medio", 0), 2),
