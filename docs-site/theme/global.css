@@ -109,15 +109,24 @@ html.dark {
 	padding-top: 1.5rem;
 }
 
-/* ── Mermaid diagram toggle (source ↔ rendered) ──────────────── */
+/* ── Mermaid diagram wrapper ─────────────────────────────────── */
 
 .mermaid-wrapper {
 	position: relative;
 	margin: 1rem 0;
 	border: 1px solid var(--rp-c-divider);
 	border-radius: 8px;
-	padding: 1rem;
+	overflow: hidden;
+}
+
+.mermaid-btn-bar {
+	display: flex;
+	gap: 6px;
+	justify-content: flex-end;
+	padding: 8px 12px;
 	background: var(--rp-c-bg-soft);
+	border-bottom: 1px solid var(--rp-c-divider);
+	flex-wrap: wrap;
 }
 
 .mermaid-toggle {
@@ -141,95 +150,52 @@ html.dark {
 	display: none;
 }
 
+.mermaid-source {
+	padding: 1rem;
+}
+
 .mermaid-source pre {
 	margin: 0;
 	border-radius: 4px;
 }
 
-.mermaid-wrapper .mermaid {
+/* Force white background on diagram area — always legible regardless of dark mode */
+.mermaid-diagram {
+	background: #ffffff;
+	padding: 1rem;
 	display: flex;
 	justify-content: center;
-	overflow-x: auto;
+	align-items: center;
+	overflow: hidden;
+	min-height: 200px;
 }
 
-.mermaid-wrapper .mermaid svg {
+.mermaid-diagram .mermaid {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+}
+
+.mermaid-diagram .mermaid svg {
 	max-width: 100%;
 	height: auto;
+	cursor: grab;
 }
 
-/* ── Collapsible sidebar for tablets ─────────────────────────── */
-
-@media (max-width: 1024px) {
-	.rp-doc-layout__sidebar {
-		position: fixed;
-		left: 0;
-		top: var(--rp-nav-height, 60px);
-		bottom: 0;
-		width: var(--rp-sidebar-width, 280px);
-		transform: translateX(-100%);
-		transition: transform 0.25s ease;
-		z-index: 100;
-		background: var(--rp-c-bg);
-		border-right: 1px solid var(--rp-c-divider);
-		overflow-y: auto;
-	}
-
-	.rp-doc-layout__sidebar.open {
-		transform: translateX(0);
-	}
-
-	/* Overlay */
-	.sidebar-overlay {
-		display: none;
-		position: fixed;
-		inset: 0;
-		top: var(--rp-nav-height, 60px);
-		background: rgba(0, 0, 0, 0.4);
-		z-index: 99;
-	}
-
-	.sidebar-overlay.visible {
-		display: block;
-	}
+.mermaid-diagram .mermaid svg:active {
+	cursor: grabbing;
 }
 
-/* Sidebar toggle button (tablet) */
-.sidebar-toggle-btn {
-	display: none;
-	position: fixed;
-	bottom: 20px;
-	left: 20px;
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: var(--rp-c-brand);
-	color: white;
-	font-size: 1.2rem;
-	border: none;
-	cursor: pointer;
-	z-index: 101;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-	transition: transform 0.15s;
-}
-
-.sidebar-toggle-btn:hover {
-	transform: scale(1.1);
-}
-
-@media (max-width: 1024px) {
-	.sidebar-toggle-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-}
-
-/* ── Mermaid button bar ──────────────────────────────────────── */
-.mermaid-btn-bar {
-	display: flex;
-	gap: 6px;
-	justify-content: flex-end;
-	margin-bottom: 8px;
+/* Panzoom hint text */
+.mermaid-diagram::after {
+	content: 'Scroll para zoom · Arraste para mover';
+	position: absolute;
+	bottom: 8px;
+	right: 12px;
+	font-size: 0.65rem;
+	color: #999;
+	pointer-events: none;
+	opacity: 0.7;
 }
 
 /* ── Mermaid fullscreen modal ────────────────────────────────── */
@@ -245,12 +211,17 @@ html.dark {
 }
 
 .mermaid-fullscreen-content {
-	background: white;
+	background: #ffffff;
 	border-radius: 12px;
 	padding: 2rem;
 	max-width: 95vw;
 	max-height: 90vh;
 	overflow: auto;
+	cursor: grab;
+}
+
+.mermaid-fullscreen-content:active {
+	cursor: grabbing;
 }
 
 .mermaid-fullscreen-content svg {
@@ -269,18 +240,10 @@ html.dark {
 	border-radius: 6px;
 	cursor: pointer;
 	font-weight: 600;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	z-index: 10000;
 }
 
 .mermaid-fullscreen-close:hover {
 	background: #f0f0f0;
-}
-
-html.dark .mermaid-fullscreen-content {
-	background: #1a1517;
-}
-
-html.dark .mermaid-fullscreen-close {
-	background: #2a2527;
-	color: #f0ebe8;
 }

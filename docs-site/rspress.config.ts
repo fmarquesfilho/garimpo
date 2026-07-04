@@ -63,7 +63,45 @@ export default defineConfig({
 					attrs: { type: 'module' },
 					children: `
 						import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-						mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+						import panzoom from 'https://cdn.jsdelivr.net/npm/panzoom@9.4.3/+esm';
+						mermaid.initialize({
+							startOnLoad: false,
+							theme: 'default',
+							themeVariables: {
+								background: '#ffffff',
+								primaryColor: '#e8f4fd',
+								primaryTextColor: '#1a1a1a',
+								primaryBorderColor: '#4a90d9',
+								secondaryColor: '#f0f7e6',
+								secondaryTextColor: '#1a1a1a',
+								secondaryBorderColor: '#5ba85b',
+								tertiaryColor: '#fff4e6',
+								tertiaryTextColor: '#1a1a1a',
+								tertiaryBorderColor: '#d4860a',
+								lineColor: '#333333',
+								textColor: '#1a1a1a',
+								mainBkg: '#e8f4fd',
+								nodeBorder: '#4a90d9',
+								clusterBkg: '#f8f9fa',
+								titleColor: '#1a1a1a',
+								edgeLabelBackground: '#ffffff',
+								actorTextColor: '#1a1a1a',
+								actorBkg: '#e8f4fd',
+								actorBorder: '#4a90d9',
+								signalColor: '#333333',
+								signalTextColor: '#1a1a1a',
+								labelBoxBkgColor: '#e8f4fd',
+								labelBoxBorderColor: '#4a90d9',
+								labelTextColor: '#1a1a1a',
+								loopTextColor: '#1a1a1a',
+								noteBkgColor: '#fff4e6',
+								noteTextColor: '#1a1a1a',
+								noteBorderColor: '#d4860a',
+								activationBkgColor: '#dbeafe',
+								activationBorderColor: '#4a90d9',
+								sequenceNumberColor: '#ffffff'
+							}
+						});
 						function renderMermaidBlocks() {
 							document.querySelectorAll('div.language-mermaid').forEach(function(el) {
 								if (el.dataset.mermaidRendered) return;
@@ -74,8 +112,11 @@ export default defineConfig({
 								var wrapper = document.createElement('div');
 								wrapper.className = 'mermaid-wrapper';
 								var diagramDiv = document.createElement('div');
-								diagramDiv.className = 'mermaid';
-								diagramDiv.textContent = source;
+								diagramDiv.className = 'mermaid-diagram';
+								var mermaidDiv = document.createElement('div');
+								mermaidDiv.className = 'mermaid';
+								mermaidDiv.textContent = source;
+								diagramDiv.appendChild(mermaidDiv);
 								var sourceDiv = document.createElement('div');
 								sourceDiv.className = 'mermaid-source hidden';
 								sourceDiv.appendChild(el.cloneNode(true));
@@ -89,6 +130,38 @@ export default defineConfig({
 									sourceDiv.classList.toggle('hidden');
 									diagramDiv.classList.toggle('hidden');
 									toggle.textContent = showingSource ? '📊 Diagrama' : '</> Código';
+								});
+								var zoomInBtn = document.createElement('button');
+								zoomInBtn.className = 'mermaid-toggle';
+								zoomInBtn.textContent = '+ Zoom';
+								var zoomOutBtn = document.createElement('button');
+								zoomOutBtn.className = 'mermaid-toggle';
+								zoomOutBtn.textContent = '− Zoom';
+								var resetBtn = document.createElement('button');
+								resetBtn.className = 'mermaid-toggle';
+								resetBtn.textContent = '↺ Reset';
+								var downloadBtn = document.createElement('button');
+								downloadBtn.className = 'mermaid-toggle';
+								downloadBtn.textContent = '⬇ Download';
+								downloadBtn.addEventListener('click', function() {
+									var svg = diagramDiv.querySelector('svg');
+									if (!svg) return;
+									var svgClone = svg.cloneNode(true);
+									svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+									if (!svgClone.getAttribute('width')) {
+										var bbox = svg.getBBox ? svg.getBBox() : null;
+										if (bbox) {
+											svgClone.setAttribute('width', bbox.width);
+											svgClone.setAttribute('height', bbox.height);
+										}
+									}
+									var blob = new Blob([svgClone.outerHTML], { type: 'image/svg+xml' });
+									var url = URL.createObjectURL(blob);
+									var a = document.createElement('a');
+									a.href = url;
+									a.download = 'diagrama.svg';
+									a.click();
+									URL.revokeObjectURL(url);
 								});
 								var fullscreenBtn = document.createElement('button');
 								fullscreenBtn.className = 'mermaid-toggle';
@@ -107,42 +180,42 @@ export default defineConfig({
 									modal.appendChild(closeBtn);
 									modal.appendChild(content);
 									document.body.appendChild(modal);
-									mermaid.run({ nodes: [content] });
+									mermaid.run({ nodes: [content] }).then(function() {
+										var fsPz = panzoom(content.querySelector('svg') || content, { smoothScroll: false });
+										modal.addEventListener('click', function(e) { if (e.target === modal) { fsPz.dispose(); modal.remove(); } });
+										closeBtn.addEventListener('click', function() { fsPz.dispose(); });
+									});
 								});
 								btnBar.appendChild(toggle);
+								btnBar.appendChild(zoomInBtn);
+								btnBar.appendChild(zoomOutBtn);
+								btnBar.appendChild(resetBtn);
+								btnBar.appendChild(downloadBtn);
 								btnBar.appendChild(fullscreenBtn);
 								wrapper.appendChild(btnBar);
 								wrapper.appendChild(diagramDiv);
 								wrapper.appendChild(sourceDiv);
 								el.replaceWith(wrapper);
+								// Store panzoom init function for after render
+								wrapper._initPanzoom = function() {
+									var svg = diagramDiv.querySelector('svg');
+									if (!svg) return;
+									var pz = panzoom(svg, { smoothScroll: false, maxZoom: 5, minZoom: 0.3 });
+									zoomInBtn.addEventListener('click', function() { pz.smoothZoom(svg.clientWidth / 2, svg.clientHeight / 2, 1.3); });
+									zoomOutBtn.addEventListener('click', function() { pz.smoothZoom(svg.clientWidth / 2, svg.clientHeight / 2, 0.7); });
+									resetBtn.addEventListener('click', function() { pz.moveTo(0, 0); pz.zoomAbs(0, 0, 1); });
+									wrapper._pz = pz;
+								};
 							});
-							mermaid.run();
+							mermaid.run().then(function() {
+								document.querySelectorAll('.mermaid-wrapper').forEach(function(w) {
+									if (w._initPanzoom && !w._pz) w._initPanzoom();
+								});
+							});
 						}
 						var observer = new MutationObserver(function() { renderMermaidBlocks(); });
 						observer.observe(document.body, { childList: true, subtree: true });
 						setTimeout(renderMermaidBlocks, 800);
-					`,
-					append: true
-				},
-				{
-					tag: 'script',
-					children: `
-						(function initSidebarToggle() {
-							var sidebar = document.querySelector('.rp-doc-layout__sidebar');
-							if (!sidebar) { setTimeout(initSidebarToggle, 300); return; }
-							if (document.querySelector('.sidebar-toggle-btn')) return;
-							var overlay = document.createElement('div');
-							overlay.className = 'sidebar-overlay';
-							document.body.appendChild(overlay);
-							var btn = document.createElement('button');
-							btn.className = 'sidebar-toggle-btn';
-							btn.innerHTML = '☰';
-							btn.setAttribute('aria-label', 'Toggle sidebar');
-							document.body.appendChild(btn);
-							btn.addEventListener('click', function() { sidebar.classList.toggle('open'); overlay.classList.toggle('visible'); });
-							overlay.addEventListener('click', function() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); });
-							sidebar.addEventListener('click', function(e) { if (e.target.closest('a')) { setTimeout(function() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }, 100); } });
-						})();
 					`,
 					append: true
 				}
