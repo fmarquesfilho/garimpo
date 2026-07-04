@@ -5,11 +5,7 @@ using Collector.V1;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
-/// Curadoria endpoints — serves the 4 primary sources for the publish page:
-/// - Busca (curadoria): fetch via gRPC collector → rank by scoring
-/// - Quedas: products with price drops (from snapshots)
-/// - Novos: recently detected products (from snapshots)
-/// - Favoritos: user-saved products (from PostgreSQL)
+/// Curadoria endpoints — serves the 4 primary sources for the publish page.
 /// </summary>
 public static partial class EndpointExtensions
 {

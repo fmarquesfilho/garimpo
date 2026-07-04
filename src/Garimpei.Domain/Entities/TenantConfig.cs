@@ -29,7 +29,7 @@ public sealed class TenantConfig : IOwnedEntity
     public bool AceitouTermos { get; set; }
     public DateTime? AceitouTermosEm { get; set; }
 
-    // Alertas
+    // Alertas — price drop notification settings
     public double AlertaThreshold { get; set; } = 0.15; // 15% de queda
     public bool AlertaApenasQuedas { get; set; } = true;
 

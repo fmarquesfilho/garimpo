@@ -82,7 +82,7 @@ type Busca struct {
 	// Timestamp da última varredura completa do catálogo (por loja)
 	FullScanAt map[int64]string `json:"full_scan_at,omitempty"`
 
-	// Legado
+	// Backward-compatible fields from v1 schema
 	KeywordLegado string `json:"keyword,omitempty"`
 	NomeLegado    string `json:"-"` // deprecated: use Nome
 }

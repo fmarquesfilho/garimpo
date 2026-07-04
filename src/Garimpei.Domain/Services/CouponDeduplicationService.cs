@@ -13,10 +13,6 @@ public static class CouponDeduplicationService
     /// <summary>
     /// Determines if a coupon should trigger an alert given existing history.
     /// </summary>
-    /// <param name="history">Most recent alert history for this coupon+rule (null if none).</param>
-    /// <param name="detectionStatus">Detection classification: "newly_discovered" or "modified".</param>
-    /// <param name="currentDiscountValue">The coupon's current discount value.</param>
-    /// <returns>True if alert should be sent.</returns>
     public static bool ShouldAlert(
         CouponAlertHistory? history,
         string detectionStatus,

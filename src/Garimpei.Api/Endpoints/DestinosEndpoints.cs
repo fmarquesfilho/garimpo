@@ -40,7 +40,7 @@ public static partial class EndpointExtensions
             Destino destino;
             if (req.Id is not null)
             {
-                // Update
+                // Update existing destination
                 destino = await db.Destinos.FindAsync([req.Id.Value], ct)
                     ?? throw new InvalidOperationException("Destino não encontrado");
 

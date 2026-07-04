@@ -1,7 +1,4 @@
 // Buscas salvas: cada busca é identificada por um ID gerado da keyword principal.
-// Uma busca pode ter múltiplas keywords (ex.: "kenzo", "shiseido" numa busca
-// "perfumaria japonesa"). Os filtros são persistidos no servidor (BigQuery) para
-// sobreviver à troca de dispositivo; o localStorage serve de cache imediato.
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { listarBuscasServidor, sincronizarBusca } from './api.js';

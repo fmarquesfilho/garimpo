@@ -234,7 +234,7 @@ public class ArchitectureTests
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Helpers
+    // Helpers — shared utilities for architecture test assertions
     // ═══════════════════════════════════════════════════════════════════════
 
     private static string FormatFailures(TestResult result)

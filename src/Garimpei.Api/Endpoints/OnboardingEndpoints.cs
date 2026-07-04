@@ -72,7 +72,7 @@ public static partial class EndpointExtensions
         {
             var cfg = await GetOrCreateTenantConfig(db, tenant.OwnerUid, ct);
             cfg.ShopeeAppId = req.AppId;
-            cfg.ShopeeSecretEnc = req.Secret; // TODO: encrypt
+            cfg.ShopeeSecretEnc = req.Secret; // TODO(T-0045): encrypt
             cfg.OnboardingStep = Math.Max(cfg.OnboardingStep, 2);
             cfg.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
@@ -104,8 +104,8 @@ public static partial class EndpointExtensions
                 return Results.BadRequest(new { error = "access_key, secret_key e partner_tag são obrigatórios" });
             }
 
-            cfg.AmazonAccessKeyEnc = req.AccessKey; // TODO: encrypt
-            cfg.AmazonSecretKeyEnc = req.SecretKey; // TODO: encrypt
+            cfg.AmazonAccessKeyEnc = req.AccessKey; // TODO(T-0045): encrypt
+            cfg.AmazonSecretKeyEnc = req.SecretKey; // TODO(T-0045): encrypt
             cfg.AmazonPartnerTag = req.PartnerTag;
             cfg.OnboardingStep = Math.Max(cfg.OnboardingStep, 2);
             cfg.UpdatedAt = DateTime.UtcNow;
@@ -125,7 +125,7 @@ public static partial class EndpointExtensions
 
             if (req.Pular != true)
             {
-                cfg.TelegramTokenEnc = req.Token; // TODO: encrypt
+                cfg.TelegramTokenEnc = req.Token; // TODO(T-0045): encrypt
                 cfg.TelegramChatId = req.ChatId;
             }
 
@@ -148,7 +148,7 @@ public static partial class EndpointExtensions
             if (req.Pular != true)
             {
                 cfg.WhatsappPhoneNumberId = req.PhoneNumberId;
-                cfg.WhatsappTokenEnc = req.AccessToken; // TODO: encrypt
+                cfg.WhatsappTokenEnc = req.AccessToken; // TODO(T-0045): encrypt
             }
 
             cfg.OnboardingStep = Math.Max(cfg.OnboardingStep, 3);
@@ -166,7 +166,7 @@ public static partial class EndpointExtensions
         {
             var cfg = await GetOrCreateTenantConfig(db, tenant.OwnerUid, ct);
 
-            // TODO: validar credenciais Shopee com chamada de teste real
+            // TODO(T-0045): validar credenciais Shopee com chamada de teste real
             cfg.OnboardingStep = 4;
             cfg.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);

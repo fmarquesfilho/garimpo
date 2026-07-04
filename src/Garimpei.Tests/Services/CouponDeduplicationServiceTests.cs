@@ -7,7 +7,7 @@ namespace Garimpei.Tests.Services;
 public class CouponDeduplicationServiceTests
 {
     // ═════════════════════════════════════════════════════════════════════
-    // ShouldAlert
+    // ShouldAlert — deduplication window and re-alert logic
     // ═════════════════════════════════════════════════════════════════════
 
     [Fact]
@@ -86,7 +86,7 @@ public class CouponDeduplicationServiceTests
     }
 
     // ═════════════════════════════════════════════════════════════════════
-    // MatchesRule
+    // MatchesRule — rule criteria matching against coupon attributes
     // ═════════════════════════════════════════════════════════════════════
 
     [Fact]

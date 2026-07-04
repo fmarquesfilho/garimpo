@@ -12,16 +12,16 @@ import (
 // NopRepository satisfaz Repository.
 var _ store.Repository = (*store.NopRepository)(nil)
 
-// DestinoRepo
+// DestinoRepo — verifies MemDestinoRepo implements the DestinoRepo interface
 var _ store.DestinoRepo = (*store.MemDestinoRepo)(nil)
 
-// TemplateRepo
+// TemplateRepo — verifies MemTemplateRepo implements the TemplateRepo interface
 var _ store.TemplateRepo = (*store.MemTemplateRepo)(nil)
 
-// FavoritoRepo
+// FavoritoRepo — verifies MemFavoritoRepo implements the FavoritoRepo interface
 var _ store.FavoritoRepo = (*store.MemFavoritoRepo)(nil)
 
-// TenantRepo
+// TenantRepo — verifies MemTenantRepo implements the TenantRepo interface
 var _ store.TenantRepo = (*store.MemTenantRepo)(nil)
 
 func TestNopRepositoryConformance(t *testing.T) {

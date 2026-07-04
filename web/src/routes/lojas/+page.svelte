@@ -21,7 +21,7 @@
 	let carregandoProdutos = $state(false);
 	let erroProdutos = $state(null);
 
-	// Novidades
+	// Novidades — state for recently detected products in this store
 	let novidades = $state(null);
 	let carregandoNovidades = $state(false);
 	let erroNovidades = $state(null);

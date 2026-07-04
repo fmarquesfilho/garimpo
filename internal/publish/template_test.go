@@ -78,7 +78,7 @@ func TestMemTemplateStoreCRUD(t *testing.T) {
 		t.Errorf("após salvar deveria ter 3+, veio %d", len(lista))
 	}
 
-	// Deletar
+	// Deletar — remove template and verify it's no longer retrievable
 	if err := s.Deletar(ctx, "promo"); err != nil {
 		t.Fatal(err)
 	}

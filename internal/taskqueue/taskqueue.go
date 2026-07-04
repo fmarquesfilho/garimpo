@@ -33,7 +33,7 @@ type Config struct {
 	TargetURL string
 	// ServiceAccountEmail para OIDC auth na task
 	ServiceAccountEmail string
-	// Logger
+	// Logger for alert task queue operations
 	Logger *slog.Logger
 }
 

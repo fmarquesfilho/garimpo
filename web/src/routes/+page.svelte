@@ -97,7 +97,7 @@
 		}
 	}
 
-	// Debounce
+	// Debounce — delays search execution to batch rapid filter changes
 	let timer;
 	$effect(() => {
 		busca;

@@ -38,11 +38,11 @@ type ReceiverConfig struct {
 
 // CredentialsConfig mapeia nomes de env vars para cada credencial.
 type CredentialsConfig struct {
-	// Shopee
+	// Shopee affiliate API environment variables
 	AppIDEnv  string `yaml:"app_id_env"`
 	SecretEnv string `yaml:"secret_env"`
 
-	// Amazon
+	// Amazon Product Advertising API environment variables
 	AccessKeyEnv  string `yaml:"access_key_env"`
 	SecretKeyEnv  string `yaml:"secret_key_env"`
 	PartnerTagEnv string `yaml:"partner_tag_env"`

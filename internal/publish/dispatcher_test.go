@@ -85,7 +85,7 @@ func TestMemDestinoStoreCRUD(t *testing.T) {
 		t.Errorf("deveria estar vazio, veio %d", len(lista))
 	}
 
-	// Salvar
+	// Salvar — persist destinations and verify only active ones are listed
 	_ = s.Salvar(ctx, Destino{ID: "a", Nome: "A", Tipo: "telegram", Config: "@a", Ativo: true})
 	_ = s.Salvar(ctx, Destino{ID: "b", Nome: "B", Tipo: "telegram", Config: "@b", Ativo: false})
 
@@ -94,19 +94,19 @@ func TestMemDestinoStoreCRUD(t *testing.T) {
 		t.Errorf("esperava 1 ativo, veio %d", len(lista))
 	}
 
-	// Buscar
+	// Buscar — retrieve a specific destination by ID
 	d, err := s.Buscar(ctx, "a")
 	if err != nil || d.Nome != "A" {
 		t.Errorf("buscar 'a' falhou: %v %+v", err, d)
 	}
 
-	// Buscar inexistente
+	// Buscar inexistente — must return error for unknown IDs
 	_, err = s.Buscar(ctx, "z")
 	if err == nil {
 		t.Error("deveria dar erro para destino inexistente")
 	}
 
-	// Deletar
+	// Deletar — remove destination and confirm list is empty
 	_ = s.Deletar(ctx, "a")
 	lista, _ = s.Listar(ctx)
 	if len(lista) != 0 {

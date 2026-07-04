@@ -36,7 +36,7 @@
 
 	onMount(carregar);
 
-	// Derivados
+	// Derivados — reactive computed values for dashboard statistics
 	let lojas = $derived((buscas ?? []).filter((b) => b.shop_ids?.length > 0));
 	let pubEnviadas = $derived((publicacoes ?? []).filter((p) => p.status === 'enviada'));
 	let pubErros = $derived((publicacoes ?? []).filter((p) => p.status === 'erro'));

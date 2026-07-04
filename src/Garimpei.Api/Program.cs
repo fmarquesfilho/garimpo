@@ -17,7 +17,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
 });
 
-// Serilog
+// Serilog structured logging configuration
 builder.Host.UseSerilog((context, config) =>
     config.ReadFrom.Configuration(context.Configuration));
 
@@ -45,7 +45,7 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddAuthorization();
 
-// Health checks
+// Health checks for readiness probes
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         builder.Configuration.GetConnectionString("PostgreSQL") ?? "",
@@ -55,7 +55,7 @@ builder.Services.AddHealthChecks()
 // HttpClient for analyzer service
 builder.Services.AddHttpClient();
 
-// OpenTelemetry
+// OpenTelemetry distributed tracing and metrics
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(r => r.AddService("garimpei-api-v2"))
     .WithTracing(tracing => tracing
@@ -67,7 +67,7 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddOtlpExporter());
 
-// OpenAPI
+// OpenAPI spec generation for Swagger/Scalar UI
 builder.Services.AddOpenApi();
 
 // CORS (dev only — production uses same-origin via Cloudflare Worker)

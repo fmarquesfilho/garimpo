@@ -21,7 +21,7 @@ public static class DependencyInjection
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
 
-        // Persistence
+        // Persistence — PostgreSQL via EF Core
         services.AddDbContext<AppDbContext>((sp, options) =>
             options.UseNpgsql(
                 configuration.GetConnectionString("PostgreSQL"),

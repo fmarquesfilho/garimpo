@@ -38,11 +38,11 @@ type SourceFactory func(cfg SourceConfig) ProductSource
 // SourceConfig agrupa credenciais e configuração necessárias para criar uma fonte.
 // Campos opcionais — cada marketplace usa o que precisa.
 type SourceConfig struct {
-	// Shopee
+	// Shopee affiliate API credentials
 	AppID  string
 	Secret string
 
-	// Amazon
+	// Amazon Product Advertising API credentials
 	AccessKey  string
 	SecretKey  string
 	PartnerTag string

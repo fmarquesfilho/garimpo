@@ -27,11 +27,11 @@ type CouponSourceFactory func(cfg SourceConfig) CouponSource
 
 // SourceConfig agrupa credenciais necessárias para criar uma fonte de cupons.
 type SourceConfig struct {
-	// Shopee
+	// Shopee affiliate API credentials
 	AppID  string
 	Secret string
 
-	// Amazon (OAuth 2.0)
+	// Amazon Product Advertising API credentials (OAuth 2.0)
 	AccessKey  string
 	SecretKey  string
 	PartnerTag string

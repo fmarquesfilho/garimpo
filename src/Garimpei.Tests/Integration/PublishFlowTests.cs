@@ -9,11 +9,6 @@ namespace Garimpei.Tests.Integration;
 
 /// <summary>
 /// Integration tests for the publish orchestration flow.
-/// Validates the contract invariants:
-/// - Immediate publish (no agendada_em) MUST trigger gRPC Publisher.Publish
-/// - Scheduled publish (with agendada_em) MUST NOT trigger gRPC
-/// - GroupId_Resolution: destino_id (UUID) → Destino.Config (chat_id)
-/// - Unreachable publisher → status "erro" with clear message
 /// </summary>
 public class PublishFlowTests : IDisposable
 {

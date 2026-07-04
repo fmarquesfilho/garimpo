@@ -53,7 +53,7 @@ public static partial class EndpointExtensions
                 });
             }
 
-            // TODO: enviar mensagem de teste via Telegram Bot API
+            // TODO(T-0045): enviar mensagem de teste via Telegram Bot API
             // Por ora retorna sucesso simulado
             return Results.Ok(new
             {
