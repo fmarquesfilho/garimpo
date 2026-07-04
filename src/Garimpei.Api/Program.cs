@@ -158,3 +158,4 @@ app.Run();
 
 // Endpoint groups — each in its own file
 public static partial class EndpointExtensions { }
+
