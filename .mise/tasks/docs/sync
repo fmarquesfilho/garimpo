@@ -26,6 +26,7 @@ cp docs/04-operacao-shopee.md "$DEST/operacao-shopee.md"
 cp docs/05-manual-do-usuario.md "$DEST/manual-do-usuario.md"
 cp docs/06-qualidade-e-testes.md "$DEST/qualidade-e-testes.md"
 cp docs/07-dados-e-ia.md "$DEST/dados-e-ia.md"
+cp docs/08-fluxos-sequencia.md "$DEST/fluxos-sequencia.md"
 
 # ── TODOS os ADRs ────────────────────────────────────────────────────────────
 for adr in docs/decisoes/*.md; do
@@ -225,6 +226,7 @@ generate_sidebar() {
   {"text":"Arquitetura","items":[
     {"text":"Visão Geral","link":"/arquitetura"},
     {"text":"Fluxos e Modelo","link":"/fluxos-e-modelo"},
+    {"text":"Fluxos de Sequência","link":"/fluxos-sequencia"},
     {"text":"Operação Shopee","link":"/operacao-shopee"}
   ]},
   {"text":"Operação","items":[
