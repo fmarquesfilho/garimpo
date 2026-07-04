@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+#MISE description="Gera manifesto de APIs a partir do código-fonte"
+# =============================================================================
+# gen-api.sh — Extrai endpoints/RPCs de todas as fontes e gera api.gen.yaml
+# =============================================================================
+# Fontes:
+#   1. protos/*.proto           → gRPC services + methods
+#   2. src/Garimpei.Api/**/*.cs → HTTP endpoints (MapGet/MapPost/MapDelete)
+#   3. services/analyzer/**/*.py→ FastAPI routes (@router.get/post)
+#   4. services/scheduler/*.go  → HTTP handlers (HandleFunc)
+#   5. web/src/lib/api.js       → Frontend API calls (pegar/postar)
+#
+# Saída: contracts/api.gen.yaml (NUNCA editar à mão — sempre regenerar)
+# =============================================================================
+set -euo pipefail
+
+OUT="contracts/api.gen.yaml"
+mkdir -p contracts
+
+cat > "$OUT" << 'HEADER'
+# ═══════════════════════════════════════════════════════════════════════════════
+# API Manifest — GERADO AUTOMATICAMENTE (não editar)
+# Regenerar: mise run gen:api
+# ═══════════════════════════════════════════════════════════════════════════════
+generated_at: "TIMESTAMP"
+
+HEADER
+
+sed -i '' "s|TIMESTAMP|$(date -u +%Y-%m-%dT%H:%M:%SZ)|" "$OUT"
+
+# ── 1. gRPC Services (protos) ────────────────────────────────────────────────
+echo "grpc_services:" >> "$OUT"
+
+for proto in protos/*/v1/*.proto; do
+  [ -f "$proto" ] || continue
+  service=$(grep "^service " "$proto" | sed 's/service \([^ ]*\).*/\1/')
+  pkg=$(grep "^package " "$proto" | sed 's/package \([^;]*\);/\1/')
+  [ -z "$service" ] && continue
+
+  echo "  - service: \"${pkg}.${service}\"" >> "$OUT"
+  echo "    proto: \"$proto\"" >> "$OUT"
+  echo "    methods:" >> "$OUT"
+
+  grep "rpc " "$proto" | sed 's/.*rpc \([^(]*\)(.*/\1/' | while read -r method; do
+    echo "      - \"$method\"" >> "$OUT"
+  done
+done
+
+# ── 2. C# HTTP Endpoints ─────────────────────────────────────────────────────
+echo "" >> "$OUT"
+echo "http_endpoints:" >> "$OUT"
+echo "  csharp_api:" >> "$OUT"
+
+# Extract all MapGet/MapPost/MapDelete with quoted path (extended regex)
+grep -rhoE 'Map(Get|Post|Delete|Put|Patch)\("[^"]*"' \
+  src/Garimpei.Api/Endpoints/ src/Garimpei.Api/Program.cs 2>/dev/null | \
+  sed 's/Map\(.*\)("\(.*\)"/\1 \2/' | \
+  sort -u | while read -r method path; do
+    echo "    - method: \"$method\"" >> "$OUT"
+    echo "      path: \"$path\"" >> "$OUT"
+  done || true
+
+# ── 3. Python Analyzer (FastAPI) ─────────────────────────────────────────────
+echo "  analyzer_python:" >> "$OUT"
+
+grep -rn "@router\.\(get\|post\)" services/analyzer/routes/ 2>/dev/null | \
+  sed -n 's|.*@router\.\(get\|post\)("\([^"]*\)".*|\2 \1|p' | \
+  sort -u | while read -r path method; do
+    echo "    - method: \"$method\"" >> "$OUT"
+    echo "      path: \"$path\"" >> "$OUT"
+  done
+
+# Standalone app routes
+grep -n "@app\.\(get\|post\)" services/analyzer/main.py 2>/dev/null | \
+  sed -n 's|.*@app\.\(get\|post\)("\([^"]*\)".*|\2 \1|p' | while read -r path method; do
+    echo "    - method: \"$method\"" >> "$OUT"
+    echo "      path: \"$path\"" >> "$OUT"
+  done
+
+# ── 4. Scheduler HTTP handlers ───────────────────────────────────────────────
+echo "  scheduler_http:" >> "$OUT"
+
+grep -n "HandleFunc" services/scheduler/*.go 2>/dev/null | \
+  sed -n 's|.*HandleFunc("\([A-Z]*\) \([^"]*\)".*|\2 \1|p' | \
+  sort -u | while read -r path method; do
+    echo "    - method: \"$method\"" >> "$OUT"
+    echo "      path: \"$path\"" >> "$OUT"
+  done
+
+# ── 5. Frontend API calls ────────────────────────────────────────────────────
+echo "" >> "$OUT"
+echo "frontend_calls:" >> "$OUT"
+
+# Extract from pegar() calls (GET)
+grep -n "pegar(" web/src/lib/api.js 2>/dev/null | \
+  sed -n "s|.*pegar(\`\([^?]*\).*|GET \1|p;s|.*pegar('\([^?']*\).*|GET \1|p" | \
+  sed "s|\${[^}]*}|{param}|g" | sort -u | while read -r method path; do
+    echo "  - method: \"$method\"" >> "$OUT"
+    echo "    path: \"$path\"" >> "$OUT"
+  done
+
+# Extract from postar() calls (POST)
+grep -n "postar(" web/src/lib/api.js 2>/dev/null | \
+  sed -n "s|.*postar('\([^']*\)'.*|POST \1|p" | \
+  sort -u | while read -r method path; do
+    echo "  - method: \"$method\"" >> "$OUT"
+    echo "    path: \"$path\"" >> "$OUT"
+  done
+
+# DELETE calls
+grep -n "method: 'DELETE'" web/src/lib/api.js 2>/dev/null | \
+  grep -B5 "DELETE" web/src/lib/api.js 2>/dev/null | \
+  sed -n "s|.*\`\${BASE}\([^?\`]*\).*|DELETE \1|p" | \
+  sed "s|\${[^}]*}|{param}|g" | sort -u | while read -r method path; do
+    echo "  - method: \"$method\"" >> "$OUT"
+    echo "    path: \"$path\"" >> "$OUT"
+  done || true
+
+# ── 6. Inter-service calls (Go → sidecars) ───────────────────────────────────
+echo "" >> "$OUT"
+echo "inter_service_calls:" >> "$OUT"
+
+# Scheduler → Collector (gRPC)
+echo "  - source: scheduler" >> "$OUT"
+echo "    target: collector" >> "$OUT"
+echo "    protocol: grpc" >> "$OUT"
+echo "    method: Fetch" >> "$OUT"
+
+# Scheduler → Analyzer (HTTP)
+grep -n "analyzerURL" services/scheduler/*.go 2>/dev/null | \
+  grep -v "envOrDefault\|field\|struct" | \
+  sed -n 's|.*analyzerURL + "\([^"]*\)".*|\1|p' | sort -u | while read -r path; do
+    echo "  - source: scheduler" >> "$OUT"
+    echo "    target: analyzer" >> "$OUT"
+    echo "    protocol: http" >> "$OUT"
+    echo "    path: \"$path\"" >> "$OUT"
+  done
+
+# Scheduler → Publisher (gRPC)
+echo "  - source: scheduler" >> "$OUT"
+echo "    target: publisher" >> "$OUT"
+echo "    protocol: grpc" >> "$OUT"
+echo "    method: Publish" >> "$OUT"
+
+# Scheduler → Cloud Tasks
+echo "  - source: scheduler" >> "$OUT"
+echo "    target: cloud-tasks" >> "$OUT"
+echo "    protocol: http" >> "$OUT"
+echo "    path: \"/process-alert\"" >> "$OUT"
+
+# C# → Analyzer (HTTP proxy)
+grep -rn "analyzerUrl" src/Garimpei.Api/Endpoints/ 2>/dev/null | \
+  sed -n 's|.*\$"{analyzerUrl}\([^"?]*\).*|\1|p' | sort -u | while read -r path; do
+    echo "  - source: csharp-api" >> "$OUT"
+    echo "    target: analyzer" >> "$OUT"
+    echo "    protocol: http" >> "$OUT"
+    echo "    path: \"$path\"" >> "$OUT"
+  done
+
+# C# → Collector (gRPC)
+echo "  - source: csharp-api" >> "$OUT"
+echo "    target: collector" >> "$OUT"
+echo "    protocol: grpc" >> "$OUT"
+echo "    method: Fetch" >> "$OUT"
+
+# C# → Publisher (gRPC)
+echo "  - source: csharp-api" >> "$OUT"
+echo "    target: publisher" >> "$OUT"
+echo "    protocol: grpc" >> "$OUT"
+echo "    method: Publish" >> "$OUT"
+
+echo ""
+echo "✓ $OUT gerado ($(wc -l < "$OUT" | tr -d ' ') linhas)"

@@ -1,0 +1,255 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# API Manifest — GERADO AUTOMATICAMENTE (não editar)
+# Regenerar: mise run gen:api
+# ═══════════════════════════════════════════════════════════════════════════════
+generated_at: "2026-07-04T15:25:59Z"
+
+grpc_services:
+  - service: "alerter.v1.AlerterService"
+    proto: "protos/alerter/v1/alerter.proto"
+    methods:
+      - "CheckAndNotify"
+      - "SendCouponAlert"
+  - service: "collector.v1.CollectorService"
+    proto: "protos/collector/v1/collector.proto"
+    methods:
+      - "Fetch"
+      - "FetchShop"
+  - service: "coupon.v1.CouponCollectorService"
+    proto: "protos/coupon/v1/coupon.proto"
+    methods:
+      - "FetchCoupons"
+  - service: "publisher.v1.PublisherService"
+    proto: "protos/publisher/v1/publisher.proto"
+    methods:
+      - "Publish"
+      - "ListGroups"
+  - service: "scheduler.v1.SchedulerService"
+    proto: "protos/scheduler/v1/scheduler.proto"
+    methods:
+      - "TriggerJob"
+      - "ListJobs"
+      - "SetSchedule"
+
+http_endpoints:
+  csharp_api:
+    - method: "Delete"
+      path: "/"
+    - method: "Delete"
+      path: "/api/lojas"
+    - method: "Delete"
+      path: "/{id:guid}"
+    - method: "Get"
+      path: "/"
+    - method: "Get"
+      path: "/api/admin/me"
+    - method: "Get"
+      path: "/api/buscas"
+    - method: "Get"
+      path: "/api/candidatos"
+    - method: "Get"
+      path: "/api/categorias"
+    - method: "Get"
+      path: "/api/coletas"
+    - method: "Get"
+      path: "/api/conversoes"
+    - method: "Get"
+      path: "/api/conversoes/reais"
+    - method: "Get"
+      path: "/api/estatisticas"
+    - method: "Get"
+      path: "/api/health"
+    - method: "Get"
+      path: "/api/lojas"
+    - method: "Get"
+      path: "/api/lojas/evolucao"
+    - method: "Get"
+      path: "/api/lojas/novidades"
+    - method: "Get"
+      path: "/destinos"
+    - method: "Get"
+      path: "/favoritos"
+    - method: "Get"
+      path: "/historico"
+    - method: "Get"
+      path: "/novos"
+    - method: "Get"
+      path: "/quedas"
+    - method: "Get"
+      path: "/ranking"
+    - method: "Get"
+      path: "/ranking/shop"
+    - method: "Get"
+      path: "/status"
+    - method: "Patch"
+      path: "/{id:guid}/toggle"
+    - method: "Post"
+      path: "/"
+    - method: "Post"
+      path: "/amazon"
+    - method: "Post"
+      path: "/api/buscas"
+    - method: "Post"
+      path: "/api/lojas"
+    - method: "Post"
+      path: "/api/publicar"
+    - method: "Post"
+      path: "/api/resolver-link"
+    - method: "Post"
+      path: "/api/templates/preview"
+    - method: "Post"
+      path: "/configurar"
+    - method: "Post"
+      path: "/excluir-conta"
+    - method: "Post"
+      path: "/internal/coupon-alerts/evaluate"
+    - method: "Post"
+      path: "/process-alert"
+    - method: "Post"
+      path: "/shopee"
+    - method: "Post"
+      path: "/telegram"
+    - method: "Post"
+      path: "/termos"
+    - method: "Post"
+      path: "/testar"
+    - method: "Post"
+      path: "/validar"
+    - method: "Post"
+      path: "/whatsapp"
+    - method: "Put"
+      path: "/{id:guid}"
+  analyzer_python:
+  scheduler_http:
+    - method: "GET"
+      path: "/healthz"
+    - method: "POST"
+      path: "/process-alert"
+
+frontend_calls:
+  - method: "GET"
+    path: "/api/admin/me"
+  - method: "GET"
+    path: "/api/alertas"
+  - method: "GET"
+    path: "/api/buscas"
+  - method: "GET"
+    path: "/api/candidatos"
+  - method: "GET"
+    path: "/api/coletas"
+  - method: "GET"
+    path: "/api/conversoes"
+  - method: "GET"
+    path: "/api/destinos"
+  - method: "GET"
+    path: "/api/estatisticas"
+  - method: "GET"
+    path: "/api/favoritos"
+  - method: "GET"
+    path: "/api/lojas/evolucao"
+  - method: "GET"
+    path: "/api/lojas/novidades"
+  - method: "GET"
+    path: "/api/onboarding/status"
+  - method: "GET"
+    path: "/api/publicacoes{param}`);"
+  - method: "GET"
+    path: "/api/templates"
+  - method: "POST"
+    path: "/api/alertas/configurar"
+  - method: "POST"
+    path: "/api/alertas/testar"
+  - method: "POST"
+    path: "/api/destinos"
+  - method: "POST"
+    path: "/api/favoritos"
+  - method: "POST"
+    path: "/api/lojas"
+  - method: "POST"
+    path: "/api/onboarding/excluir-conta"
+  - method: "POST"
+    path: "/api/onboarding/shopee"
+  - method: "POST"
+    path: "/api/onboarding/telegram"
+  - method: "POST"
+    path: "/api/onboarding/termos"
+  - method: "POST"
+    path: "/api/onboarding/validar"
+  - method: "POST"
+    path: "/api/onboarding/whatsapp"
+  - method: "POST"
+    path: "/api/publicacoes"
+  - method: "POST"
+    path: "/api/publicar"
+  - method: "POST"
+    path: "/api/resolver-link"
+  - method: "POST"
+    path: "/api/templates"
+  - method: "POST"
+    path: "/api/templates/preview"
+  - method: "DELETE"
+    path: "/api/destinos"
+  - method: "DELETE"
+    path: "/api/favoritos"
+  - method: "DELETE"
+    path: "/api/lojas"
+  - method: "DELETE"
+    path: "/api/templates"
+
+inter_service_calls:
+  - source: scheduler
+    target: collector
+    protocol: grpc
+    method: Fetch
+  - source: scheduler
+    target: analyzer
+    protocol: http
+    path: "/detect-coupons"
+  - source: scheduler
+    target: publisher
+    protocol: grpc
+    method: Publish
+  - source: scheduler
+    target: cloud-tasks
+    protocol: http
+    path: "/process-alert"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/coletas"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/conversoes"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/cupons-ativos"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/cupons-historico"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/estatisticas"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/evolucao"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/novidades"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/quedas"
+  - source: csharp-api
+    target: collector
+    protocol: grpc
+    method: Fetch
+  - source: csharp-api
+    target: publisher
+    protocol: grpc
+    method: Publish
