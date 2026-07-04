@@ -18,6 +18,7 @@ import (
 
 	collectorpb "github.com/fmarquesfilho/garimpo/gen/go/collector/v1"
 	couponpb "github.com/fmarquesfilho/garimpo/gen/go/coupon/v1"
+	publisherpb "github.com/fmarquesfilho/garimpo/gen/go/publisher/v1"
 	schedulerpb "github.com/fmarquesfilho/garimpo/gen/go/scheduler/v1"
 	"github.com/fmarquesfilho/garimpo/internal/taskqueue"
 )
@@ -30,7 +31,9 @@ type SchedulerServer struct {
 	logger          *slog.Logger
 	collector       collectorpb.CollectorServiceClient
 	couponCollector couponpb.CouponCollectorServiceClient
+	publisher       publisherpb.PublisherServiceClient
 	analyzerURL     string
+	alertChatID     string // fallback chat for alerts
 	alertQueue      *taskqueue.Client
 
 	mu   sync.RWMutex
@@ -53,9 +56,16 @@ func NewSchedulerServer(collectorAddr, publisherAddr string, logger *slog.Logger
 		return nil, fmt.Errorf("conectar ao collector %s: %w", collectorAddr, err)
 	}
 
-	analyzerURL := envOrDefault("ANALYZER_URL", "http://localhost:8060")
+	// Connect to publisher for alert delivery
+	pubConn, err := grpc.NewClient(publisherAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("conectar ao publisher %s: %w", publisherAddr, err)
+	}
 
-	// Cloud Tasks client for price alert enqueuing
+	analyzerURL := envOrDefault("ANALYZER_URL", "http://localhost:8060")
+	alertChatID := envOrDefault("ALERT_CHAT_ID", "")
+
+	// Cloud Tasks client for durable alert dispatch
 	var alertQ *taskqueue.Client
 	projectID := envOrDefault("GCP_PROJECT_ID", "garimpo-500114")
 	queueLocation := envOrDefault("CLOUD_TASKS_LOCATION", "southamerica-east1")
@@ -80,18 +90,17 @@ func NewSchedulerServer(collectorAddr, publisherAddr string, logger *slog.Logger
 				slog.String("target", alertTargetURL))
 		}
 	} else {
-		logger.Info("ALERT_TARGET_URL not set, price alerts via Cloud Tasks disabled")
+		logger.Info("ALERT_TARGET_URL not set, Cloud Tasks alerts disabled")
 	}
-
-	// Publisher direct connection reserved for future use
-	_ = publisherAddr
 
 	return &SchedulerServer{
 		cron:            cron.New(cron.WithLocation(time.FixedZone("BRT", -3*60*60))),
 		logger:          logger,
 		collector:       collectorpb.NewCollectorServiceClient(collConn),
 		couponCollector: couponpb.NewCouponCollectorServiceClient(collConn),
+		publisher:       publisherpb.NewPublisherServiceClient(pubConn),
 		analyzerURL:     analyzerURL,
+		alertChatID:     alertChatID,
 		alertQueue:      alertQ,
 		jobs:            make(map[string]*registeredJob),
 	}, nil
@@ -103,7 +112,6 @@ func envOrDefault(key, fallback string) string {
 	}
 	return fallback
 }
-
 // lookupEnv is a thin wrapper for testing.
 var lookupEnv = os.Getenv
 
@@ -272,16 +280,23 @@ func (s *SchedulerServer) executeJob(job *registeredJob, params map[string]strin
 
 	s.logger.Info("job concluído", slog.String("job", job.name), slog.Int("produtos", int(resp.GetTotalFound())))
 
-	// Enqueue price alert check via Cloud Tasks (rate-limited, durable, deduped)
+	// Enqueue price alert via Cloud Tasks (rate-limited, durable, deduped).
+	// The task calls back into this scheduler's HTTP handler /process-alert.
 	if s.alertQueue != nil {
 		ownerUID := params["owner_uid"]
-		threshold := 0.15
-		if err := s.alertQueue.EnqueueAlert(ctx, taskqueue.AlertPayload{
-			OwnerUID:  ownerUID,
-			Keyword:   keyword,
-			Threshold: threshold,
-		}, 0); err != nil {
-			s.logger.Warn("failed to enqueue alert task", slog.String("keyword", keyword), slog.String("error", err.Error()))
+		chatID := params["chat_id"]
+		if chatID == "" {
+			chatID = s.alertChatID
+		}
+		if chatID != "" {
+			if err := s.alertQueue.EnqueueAlert(ctx, taskqueue.AlertPayload{
+				OwnerUID:  ownerUID,
+				Keyword:   keyword,
+				Threshold: 0.15,
+				ChatID:    chatID,
+			}, 0); err != nil {
+				s.logger.Warn("failed to enqueue alert task", slog.String("keyword", keyword), slog.String("error", err.Error()))
+			}
 		}
 	}
 }

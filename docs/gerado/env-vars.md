@@ -16,6 +16,7 @@ Não edite manualmente. Rode `mise run docs:env` para regenerar.
 | `COLLECTOR_CONFIG` | `services/collector/config.go` | 108 |
 | `ENCRYPTION_KEY` | `internal/crypto/crypto.go` | 26 |
 | `GOOGLE_CLOUD_PROJECT` | `internal/store/novo_gcp.go` | 14 |
+| `HTTP_PORT` | `services/scheduler/main.go` | 63 |
 | `PORT` | `services/publisher/main.go` | 23 |
 | `PUBLISHER_ADDR` | `services/scheduler/main.go` | 32 |
 | `TELEGRAM_BOT_TOKEN` | `internal/publish/novo.go` | 20 |

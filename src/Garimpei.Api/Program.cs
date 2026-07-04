@@ -152,7 +152,7 @@ app.MapGroup("/api/v2")
 
 // Internal endpoints (no auth — internal network only)
 app.MapCouponAlertEvaluationEndpoints();
-app.MapAlertCheckEndpoints();
+app.MapAlertProxyEndpoints();
 
 app.Run();
 

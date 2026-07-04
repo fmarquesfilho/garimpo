@@ -43,6 +43,8 @@ type AlertPayload struct {
 	Keyword  string `json:"keyword"`
 	// Threshold mínimo de variação para disparar (0.15 = 15%)
 	Threshold float64 `json:"threshold"`
+	// ChatID do Telegram para enviar o alerta (resolvido pelo scheduler antes de enfileirar)
+	ChatID string `json:"chat_id"`
 }
 
 // Client encapsula o Cloud Tasks client.

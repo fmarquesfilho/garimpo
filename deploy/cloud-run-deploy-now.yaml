@@ -33,8 +33,6 @@ spec:
                   key: latest
             - name: Analyzer__BaseUrl
               value: "http://localhost:8060"
-            - name: Alerts__TelegramChatId
-              value: "-1003827989143"
             - name: Grpc__CollectorAddress
               value: "http://localhost:50051"
             - name: Grpc__PublisherAddress
@@ -116,9 +114,13 @@ spec:
             - name: ALERT_QUEUE_ID
               value: "price-alerts"
             - name: ALERT_TARGET_URL
-              value: "https://garimpei-v2-vj6afttbza-rj.a.run.app/internal/alerts/check"
+              value: "https://garimpei-v2-vj6afttbza-rj.a.run.app/process-alert"
             - name: ALERT_SA_EMAIL
               value: "garimpo-api-sa@garimpo-500114.iam.gserviceaccount.com"
+            - name: ALERT_CHAT_ID
+              value: "-1003827989143"
+            - name: HTTP_PORT
+              value: "8054"
           resources:
             limits:
               cpu: "0.25"

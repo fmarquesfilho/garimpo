@@ -59,6 +59,13 @@ func main() {
 	// Start cron jobs
 	server.Start()
 
+	// Start HTTP server for Cloud Tasks callbacks (non-blocking)
+	httpPort := os.Getenv("HTTP_PORT")
+	if httpPort == "" {
+		httpPort = "8054"
+	}
+	go server.StartHTTP(httpPort)
+
 	go func() {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

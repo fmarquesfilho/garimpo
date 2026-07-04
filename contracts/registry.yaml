@@ -28,16 +28,11 @@ services:
     port: 50051
     proto: protos/collector/v1/collector.proto
 
-  - id: alerter
-    name: "Alerter (Go)"
-    runtime: cloud-run-sidecar
-    port: 50053
-    proto: protos/alerter/v1/alerter.proto
-
   - id: scheduler
     name: "Scheduler (Go)"
     runtime: cloud-run-sidecar
     port: 50054
+    http_port: 8054
     proto: protos/scheduler/v1/scheduler.proto
 
   - id: analyzer

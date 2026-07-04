@@ -149,7 +149,7 @@ case "$MODE" in
     PROJECT_ID="garimpo-500114"
     LOCATION="southamerica-east1"
     QUEUE_ID="price-alerts"
-    TARGET_URL="https://garimpei-v2-vj6afttbza-rj.a.run.app/internal/alerts/check"
+    TARGET_URL="https://garimpei-v2-vj6afttbza-rj.a.run.app/process-alert"
     SA_EMAIL="garimpo-api-sa@$PROJECT_ID.iam.gserviceaccount.com"
 
     # Verificar se queue existe
@@ -174,7 +174,7 @@ case "$MODE" in
 
     # Criar task via gcloud
     TASK_NAME="test-alert-$(date +%s)"
-    BODY='{"keyword":"'"$KEYWORD"'","threshold":0.15}'
+    BODY='{"keyword":"'"$KEYWORD"'","threshold":0.15,"chat_id":"-1003827989143"}'
 
     gcloud tasks create-http-task "$TASK_NAME" \
       --queue="$QUEUE_ID" \
