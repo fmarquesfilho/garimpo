@@ -6,7 +6,7 @@ O Garimpei usa uma **arquitetura poliglota orientada a serviços**, onde cada li
 é usada no domínio em que é mais produtiva:
 
 - **C# (ASP.NET Core 10)** — API principal: CRUD, autenticação, multi-tenant, orquestração
-- **Go (gRPC)** — microserviços de I/O intensivo: coleta Shopee, publicação, alertas, scheduling
+- **Go (gRPC)** — microserviços de I/O intensivo: coleta Shopee, publicação, scheduling
 - **Python (FastAPI)** — analytics e IA: queries BigQuery, detecção de padrões, séries temporais
 - **SvelteKit** — frontend SPA servido via CDN global (Cloudflare Pages)
 
@@ -57,23 +57,23 @@ conforme documentado na ADR-0012.
 │  └────────────┬──────────────┬──────────────┬──────────┬──────────┘   │
 │               │gRPC          │gRPC          │gRPC      │HTTP          │
 │               │localhost     │localhost     │localhost  │localhost     │
-│  ┌────────────▼──┐  ┌───────▼───┐  ┌───────▼──┐  ┌───▼──────────┐   │
-│  │  collector    │  │ publisher │  │  alerter │  │   analyzer   │   │
-│  │  (Go :50051)  │  │ (Go:50052)│  │ (Go:50053)│  │ (Py :8060)  │   │
-│  │               │  │           │  │          │  │              │   │
-│  │  Shopee API   │  │ Telegram  │  │ Telegram │  │  BigQuery    │   │
-│  │  GraphQL      │  │ Bot API   │  │ preço    │  │  pandas      │   │
-│  │  HMAC-SHA256  │  │ Meta WA   │  │ alertas  │  │  novidades   │   │
-│  │  throttling   │  │ Cloud API │  │ snapshot │  │  quedas      │   │
-│  │  paginação    │  │ retry     │  │ compare  │  │  evolução    │   │
-│  └───────────────┘  └───────────┘  └──────────┘  │  estatísticas│   │
-│                                                   └──────┬───────┘   │
-│  ┌───────────────┐                                      │            │
-│  │  scheduler    │                                      │            │
-│  │  (Go :50054)  │──── orquestra collector/alerter      │            │
-│  │  robfig/cron  │     via gRPC (timezone BRT)          │            │
-│  └───────────────┘                                      │            │
-└─────────────────────────────────────────────────────────┼────────────┘
+│  ┌────────────▼──┐  ┌───────▼───┐  ┌───▼──────────┐   │
+│  │  collector    │  │ publisher │  │   analyzer   │   │
+│  │  (Go :50051)  │  │ (Go:50052)│  │ (Py :8060)  │   │
+│  │               │  │           │  │              │   │
+│  │  Shopee API   │  │ Telegram  │  │  BigQuery    │   │
+│  │  GraphQL      │  │ Bot API   │  │  pandas      │   │
+│  │  HMAC-SHA256  │  │ Meta WA   │  │  novidades   │   │
+│  │  throttling   │  │ Cloud API │  │  quedas      │   │
+│  │  paginação    │  │ retry     │  │  evolução    │   │
+│  └───────────────┘  └───────────┘  │  estatísticas│   │
+│                                     └──────┬───────┘   │
+│  ┌───────────────┐                         │           │
+│  │  scheduler    │                         │           │
+│  │  (Go :50054)  │──── orquestra collector │           │
+│  │  robfig/cron  │     + Cloud Tasks alerts│           │
+│  └───────────────┘     (timezone BRT)      │           │
+└────────────────────────────────────────────┼───────────┘
                           │                               │
               ┌───────────▼──────────┐      ┌─────────────▼──────────┐
               │  PostgreSQL (Neon)   │      │  BigQuery (GCP)        │
@@ -404,30 +404,27 @@ Request HTTP com JWT Firebase
 - `Publish(channel, group_id, content)` → envia mensagem
 - `ListGroups(channel)` → lista destinos configurados
 
-### alerter (Go, gRPC :50053)
-
-**Responsabilidade:** detectar variações de preço e notificar
-
-- Compara snapshots da janela de dias configurada
-- Threshold configurável (default: 15%)
-- Filtro "apenas quedas" (oportunidades)
-- Notificação via Telegram (formatação HTML)
-
-**RPCs:**
-- `CheckAndNotify(owner_uid, rules[])` → verifica e notifica
-
 ### scheduler (Go, gRPC :50054)
 
 **Responsabilidade:** orquestrar jobs periódicos
 
 - Cron nativo (robfig/cron, timezone America/Sao_Paulo)
-- Chama collector, publisher, alerter via gRPC
+- Chama collector via gRPC para coletas
+- Após coleta, enfileira alerta via Cloud Tasks (ADR-0023)
 - Gerenciável em runtime (criar/pausar/deletar jobs)
 
 **RPCs:**
 - `SetSchedule(job_id, cron, params)` → criar/atualizar job
 - `ListJobs(status_filter)` → listar jobs registrados
 - `TriggerJob(job_id)` → executar job manualmente
+
+**Fluxo de alertas (pós-coleta):**
+```
+Scheduler → Cloud Tasks (price-alerts queue, 1 msg/s, retry 5x)
+  → C# POST /internal/alerts/check
+  → Analyzer GET /quedas (detecta variações)
+  → Publisher gRPC (envia Telegram/WhatsApp)
+```
 
 ### analyzer (Python, REST :8060)
 
@@ -476,7 +473,7 @@ push main → GitHub Actions (ci.yml)
   ├─ proto: buf lint + sync check (Go + C# stubs)
   ├─ frontend: npm ci + build + lint + vitest + playwright (Firebase Emulator)
   ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
-  ├─ docker: build all 6 images (validação Dockerfiles)
+  ├─ docker: build all 5 images (validação Dockerfiles)
   ├─ deploy-web: wrangler pages deploy → Cloudflare Pages (garimpei-web)
   └─ deploy-docs: sync + build + deploy → Cloudflare Pages (garimpei-docs)
 ```
@@ -486,18 +483,17 @@ push main → GitHub Actions (ci.yml)
 
 ### Cloud Run multi-container
 
-6 containers na mesma instância, comunicação via localhost:
+5 containers na mesma instância, comunicação via localhost:
 
 | Container | CPU | RAM | Probe |
 |-----------|-----|-----|-------|
 | garimpei-api (C#) | 1.0 | 512Mi | HTTP /health |
 | collector (Go) | 0.5 | 256Mi | TCP :50051 |
 | publisher (Go) | 0.25 | 128Mi | TCP :50052 |
-| alerter (Go) | 0.25 | 128Mi | TCP :50053 |
 | scheduler (Go) | 0.25 | 128Mi | TCP :50054 |
 | analyzer (Python) | 0.5 | 256Mi | HTTP /health :8060 |
 
-**Total:** 2.75 vCPU, 1408Mi RAM (quando ativo). **Zero quando idle** (scale-to-zero).
+**Total:** 2.5 vCPU, 1280Mi RAM (quando ativo). **Zero quando idle** (scale-to-zero).
 
 ### Routing (Cloudflare Worker)
 
@@ -523,8 +519,8 @@ Feature flags (env vars no Worker):
 | Go (internal) | go test | source 87%, publish 62%, store 36% | Paths críticos |
 | Go (services) | go test | 12 testes (validações + fluxos) | 11-33% |
 | Go (couponsource) | go test | 9 testes (adapters + registry) | Adapters + factory |
-| C# | xUnit + NetArchTest | 51 testes (multi-tenant, persistence, arquitetura, dedup) | Isolamento + fitness functions |
-| Frontend | Vitest + Playwright | 109 unitários + E2E | Componentes + fluxos |
+| C# | xUnit + NetArchTest | 61 testes (multi-tenant, persistence, arquitetura, dedup, JSON) | Isolamento + fitness functions |
+| Frontend | Vitest + Playwright | 109 unitários + 12 E2E preços + E2E flows | Componentes + fluxos |
 
 ### Fitness functions (testes de arquitetura)
 
@@ -591,3 +587,4 @@ Shopee) existem apenas no SQL schema.
 | [0014](/docs/decisoes/0014-analyzer-python-fastapi/) | Analyzer Python (FastAPI + BigQuery) | 2026-07 |
 | [0016](/docs/decisoes/0016-multi-marketplace/) | Suporte multi-marketplace (Shopee + Amazon + ML) | 2026-07 |
 | [0017](/docs/decisoes/0017-coupon-monitoring/) | Monitoramento de cupons cross-marketplace | 2026-07 |
+| [0023](/docs/decisoes/0023-alertas-via-cloud-tasks-publisher/) | Alertas via Cloud Tasks + Publisher (eliminar alerter) | 2026-07 |

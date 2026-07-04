@@ -13,7 +13,7 @@ push main → GitHub Actions (ci.yml)
   ├─ proto: buf lint + sync check (Go + C# stubs atualizados?)
   ├─ frontend: npm ci + build + lint:css + lint:js + vitest + playwright (Firebase Emulator)
   ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
-  ├─ docker: build all 6 images (validação de Dockerfiles)
+  ├─ docker: build all 5 images (validação de Dockerfiles)
   ├─ deploy-web: wrangler pages deploy → Cloudflare Pages (só push main)
   └─ deploy-docs: sync + build + deploy → Cloudflare Pages (só push main, se docs mudam)
 ```

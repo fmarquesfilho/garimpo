@@ -220,5 +220,5 @@ bq query --use_legacy_sql=false --project_id=garimpo-500114 \
 
 1. **T-0028**: Criar mecanismo de auto-sync (buscas ativas no PG → jobs no scheduler)
 2. **T-0007**: Scoring ML no analyzer (substituir rule-based por modelo treinado)
-3. **Alertas de preço**: scheduler detecta queda → alerter notifica usuário (Telegram/WhatsApp)
+3. **Alertas de preço**: scheduler → Cloud Tasks → C# → publisher (Telegram/WhatsApp) — ADR-0023
 4. **Histórico de variações**: armazenar detecções em tabela dedicada no BQ

@@ -10,6 +10,7 @@ O diagrama ER completo é gerado automaticamente — ver `docs/gerado/ENTIDADES.
 |---|---|---|
 | `eventos` | Seleções e publicações de curadoria | `DATE(em)` |
 | `snapshots` | Foto periódica dos top N de uma keyword/categoria | `DATE(coletado_em)` |
+| `coupon_snapshots` | Cupons coletados (append-only, 90d TTL) | `DATE(collected_at)` |
 | `buscas` | Perfis de coleta (filtros + cron + shop_ids), append-only | `DATE(salvo_em)` |
 | `conversoes` | Conversões reais da Shopee (conversionReport) | `DATE(compra_em)` |
 
