@@ -112,6 +112,7 @@ func envOrDefault(key, fallback string) string {
 	}
 	return fallback
 }
+
 // lookupEnv is a thin wrapper for testing.
 var lookupEnv = os.Getenv
 
@@ -391,7 +392,6 @@ func (s *SchedulerServer) triggerCouponDetection(ownerUID, marketplace, fetchedA
 		return
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		s.logger.Warn("detect-coupons retornou erro",
 			slog.Int("status", resp.StatusCode),

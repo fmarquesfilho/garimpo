@@ -318,25 +318,41 @@ schema nem cruzar fronteiras**:
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Regras de acesso (enforced no CI):**
+**Regras de acesso (enforced no CI via `mise run checks`):**
 
-| Componente | PostgreSQL | BigQuery | Enforced por |
-|------------|-----------|----------|--------------|
-| C# API (`src/`) | ✅ Lê e escreve (EF Core) | ❌ Nunca | `check-data-ownership.sh` |
-| Go collectors (`services/collector*`) | ❌ Nunca | ✅ Escreve (append) | `check-data-ownership.sh` |
-| Go scheduler (`services/scheduler/`) | ❌ Nunca | ❌ (orquestra via gRPC) | `check-data-ownership.sh` |
-| Python analyzer (`services/analyzer/`) | ❌ Nunca | ✅ Lê (queries) | `check-data-ownership.sh` |
+| Componente | PostgreSQL | BigQuery | Analyzer (HTTP) | Publisher (gRPC) |
+|------------|-----------|----------|----------------|-----------------|
+| C# API (`src/`) | ✅ R/W (EF Core) | ❌ | ✅ Proxy only | ✅ Publicação manual |
+| Go collector (`services/collector/`) | ❌ | ✅ Write | ❌ | ❌ |
+| Go scheduler (`services/scheduler/`) | ❌ | ❌ (orquestra) | ✅ GET /quedas | ✅ Alertas |
+| Go publisher (`services/publisher/`) | ❌ | ❌ | ❌ | — (é ele) |
+| Python analyzer (`services/analyzer/`) | ❌ | ✅ Read | — (é ele) | ❌ |
 
-**Comunicação cross-boundary:**
+**Regras de orquestração:**
 
-Quando o Python analyzer detecta algo no BigQuery que precisa virar uma ação no
-PostgreSQL (ex: cupom novo → avaliar regras → enviar alerta), ele **não acessa o PG
-diretamente**. Ele faz HTTP POST para o C# API (`/internal/coupon-alerts/evaluate`),
-que é o dono do PostgreSQL. O dado nunca pula a fronteira.
+| Quem decide | O que decide | Como age |
+|---|---|---|
+| **Scheduler** (Go) | Quando coletar, quando alertar | Cloud Tasks + gRPC |
+| **C# API** | Quem recebe (CRUD de destinos/regras) | Serve config via HTTP |
+| **Analyzer** (Python) | O que mudou (detecta variações) | Retorna dados via REST |
+| **Publisher** (Go) | Como entregar (Telegram/WhatsApp) | Recebe ordem, executa |
+
+**Comunicação cross-boundary (ponto de contato = `owner_uid`):**
 
 ```
-BigQuery ──[Python lê]──► Detector ──[HTTP POST]──► C# API ──[EF Core]──► PostgreSQL
+Scheduler ──[GET /quedas]──► Analyzer ──[query BQ]──► BigQuery
+    │
+    └──[gRPC Publish]──► Publisher ──[sendMessage]──► Telegram
+
+C# API ──[HttpClient]──► Analyzer (proxy para frontend apenas)
+C# API ──[gRPC Publish]──► Publisher (publicação manual do usuário)
 ```
+
+**O C# API NÃO orquestra fluxos automáticos.** Ele serve:
+1. CRUD (buscas, destinos, regras, templates)
+2. Proxy para o frontend (GET /api/lojas/novidades → analyzer)
+3. Publicação manual (usuário clica "publicar" → publisher)
+4. Passthrough para Cloud Tasks (POST /process-alert → scheduler HTTP)
 
 ---
 
