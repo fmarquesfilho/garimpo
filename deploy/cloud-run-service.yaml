@@ -7,6 +7,7 @@
 #   - publisher (Go): sidecar gRPC (:50052)
 #   - alerter (Go): sidecar gRPC (:50053)
 #   - scheduler (Go): sidecar gRPC (:50054)
+#   - analyzer (Python): sidecar HTTP (:8060) — analytics/BigQuery
 #
 # All sidecars communicate via localhost within the same instance.
 
@@ -23,7 +24,7 @@ spec:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "3"
         run.googleapis.com/execution-environment: gen2
-        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler"]}'
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","alerter","scheduler","analyzer"]}'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -40,6 +41,8 @@ spec:
               value: Production
             - name: Auth__ProjectId
               value: PROJECT_ID
+            - name: Analyzer__BaseUrl
+              value: "http://localhost:8060"
             - name: ConnectionStrings__PostgreSQL
               valueFrom:
                 secretKeyRef:
@@ -167,6 +170,8 @@ spec:
               value: "localhost:50052"
             - name: ALERTER_ADDR
               value: "localhost:50053"
+            - name: ANALYZER_URL
+              value: "http://localhost:8060"
           resources:
             limits:
               cpu: "0.25"
@@ -177,3 +182,30 @@ spec:
               service: scheduler.v1.SchedulerService
             periodSeconds: 5
             failureThreshold: 5
+
+        # ── Sidecar: analyzer (Python FastAPI) ─────────────────────────
+        - name: analyzer
+          image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/analyzer:latest
+          env:
+            - name: PORT
+              value: "8060"
+            - name: BQ_PROJECT
+              value: PROJECT_ID
+            - name: BQ_DATASET
+              value: garimpo
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 256Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8060
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8060
+            periodSeconds: 30

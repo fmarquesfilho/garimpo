@@ -127,6 +127,8 @@ spec:
               value: "localhost:50052"
             - name: ALERTER_ADDR
               value: "localhost:50053"
+            - name: ANALYZER_URL
+              value: "http://localhost:8060"
           resources:
             limits:
               cpu: "0.25"
