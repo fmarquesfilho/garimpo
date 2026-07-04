@@ -68,13 +68,6 @@ services:
   #   ports:
   #     - "50052:50052"
   #
-  # alerter:
-  #   build:
-  #     context: .
-  #     dockerfile: services/alerter/Dockerfile
-  #   ports:
-  #     - "50053:50053"
-  #
   # scheduler:
   #   build:
   #     context: .

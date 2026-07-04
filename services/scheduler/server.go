@@ -46,7 +46,7 @@ type registeredJob struct {
 	params   map[string]string
 }
 
-func NewSchedulerServer(collectorAddr, publisherAddr, alerterAddr string, logger *slog.Logger) (*SchedulerServer, error) {
+func NewSchedulerServer(collectorAddr, publisherAddr string, logger *slog.Logger) (*SchedulerServer, error) {
 	// Connect to unified collector (handles both products and coupons on same port)
 	collConn, err := grpc.NewClient(collectorAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -83,8 +83,8 @@ func NewSchedulerServer(collectorAddr, publisherAddr, alerterAddr string, logger
 		logger.Info("ALERT_TARGET_URL not set, price alerts via Cloud Tasks disabled")
 	}
 
-	// Publisher and alerter direct connections reserved for future use
-	_, _ = publisherAddr, alerterAddr
+	// Publisher direct connection reserved for future use
+	_ = publisherAddr
 
 	return &SchedulerServer{
 		cron:            cron.New(cron.WithLocation(time.FixedZone("BRT", -3*60*60))),

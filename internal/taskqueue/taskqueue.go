@@ -62,7 +62,10 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 
 // Close libera recursos do client.
 func (c *Client) Close() error {
-	return c.client.Close()
+	if err := c.client.Close(); err != nil {
+		return fmt.Errorf("taskqueue: close: %w", err)
+	}
+	return nil
 }
 
 // EnqueueAlert cria uma task para verificar alertas de preço.

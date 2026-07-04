@@ -33,12 +33,8 @@ func main() {
 	if publisherAddr == "" {
 		publisherAddr = "localhost:50052"
 	}
-	alerterAddr := os.Getenv("ALERTER_ADDR")
-	if alerterAddr == "" {
-		alerterAddr = "localhost:50053"
-	}
 
-	server, err := NewSchedulerServer(collectorAddr, publisherAddr, alerterAddr, logger)
+	server, err := NewSchedulerServer(collectorAddr, publisherAddr, logger)
 	if err != nil {
 		logger.Error("falha ao criar scheduler server", slog.String("erro", err.Error()))
 		os.Exit(1)

@@ -59,13 +59,6 @@ dependenciesRules:
     shouldNotDependsOn:
       internal:
         - "github.com/fmarquesfilho/garimpo/internal/source"
-        - "github.com/fmarquesfilho/garimpo/internal/alerts"
-
-  - package: "github.com/fmarquesfilho/garimpo/services/alerter"
-    shouldNotDependsOn:
-      internal:
-        - "github.com/fmarquesfilho/garimpo/internal/source"
-        - "github.com/fmarquesfilho/garimpo/internal/publish"
 
   - package: "github.com/fmarquesfilho/garimpo/services/scheduler"
     shouldNotDependsOn:

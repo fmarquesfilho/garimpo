@@ -16,7 +16,7 @@ func newTestSchedulerServer(t *testing.T) *SchedulerServer {
 	t.Helper()
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}))
 	// Use a fake collector address — we won't actually call it in these tests.
-	srv, err := NewSchedulerServer("localhost:0", "localhost:0", "localhost:0", logger)
+	srv, err := NewSchedulerServer("localhost:0", "localhost:0", logger)
 	if err != nil {
 		t.Fatalf("failed to create scheduler server: %v", err)
 	}

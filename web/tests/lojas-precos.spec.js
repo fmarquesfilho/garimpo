@@ -100,8 +100,28 @@ const mockCandidatos = {
 	estrategia: 'nicho',
 	total_bruto: 2,
 	candidatos: [
-		{ id: 'SP-001', nome: 'Perfume CK One 100ml', preco: 151.9, comissao: 0.12, vendas: 3520, avaliacao: 4.8, loja: 'ImportsPerfumaria', imagem: '', link: '' },
-		{ id: 'SP-002', nome: 'D&G Light Blue 75ml', preco: 194.0, comissao: 0.1, vendas: 1920, avaliacao: 4.9, loja: 'ImportsPerfumaria', imagem: '', link: '' }
+		{
+			id: 'SP-001',
+			nome: 'Perfume CK One 100ml',
+			preco: 151.9,
+			comissao: 0.12,
+			vendas: 3520,
+			avaliacao: 4.8,
+			loja: 'ImportsPerfumaria',
+			imagem: '',
+			link: ''
+		},
+		{
+			id: 'SP-002',
+			nome: 'D&G Light Blue 75ml',
+			preco: 194.0,
+			comissao: 0.1,
+			vendas: 1920,
+			avaliacao: 4.9,
+			loja: 'ImportsPerfumaria',
+			imagem: '',
+			link: ''
+		}
 	]
 };
 
