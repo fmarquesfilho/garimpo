@@ -129,7 +129,10 @@ spec:
             periodSeconds: 5
             failureThreshold: 5
 
-        # ── Sidecar: alerter ───────────────────────────────────────────
+        # ── Sidecar: alerter (DEPRECATED — alert logic moved to C# API) ───
+        # Kept temporarily for backward compatibility.
+        # Alert flow now: Cloud Tasks → C# /internal/alerts/check → Publisher
+        # TODO: Remove alerter sidecar after confirming alerts work via publisher
         - name: alerter
           image: REGION-docker.pkg.dev/PROJECT_ID/garimpo/alerter:latest
           env:

@@ -4,6 +4,7 @@ go 1.26.4
 
 require (
 	cloud.google.com/go/bigquery v1.77.0
+	cloud.google.com/go/cloudtasks v1.18.0
 	github.com/robfig/cron/v3 v3.0.1
 	google.golang.org/api v0.287.0
 	google.golang.org/grpc v1.82.0

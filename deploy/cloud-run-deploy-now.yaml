@@ -129,6 +129,16 @@ spec:
               value: "localhost:50053"
             - name: ANALYZER_URL
               value: "http://localhost:8060"
+            - name: GCP_PROJECT_ID
+              value: "garimpo-500114"
+            - name: CLOUD_TASKS_LOCATION
+              value: "southamerica-east1"
+            - name: ALERT_QUEUE_ID
+              value: "price-alerts"
+            - name: ALERT_TARGET_URL
+              value: "https://garimpei-v2-vj6afttbza-rj.a.run.app/internal/alerts/check"
+            - name: ALERT_SA_EMAIL
+              value: "garimpo-api-sa@garimpo-500114.iam.gserviceaccount.com"
           resources:
             limits:
               cpu: "0.25"

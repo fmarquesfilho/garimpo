@@ -19,6 +19,7 @@ import (
 	collectorpb "github.com/fmarquesfilho/garimpo/gen/go/collector/v1"
 	couponpb "github.com/fmarquesfilho/garimpo/gen/go/coupon/v1"
 	schedulerpb "github.com/fmarquesfilho/garimpo/gen/go/scheduler/v1"
+	"github.com/fmarquesfilho/garimpo/internal/taskqueue"
 )
 
 // SchedulerServer implementa scheduler.v1.SchedulerService.
@@ -30,6 +31,7 @@ type SchedulerServer struct {
 	collector       collectorpb.CollectorServiceClient
 	couponCollector couponpb.CouponCollectorServiceClient
 	analyzerURL     string
+	alertQueue      *taskqueue.Client
 
 	mu   sync.RWMutex
 	jobs map[string]*registeredJob
@@ -53,7 +55,35 @@ func NewSchedulerServer(collectorAddr, publisherAddr, alerterAddr string, logger
 
 	analyzerURL := envOrDefault("ANALYZER_URL", "http://localhost:8060")
 
-	// Publisher and alerter connections will be used when those features are wired
+	// Cloud Tasks client for price alert enqueuing
+	var alertQ *taskqueue.Client
+	projectID := envOrDefault("GCP_PROJECT_ID", "garimpo-500114")
+	queueLocation := envOrDefault("CLOUD_TASKS_LOCATION", "southamerica-east1")
+	alertQueueID := envOrDefault("ALERT_QUEUE_ID", "price-alerts")
+	alertTargetURL := envOrDefault("ALERT_TARGET_URL", "")
+	alertSA := envOrDefault("ALERT_SA_EMAIL", "")
+
+	if alertTargetURL != "" {
+		alertQ, err = taskqueue.New(context.Background(), taskqueue.Config{
+			ProjectID:           projectID,
+			Location:            queueLocation,
+			QueueID:             alertQueueID,
+			TargetURL:           alertTargetURL,
+			ServiceAccountEmail: alertSA,
+			Logger:              logger,
+		})
+		if err != nil {
+			logger.Warn("cloud tasks client failed, alerts disabled", slog.String("error", err.Error()))
+		} else {
+			logger.Info("cloud tasks alert queue connected",
+				slog.String("queue", alertQueueID),
+				slog.String("target", alertTargetURL))
+		}
+	} else {
+		logger.Info("ALERT_TARGET_URL not set, price alerts via Cloud Tasks disabled")
+	}
+
+	// Publisher and alerter direct connections reserved for future use
 	_, _ = publisherAddr, alerterAddr
 
 	return &SchedulerServer{
@@ -62,6 +92,7 @@ func NewSchedulerServer(collectorAddr, publisherAddr, alerterAddr string, logger
 		collector:       collectorpb.NewCollectorServiceClient(collConn),
 		couponCollector: couponpb.NewCouponCollectorServiceClient(collConn),
 		analyzerURL:     analyzerURL,
+		alertQueue:      alertQ,
 		jobs:            make(map[string]*registeredJob),
 	}, nil
 }
@@ -240,6 +271,19 @@ func (s *SchedulerServer) executeJob(job *registeredJob, params map[string]strin
 	}
 
 	s.logger.Info("job concluído", slog.String("job", job.name), slog.Int("produtos", int(resp.GetTotalFound())))
+
+	// Enqueue price alert check via Cloud Tasks (rate-limited, durable, deduped)
+	if s.alertQueue != nil {
+		ownerUID := params["owner_uid"]
+		threshold := 0.15
+		if err := s.alertQueue.EnqueueAlert(ctx, taskqueue.AlertPayload{
+			OwnerUID:  ownerUID,
+			Keyword:   keyword,
+			Threshold: threshold,
+		}, 0); err != nil {
+			s.logger.Warn("failed to enqueue alert task", slog.String("keyword", keyword), slog.String("error", err.Error()))
+		}
+	}
 }
 
 // executeCouponCollectionJob collects coupons from all configured marketplaces sequentially.
