@@ -65,26 +65,25 @@ export default defineConfig({
 						import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 						mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 						function renderMermaidBlocks() {
-							document.querySelectorAll('pre code.language-mermaid').forEach(el => {
-								const pre = el.parentElement;
-								if (pre.dataset.mermaid) return;
-								pre.dataset.mermaid = 'true';
-								const source = el.textContent;
-								const wrapper = document.createElement('div');
+							document.querySelectorAll('div.language-mermaid').forEach(el => {
+								if (el.dataset.mermaidRendered) return;
+								el.dataset.mermaidRendered = 'true';
+								var code = el.querySelector('pre code');
+								if (!code) return;
+								var source = code.textContent;
+								var wrapper = document.createElement('div');
 								wrapper.className = 'mermaid-wrapper';
-								const diagramDiv = document.createElement('div');
+								var diagramDiv = document.createElement('div');
 								diagramDiv.className = 'mermaid';
 								diagramDiv.textContent = source;
-								const sourceDiv = document.createElement('div');
+								var sourceDiv = document.createElement('div');
 								sourceDiv.className = 'mermaid-source hidden';
-								const sourcePre = pre.cloneNode(true);
-								delete sourcePre.dataset.mermaid;
-								sourceDiv.appendChild(sourcePre);
-								const toggle = document.createElement('button');
+								sourceDiv.appendChild(el.cloneNode(true));
+								var toggle = document.createElement('button');
 								toggle.className = 'mermaid-toggle';
 								toggle.textContent = '</> Código';
-								toggle.addEventListener('click', () => {
-									const showingSource = sourceDiv.classList.contains('hidden');
+								toggle.addEventListener('click', function() {
+									var showingSource = sourceDiv.classList.contains('hidden');
 									sourceDiv.classList.toggle('hidden');
 									diagramDiv.classList.toggle('hidden');
 									toggle.textContent = showingSource ? '📊 Diagrama' : '</> Código';
@@ -92,13 +91,13 @@ export default defineConfig({
 								wrapper.appendChild(toggle);
 								wrapper.appendChild(diagramDiv);
 								wrapper.appendChild(sourceDiv);
-								pre.replaceWith(wrapper);
+								el.replaceWith(wrapper);
 							});
 							mermaid.run();
 						}
-						const observer = new MutationObserver(() => renderMermaidBlocks());
+						var observer = new MutationObserver(function() { renderMermaidBlocks(); });
 						observer.observe(document.body, { childList: true, subtree: true });
-						setTimeout(renderMermaidBlocks, 500);
+						setTimeout(renderMermaidBlocks, 800);
 					`,
 					append: true
 				},
@@ -106,7 +105,7 @@ export default defineConfig({
 					tag: 'script',
 					children: `
 						document.addEventListener('DOMContentLoaded', function() {
-							var sidebar = document.querySelector('.rspress-sidebar');
+							var sidebar = document.querySelector('.rp-doc-layout__sidebar');
 							if (!sidebar) return;
 							var overlay = document.createElement('div');
 							overlay.className = 'sidebar-overlay';

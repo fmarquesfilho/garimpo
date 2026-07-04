@@ -71,7 +71,7 @@ html.dark {
 }
 
 /* Sidebar active item */
-.rspress-sidebar .active {
+.rp-doc-layout__sidebar .active {
 	color: var(--rp-c-brand);
 	font-weight: 600;
 }
@@ -164,7 +164,7 @@ html.dark {
 /* ── Collapsible sidebar for tablets ─────────────────────────── */
 
 @media (max-width: 1024px) {
-	.rspress-sidebar {
+	.rp-doc-layout__sidebar {
 		position: fixed;
 		left: 0;
 		top: var(--rp-nav-height, 60px);
@@ -178,7 +178,7 @@ html.dark {
 		overflow-y: auto;
 	}
 
-	.rspress-sidebar.open {
+	.rp-doc-layout__sidebar.open {
 		transform: translateX(0);
 	}
 
