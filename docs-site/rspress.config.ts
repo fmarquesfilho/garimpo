@@ -22,6 +22,35 @@ export default defineConfig({
 		mdxRs: false,
 		checkDeadLinks: true
 	},
+	head: [
+		['script', { type: 'module' }, `
+			import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+			mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+			const observer = new MutationObserver(() => {
+				document.querySelectorAll('pre code.language-mermaid').forEach(el => {
+					const pre = el.parentElement;
+					if (pre.dataset.mermaid) return;
+					pre.dataset.mermaid = 'true';
+					const div = document.createElement('div');
+					div.className = 'mermaid';
+					div.textContent = el.textContent;
+					pre.replaceWith(div);
+				});
+				mermaid.run();
+			});
+			observer.observe(document.body, { childList: true, subtree: true });
+			document.addEventListener('DOMContentLoaded', () => {
+				document.querySelectorAll('pre code.language-mermaid').forEach(el => {
+					const pre = el.parentElement;
+					const div = document.createElement('div');
+					div.className = 'mermaid';
+					div.textContent = el.textContent;
+					pre.replaceWith(div);
+				});
+				mermaid.run();
+			});
+		`]
+	],
 	route: {
 		cleanUrls: true
 	},
