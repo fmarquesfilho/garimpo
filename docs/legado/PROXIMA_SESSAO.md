@@ -1,138 +1,95 @@
-# Próxima Sessão — Testar Fluxo de Variação de Preços
+# Próxima Sessão — Configurar Scheduler + Onboarding Lojas
 
-**Data:** 2026-07-04
-**Prioridade:** Alta (feature core do produto)
+**Data:** 2026-07-05
+**Prioridade:** Alta
 
 ---
 
 ## Objetivo
 
-Validar o fluxo completo de detecção de variações de preço: coleta de snapshots → comparação → detecção de quedas/altas → exibição na UI (página Lojas, aba "📉 Preços") → publicação de ofertas com preço antigo vs atual.
+Completar o fluxo de variação de preços tornando-o self-service:
+1. Criar mecanismo de auto-sync (buscas ativas no PG → jobs no scheduler)
+2. Permitir que o usuário adicione lojas pelo frontend e a coleta comece automaticamente
+3. Testar publicação a partir de uma variação detectada
 
 ---
 
-## Contexto
+## Contexto (sessão 2026-07-04)
 
-O sistema monitora lojas Shopee via coletas agendadas (scheduler → collector). Cada coleta grava um snapshot no BigQuery com os preços atuais. O frontend compara snapshots para detectar variações e exibe na aba "Preços" da página Lojas.
+O fluxo de variação de preços está **funcionando em produção**:
+- Scheduler coleta snapshots a cada ~8h (2 lojas + keywords)
+- Analyzer detecta variações comparando snapshots no BigQuery
+- Frontend exibe na aba "📉 Preços" da página /lojas
+- Dashboard mostra contagem de quedas/altas
 
-### Fluxo esperado
+### Dados reais em produção
 
-```
-Scheduler (cron) → Collector (gRPC FetchShop) → BigQuery (snapshot)
-                                                       │
-Frontend (GET /api/lojas/novidades) ←── API C# ←──────┘
-    │                                    (compara snapshots, detecta diffs)
-    ▼
-Aba "📉 Preços" mostra variações
-    │ clique "📤 Publicar"
-    ▼
-Publicação com preço anterior vs atual
-```
-
-### Serviços envolvidos
-
-| Serviço | Porta | Responsabilidade |
-|---------|-------|-----------------|
-| Scheduler Go | :50054 | Orquestra coletas por cron |
-| Collector Go | :50051 | FetchShop → busca produtos da loja na Shopee |
-| API C# | :5000 | Endpoint /api/lojas/novidades (compara snapshots) |
-| BigQuery | — | Armazena snapshots históricos |
-| Frontend | :5173 | Exibe variações na aba Preços |
+- 1576+ snapshots no BigQuery (2 lojas: Glory of Seoul, outra com 104 produtos)
+- 5 variações de preço detectadas na loja-920292999 (2 quedas de 20%+)
+- 11 variações na loja-457864097
+- 3 produtos novos detectados
 
 ---
 
-## O que testar
+## O que falta
 
-### 1. Coleta de snapshots funciona?
-- O scheduler está disparando coletas?
-- O collector grava no BigQuery?
-- Verificar com: `./scripts/prod-api.sh GET /api/coletas`
+### 1. Sync buscas → scheduler (T-0028)
+O scheduler tem jobs mas não se atualiza quando o usuário adiciona/remove lojas.
+Precisa de um endpoint ou mecanismo que:
+- Leia buscas ativas no PostgreSQL
+- Crie/remova cron jobs no scheduler via gRPC `SetSchedule`
+- Rode ao subir o serviço ou via trigger periódico
 
-### 2. Endpoint de novidades retorna dados?
-- `./scripts/prod-api.sh GET '/api/lojas/novidades?busca_id=<id>&dias=7'`
-- Espera: `{ produtos_novos: [...], variacoes: [...], dias_janela: 7 }`
+### 2. Onboarding de novas lojas
+Quando o usuário adiciona uma loja pelo frontend (`POST /api/lojas`):
+- A busca é criada no PG ✅
+- Mas o scheduler não sabe dela
+- Precisa triggar `SetSchedule` imediatamente
 
-### 3. Frontend exibe variações?
-- Navegar para /lojas → selecionar loja → aba "📉 Preços"
-- Verificar se a tabela mostra: Produto, Antes, Agora, Variação%, Detectado
+### 3. Publicação a partir de variação
+O botão 📤 na aba Preços navega para /publicar com dados preenchidos.
+Testar se o fluxo completo funciona (variação → publicar → Telegram).
 
-### 4. Publicar a partir de variação funciona?
-- Clicar 📤 na linha da variação
-- Deve navegar para /publicar com `preco_atual` e `nome` preenchidos
-- Enviar → mensagem no Telegram
-
-### 5. Se não há snapshots (primeira coleta)
-- Como o sistema se comporta com zero histórico?
-- O scheduler precisa rodar pelo menos 2x para ter diff
-
----
-
-## Setup necessário
-
-### Dev local (contra produção)
-```bash
-cd web && VITE_API_BASE=https://garimpei.app.br npm run dev
-# Login via Google no browser
-```
-
-### Testar APIs diretamente
-```bash
-./scripts/prod-api.sh GET /api/coletas
-./scripts/prod-api.sh GET '/api/lojas/novidades?busca_id=<ID_DA_BUSCA>&dias=30'
-./scripts/prod-api.sh GET /api/buscas   # lista perfis de busca com shop_ids
-```
-
-### Verificar BigQuery (snapshots)
-```bash
-# Via banco PostgreSQL (buscas salvas)
-PG_URL=<...>  # ver scripts/prod-api.sh para construir
-psql "$PG_URL" -c 'SELECT "Id", "Keywords", "ShopIds" FROM "Buscas" LIMIT 5;'
-```
+### 4. Alertas automáticos de queda
+O alerter (Go) está deployado mas não está wired ao fluxo de variações.
+Precisa conectar: scheduler detecta queda → alerter notifica via Telegram.
 
 ---
 
-## Resultados da sessão anterior (2026-07-03)
+## Resultados da sessão 2026-07-04
 
-### Bugs corrigidos
-- ✅ Página publicar travada em "Carregando..." (Tooltip.Provider faltando)
-- ✅ Select mostrando UUID ao invés de nome (selectedLabel derivado)
-- ✅ Envio Telegram falhando silenciosamente (sendPhoto fallback + JsonPropertyName)
-- ✅ Cloud Run não criava nova revision (SHA tags no deploy)
-- ✅ CORS para dev local
+### Bug crítico corrigido
+- Analyzer crashava: coluna `em` não existe no BigQuery (é `coletado_em`)
+- Fix deployado via CI, endpoint `/api/lojas/novidades` agora retorna dados reais
 
-### Migração UI concluída
-- ✅ shadcn-svelte + Tailwind CSS v4 em todos os 50 componentes
-- ✅ Prettier com Tailwind class sorting
-- ✅ Dark mode corrigido (contraste)
-- ✅ Layout padronizado (space-y-8)
+### Features implementadas
+- Mock mode no analyzer (`MOCK_DATA=true`) para dev local sem BigQuery
+- Script `seed-local-test.py` para popular cenário fictício
+- Endpoint `/evolucao` enriquecido com `resumo.total_quedas/total_altas`
+- Endpoint `/estatisticas` retorna `total_amostras` para o dashboard
+- Cloud Run service yaml atualizado (analyzer sidecar + ANALYZER_URL)
 
-### Infra/DX
-- ✅ pre-push ~20s (sem E2E)
-- ✅ E2E disponível via `mise run test:e2e`
-- ✅ `scripts/prod-api.sh` para debug produção
-- ✅ PostgreSQL auto-start no `mise run test:csharp`
-- ✅ CI otimizado (mise@v4, buf binary direto, deploy com SHA)
+### Testes E2E adicionados
+12 cenários Playwright para o fluxo de variação de preços:
+- Seleção de loja → abas → tabela de variações
+- Indicadores ↓/↑ para quedas/altas
+- Botão publicar navega com dados
+- Graceful degradation (analyzer offline)
+
+### Documentação
+- `docs/guias/fluxo-variacao-precos.md` — guia completo do fluxo
+- `backlog/tasks/T-0044` — tarefa documentando o diagnóstico e fix
+- Atualização do PROXIMA_SESSAO.md
 
 ### Tasks concluídas
-- T-0035: Pós-migração bugs
-- T-0037: Bits UI + tokens
-- T-0038: UI fase 2
-- T-0040: shadcn-svelte + Tailwind
-- T-0041: format:check CI
-- T-0042: Dark mode + layout
-- T-0043: Deploy Cloud Run + JSON binding
+- T-0044: Testar fluxo de variação de preços end-to-end
 
-### Pendente (backlog)
-- T-0034: Descobrir filtros (badge drift)
-- T-0027: Publisher multi-tenant tokens
-- T-0028: Configurar coleta no scheduler (popular snapshots)
-- T-0002: Persistir conversões BigQuery
-
----
-
-## Decisões a tomar nesta sessão
-
-1. O scheduler está configurado e rodando em produção? Ou precisa ser ativado?
-2. Há snapshots no BigQuery ou preciso popular manualmente?
-3. O endpoint `/api/lojas/novidades` está implementado no C# ou ainda aponta para o Go legado?
-4. As buscas com `shop_ids` estão configuradas no banco?
+### Commits (5)
+```
+a4e52b7 feat(analyzer): add mock mode + seed script for local price variation testing
+e7e8648 deploy: add analyzer sidecar to Cloud Run + wire ANALYZER_URL to scheduler
+f2fab6e fix(analyzer): use coletado_em column name matching production BQ schema
+8e68a52 docs: fluxo de variação de preços + task T-0044
+9e6f5ca test(e2e): add price variation flow tests (12 scenarios)
+9dd96ee feat(analyzer): enrich /evolucao with resumo (quedas/altas) + /estatisticas total_amostras
+```
