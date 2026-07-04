@@ -65,7 +65,7 @@ export default defineConfig({
 						import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 						mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 						function renderMermaidBlocks() {
-							document.querySelectorAll('div.language-mermaid').forEach(el => {
+							document.querySelectorAll('div.language-mermaid').forEach(function(el) {
 								if (el.dataset.mermaidRendered) return;
 								el.dataset.mermaidRendered = 'true';
 								var code = el.querySelector('pre code');
@@ -79,6 +79,8 @@ export default defineConfig({
 								var sourceDiv = document.createElement('div');
 								sourceDiv.className = 'mermaid-source hidden';
 								sourceDiv.appendChild(el.cloneNode(true));
+								var btnBar = document.createElement('div');
+								btnBar.className = 'mermaid-btn-bar';
 								var toggle = document.createElement('button');
 								toggle.className = 'mermaid-toggle';
 								toggle.textContent = '</> Código';
@@ -88,7 +90,28 @@ export default defineConfig({
 									diagramDiv.classList.toggle('hidden');
 									toggle.textContent = showingSource ? '📊 Diagrama' : '</> Código';
 								});
-								wrapper.appendChild(toggle);
+								var fullscreenBtn = document.createElement('button');
+								fullscreenBtn.className = 'mermaid-toggle';
+								fullscreenBtn.textContent = '⛶ Tela cheia';
+								fullscreenBtn.addEventListener('click', function() {
+									var modal = document.createElement('div');
+									modal.className = 'mermaid-fullscreen';
+									var closeBtn = document.createElement('button');
+									closeBtn.className = 'mermaid-fullscreen-close';
+									closeBtn.textContent = '✕ Fechar';
+									closeBtn.addEventListener('click', function() { modal.remove(); });
+									modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+									var content = document.createElement('div');
+									content.className = 'mermaid-fullscreen-content mermaid';
+									content.textContent = source;
+									modal.appendChild(closeBtn);
+									modal.appendChild(content);
+									document.body.appendChild(modal);
+									mermaid.run({ nodes: [content] });
+								});
+								btnBar.appendChild(toggle);
+								btnBar.appendChild(fullscreenBtn);
+								wrapper.appendChild(btnBar);
 								wrapper.appendChild(diagramDiv);
 								wrapper.appendChild(sourceDiv);
 								el.replaceWith(wrapper);
@@ -104,9 +127,10 @@ export default defineConfig({
 				{
 					tag: 'script',
 					children: `
-						document.addEventListener('DOMContentLoaded', function() {
+						(function initSidebarToggle() {
 							var sidebar = document.querySelector('.rp-doc-layout__sidebar');
-							if (!sidebar) return;
+							if (!sidebar) { setTimeout(initSidebarToggle, 300); return; }
+							if (document.querySelector('.sidebar-toggle-btn')) return;
 							var overlay = document.createElement('div');
 							overlay.className = 'sidebar-overlay';
 							document.body.appendChild(overlay);
@@ -117,8 +141,8 @@ export default defineConfig({
 							document.body.appendChild(btn);
 							btn.addEventListener('click', function() { sidebar.classList.toggle('open'); overlay.classList.toggle('visible'); });
 							overlay.addEventListener('click', function() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); });
-							sidebar.addEventListener('click', function(e) { if (e.target.closest('a')) { sidebar.classList.remove('open'); overlay.classList.remove('visible'); } });
-						});
+							sidebar.addEventListener('click', function(e) { if (e.target.closest('a')) { setTimeout(function() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }, 100); } });
+						})();
 					`,
 					append: true
 				}

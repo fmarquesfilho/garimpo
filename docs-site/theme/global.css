@@ -121,9 +121,6 @@ html.dark {
 }
 
 .mermaid-toggle {
-	position: absolute;
-	top: 8px;
-	right: 8px;
 	padding: 4px 10px;
 	font-size: 0.75rem;
 	font-family: 'Archivo', system-ui, sans-serif;
@@ -132,7 +129,6 @@ html.dark {
 	border-radius: 4px;
 	cursor: pointer;
 	color: var(--rp-c-text-2);
-	z-index: 10;
 	transition: background 0.15s, color 0.15s;
 }
 
@@ -226,4 +222,65 @@ html.dark {
 		align-items: center;
 		justify-content: center;
 	}
+}
+
+/* ── Mermaid button bar ──────────────────────────────────────── */
+.mermaid-btn-bar {
+	display: flex;
+	gap: 6px;
+	justify-content: flex-end;
+	margin-bottom: 8px;
+}
+
+/* ── Mermaid fullscreen modal ────────────────────────────────── */
+.mermaid-fullscreen {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	background: rgba(0, 0, 0, 0.85);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem;
+}
+
+.mermaid-fullscreen-content {
+	background: white;
+	border-radius: 12px;
+	padding: 2rem;
+	max-width: 95vw;
+	max-height: 90vh;
+	overflow: auto;
+}
+
+.mermaid-fullscreen-content svg {
+	max-width: 100%;
+	height: auto;
+}
+
+.mermaid-fullscreen-close {
+	position: absolute;
+	top: 16px;
+	right: 24px;
+	padding: 8px 16px;
+	font-size: 0.9rem;
+	background: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: 600;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.mermaid-fullscreen-close:hover {
+	background: #f0f0f0;
+}
+
+html.dark .mermaid-fullscreen-content {
+	background: #1a1517;
+}
+
+html.dark .mermaid-fullscreen-close {
+	background: #2a2527;
+	color: #f0ebe8;
 }
