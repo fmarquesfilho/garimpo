@@ -143,12 +143,12 @@ Verifica sincronização de schemas entre os 3 datastores e os componentes:
 | Métrica | Alvo | Validação |
 |---------|------|-----------|
 | Testes Go | ~200 | `go test ./...` |
-| Testes C# | 38 (10 persistence + 13 arch + 15 integration) | `dotnet test` |
-| Testes frontend | 109 | `vitest --run` (<2s) |
-| Drift API | 0 rotas faltantes | `check-api-contract.sh` |
-| Drift config | 0 inconsistências | `check-config-consistency.sh` |
-| Drift schema | 0 desincronizações | `check-schema-sync.sh` |
-| Pre-push | 7/7 checks | `pre-push-check.sh` |
+| Testes C# | 61 (multi-tenant + arch + integration + JSON) | `dotnet test` |
+| Testes frontend | ~109 unitários + ~36 E2E | `vitest --run` + `playwright test` |
+| Drift API | 0 rotas faltantes | `mise run check:api-contract` |
+| Drift config | 0 inconsistências | `mise run check:config-consistency` |
+| Drift schema | 0 desincronizações | `mise run check:schema-sync` |
+| Pre-push | 9/9 checks | `mise run prepush` |
 | Arquivos > 400 linhas | 0 | CI bloqueia |
 | Warnings C# | 0 | TreatWarningsAsErrors |
 
@@ -174,6 +174,54 @@ cd web && npx vitest run
 # TUDO de uma vez (mesmo script usado pelo pre-push hook)
 ./scripts/pre-push-check.sh
 ```
+
+---
+
+## Testes opcionais (não rodam no CI)
+
+Testes que requerem serviços externos ou são informativos (não bloqueiam push):
+
+### E2E completo (frontend + Firebase Emulator)
+
+Testa fluxos autenticados no browser com Playwright + Firebase Auth Emulator:
+
+```bash
+mise run test:e2e
+```
+
+**Requer:** Firebase CLI instalada (`npm i -g firebase-tools`).
+**Cenários:** login → descobrir → filtros → lojas → preços → publicar.
+
+### Qualidade de comentários
+
+Detecta anti-patterns em comentários: código morto comentado, TODOs sem issue,
+comentários óbvios, comentários de 1 palavra. Cross-stack (Go, C#, Python, Svelte).
+
+```bash
+mise run check:comment-quality              # arquivos alterados vs main
+mise run check:comment-quality -- --all     # todos os arquivos
+mise run check:comment-quality -- --strict  # exit 1 se houver warnings
+```
+
+**Anti-patterns detectados:**
+- Blocos de 3+ linhas de código comentado (dead code)
+- `TODO`/`FIXME` sem referência a task (`T-NNNN`) ou issue
+- Comentários triviais que repetem o que o código diz
+- Comentários de 1 palavra em funções (sem contexto útil)
+
+**Não bloqueia push** — é informativo. Use `--strict` se quiser enforcement.
+
+### Teste de alertas (Telegram real)
+
+Testa o fluxo de alertas com envio real para Telegram:
+
+```bash
+./scripts/test-alerts.sh local     # lógica sem envio (analyzer mock)
+./scripts/test-alerts.sh telegram  # envio real (requer tokens)
+./scripts/test-alerts.sh prod      # Cloud Task em produção
+```
+
+**Requer:** `TELEGRAM_BOT_TOKEN` (de `gcloud secrets`) para modo telegram/prod.
 
 ---
 

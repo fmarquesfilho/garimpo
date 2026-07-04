@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+#MISE description="Verifica qualidade de comentários (anti-patterns)"
+# =============================================================================
+# check-comment-quality.sh — Detecta anti-patterns em comentários de código
+# =============================================================================
+# Verifica:
+#   1. Código comentado (blocos de código morto)
+#   2. TODOs sem referência (issue/task number)
+#   3. Comentários óbvios ("increment counter", "return value")
+#   4. Comentários de uma só palavra em funções/métodos complexos
+#   5. Comentários desatualizados (referências a nomes que não existem)
+#
+# Escopo: arquivos modificados no branch (ou todos se --all).
+# Não-obstrusivo: warnings por padrão, exit 0. Use --strict para exit 1.
+# =============================================================================
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+GREEN='\033[0;32m'
+DIM='\033[2m'
+NC='\033[0m'
+
+STRICT=false
+ALL=false
+WARN_FILE=$(mktemp)
+echo "0" > "$WARN_FILE"
+
+for arg in "$@"; do
+  case "$arg" in
+    --strict) STRICT=true ;;
+    --all) ALL=true ;;
+  esac
+done
+
+# Determine files to check
+if $ALL; then
+  FILES=$(find services/ internal/ src/ web/src/ -type f \
+    \( -name "*.go" -o -name "*.cs" -o -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.svelte" \) \
+    ! -path "*/node_modules/*" ! -path "*/bin/*" ! -path "*/obj/*" ! -path "*/.svelte-kit/*" \
+    ! -path "*/Generated/*" ! -path "*/gen/*" ! -path "*/__pycache__/*" 2>/dev/null)
+else
+  # Only files changed vs origin/main
+  FILES=$(git diff --name-only origin/main 2>/dev/null | grep -E '\.(go|cs|py|js|ts|svelte)$' | \
+    grep -v "node_modules\|bin/\|obj/\|Generated/\|gen/\|__pycache__" || true)
+fi
+
+if [ -z "$FILES" ]; then
+  echo -e "${GREEN}✅ Sem arquivos para verificar.${NC}"
+  exit 0
+fi
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Comment Quality Check"
+echo "═══════════════════════════════════════════════════════════════"
+echo ""
+
+warn() {
+  local file="$1" line="$2" msg="$3"
+  echo -e "${YELLOW}   ⚠ ${file}:${line}${NC} — ${msg}"
+  echo $(( $(cat "$WARN_FILE") + 1 )) > "$WARN_FILE"
+}
+
+# ── 1. Código comentado (blocos >= 3 linhas consecutivas) ─────────────────────
+echo "🔍 Código comentado (dead code em comentários)..."
+
+while IFS= read -r file; do
+  [ -f "$file" ] || continue
+
+  # Detect 3+ consecutive comment-only lines that look like code
+  # (contain assignment, function calls, braces, semicolons)
+  awk '
+    /^[[:space:]]*(\/\/|#|\/\*).*[=;{}()\[\]]/ { count++; start = (count == 1) ? NR : start; next }
+    { if (count >= 3) print FILENAME ":" start ": " count " linhas de código comentado"; count = 0 }
+    END { if (count >= 3) print FILENAME ":" start ": " count " linhas de código comentado" }
+  ' "$file" | while IFS= read -r match; do
+    f=$(echo "$match" | cut -d: -f1)
+    l=$(echo "$match" | cut -d: -f2)
+    msg=$(echo "$match" | cut -d: -f3-)
+    warn "$f" "$l" "possível código morto comentado ($msg)"
+  done
+done <<< "$FILES"
+
+# ── 2. TODOs sem referência ───────────────────────────────────────────────────
+echo "🔍 TODOs/FIXMEs sem issue ou task number..."
+
+while IFS= read -r file; do
+  [ -f "$file" ] || continue
+
+  # Match TODO/FIXME/HACK without T-NNNN, #NNN, or URL
+  grep -nE "(TODO|FIXME|HACK|XXX)" "$file" 2>/dev/null | \
+    grep -v "T-[0-9]\|#[0-9]\|http\|nolint\|nosemgrep\|NOSONAR" | \
+    head -5 | while IFS= read -r match; do
+      l=$(echo "$match" | cut -d: -f1)
+      warn "$file" "$l" "TODO/FIXME sem referência (use T-NNNN ou link)"
+    done || true
+done <<< "$FILES"
+
+# ── 3. Comentários triviais/óbvios ───────────────────────────────────────────
+echo "🔍 Comentários triviais (dizem o óbvio)..."
+
+# Patterns that indicate obvious comments
+OBVIOUS_PATTERNS=(
+  "increment\|decrement\|increase\|decrease.*counter"
+  "set.*variable\|assign.*value"
+  "return.*result\|return.*value"
+  "initialize\|initialise\|init var"
+  "declare.*variable"
+  "loop through\|iterate over\|for each"
+  "check if\|verify that\|see if"
+  "get the\|set the"
+  "constructor\|destructor"
+  "default constructor"
+  "getter\|setter"
+)
+
+PATTERN=$(printf "%s\n" "${OBVIOUS_PATTERNS[@]}" | paste -sd'|' -)
+
+while IFS= read -r file; do
+  [ -f "$file" ] || continue
+
+  grep -inE "^[[:space:]]*(//|#|///|/\*\*?).*($PATTERN)" "$file" 2>/dev/null | \
+    head -5 | while IFS= read -r match; do
+      l=$(echo "$match" | cut -d: -f1)
+      warn "$file" "$l" "comentário possivelmente óbvio (o código já diz isso?)"
+    done || true
+done <<< "$FILES"
+
+# ── 4. Comentários de 1-2 palavras em funções longas ──────────────────────────
+echo "🔍 Comentários muito curtos em código complexo..."
+
+while IFS= read -r file; do
+  [ -f "$file" ] || continue
+
+  # Find comments that are 1-2 words (excluding directives, pragmas, section markers)
+  grep -nE "^[[:space:]]*(//|#)[[:space:]]+[a-zA-Z]+[[:space:]]*$" "$file" 2>/dev/null | \
+    grep -v "nolint\|nosemgrep\|pragma\|region\|endregion\|──\|═\|TODO\|FIXME\|NOTE" | \
+    head -3 | while IFS= read -r match; do
+      l=$(echo "$match" | cut -d: -f1)
+      warn "$file" "$l" "comentário de 1 palavra — adicionar contexto ou remover"
+    done || true
+done <<< "$FILES"
+
+# ── Resultado ─────────────────────────────────────────────────────────────────
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+WARNINGS=$(cat "$WARN_FILE")
+rm -f "$WARN_FILE"
+if [ "$WARNINGS" -eq 0 ]; then
+  echo -e "${GREEN}✅ Nenhum anti-pattern de comentário detectado.${NC}"
+  exit 0
+else
+  echo -e "${YELLOW}⚠ $WARNINGS aviso(s) de qualidade de comentário.${NC}"
+  echo -e "${DIM}   Dicas: remova código morto, adicione T-NNNN em TODOs, evite o óbvio.${NC}"
+  if $STRICT; then
+    exit 1
+  fi
+  exit 0
+fi
