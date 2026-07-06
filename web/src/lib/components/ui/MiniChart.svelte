@@ -19,18 +19,18 @@
 		{#each pontos as ponto, i}
 			{@const h = ((ponto.valor - min) / range) * 100}
 			<div
-				class="min-h-[3px] flex-1 rounded-t-sm bg-[var(--ouro-claro)] transition-[height] duration-200 ease-linear motion-reduce:transition-none"
-				class:!bg-[var(--sucesso-texto)]={i > 0 && ponto.valor < pontos[i - 1].valor}
-				class:!bg-[var(--erro-texto)]={i > 0 && ponto.valor > pontos[i - 1].valor}
+				class="min-h-[3px] flex-1 rounded-t-sm bg-primary/30 transition-[height] duration-200 ease-linear motion-reduce:transition-none"
+				class:!bg-sucesso={i > 0 && ponto.valor < pontos[i - 1].valor}
+				class:!bg-destructive={i > 0 && ponto.valor > pontos[i - 1].valor}
 				style="height: {Math.max(h, 8)}%"
 				title="{ponto.data}: {formatValor(ponto.valor)}"
 			></div>
 		{/each}
 	</div>
-	<div class="mt-0.5 flex justify-between text-xs text-tinta-suave">
+	<div class="mt-0.5 flex justify-between text-xs text-muted-foreground">
 		<span>{formatValor(min)}</span>
 		<span>{formatValor(max)}</span>
 	</div>
 {:else}
-	<p class="m-0 text-sm italic text-tinta-suave">Aguardando dados…</p>
+	<p class="m-0 text-sm italic text-muted-foreground">Aguardando dados…</p>
 {/if}

@@ -32,18 +32,18 @@
 
 <div class="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
 	<div class="flex items-center justify-between gap-4">
-		<span class="text-xs font-bold uppercase tracking-wide text-tinta-suave">coleta automática</span>
-		<div class="inline-flex gap-0.5 rounded-full bg-[var(--linha)] p-0.5">
+		<span class="text-xs font-bold uppercase tracking-wide text-muted-foreground">coleta automática</span>
+		<div class="inline-flex gap-0.5 rounded-full bg-border p-0.5">
 			<button
-				class="cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-xs font-semibold text-tinta-suave"
-				class:!bg-porcelana={modo === 'atalho'}
+				class="cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-xs font-semibold text-muted-foreground"
+				class:!bg-muted={modo === 'atalho'}
 				class:!text-foreground={modo === 'atalho'}
 				onclick={() => (modo = 'atalho')}
 				type="button">Atalhos</button
 			>
 			<button
-				class="cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-xs font-semibold text-tinta-suave"
-				class:!bg-porcelana={modo === 'avancado'}
+				class="cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-xs font-semibold text-muted-foreground"
+				class:!bg-muted={modo === 'avancado'}
 				class:!text-foreground={modo === 'avancado'}
 				onclick={() => (modo = 'avancado')}
 				type="button">Avançado</button
@@ -56,10 +56,10 @@
 			{#each atalhos as a}
 				<button
 					type="button"
-					class="cursor-pointer rounded-full border border-border bg-porcelana px-3 py-1.5 text-sm font-medium text-foreground transition-all duration-100 ease-linear hover:border-ouro hover:text-ouro"
-					class:!bg-ouro-fundo={value === a.cron}
-					class:!border-ouro={value === a.cron}
-					class:!text-ouro-escuro={value === a.cron}
+					class="cursor-pointer rounded-full border border-border bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition-all duration-100 ease-linear hover:border-primary hover:text-primary"
+					class:!bg-accent={value === a.cron}
+					class:!border-primary={value === a.cron}
+					class:!text-accent-foreground={value === a.cron}
 					class:!font-bold={value === a.cron}
 					onclick={() => selecionarAtalho(a.cron)}
 				>
@@ -71,18 +71,17 @@
 		<div class="flex flex-col gap-2">
 			<input
 				type="text"
-				class="dado w-full rounded-[10px] border border-border bg-porcelana px-3 py-2 font-mono text-[0.9rem] text-foreground"
+				class="dado w-full rounded-[10px] border border-border bg-muted px-3 py-2 font-mono text-[0.9rem] text-foreground"
 				bind:value
 				placeholder="ex.: 0 8 * * * (min hora dia mês semana)"
 				spellcheck="false"
 			/>
-			<p class="m-0 text-xs leading-relaxed text-tinta-suave">
-				Formato: <code class="rounded bg-ouro-fundo px-1.5 py-px font-mono text-[0.85em]"
+			<p class="m-0 text-xs leading-relaxed text-muted-foreground">
+				Formato: <code class="rounded bg-accent px-1.5 py-px font-mono text-[0.85em]"
 					>minuto hora dia-do-mês mês dia-da-semana</code
-				>. Exemplos: <code class="rounded bg-ouro-fundo px-1.5 py-px font-mono text-[0.85em]">0 8 * * *</code> = todo
-				dia às 8h;
-				<code class="rounded bg-ouro-fundo px-1.5 py-px font-mono text-[0.85em]">0 9 * * 1,4</code> = segunda e quinta às
-				9h.
+				>. Exemplos: <code class="rounded bg-accent px-1.5 py-px font-mono text-[0.85em]">0 8 * * *</code> = todo dia às
+				8h;
+				<code class="rounded bg-accent px-1.5 py-px font-mono text-[0.85em]">0 9 * * 1,4</code> = segunda e quinta às 9h.
 			</p>
 		</div>
 	{/if}
@@ -92,11 +91,11 @@
 			⏱ {descricao(value)}
 			<button
 				type="button"
-				class="cursor-pointer rounded-md border-none bg-transparent px-1.5 py-0.5 text-xs text-tinta-suave hover:text-[var(--erro-texto)]"
+				class="cursor-pointer rounded-md border-none bg-transparent px-1.5 py-0.5 text-xs text-muted-foreground hover:text-erro"
 				onclick={() => (value = '')}>remover</button
 			>
 		</p>
 	{:else}
-		<p class="dado m-0 text-sm italic text-tinta-suave">Sem agendamento — a busca só roda quando você clicar.</p>
+		<p class="dado m-0 text-sm italic text-muted-foreground">Sem agendamento — a busca só roda quando você clicar.</p>
 	{/if}
 </div>

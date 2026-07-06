@@ -15,9 +15,9 @@
 <div class="rounded-sm border border-border bg-card px-4 py-3 text-center" {...rest}>
 	<span
 		class="block font-mono text-2xl font-bold leading-tight tabular-nums"
-		class:text-ouro={resolvedVariant === 'gold'}
-		class:text-[var(--sucesso-texto)]={resolvedVariant === 'green'}
-		class:text-[var(--erro-texto)]={resolvedVariant === 'red'}>{valor}</span
+		class:text-primary={resolvedVariant === 'gold'}
+		class:text-sucesso={resolvedVariant === 'green'}
+		class:text-destructive={resolvedVariant === 'red'}>{valor}</span
 	>
-	<span class="text-xs font-semibold uppercase text-tinta-suave">{label}</span>
+	<span class="text-xs font-semibold uppercase text-muted-foreground">{label}</span>
 </div>

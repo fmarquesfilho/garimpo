@@ -10,10 +10,10 @@
 
 <section class="mb-8 max-w-[42rem]" {...rest}>
 	{#if rotulo}
-		<p class="text-xs font-semibold uppercase tracking-widest text-tinta-suave">{rotulo}</p>
+		<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{rotulo}</p>
 	{/if}
 	<h1 class="my-2 mb-4 font-display text-[clamp(1.8rem,5vw,2.5rem)]">{titulo}</h1>
 	{#if subtitulo}
-		<p class="m-0 mb-4 leading-relaxed text-tinta-suave">{subtitulo}</p>
+		<p class="m-0 mb-4 leading-relaxed text-muted-foreground">{subtitulo}</p>
 	{/if}
 </section>

@@ -6,4 +6,4 @@
 	let { mensagem = 'Carregando…', ...rest } = $props();
 </script>
 
-<p class="italic text-tinta-suave" {...rest}>{mensagem}</p>
+<p class="italic text-muted-foreground" {...rest}>{mensagem}</p>

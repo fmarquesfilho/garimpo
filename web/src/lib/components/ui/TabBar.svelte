@@ -10,17 +10,17 @@
 <nav class="mb-5 flex gap-0.5 overflow-x-auto border-b-2 border-border">
 	{#each tabs as tab (tab.id)}
 		<button
-			class="-mb-[2px] flex cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 border-b-transparent bg-transparent px-4 py-2 text-sm font-semibold text-tinta-suave max-sm:px-3 max-sm:text-xs"
+			class="-mb-[2px] flex cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 border-b-transparent bg-transparent px-4 py-2 text-sm font-semibold text-muted-foreground max-sm:px-3 max-sm:text-xs"
 			class:!text-foreground={active === tab.id}
-			class:!border-b-ouro={active === tab.id}
+			class:!border-b-primary={active === tab.id}
 			onclick={() => (active = tab.id)}
 		>
 			{tab.label}
 			{#if tab.badge}
 				<span
-					class="rounded-full bg-ouro-fundo px-2 py-px text-xs font-bold text-ouro-escuro"
-					class:!bg-[var(--erro-fundo)]={tab.badgeVariant === 'alert'}
-					class:!text-[var(--erro-texto)]={tab.badgeVariant === 'alert'}
+					class="rounded-full bg-accent px-2 py-px text-xs font-bold text-accent-foreground"
+					class:!bg-destructive={tab.badgeVariant === 'alert'}
+					class:!text-destructive-foreground={tab.badgeVariant === 'alert'}
 				>
 					{tab.badge}
 				</span>

@@ -63,13 +63,13 @@
 				<span class="text-sm font-semibold text-foreground">Fontes de dados:</span>
 				<div class="flex flex-wrap gap-3">
 					<label class="flex cursor-pointer items-center gap-1 text-sm"
-						><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.curadoria} /> 🔍 Curadoria</label
+						><input type="checkbox" class="accent-primary" bind:checked={fontes.curadoria} /> 🔍 Curadoria</label
 					>
 					<label class="flex cursor-pointer items-center gap-1 text-sm"
-						><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.quedas} /> 📉 Quedas de preço</label
+						><input type="checkbox" class="accent-primary" bind:checked={fontes.quedas} /> 📉 Quedas de preço</label
 					>
 					<label class="flex cursor-pointer items-center gap-1 text-sm"
-						><input type="checkbox" class="accent-[var(--ouro)]" bind:checked={fontes.novos} /> 🆕 Produtos novos</label
+						><input type="checkbox" class="accent-primary" bind:checked={fontes.novos} /> 🆕 Produtos novos</label
 					>
 				</div>
 			</div>
@@ -115,6 +115,6 @@
 			{/each}
 		</div>
 	{:else if !mostrarForm}
-		<p class="text-sm italic text-tinta-suave">Nenhuma busca agendada. Clique em "+ nova busca" para criar.</p>
+		<p class="text-sm italic text-muted-foreground">Nenhuma busca agendada. Clique em "+ nova busca" para criar.</p>
 	{/if}
 </div>

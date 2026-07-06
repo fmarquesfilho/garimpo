@@ -73,11 +73,11 @@
 			bind:value={linkColado}
 			placeholder="Cole o link da Shopee aqui…"
 			onkeydown={(e) => e.key === 'Enter' && aplicarLink()}
-			class="min-w-[200px] flex-1 rounded-sm border border-border bg-porcelana px-3.5 py-2.5 text-[0.9rem]"
+			class="min-w-[200px] flex-1 rounded-sm border border-border bg-muted px-3.5 py-2.5 text-[0.9rem]"
 		/>
 		<button
 			type="button"
-			class="whitespace-nowrap rounded-sm border border-ouro bg-[var(--ouro)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-ouro-escuro disabled:cursor-not-allowed disabled:opacity-50"
+			class="whitespace-nowrap rounded-sm border border-primary bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-ouro-hover disabled:cursor-not-allowed disabled:opacity-50"
 			onclick={colarDoClipboard}
 			disabled={resolvendoLink}
 		>
@@ -85,8 +85,8 @@
 		</button>
 	</div>
 	{#if resolvendoLink}
-		<p class="m-0 text-sm text-ouro">Buscando dados do produto…</p>
+		<p class="m-0 text-sm text-primary">Buscando dados do produto…</p>
 	{:else if linkAplicado}
-		<p class="m-0 text-sm text-[var(--sucesso-texto)]">✓ Link aplicado — edite os campos abaixo se necessário.</p>
+		<p class="m-0 text-sm text-sucesso">✓ Link aplicado — edite os campos abaixo se necessário.</p>
 	{/if}
 </div>
