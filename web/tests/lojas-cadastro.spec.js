@@ -10,7 +10,11 @@ test.describe('Lojas — Cadastro e Agendamento', () => {
 			if (route.request().method() === 'GET') {
 				// Na primeira chamada (antes de adicionar), retorna lista vazia
 				if (!chamouAdicionar) {
-					await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ buscas: [], total: 0 }) });
+					await route.fulfill({
+						status: 200,
+						contentType: 'application/json',
+						body: JSON.stringify({ buscas: [], total: 0 })
+					});
 				} else {
 					// Após adicionar, retorna a loja recém cadastrada
 					await route.fulfill({
@@ -53,7 +57,11 @@ test.describe('Lojas — Cadastro e Agendamento', () => {
 		});
 
 		await page.route('**/api/lojas/novidades*', async (route) => {
-			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ produtos_novos: [], variacoes: [] }) });
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ produtos_novos: [], variacoes: [] })
+			});
 		});
 		await page.route('**/api/candidatos*', async (route) => {
 			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ candidatos: [] }) });
