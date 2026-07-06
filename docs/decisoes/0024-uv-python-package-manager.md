@@ -21,9 +21,12 @@ Em vez de:
 ```bash
 pip install -r services/analyzer/requirements.txt
 ```
-Passamos a utilizar:
-```bash
-uv pip install --system -r services/analyzer/requirements.txt
+Passamos a utilizar a seguinte configuração, que inclui também o bypass de compatibilidade do PyO3 para versões do Python lançadas antes da biblioteca atualizar (ex: erro no pydantic-core em Python 3.14+):
+```yaml
+env:
+  PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
+run: |
+  uv pip install --system -r services/analyzer/requirements.txt
 ```
 
 ## Consequências
