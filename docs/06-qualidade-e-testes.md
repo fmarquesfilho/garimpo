@@ -34,7 +34,7 @@ Pushes que só tocam `docs/legado/**`, `docs/meta/**` ou `README.md` são ignora
 | C# (Arquitetura) | xUnit + NetArchTest | 13 | Fitness functions (regras Clean Architecture) |
 | C# (Integração) | xUnit | 38 | Onboarding, JSON binding, dedup, publish flow |
 | Frontend (unit) | Vitest | ~109 | Componentes, stores, utils, lógica filtros |
-| Frontend (E2E) | Playwright | ~36 | Smoke + Descobrir + Lojas/Preços |
+| Frontend (E2E) | Playwright | ~36 | Smoke + Descobrir + Lojas/Preços + ResolveShop |
 | Cross-stack (drift) | Shell scripts (mise) | 7 | Contracts, ownership, stale refs, schema sync |
 
 ### BDD (Behaviour-Driven Development)
@@ -191,6 +191,39 @@ mise run test:e2e
 
 **Requer:** Firebase CLI instalada (`npm i -g firebase-tools`).
 **Cenários:** login → descobrir → filtros → lojas → preços → publicar.
+
+### E2E ResolveShop (integração real com Collector + Shopee)
+
+Testa o fluxo de adição de loja **sem mocks** — valida a comunicação real entre
+Frontend → C# API → Collector gRPC → Shopee API v4 → PostgreSQL.
+
+```bash
+# Pré-requisitos: API + Collector + Firebase Emulator rodando
+mise run up                                    # sobe API + PG + Analyzer
+cd services/collector && go run . &            # sobe collector na porta 50051
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test lojas-resolve-shop
+```
+
+**Arquivo:** `web/tests/lojas-resolve-shop.spec.js`
+
+**Cenários testados:**
+
+| # | Cenário | Input | Validação |
+|---|---------|-------|-----------|
+| 1 | Link direto `shopee.com.br/{username}` | `https://shopee.com.br/belezanaweb_oficial` | shop_id=1674883556, name="Beleza na Web Oficial" |
+| 2 | Link curto `s.shopee.com.br/{hash}` | `https://s.shopee.com.br/70IKp57jnV` | Segue redirect → shop_id=920292999, name="Glory of Seoul" |
+| 3 | Username puro | `gloryofseoul.br` | shop_id=920292999 |
+| 4 | Listagem com shop_ids | GET /api/lojas | Lojas resolvidas aparecem com `shop_ids[]` preenchido |
+| 5 | Link inválido | `loja_que_nao_existe_xyz_999` | HTTP 400 com mensagem "não encontrada" |
+
+**Data ownership validada no teste:**
+- C# API persiste em PostgreSQL (dono exclusivo do PG) ✅
+- Collector Go faz I/O externo (Shopee API v4) sem tocar PG ✅
+- Comunicação via gRPC (contrato tipado) ✅
+
+**Nota:** Este teste depende da API pública da Shopee e pode falhar se houver rate
+limiting ou instabilidade na API. Por isso não roda no CI por padrão — é um teste
+de integração manual para validação pré-deploy.
 
 #### Boas Práticas e Resolução de Problemas E2E
 

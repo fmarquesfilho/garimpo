@@ -161,6 +161,7 @@ Frontend
 |------|------|--------|
 | Resultado da busca (candidatos) | **Nenhum lugar** | A busca é real-time pass-through — não salva |
 | Perfil de busca (keywords, filtros) | **PostgreSQL** (tabela `Buscas`) | Quando o usuário salva uma busca |
+| Perfil de loja (shop_ids resolvidos) | **PostgreSQL** (tabela `Buscas`) | POST /api/lojas resolve shop_id via Collector e salva |
 | Snapshot de mercado (top produtos) | **BigQuery** (tabela `snapshots`) | Scheduler executa coletas agendadas (cron) |
 | Publicações enviadas | **PostgreSQL** (tabela `Publicacoes`) | Ao clicar "Enviar" |
 | Favoritos | **PostgreSQL** (tabela `Favoritos`) | Ao clicar ★ |
