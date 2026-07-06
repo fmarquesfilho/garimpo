@@ -16,6 +16,8 @@ enum Marketplace {
 service CollectorService {
   // Resolve shop ID by username or URL.
   rpc ResolveShop(ResolveShopRequest) returns (ResolveShopResponse);
+  // Generate affiliate tracking link via marketplace API (e.g., Shopee generateShortLink).
+  rpc GenerateAffiliateLink(GenerateAffiliateLinkRequest) returns (GenerateAffiliateLinkResponse);
   // Fetch products by search keyword from a given marketplace.
   rpc Fetch(FetchRequest) returns (FetchResponse);
   // Fetch all products from a specific shop.
@@ -47,6 +49,26 @@ message ResolveShopRequest {
 message ResolveShopResponse {
   int64 shop_id = 1;
   string shop_name = 2;
+}
+
+// GenerateAffiliateLink — gera link curto de afiliada via Shopee generateShortLink.
+// SubIds são usados para rastrear conversões (voltam no conversionReport.utmContent).
+message GenerateAffiliateLinkRequest {
+  // URL original do produto ou loja (ex: https://shopee.com.br/product/123/456).
+  string original_url = 1;
+  // Sub IDs para tracking de conversão (máx 5). Ex: ["canal", "estrategia", "20260706"].
+  repeated string sub_ids = 2;
+  // Marketplace (default: SHOPEE).
+  Marketplace marketplace = 3;
+  // Owner UID do tenant (para buscar credenciais de afiliado).
+  string owner_uid = 4;
+}
+
+message GenerateAffiliateLinkResponse {
+  // Link curto gerado pela API do marketplace.
+  string short_link = 1;
+  // Link longo original com parâmetros de afiliação (fallback se short_link falhar).
+  string long_link = 2;
 }
 
 message FetchResponse {

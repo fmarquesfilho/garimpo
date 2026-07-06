@@ -324,6 +324,134 @@ func (x *ResolveShopResponse) GetShopName() string {
 	return ""
 }
 
+// GenerateAffiliateLink — gera link curto de afiliada via Shopee generateShortLink.
+// SubIds são usados para rastrear conversões (voltam no conversionReport.utmContent).
+type GenerateAffiliateLinkRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// URL original do produto ou loja (ex: https://shopee.com.br/product/123/456).
+	OriginalUrl string `protobuf:"bytes,1,opt,name=original_url,json=originalUrl,proto3" json:"original_url,omitempty"`
+	// Sub IDs para tracking de conversão (máx 5). Ex: ["canal", "estrategia", "20260706"].
+	SubIds []string `protobuf:"bytes,2,rep,name=sub_ids,json=subIds,proto3" json:"sub_ids,omitempty"`
+	// Marketplace (default: SHOPEE).
+	Marketplace Marketplace `protobuf:"varint,3,opt,name=marketplace,proto3,enum=collector.v1.Marketplace" json:"marketplace,omitempty"`
+	// Owner UID do tenant (para buscar credenciais de afiliado).
+	OwnerUid      string `protobuf:"bytes,4,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateAffiliateLinkRequest) Reset() {
+	*x = GenerateAffiliateLinkRequest{}
+	mi := &file_collector_v1_collector_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateAffiliateLinkRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateAffiliateLinkRequest) ProtoMessage() {}
+
+func (x *GenerateAffiliateLinkRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_collector_v1_collector_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateAffiliateLinkRequest.ProtoReflect.Descriptor instead.
+func (*GenerateAffiliateLinkRequest) Descriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GenerateAffiliateLinkRequest) GetOriginalUrl() string {
+	if x != nil {
+		return x.OriginalUrl
+	}
+	return ""
+}
+
+func (x *GenerateAffiliateLinkRequest) GetSubIds() []string {
+	if x != nil {
+		return x.SubIds
+	}
+	return nil
+}
+
+func (x *GenerateAffiliateLinkRequest) GetMarketplace() Marketplace {
+	if x != nil {
+		return x.Marketplace
+	}
+	return Marketplace_MARKETPLACE_UNSPECIFIED
+}
+
+func (x *GenerateAffiliateLinkRequest) GetOwnerUid() string {
+	if x != nil {
+		return x.OwnerUid
+	}
+	return ""
+}
+
+type GenerateAffiliateLinkResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Link curto gerado pela API do marketplace.
+	ShortLink string `protobuf:"bytes,1,opt,name=short_link,json=shortLink,proto3" json:"short_link,omitempty"`
+	// Link longo original com parâmetros de afiliação (fallback se short_link falhar).
+	LongLink      string `protobuf:"bytes,2,opt,name=long_link,json=longLink,proto3" json:"long_link,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateAffiliateLinkResponse) Reset() {
+	*x = GenerateAffiliateLinkResponse{}
+	mi := &file_collector_v1_collector_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateAffiliateLinkResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateAffiliateLinkResponse) ProtoMessage() {}
+
+func (x *GenerateAffiliateLinkResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_collector_v1_collector_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateAffiliateLinkResponse.ProtoReflect.Descriptor instead.
+func (*GenerateAffiliateLinkResponse) Descriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GenerateAffiliateLinkResponse) GetShortLink() string {
+	if x != nil {
+		return x.ShortLink
+	}
+	return ""
+}
+
+func (x *GenerateAffiliateLinkResponse) GetLongLink() string {
+	if x != nil {
+		return x.LongLink
+	}
+	return ""
+}
+
 type FetchResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Products      []*Product             `protobuf:"bytes,1,rep,name=products,proto3" json:"products,omitempty"`
@@ -335,7 +463,7 @@ type FetchResponse struct {
 
 func (x *FetchResponse) Reset() {
 	*x = FetchResponse{}
-	mi := &file_collector_v1_collector_proto_msgTypes[4]
+	mi := &file_collector_v1_collector_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -347,7 +475,7 @@ func (x *FetchResponse) String() string {
 func (*FetchResponse) ProtoMessage() {}
 
 func (x *FetchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_v1_collector_proto_msgTypes[4]
+	mi := &file_collector_v1_collector_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -360,7 +488,7 @@ func (x *FetchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FetchResponse.ProtoReflect.Descriptor instead.
 func (*FetchResponse) Descriptor() ([]byte, []int) {
-	return file_collector_v1_collector_proto_rawDescGZIP(), []int{4}
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *FetchResponse) GetProducts() []*Product {
@@ -395,7 +523,7 @@ type FetchShopResponse struct {
 
 func (x *FetchShopResponse) Reset() {
 	*x = FetchShopResponse{}
-	mi := &file_collector_v1_collector_proto_msgTypes[5]
+	mi := &file_collector_v1_collector_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -407,7 +535,7 @@ func (x *FetchShopResponse) String() string {
 func (*FetchShopResponse) ProtoMessage() {}
 
 func (x *FetchShopResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_v1_collector_proto_msgTypes[5]
+	mi := &file_collector_v1_collector_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -420,7 +548,7 @@ func (x *FetchShopResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FetchShopResponse.ProtoReflect.Descriptor instead.
 func (*FetchShopResponse) Descriptor() ([]byte, []int) {
-	return file_collector_v1_collector_proto_rawDescGZIP(), []int{5}
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *FetchShopResponse) GetProducts() []*Product {
@@ -468,7 +596,7 @@ type Product struct {
 
 func (x *Product) Reset() {
 	*x = Product{}
-	mi := &file_collector_v1_collector_proto_msgTypes[6]
+	mi := &file_collector_v1_collector_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -480,7 +608,7 @@ func (x *Product) String() string {
 func (*Product) ProtoMessage() {}
 
 func (x *Product) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_v1_collector_proto_msgTypes[6]
+	mi := &file_collector_v1_collector_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -493,7 +621,7 @@ func (x *Product) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Product.ProtoReflect.Descriptor instead.
 func (*Product) Descriptor() ([]byte, []int) {
-	return file_collector_v1_collector_proto_rawDescGZIP(), []int{6}
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Product) GetItemId() int64 {
@@ -622,7 +750,16 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\vmarketplace\x18\x02 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"K\n" +
 	"\x13ResolveShopResponse\x12\x17\n" +
 	"\ashop_id\x18\x01 \x01(\x03R\x06shopId\x12\x1b\n" +
-	"\tshop_name\x18\x02 \x01(\tR\bshopName\"\x82\x01\n" +
+	"\tshop_name\x18\x02 \x01(\tR\bshopName\"\xb4\x01\n" +
+	"\x1cGenerateAffiliateLinkRequest\x12!\n" +
+	"\foriginal_url\x18\x01 \x01(\tR\voriginalUrl\x12\x17\n" +
+	"\asub_ids\x18\x02 \x03(\tR\x06subIds\x12;\n" +
+	"\vmarketplace\x18\x03 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\x12\x1b\n" +
+	"\towner_uid\x18\x04 \x01(\tR\bownerUid\"[\n" +
+	"\x1dGenerateAffiliateLinkResponse\x12\x1d\n" +
+	"\n" +
+	"short_link\x18\x01 \x01(\tR\tshortLink\x12\x1b\n" +
+	"\tlong_link\x18\x02 \x01(\tR\blongLink\"\x82\x01\n" +
 	"\rFetchResponse\x121\n" +
 	"\bproducts\x18\x01 \x03(\v2\x15.collector.v1.ProductR\bproducts\x12\x1f\n" +
 	"\vtotal_found\x18\x02 \x01(\x05R\n" +
@@ -659,9 +796,10 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\x17MARKETPLACE_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12MARKETPLACE_SHOPEE\x10\x01\x12\x16\n" +
 	"\x12MARKETPLACE_AMAZON\x10\x02\x12\x1c\n" +
-	"\x18MARKETPLACE_MERCADOLIVRE\x10\x032\xf6\x01\n" +
+	"\x18MARKETPLACE_MERCADOLIVRE\x10\x032\xe8\x02\n" +
 	"\x10CollectorService\x12R\n" +
-	"\vResolveShop\x12 .collector.v1.ResolveShopRequest\x1a!.collector.v1.ResolveShopResponse\x12@\n" +
+	"\vResolveShop\x12 .collector.v1.ResolveShopRequest\x1a!.collector.v1.ResolveShopResponse\x12p\n" +
+	"\x15GenerateAffiliateLink\x12*.collector.v1.GenerateAffiliateLinkRequest\x1a+.collector.v1.GenerateAffiliateLinkResponse\x12@\n" +
 	"\x05Fetch\x12\x1a.collector.v1.FetchRequest\x1a\x1b.collector.v1.FetchResponse\x12L\n" +
 	"\tFetchShop\x12\x1e.collector.v1.FetchShopRequest\x1a\x1f.collector.v1.FetchShopResponseB\xb5\x01\n" +
 	"\x10com.collector.v1B\x0eCollectorProtoP\x01Z@github.com/fmarquesfilho/garimpo/gen/go/collector/v1;collectorv1\xa2\x02\x03CXX\xaa\x02\fCollector.V1\xca\x02\fCollector\\V1\xe2\x02\x18Collector\\V1\\GPBMetadata\xea\x02\rCollector::V1b\x06proto3"
@@ -679,35 +817,40 @@ func file_collector_v1_collector_proto_rawDescGZIP() []byte {
 }
 
 var file_collector_v1_collector_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_collector_v1_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_collector_v1_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_collector_v1_collector_proto_goTypes = []any{
-	(Marketplace)(0),            // 0: collector.v1.Marketplace
-	(*FetchRequest)(nil),        // 1: collector.v1.FetchRequest
-	(*FetchShopRequest)(nil),    // 2: collector.v1.FetchShopRequest
-	(*ResolveShopRequest)(nil),  // 3: collector.v1.ResolveShopRequest
-	(*ResolveShopResponse)(nil), // 4: collector.v1.ResolveShopResponse
-	(*FetchResponse)(nil),       // 5: collector.v1.FetchResponse
-	(*FetchShopResponse)(nil),   // 6: collector.v1.FetchShopResponse
-	(*Product)(nil),             // 7: collector.v1.Product
+	(Marketplace)(0),                      // 0: collector.v1.Marketplace
+	(*FetchRequest)(nil),                  // 1: collector.v1.FetchRequest
+	(*FetchShopRequest)(nil),              // 2: collector.v1.FetchShopRequest
+	(*ResolveShopRequest)(nil),            // 3: collector.v1.ResolveShopRequest
+	(*ResolveShopResponse)(nil),           // 4: collector.v1.ResolveShopResponse
+	(*GenerateAffiliateLinkRequest)(nil),  // 5: collector.v1.GenerateAffiliateLinkRequest
+	(*GenerateAffiliateLinkResponse)(nil), // 6: collector.v1.GenerateAffiliateLinkResponse
+	(*FetchResponse)(nil),                 // 7: collector.v1.FetchResponse
+	(*FetchShopResponse)(nil),             // 8: collector.v1.FetchShopResponse
+	(*Product)(nil),                       // 9: collector.v1.Product
 }
 var file_collector_v1_collector_proto_depIdxs = []int32{
-	0, // 0: collector.v1.FetchRequest.marketplace:type_name -> collector.v1.Marketplace
-	0, // 1: collector.v1.FetchShopRequest.marketplace:type_name -> collector.v1.Marketplace
-	0, // 2: collector.v1.ResolveShopRequest.marketplace:type_name -> collector.v1.Marketplace
-	7, // 3: collector.v1.FetchResponse.products:type_name -> collector.v1.Product
-	7, // 4: collector.v1.FetchShopResponse.products:type_name -> collector.v1.Product
-	0, // 5: collector.v1.Product.marketplace:type_name -> collector.v1.Marketplace
-	3, // 6: collector.v1.CollectorService.ResolveShop:input_type -> collector.v1.ResolveShopRequest
-	1, // 7: collector.v1.CollectorService.Fetch:input_type -> collector.v1.FetchRequest
-	2, // 8: collector.v1.CollectorService.FetchShop:input_type -> collector.v1.FetchShopRequest
-	4, // 9: collector.v1.CollectorService.ResolveShop:output_type -> collector.v1.ResolveShopResponse
-	5, // 10: collector.v1.CollectorService.Fetch:output_type -> collector.v1.FetchResponse
-	6, // 11: collector.v1.CollectorService.FetchShop:output_type -> collector.v1.FetchShopResponse
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	0,  // 0: collector.v1.FetchRequest.marketplace:type_name -> collector.v1.Marketplace
+	0,  // 1: collector.v1.FetchShopRequest.marketplace:type_name -> collector.v1.Marketplace
+	0,  // 2: collector.v1.ResolveShopRequest.marketplace:type_name -> collector.v1.Marketplace
+	0,  // 3: collector.v1.GenerateAffiliateLinkRequest.marketplace:type_name -> collector.v1.Marketplace
+	9,  // 4: collector.v1.FetchResponse.products:type_name -> collector.v1.Product
+	9,  // 5: collector.v1.FetchShopResponse.products:type_name -> collector.v1.Product
+	0,  // 6: collector.v1.Product.marketplace:type_name -> collector.v1.Marketplace
+	3,  // 7: collector.v1.CollectorService.ResolveShop:input_type -> collector.v1.ResolveShopRequest
+	5,  // 8: collector.v1.CollectorService.GenerateAffiliateLink:input_type -> collector.v1.GenerateAffiliateLinkRequest
+	1,  // 9: collector.v1.CollectorService.Fetch:input_type -> collector.v1.FetchRequest
+	2,  // 10: collector.v1.CollectorService.FetchShop:input_type -> collector.v1.FetchShopRequest
+	4,  // 11: collector.v1.CollectorService.ResolveShop:output_type -> collector.v1.ResolveShopResponse
+	6,  // 12: collector.v1.CollectorService.GenerateAffiliateLink:output_type -> collector.v1.GenerateAffiliateLinkResponse
+	7,  // 13: collector.v1.CollectorService.Fetch:output_type -> collector.v1.FetchResponse
+	8,  // 14: collector.v1.CollectorService.FetchShop:output_type -> collector.v1.FetchShopResponse
+	11, // [11:15] is the sub-list for method output_type
+	7,  // [7:11] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_collector_v1_collector_proto_init() }
@@ -721,7 +864,7 @@ func file_collector_v1_collector_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_collector_v1_collector_proto_rawDesc), len(file_collector_v1_collector_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

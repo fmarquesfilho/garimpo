@@ -25,6 +25,7 @@ public static partial class EndpointExtensions
                     id = b.Id,
                     keyword = b.Keyword,
                     shop_ids = b.ShopIds,
+                    source_url = b.SourceUrl,
                     ativo = b.Active,
                     criado_em = b.CreatedAt
                 }),
@@ -54,7 +55,8 @@ public static partial class EndpointExtensions
                 Keyword = keyword,
                 OwnerUid = "",
                 SortBy = "relevance",
-                Limit = 50
+                Limit = 50,
+                SourceUrl = keyword.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? keyword : null
             };
 
             try
@@ -90,7 +92,7 @@ public static partial class EndpointExtensions
             db.Buscas.Add(busca);
             await db.SaveChangesAsync(ct);
 
-            return Results.Ok(new { id = busca.Id, keyword = busca.Keyword, shop_ids = busca.ShopIds, status = "adicionada" });
+            return Results.Ok(new { id = busca.Id, keyword = busca.Keyword, shop_ids = busca.ShopIds, source_url = busca.SourceUrl, status = "adicionada" });
         }).RequireAuthorization().WithTags("Lojas");
 
         app.MapDelete("/api/lojas", async (AppDbContext db, string id, CancellationToken ct) =>

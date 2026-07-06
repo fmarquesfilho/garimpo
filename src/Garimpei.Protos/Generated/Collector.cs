@@ -36,36 +36,45 @@ namespace Collector.V1 {
             "JgoPdXNlcm5hbWVfb3JfdXJsGAEgASgJUg11c2VybmFtZU9yVXJsEjsKC21h",
             "cmtldHBsYWNlGAIgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBsYWNlUgtt",
             "YXJrZXRwbGFjZSJLChNSZXNvbHZlU2hvcFJlc3BvbnNlEhcKB3Nob3BfaWQY",
-            "ASABKANSBnNob3BJZBIbCglzaG9wX25hbWUYAiABKAlSCHNob3BOYW1lIoIB",
-            "Cg1GZXRjaFJlc3BvbnNlEjEKCHByb2R1Y3RzGAEgAygLMhUuY29sbGVjdG9y",
-            "LnYxLlByb2R1Y3RSCHByb2R1Y3RzEh8KC3RvdGFsX2ZvdW5kGAIgASgFUgp0",
-            "b3RhbEZvdW5kEh0KCmZldGNoZWRfYXQYAyABKAlSCWZldGNoZWRBdCKGAQoR",
-            "RmV0Y2hTaG9wUmVzcG9uc2USMQoIcHJvZHVjdHMYASADKAsyFS5jb2xsZWN0",
-            "b3IudjEuUHJvZHVjdFIIcHJvZHVjdHMSHwoLdG90YWxfZm91bmQYAiABKAVS",
-            "CnRvdGFsRm91bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJZmV0Y2hlZEF0IssD",
-            "CgdQcm9kdWN0EhcKB2l0ZW1faWQYASABKANSBml0ZW1JZBIXCgdzaG9wX2lk",
-            "GAIgASgDUgZzaG9wSWQSEgoEbmFtZRgDIAEoCVIEbmFtZRIUCgVwcmljZRgE",
-            "IAEoAVIFcHJpY2USJQoOb3JpZ2luYWxfcHJpY2UYBSABKAFSDW9yaWdpbmFs",
-            "UHJpY2USEgoEc29sZBgGIAEoBVIEc29sZBIWCgZyYXRpbmcYByABKAFSBnJh",
-            "dGluZxIbCglpbWFnZV91cmwYCCABKAlSCGltYWdlVXJsEh8KC3Byb2R1Y3Rf",
-            "dXJsGAkgASgJUgpwcm9kdWN0VXJsEhsKCXNob3BfbmFtZRgKIAEoCVIIc2hv",
-            "cE5hbWUSKQoQZGlzY291bnRfcGVyY2VudBgLIAEoAVIPZGlzY291bnRQZXJj",
-            "ZW50Eh4KCmNvbW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoIY2F0ZWdv",
-            "cnkYDSABKAlSCGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsSOwoLbWFy",
-            "a2V0cGxhY2UYDyABKA4yGS5jb2xsZWN0b3IudjEuTWFya2V0cGxhY2VSC21h",
-            "cmtldHBsYWNlKngKC01hcmtldHBsYWNlEhsKF01BUktFVFBMQUNFX1VOU1BF",
-            "Q0lGSUVEEAASFgoSTUFSS0VUUExBQ0VfU0hPUEVFEAESFgoSTUFSS0VUUExB",
-            "Q0VfQU1BWk9OEAISHAoYTUFSS0VUUExBQ0VfTUVSQ0FET0xJVlJFEAMy9gEK",
-            "EENvbGxlY3RvclNlcnZpY2USUgoLUmVzb2x2ZVNob3ASIC5jb2xsZWN0b3Iu",
-            "djEuUmVzb2x2ZVNob3BSZXF1ZXN0GiEuY29sbGVjdG9yLnYxLlJlc29sdmVT",
-            "aG9wUmVzcG9uc2USQAoFRmV0Y2gSGi5jb2xsZWN0b3IudjEuRmV0Y2hSZXF1",
-            "ZXN0GhsuY29sbGVjdG9yLnYxLkZldGNoUmVzcG9uc2USTAoJRmV0Y2hTaG9w",
-            "Eh4uY29sbGVjdG9yLnYxLkZldGNoU2hvcFJlcXVlc3QaHy5jb2xsZWN0b3Iu",
-            "djEuRmV0Y2hTaG9wUmVzcG9uc2VCtQEKEGNvbS5jb2xsZWN0b3IudjFCDkNv",
-            "bGxlY3RvclByb3RvUAFaQGdpdGh1Yi5jb20vZm1hcnF1ZXNmaWxoby9nYXJp",
-            "bXBvL2dlbi9nby9jb2xsZWN0b3IvdjE7Y29sbGVjdG9ydjGiAgNDWFiqAgxD",
-            "b2xsZWN0b3IuVjHKAgxDb2xsZWN0b3JcVjHiAhhDb2xsZWN0b3JcVjFcR1BC",
-            "TWV0YWRhdGHqAg1Db2xsZWN0b3I6OlYxYgZwcm90bzM="));
+            "ASABKANSBnNob3BJZBIbCglzaG9wX25hbWUYAiABKAlSCHNob3BOYW1lIrQB",
+            "ChxHZW5lcmF0ZUFmZmlsaWF0ZUxpbmtSZXF1ZXN0EiEKDG9yaWdpbmFsX3Vy",
+            "bBgBIAEoCVILb3JpZ2luYWxVcmwSFwoHc3ViX2lkcxgCIAMoCVIGc3ViSWRz",
+            "EjsKC21hcmtldHBsYWNlGAMgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBs",
+            "YWNlUgttYXJrZXRwbGFjZRIbCglvd25lcl91aWQYBCABKAlSCG93bmVyVWlk",
+            "IlsKHUdlbmVyYXRlQWZmaWxpYXRlTGlua1Jlc3BvbnNlEh0KCnNob3J0X2xp",
+            "bmsYASABKAlSCXNob3J0TGluaxIbCglsb25nX2xpbmsYAiABKAlSCGxvbmdM",
+            "aW5rIoIBCg1GZXRjaFJlc3BvbnNlEjEKCHByb2R1Y3RzGAEgAygLMhUuY29s",
+            "bGVjdG9yLnYxLlByb2R1Y3RSCHByb2R1Y3RzEh8KC3RvdGFsX2ZvdW5kGAIg",
+            "ASgFUgp0b3RhbEZvdW5kEh0KCmZldGNoZWRfYXQYAyABKAlSCWZldGNoZWRB",
+            "dCKGAQoRRmV0Y2hTaG9wUmVzcG9uc2USMQoIcHJvZHVjdHMYASADKAsyFS5j",
+            "b2xsZWN0b3IudjEuUHJvZHVjdFIIcHJvZHVjdHMSHwoLdG90YWxfZm91bmQY",
+            "AiABKAVSCnRvdGFsRm91bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJZmV0Y2hl",
+            "ZEF0IssDCgdQcm9kdWN0EhcKB2l0ZW1faWQYASABKANSBml0ZW1JZBIXCgdz",
+            "aG9wX2lkGAIgASgDUgZzaG9wSWQSEgoEbmFtZRgDIAEoCVIEbmFtZRIUCgVw",
+            "cmljZRgEIAEoAVIFcHJpY2USJQoOb3JpZ2luYWxfcHJpY2UYBSABKAFSDW9y",
+            "aWdpbmFsUHJpY2USEgoEc29sZBgGIAEoBVIEc29sZBIWCgZyYXRpbmcYByAB",
+            "KAFSBnJhdGluZxIbCglpbWFnZV91cmwYCCABKAlSCGltYWdlVXJsEh8KC3By",
+            "b2R1Y3RfdXJsGAkgASgJUgpwcm9kdWN0VXJsEhsKCXNob3BfbmFtZRgKIAEo",
+            "CVIIc2hvcE5hbWUSKQoQZGlzY291bnRfcGVyY2VudBgLIAEoAVIPZGlzY291",
+            "bnRQZXJjZW50Eh4KCmNvbW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoI",
+            "Y2F0ZWdvcnkYDSABKAlSCGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsS",
+            "OwoLbWFya2V0cGxhY2UYDyABKA4yGS5jb2xsZWN0b3IudjEuTWFya2V0cGxh",
+            "Y2VSC21hcmtldHBsYWNlKngKC01hcmtldHBsYWNlEhsKF01BUktFVFBMQUNF",
+            "X1VOU1BFQ0lGSUVEEAASFgoSTUFSS0VUUExBQ0VfU0hPUEVFEAESFgoSTUFS",
+            "S0VUUExBQ0VfQU1BWk9OEAISHAoYTUFSS0VUUExBQ0VfTUVSQ0FET0xJVlJF",
+            "EAMy6AIKEENvbGxlY3RvclNlcnZpY2USUgoLUmVzb2x2ZVNob3ASIC5jb2xs",
+            "ZWN0b3IudjEuUmVzb2x2ZVNob3BSZXF1ZXN0GiEuY29sbGVjdG9yLnYxLlJl",
+            "c29sdmVTaG9wUmVzcG9uc2UScAoVR2VuZXJhdGVBZmZpbGlhdGVMaW5rEiou",
+            "Y29sbGVjdG9yLnYxLkdlbmVyYXRlQWZmaWxpYXRlTGlua1JlcXVlc3QaKy5j",
+            "b2xsZWN0b3IudjEuR2VuZXJhdGVBZmZpbGlhdGVMaW5rUmVzcG9uc2USQAoF",
+            "RmV0Y2gSGi5jb2xsZWN0b3IudjEuRmV0Y2hSZXF1ZXN0GhsuY29sbGVjdG9y",
+            "LnYxLkZldGNoUmVzcG9uc2USTAoJRmV0Y2hTaG9wEh4uY29sbGVjdG9yLnYx",
+            "LkZldGNoU2hvcFJlcXVlc3QaHy5jb2xsZWN0b3IudjEuRmV0Y2hTaG9wUmVz",
+            "cG9uc2VCtQEKEGNvbS5jb2xsZWN0b3IudjFCDkNvbGxlY3RvclByb3RvUAFa",
+            "QGdpdGh1Yi5jb20vZm1hcnF1ZXNmaWxoby9nYXJpbXBvL2dlbi9nby9jb2xs",
+            "ZWN0b3IvdjE7Y29sbGVjdG9ydjGiAgNDWFiqAgxDb2xsZWN0b3IuVjHKAgxD",
+            "b2xsZWN0b3JcVjHiAhhDb2xsZWN0b3JcVjFcR1BCTWV0YWRhdGHqAg1Db2xs",
+            "ZWN0b3I6OlYxYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Collector.V1.Marketplace), }, null, new pbr::GeneratedClrTypeInfo[] {
@@ -73,6 +82,8 @@ namespace Collector.V1 {
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopRequest), global::Collector.V1.FetchShopRequest.Parser, new[]{ "ShopId", "Limit", "OwnerUid", "Marketplace" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.ResolveShopRequest), global::Collector.V1.ResolveShopRequest.Parser, new[]{ "UsernameOrUrl", "Marketplace" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.ResolveShopResponse), global::Collector.V1.ResolveShopResponse.Parser, new[]{ "ShopId", "ShopName" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.GenerateAffiliateLinkRequest), global::Collector.V1.GenerateAffiliateLinkRequest.Parser, new[]{ "OriginalUrl", "SubIds", "Marketplace", "OwnerUid" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.GenerateAffiliateLinkResponse), global::Collector.V1.GenerateAffiliateLinkResponse.Parser, new[]{ "ShortLink", "LongLink" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchResponse), global::Collector.V1.FetchResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopResponse), global::Collector.V1.FetchShopResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link", "Marketplace" }, null, null, null, null)
@@ -1229,6 +1240,561 @@ namespace Collector.V1 {
 
   }
 
+  /// <summary>
+  /// GenerateAffiliateLink — gera link curto de afiliada via Shopee generateShortLink.
+  /// SubIds são usados para rastrear conversões (voltam no conversionReport.utmContent).
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class GenerateAffiliateLinkRequest : pb::IMessage<GenerateAffiliateLinkRequest>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<GenerateAffiliateLinkRequest> _parser = new pb::MessageParser<GenerateAffiliateLinkRequest>(() => new GenerateAffiliateLinkRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<GenerateAffiliateLinkRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[4]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public GenerateAffiliateLinkRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public GenerateAffiliateLinkRequest(GenerateAffiliateLinkRequest other) : this() {
+      originalUrl_ = other.originalUrl_;
+      subIds_ = other.subIds_.Clone();
+      marketplace_ = other.marketplace_;
+      ownerUid_ = other.ownerUid_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public GenerateAffiliateLinkRequest Clone() {
+      return new GenerateAffiliateLinkRequest(this);
+    }
+
+    /// <summary>Field number for the "original_url" field.</summary>
+    public const int OriginalUrlFieldNumber = 1;
+    private string originalUrl_ = "";
+    /// <summary>
+    /// URL original do produto ou loja (ex: https://shopee.com.br/product/123/456).
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string OriginalUrl {
+      get { return originalUrl_; }
+      set {
+        originalUrl_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "sub_ids" field.</summary>
+    public const int SubIdsFieldNumber = 2;
+    private static readonly pb::FieldCodec<string> _repeated_subIds_codec
+        = pb::FieldCodec.ForString(18);
+    private readonly pbc::RepeatedField<string> subIds_ = new pbc::RepeatedField<string>();
+    /// <summary>
+    /// Sub IDs para tracking de conversão (máx 5). Ex: ["canal", "estrategia", "20260706"].
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<string> SubIds {
+      get { return subIds_; }
+    }
+
+    /// <summary>Field number for the "marketplace" field.</summary>
+    public const int MarketplaceFieldNumber = 3;
+    private global::Collector.V1.Marketplace marketplace_ = global::Collector.V1.Marketplace.Unspecified;
+    /// <summary>
+    /// Marketplace (default: SHOPEE).
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Collector.V1.Marketplace Marketplace {
+      get { return marketplace_; }
+      set {
+        marketplace_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "owner_uid" field.</summary>
+    public const int OwnerUidFieldNumber = 4;
+    private string ownerUid_ = "";
+    /// <summary>
+    /// Owner UID do tenant (para buscar credenciais de afiliado).
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string OwnerUid {
+      get { return ownerUid_; }
+      set {
+        ownerUid_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as GenerateAffiliateLinkRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(GenerateAffiliateLinkRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (OriginalUrl != other.OriginalUrl) return false;
+      if(!subIds_.Equals(other.subIds_)) return false;
+      if (Marketplace != other.Marketplace) return false;
+      if (OwnerUid != other.OwnerUid) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (OriginalUrl.Length != 0) hash ^= OriginalUrl.GetHashCode();
+      hash ^= subIds_.GetHashCode();
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) hash ^= Marketplace.GetHashCode();
+      if (OwnerUid.Length != 0) hash ^= OwnerUid.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (OriginalUrl.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(OriginalUrl);
+      }
+      subIds_.WriteTo(output, _repeated_subIds_codec);
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(24);
+        output.WriteEnum((int) Marketplace);
+      }
+      if (OwnerUid.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(OwnerUid);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (OriginalUrl.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(OriginalUrl);
+      }
+      subIds_.WriteTo(ref output, _repeated_subIds_codec);
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(24);
+        output.WriteEnum((int) Marketplace);
+      }
+      if (OwnerUid.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(OwnerUid);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (OriginalUrl.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(OriginalUrl);
+      }
+      size += subIds_.CalculateSize(_repeated_subIds_codec);
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Marketplace);
+      }
+      if (OwnerUid.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(OwnerUid);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(GenerateAffiliateLinkRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.OriginalUrl.Length != 0) {
+        OriginalUrl = other.OriginalUrl;
+      }
+      subIds_.Add(other.subIds_);
+      if (other.Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        Marketplace = other.Marketplace;
+      }
+      if (other.OwnerUid.Length != 0) {
+        OwnerUid = other.OwnerUid;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            OriginalUrl = input.ReadString();
+            break;
+          }
+          case 18: {
+            subIds_.AddEntriesFrom(input, _repeated_subIds_codec);
+            break;
+          }
+          case 24: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
+          case 34: {
+            OwnerUid = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            OriginalUrl = input.ReadString();
+            break;
+          }
+          case 18: {
+            subIds_.AddEntriesFrom(ref input, _repeated_subIds_codec);
+            break;
+          }
+          case 24: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
+          case 34: {
+            OwnerUid = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class GenerateAffiliateLinkResponse : pb::IMessage<GenerateAffiliateLinkResponse>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<GenerateAffiliateLinkResponse> _parser = new pb::MessageParser<GenerateAffiliateLinkResponse>(() => new GenerateAffiliateLinkResponse());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<GenerateAffiliateLinkResponse> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[5]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public GenerateAffiliateLinkResponse() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public GenerateAffiliateLinkResponse(GenerateAffiliateLinkResponse other) : this() {
+      shortLink_ = other.shortLink_;
+      longLink_ = other.longLink_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public GenerateAffiliateLinkResponse Clone() {
+      return new GenerateAffiliateLinkResponse(this);
+    }
+
+    /// <summary>Field number for the "short_link" field.</summary>
+    public const int ShortLinkFieldNumber = 1;
+    private string shortLink_ = "";
+    /// <summary>
+    /// Link curto gerado pela API do marketplace.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ShortLink {
+      get { return shortLink_; }
+      set {
+        shortLink_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "long_link" field.</summary>
+    public const int LongLinkFieldNumber = 2;
+    private string longLink_ = "";
+    /// <summary>
+    /// Link longo original com parâmetros de afiliação (fallback se short_link falhar).
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string LongLink {
+      get { return longLink_; }
+      set {
+        longLink_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as GenerateAffiliateLinkResponse);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(GenerateAffiliateLinkResponse other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (ShortLink != other.ShortLink) return false;
+      if (LongLink != other.LongLink) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (ShortLink.Length != 0) hash ^= ShortLink.GetHashCode();
+      if (LongLink.Length != 0) hash ^= LongLink.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (ShortLink.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(ShortLink);
+      }
+      if (LongLink.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(LongLink);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (ShortLink.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(ShortLink);
+      }
+      if (LongLink.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(LongLink);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (ShortLink.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ShortLink);
+      }
+      if (LongLink.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(LongLink);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(GenerateAffiliateLinkResponse other) {
+      if (other == null) {
+        return;
+      }
+      if (other.ShortLink.Length != 0) {
+        ShortLink = other.ShortLink;
+      }
+      if (other.LongLink.Length != 0) {
+        LongLink = other.LongLink;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            ShortLink = input.ReadString();
+            break;
+          }
+          case 18: {
+            LongLink = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            ShortLink = input.ReadString();
+            break;
+          }
+          case 18: {
+            LongLink = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class FetchResponse : pb::IMessage<FetchResponse>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
@@ -1244,7 +1810,7 @@ namespace Collector.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[4]; }
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1508,7 +2074,7 @@ namespace Collector.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[5]; }
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1772,7 +2338,7 @@ namespace Collector.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[6]; }
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

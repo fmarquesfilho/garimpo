@@ -210,6 +210,14 @@ boundaries:
     service: collector.v1.CollectorService
     method: ResolveShop
 
+  - id: api-collector-generate-link
+    source: csharp-api
+    target: collector
+    protocol: grpc
+    service: collector.v1.CollectorService
+    method: GenerateAffiliateLink
+    notes: "Gera link curto de afiliada via Shopee generateShortLink com sub_ids para rastreamento de conversões."
+
   # ── C# API → Python Analyzer (HTTP) ────────────────────────────────────────
   - id: api-analyzer-candidatos
     source: csharp-api

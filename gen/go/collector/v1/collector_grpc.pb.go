@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CollectorService_ResolveShop_FullMethodName = "/collector.v1.CollectorService/ResolveShop"
-	CollectorService_Fetch_FullMethodName       = "/collector.v1.CollectorService/Fetch"
-	CollectorService_FetchShop_FullMethodName   = "/collector.v1.CollectorService/FetchShop"
+	CollectorService_ResolveShop_FullMethodName           = "/collector.v1.CollectorService/ResolveShop"
+	CollectorService_GenerateAffiliateLink_FullMethodName = "/collector.v1.CollectorService/GenerateAffiliateLink"
+	CollectorService_Fetch_FullMethodName                 = "/collector.v1.CollectorService/Fetch"
+	CollectorService_FetchShop_FullMethodName             = "/collector.v1.CollectorService/FetchShop"
 )
 
 // CollectorServiceClient is the client API for CollectorService service.
@@ -30,6 +31,8 @@ const (
 type CollectorServiceClient interface {
 	// Resolve shop ID by username or URL.
 	ResolveShop(ctx context.Context, in *ResolveShopRequest, opts ...grpc.CallOption) (*ResolveShopResponse, error)
+	// Generate affiliate tracking link via marketplace API (e.g., Shopee generateShortLink).
+	GenerateAffiliateLink(ctx context.Context, in *GenerateAffiliateLinkRequest, opts ...grpc.CallOption) (*GenerateAffiliateLinkResponse, error)
 	// Fetch products by search keyword from a given marketplace.
 	Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error)
 	// Fetch all products from a specific shop.
@@ -48,6 +51,16 @@ func (c *collectorServiceClient) ResolveShop(ctx context.Context, in *ResolveSho
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ResolveShopResponse)
 	err := c.cc.Invoke(ctx, CollectorService_ResolveShop_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *collectorServiceClient) GenerateAffiliateLink(ctx context.Context, in *GenerateAffiliateLinkRequest, opts ...grpc.CallOption) (*GenerateAffiliateLinkResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GenerateAffiliateLinkResponse)
+	err := c.cc.Invoke(ctx, CollectorService_GenerateAffiliateLink_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +93,8 @@ func (c *collectorServiceClient) FetchShop(ctx context.Context, in *FetchShopReq
 type CollectorServiceServer interface {
 	// Resolve shop ID by username or URL.
 	ResolveShop(context.Context, *ResolveShopRequest) (*ResolveShopResponse, error)
+	// Generate affiliate tracking link via marketplace API (e.g., Shopee generateShortLink).
+	GenerateAffiliateLink(context.Context, *GenerateAffiliateLinkRequest) (*GenerateAffiliateLinkResponse, error)
 	// Fetch products by search keyword from a given marketplace.
 	Fetch(context.Context, *FetchRequest) (*FetchResponse, error)
 	// Fetch all products from a specific shop.
@@ -96,6 +111,9 @@ type UnimplementedCollectorServiceServer struct{}
 
 func (UnimplementedCollectorServiceServer) ResolveShop(context.Context, *ResolveShopRequest) (*ResolveShopResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResolveShop not implemented")
+}
+func (UnimplementedCollectorServiceServer) GenerateAffiliateLink(context.Context, *GenerateAffiliateLinkRequest) (*GenerateAffiliateLinkResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GenerateAffiliateLink not implemented")
 }
 func (UnimplementedCollectorServiceServer) Fetch(context.Context, *FetchRequest) (*FetchResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Fetch not implemented")
@@ -138,6 +156,24 @@ func _CollectorService_ResolveShop_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CollectorServiceServer).ResolveShop(ctx, req.(*ResolveShopRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CollectorService_GenerateAffiliateLink_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateAffiliateLinkRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServiceServer).GenerateAffiliateLink(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CollectorService_GenerateAffiliateLink_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServiceServer).GenerateAffiliateLink(ctx, req.(*GenerateAffiliateLinkRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,6 +224,10 @@ var CollectorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ResolveShop",
 			Handler:    _CollectorService_ResolveShop_Handler,
+		},
+		{
+			MethodName: "GenerateAffiliateLink",
+			Handler:    _CollectorService_GenerateAffiliateLink_Handler,
 		},
 		{
 			MethodName: "Fetch",

@@ -218,3 +218,19 @@ func (p *Pipeline) ReceiverIDs() []string {
 	}
 	return ids
 }
+
+// ShopeeCredentials retorna AppID e Secret do primeiro receiver Shopee configurado.
+func (p *Pipeline) ShopeeCredentials() (appID, secret string) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	for _, recv := range p.receivers {
+		if recv.Config.Marketplace == "shopee" {
+			appID = ResolveCredentialEnv(recv.Config.Credentials.AppIDEnv)
+			secret = ResolveCredentialEnv(recv.Config.Credentials.SecretEnv)
+			if appID != "" && secret != "" {
+				return
+			}
+		}
+	}
+	return "", ""
+}

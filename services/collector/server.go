@@ -2,13 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
 	"log/slog"
-	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -33,117 +27,6 @@ type UnifiedCollectorServer struct {
 
 func NewUnifiedCollectorServer(pipeline *Pipeline, logger *slog.Logger) *UnifiedCollectorServer {
 	return &UnifiedCollectorServer{pipeline: pipeline, logger: logger}
-}
-
-// resolveShortLink segue redirects de links curtos (s.shopee.com.br/xxx) e retorna a URL final.
-func resolveShortLink(ctx context.Context, shortURL string) (string, error) {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			// Para no primeiro redirect para shopee.com.br (evita loops)
-			if strings.Contains(req.URL.Host, "shopee.com.br") && !strings.Contains(req.URL.Host, "s.shopee.com.br") {
-				return http.ErrUseLastResponse
-			}
-			if len(via) >= 5 {
-				return http.ErrUseLastResponse
-			}
-			return nil
-		},
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, shortURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("criando request para link curto: %w", err)
-	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("seguindo redirect do link curto: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// O redirect final está no Location header ou na URL do response
-	if loc := resp.Header.Get("Location"); loc != "" {
-		return loc, nil
-	}
-	return resp.Request.URL.String(), nil
-}
-
-func (s *UnifiedCollectorServer) ResolveShop(ctx context.Context, req *collectorpb.ResolveShopRequest) (*collectorpb.ResolveShopResponse, error) {
-	if req.GetUsernameOrUrl() == "" {
-		return nil, status.Error(codes.InvalidArgument, "username_or_url é obrigatório")
-	}
-
-	mkt := resolveMarketplace(req.GetMarketplace())
-	marketplace := source.ProtoToMarketplace(mkt)
-
-	if marketplace != domain.MarketplaceShopee {
-		return nil, status.Errorf(codes.Unimplemented, "ResolveShop não suportado para %q", marketplace)
-	}
-
-	username := req.GetUsernameOrUrl()
-	if strings.HasPrefix(username, "http") {
-		u, err := url.Parse(username)
-		if err == nil {
-			// Links curtos (s.shopee.com.br/xxx) precisam de redirect para resolver
-			if strings.Contains(u.Host, "s.shopee.com.br") {
-				resolved, err := resolveShortLink(ctx, username)
-				if err != nil {
-					return nil, status.Errorf(codes.Internal, "falha ao resolver link curto: %v", err)
-				}
-				u, _ = url.Parse(resolved)
-			}
-			parts := strings.Split(strings.Trim(u.Path, "/"), "/")
-			if len(parts) > 0 {
-				username = parts[len(parts)-1]
-			}
-		}
-	}
-
-	if username == "" {
-		return nil, status.Error(codes.InvalidArgument, "username inválido")
-	}
-
-	apiURL := "https://shopee.com.br/api/v4/shop/get_shop_detail?username=" + url.QueryEscape(username)
-	reqHTTP, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "erro ao criar request: %v", err)
-	}
-	reqHTTP.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(reqHTTP)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "erro na requisição Shopee API: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "erro ao ler resposta: %v", err)
-	}
-
-	var data struct {
-		Error int `json:"error"`
-		Data  struct {
-			ShopID int64  `json:"shopid"`
-			Name   string `json:"name"`
-		} `json:"data"`
-	}
-
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, status.Errorf(codes.Internal, "falha ao fazer parse do JSON: %v", err)
-	}
-
-	if data.Error != 0 || data.Data.ShopID == 0 {
-		return nil, status.Errorf(codes.NotFound, "loja não encontrada (error=%d)", data.Error)
-	}
-
-	return &collectorpb.ResolveShopResponse{
-		ShopId:   data.Data.ShopID,
-		ShopName: data.Data.Name,
-	}, nil
 }
 
 func (s *UnifiedCollectorServer) Fetch(ctx context.Context, req *collectorpb.FetchRequest) (*collectorpb.FetchResponse, error) {

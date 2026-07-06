@@ -19,6 +19,12 @@ public sealed class Busca : IOwnedEntity
     public long[]? ShopIds { get; set; }
 
     /// <summary>
+    /// URL original fornecida pelo usuário ao adicionar a loja (pode ser link de afiliada com tracking).
+    /// Preservada para futura geração de links de conversão via generateShortLink.
+    /// </summary>
+    public string? SourceUrl { get; set; }
+
+    /// <summary>
     /// Marketplaces to query for this search. Defaults to Shopee only.
     /// Stored as comma-separated string in the database (e.g. "shopee,amazon").
     /// </summary>

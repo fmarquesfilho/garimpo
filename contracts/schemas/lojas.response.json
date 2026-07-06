@@ -16,6 +16,10 @@
       "items": { "type": "integer" },
       "description": "IDs numéricos da loja no marketplace"
     },
+    "source_url": {
+      "type": ["string", "null"],
+      "description": "URL original fornecida pelo usuário (pode conter parâmetros de afiliada)"
+    },
     "status": {
       "type": "string",
       "enum": ["adicionada"],
