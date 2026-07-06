@@ -183,7 +183,7 @@ echo ""
 echo "🔍 Verificando referências nos flows..."
 
 # Coleta todos os boundary IDs
-ALL_BOUNDARY_IDS=$(yq -r '.boundaries[].id' "$REGISTRY")
+ALL_BOUNDARY_IDS=$(yq -r '.boundaries[].id' "$REGISTRY" | tr -d '\r' | tr -d '"' | tr -d "'")
 
 FLOW_OK=0
 FLOW_FAIL=0
@@ -199,7 +199,7 @@ while IFS= read -r ref; do
         FLOW_FAIL=$((FLOW_FAIL + 1))
         ERRORS=$((ERRORS + 1))
     fi
-done < <(yq -r '.flows[].steps[].boundary // ""' "$REGISTRY")
+done < <(yq -r '.flows[].steps[].boundary // ""' "$REGISTRY" | tr -d '\r' | tr -d '"' | tr -d "'")
 
 if [ "$FLOW_FAIL" -eq 0 ]; then
     echo -e "${GREEN}   ✓ Todas as $FLOW_OK referências de flow válidas${NC}"
