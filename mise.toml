@@ -150,6 +150,29 @@ run = "docker compose down"
 description = "Logs de todos os containers"
 run = "docker compose logs -f"
 
+[tasks."deploy:migrate"]
+description = "Aplica EF Core migrations no banco de produção (Neon)"
+run = """
+echo "🐘 Aplicando migrations no banco de produção..."
+
+CONNECTION_STRING=$(gcloud secrets versions access latest \
+  --secret=GARIMPEI_PG_CONNECTION_STRING \
+  --project=garimpo-500114 2>&1)
+
+if echo "$CONNECTION_STRING" | grep -q "ERROR"; then
+  echo "❌ Falha ao ler secret. Verifique: gcloud auth login"
+  exit 1
+fi
+
+dotnet tool restore
+dotnet ef database update \
+  --project src/Garimpei.Infrastructure \
+  --startup-project src/Garimpei.Api \
+  --connection "$CONNECTION_STRING"
+
+echo "✅ Migrations aplicadas com sucesso."
+"""
+
 # ── Atalhos ───────────────────────────────────────────────────────────────────
 
 [tasks.ci]
