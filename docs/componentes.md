@@ -184,6 +184,32 @@ $lib/utils.ts                    → cn() (tailwind-merge + clsx)
 
 ---
 
+## Componentes de Aplicação (Refatorados)
+
+Além da base em `ui/`, os componentes de domínio e layout (localizados em `$lib/components/`) foram totalmente migrados para consumir as primitivas shadcn-svelte e os design tokens:
+
+### Componentes Primitivos e de UI Básica
+- **TagInput**: Campo de tags acessível (shadcn pattern).
+- **PeriodSelector**: Seleção interativa de janelas de tempo.
+- **ScoreMeter**: Termômetro que exibe o "teor" de oportunidade do produto.
+- **ErrorMessage**: Wrapper de feedback usando `--color-erro`.
+
+### Navegação e Layout
+- **NavDrawer**: Menu lateral deslizante (mobile/desktop).
+- **FilterBar**: Barra de filtragem de produtos e buscas.
+- **LandingHero** / **HeroProduto**: Headers principais da interface, com suporte a dark mode.
+- **PainelAlertas**: Componente de dashboard para gestão de notificações.
+
+### Cards e Componentes de Domínio
+- **ProductCard**: Exibição central de ofertas.
+- **CandidateCard**: Visualização de leads de produto.
+- **BuscaCard**: Resumo da busca configurada pelo usuário.
+- **FormAdicionarLoja**: Formulários usando `<Input>`, `<Select>` e validação padronizada.
+- **GerenciarBuscas** / **ListaProdutosLoja** / **AgendadorBusca**: Interações complexas substituídas por `<Dialog>` e modais Bits UI.
+- **ResolverLink**: Ferramenta de processamento de links curtos.
+
+---
+
 ## Tema e Tokens
 
 ### Estrutura
