@@ -192,6 +192,19 @@ mise run test:e2e
 **Requer:** Firebase CLI instalada (`npm i -g firebase-tools`).
 **Cenários:** login → descobrir → filtros → lojas → preços → publicar.
 
+#### Boas Práticas e Resolução de Problemas E2E
+
+1. **Paridade de Mocks da API:**
+   Ao criar testes E2E que não dependem do backend real (mockando chamadas de rede), certifique-se de que a rota interceptada pelo Playwright (`page.route()`) corresponde **exatamente** à URL chamada pelo `$lib/api.js`. Por exemplo, o frontend pode listar lojas usando `GET /api/buscas`, mas adicionar usando `POST /api/lojas`. Mocar a rota incorreta causará timeouts no frontend.
+2. **Estabilidade de Seletores:**
+   Devido à adoção do `shadcn-svelte` e ao estilo utilitário do Tailwind, **não use classes CSS (ex: `.marca`, `.hero-features`)** como seletores no Playwright. 
+   Prefira seletores resilientes a mudanças de estilo:
+   - Atributos ARIA: `page.locator('[aria-label="Abrir menu"]')`
+   - Texto explícito: `page.locator('text=Garimpei')`
+   - Tags semânticas contextuais: `page.locator('h1')`
+3. **Timeouts Inesperados:**
+   Falhas de timeout no login de teste (`typeof window.__TEST_SIGN_IN__`) frequentemente indicam que a página travou antes do Firebase carregar (ex: o `npm run preview` devolveu um erro HTTP 500 no console JS ou a porta do emulator Firebase, 9099, já estava em uso por um processo zumbi).
+
 ### Qualidade de comentários
 
 Detecta anti-patterns em comentários: código morto comentado, TODOs sem issue,

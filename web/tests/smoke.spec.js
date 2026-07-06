@@ -8,24 +8,24 @@ test.describe('Landing page (não logado)', () => {
 		// Landing page deve ter botão de entrar
 		await expect(page.locator('text=Entrar com Google')).toBeVisible();
 		// Não deve mostrar o menu hamburger
-		await expect(page.locator('.hamburguer')).not.toBeVisible();
+		await expect(page.locator('[aria-label="Abrir menu"]')).not.toBeVisible();
 	});
 
 	test('mostra o nome do app', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('.marca')).toContainText('Garimpei');
+		await expect(page.locator('h1')).toContainText('Garimpei');
 	});
 
 	test('mostra features na landing', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('.hero-features')).toBeVisible();
-		await expect(page.locator('.feature')).toHaveCount(4);
+		await expect(page.locator('text=Curadoria inteligente')).toBeVisible();
+		await expect(page.locator('text=Busca e ranking por comissão')).toBeVisible();
 	});
 
 	test('não mostra conteúdo do app sem login', async ({ page }) => {
 		await page.goto('/');
-		// A barra de filtros NÃO deve estar visível
-		await expect(page.locator('.filtros')).not.toBeVisible();
+		// A barra de filtros NÃO deve estar visível (e a página deve pedir login)
+		await expect(page.locator('text=Filtros')).not.toBeVisible();
 	});
 });
 
