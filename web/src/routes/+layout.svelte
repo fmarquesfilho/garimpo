@@ -91,7 +91,7 @@
 	<NavDrawer aberto={menuAberto} usuario={$usuario} {isAdmin} onfechar={fecharMenu} />
 
 	{#if $usuario}
-		<main class="casca min-h-[70vh] pt-8 pb-12">
+		<main class="casca flex flex-col gap-8 min-h-[70vh] pt-8 pb-12">
 			{@render children()}
 		</main>
 	{:else}

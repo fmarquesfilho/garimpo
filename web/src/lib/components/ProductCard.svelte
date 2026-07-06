@@ -74,21 +74,26 @@
 	<!-- ═══ LAYOUT FULL — card vertical com imagem grande ═══ -->
 	<article
 		class={cn(
-			'bg-card border border-border rounded-md overflow-hidden shadow-sm transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[var(--sombra)]',
-			destaque && 'border-ouro-claro'
+			'bg-card/95 backdrop-blur-md border border-border rounded-2xl overflow-hidden shadow-md transition-all duration-250 ease-out hover:-translate-y-1 hover:shadow-[var(--sombra)]',
+			destaque && 'border-ouro shadow-[0_0_15px_rgba(212,154,32,0.15)]'
 		)}
 	>
 		{#if produto.imagem}
-			<a href={produto.link || '#'} target="_blank" rel="noopener" class="block no-underline hover:opacity-90">
+			<a
+				href={produto.link || '#'}
+				target="_blank"
+				rel="noopener"
+				class="block no-underline hover:opacity-95 transition-opacity"
+			>
 				<img
 					src={produto.imagem}
 					alt={produto.nome}
-					class="w-full h-[180px] object-cover block bg-porcelana max-sm:h-[140px]"
+					class="w-full h-[220px] object-cover block bg-porcelana max-sm:h-[180px]"
 					loading="lazy"
 				/>
 			</a>
 		{/if}
-		<div class="p-4 flex flex-col gap-3">
+		<div class="p-5 flex flex-col gap-4">
 			{#if posicao != null}
 				<span class="text-xs font-bold text-tinta-suave opacity-60">#{posicao}</span>
 			{/if}
@@ -145,7 +150,7 @@
 			<footer class="flex gap-2 mt-2">
 				{#if onpublicar}
 					<button
-						class="rounded-sm py-2 px-3.5 text-sm font-semibold border border-ouro-claro bg-ouro-fundo text-ouro-escuro flex-1 hover:bg-ouro-claro"
+						class="rounded-lg py-2.5 px-4 text-sm font-semibold border border-ouro-claro bg-ouro-fundo text-ouro-escuro flex-1 transition-all duration-250 active:scale-[0.98] hover:bg-ouro hover:text-branco hover:border-ouro hover:shadow-md"
 						onclick={() => onpublicar(produto)}>📤 Publicar</button
 					>
 				{/if}
@@ -161,7 +166,7 @@
 				{/if}
 				{#if exibirLink}
 					<button
-						class="rounded-sm py-2 px-2.5 text-sm font-semibold border border-transparent bg-transparent text-tinta-suave hover:text-ouro disabled:opacity-30 disabled:cursor-not-allowed"
+						class="rounded-lg py-2.5 px-3 text-sm font-semibold border border-transparent bg-transparent text-tinta-suave transition-colors hover:text-ouro hover:bg-ouro-fundo disabled:opacity-30 disabled:cursor-not-allowed"
 						onclick={copiarLink}
 						disabled={!produto.link}
 					>
@@ -173,9 +178,11 @@
 	</article>
 {:else if layout === 'compact'}
 	<!-- ═══ LAYOUT COMPACT — linha horizontal ═══ -->
-	<div class="flex gap-3 px-4 py-3 border border-border rounded-sm bg-[var(--branco)] items-center">
+	<div
+		class="flex gap-4 px-5 py-4 border border-border rounded-xl bg-card/95 backdrop-blur-md shadow-sm items-center transition-all duration-250 hover:shadow-md"
+	>
 		{#if produto.imagem}
-			<img src={produto.imagem} alt={produto.nome} class="w-14 h-14 rounded-lg object-cover shrink-0" loading="lazy" />
+			<img src={produto.imagem} alt={produto.nome} class="w-16 h-16 rounded-xl object-cover shrink-0" loading="lazy" />
 		{/if}
 		<div class="flex-1 min-w-0">
 			<h4 class="text-sm m-0 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{produto.nome}</h4>
@@ -191,7 +198,7 @@
 			{#if onfavoritar}
 				<button
 					class={cn(
-						'border border-border bg-porcelana rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-base hover:border-ouro',
+						'border border-border bg-porcelana rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer text-base transition-colors hover:border-ouro hover:text-ouro',
 						isFav && 'text-ouro border-ouro'
 					)}
 					onclick={() => onfavoritar(produto)}
@@ -200,7 +207,7 @@
 			{/if}
 			{#if onpublicar}
 				<button
-					class="border border-border bg-porcelana rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-base hover:border-ouro"
+					class="border border-border bg-porcelana rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer text-base transition-colors hover:border-ouro hover:text-ouro"
 					onclick={() => onpublicar(produto)}
 					title="Publicar">📤</button
 				>
@@ -211,8 +218,8 @@
 	<!-- ═══ LAYOUT FEED — card com borda lateral (oportunidades) ═══ -->
 	<div
 		class={cn(
-			'border border-border rounded-md p-4 bg-[var(--branco)] transition-[border-color] duration-150 hover:border-ouro-claro',
-			variacao?.tipo === 'queda' && 'border-l-[3px] border-l-sucesso',
+			'border border-border rounded-xl p-5 bg-card/95 backdrop-blur-md shadow-sm transition-all duration-250 hover:shadow-md hover:border-ouro',
+			variacao?.tipo === 'queda' && 'border-l-[4px] border-l-sucesso',
 			variacao?.tipo === 'alta' && 'border-l-[3px] border-l-erro',
 			(!variacao?.tipo || variacao?.tipo === 'novo') && 'border-l-[3px] border-l-ouro'
 		)}

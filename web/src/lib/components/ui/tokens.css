@@ -4,45 +4,45 @@
    Fonte única de verdade para todas as decisões visuais.
    Organizado por categoria: cores, espaçamento, tipografia, superfícies.
    
-   Metáfora: ouro + porcelana. Estética editorial de beleza.
-   Regra 60-30-10: porcelana (60%) / tinta (30%) / ouro (10%).
+   Metáfora: garimpo, rústico, terracota e ouro.
+   Estética quente e humana.
    ============================================================ */
 
 :root {
-	/* ── Color: Neutrals (60% — superfícies e texto) ───────────────── */
-	--porcelana: #f5f0ed;
-	--nevoa: #faf7f5;
+	/* ── Color: Neutrals (Superfícies Quentes) ───────────────── */
+	--porcelana: #fdfaf6; /* Areia clara */
+	--nevoa: #f6f1ea; /* Areia ligeiramente mais escura */
 	--branco: #ffffff;
-	--linha: #e3d9d4;
-	--tinta-suave: #6d5a53;
-	--tinta: #2e2226;
+	--linha: #e8dbce; /* Terracota muito suave */
+	--tinta-suave: #755e4f; /* Marrom suave */
+	--tinta: #3d2b1f; /* Marrom muito escuro / Carvão quente */
 
-	/* ── Color: Ouro Accents (10% — ações, destaques) ──────────────── */
-	--ouro: #9e7422;
-	--ouro-hover: #7d5b18;
-	--ouro-claro: #dfc487;
-	--ouro-fundo: #f4ecd8;
-	--ouro-escuro: #5c4210;
+	/* ── Color: Ouro Accents (Destaques, Foco) ──────────────── */
+	--ouro: #ab7815; /* Amarelo ouro forte e quente */
+	--ouro-hover: #946811;
+	--ouro-claro: #eed599;
+	--ouro-fundo: #fbf5e6;
+	--ouro-escuro: #6e4e0b;
 
-	/* ── Color: Rosa Accents (nicho beleza) ─────────────────────────── */
-	--rosa: #944c63;
-	--rosa-hover: #7a3d52;
-	--rosa-fundo: #f6eaef;
+	/* ── Color: Terracota Accents (Ações Secundárias / Destrutivas) ─────────────────────────── */
+	--rosa: #c05c48; /* Terracota intenso */
+	--rosa-hover: #a34835;
+	--rosa-fundo: #f8e9e6;
 
 	/* ── Color: Feedback — Sucesso ─────────────────────────────────── */
-	--sucesso-texto: #3d6b4a;
-	--sucesso-fundo: #edf6ef;
-	--sucesso-borda: #b8dcc2;
+	--sucesso-texto: #366b40;
+	--sucesso-fundo: #eef6f0;
+	--sucesso-borda: #bcdcb5;
 
 	/* ── Color: Feedback — Erro ────────────────────────────────────── */
-	--erro-texto: #9c3b2e;
-	--erro-fundo: #fdf0ed;
-	--erro-borda: #f2c7bf;
+	--erro-texto: #b84430;
+	--erro-fundo: #fdf1ef;
+	--erro-borda: #f3ceca;
 
 	/* ── Color: Feedback — Aviso ───────────────────────────────────── */
-	--aviso-texto: #7a5d14;
-	--aviso-fundo: #fdf7e8;
-	--aviso-borda: #edd98b;
+	--aviso-texto: #8c6a10;
+	--aviso-fundo: #fef8eb;
+	--aviso-borda: #f2e09b;
 
 	/* ── Spacing ───────────────────────────────────────────────────── */
 	--r1: 0.25rem;
@@ -55,76 +55,75 @@
 	--r12: 3rem;
 
 	/* ── Typography: Families ──────────────────────────────────────── */
-	--display: 'Fraunces', Georgia, serif;
-	--ui: 'Archivo', system-ui, sans-serif;
+	--display: 'Lora', Georgia, serif;
+	--ui: 'Alegreya Sans', system-ui, sans-serif;
 	--mono: 'Space Mono', ui-monospace, monospace;
 
 	/* ── Typography: Scale ─────────────────────────────────────────── */
-	--text-xs: 0.7rem;
-	--text-sm: 0.8rem;
-	--text-base: 0.9rem;
-	--text-md: 0.95rem;
-	--text-lg: 1.1rem;
-	--text-xl: 1.3rem;
-	--text-2xl: 1.5rem;
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-md: 1.05rem;
+	--text-lg: 1.15rem;
+	--text-xl: 1.35rem;
+	--text-2xl: 1.6rem;
 
 	/* ── Typography: Weights ───────────────────────────────────────── */
-	--font-semi: 600;
+	--font-semi: 500;
 	--font-bold: 700;
 
-	/* ── Surfaces ──────────────────────────────────────────────────── */
-	--raio: 14px;
-	--raio-sm: 8px;
-	--raio-lg: 16px;
+	/* ── Surfaces & Shadows ────────────────────────────────────────── */
+	--raio: 16px;
+	--raio-sm: 10px;
+	--raio-lg: 20px;
 	--raio-full: 999px;
-	--sombra: 0 1px 3px rgba(46, 34, 38, 0.04), 0 8px 24px -12px rgba(46, 34, 38, 0.12);
+	/* Sombra quente e terrosa em vez de preta/azulada */
+	--sombra: 0 2px 8px rgba(90, 50, 20, 0.05), 0 12px 32px -12px rgba(90, 50, 20, 0.1);
 }
 
 /* ============================================================
    Dark Mode — Overrides de cor para data-theme="dark"
    
-   Paleta warm (não invertida): charcoal backgrounds, gold/pink
-   mais luminosos para manter a identidade editorial.
-   Todos os pares texto/fundo passam WCAG AA (≥4.5:1).
-   Spacing, tipografia e superfícies permanecem iguais.
+   Paleta dark quente (sépia/marrom profundo em vez de cinza/preto frio).
+   Ouro ganha destaque brilhante.
    ============================================================ */
 
 :root[data-theme='dark'] {
-	/* ── Color: Neutrals (60% — superfícies e texto) ───────────────── */
-	--porcelana: #1a1517; /* fundo principal — warm near-black */
-	--nevoa: #221e20; /* superfície de card — slightly lighter */
-	--branco: #2a2527; /* inputs, cards ativos — elevated */
-	--linha: #3d3538; /* bordas, separadores — subtle warm */
-	--tinta-suave: #a89a95; /* texto secundário — 4.6:1 sobre porcelana ✓ */
-	--tinta: #f0ebe8; /* texto primário — 13:1 sobre porcelana ✓ */
+	/* ── Color: Neutrals ───────────────── */
+	--porcelana: #241d19; /* Marrom escuro denso (sépia escuro) */
+	--nevoa: #2e241f; /* Superfície de card */
+	--branco: #362a24; /* Elevated */
+	--linha: #4a3b31; /* Bordas terrosas */
+	--tinta-suave: #b8a69a; /* Texto secundário */
+	--tinta: #f5eee9; /* Texto primário */
 
-	/* ── Color: Ouro Accents (10% — ações, destaques) ──────────────── */
-	--ouro: #d4a845; /* botões/acento — 4.8:1 sobre nevoa ✓ */
-	--ouro-hover: #e6be5c; /* hover — mais claro em dark */
-	--ouro-claro: #8b7230; /* preenchimentos decorativos (subdued) */
-	--ouro-fundo: #2e2618; /* backgrounds suaves (badges, chips) */
-	--ouro-escuro: #f0d080; /* texto sobre ouro-fundo — 7.5:1 ✓ */
+	/* ── Color: Ouro Accents ──────────────── */
+	--ouro: #eabb4d; /* Ouro luminoso */
+	--ouro-hover: #f2ce73;
+	--ouro-claro: #8a6c23;
+	--ouro-fundo: #3a2e18;
+	--ouro-escuro: #f9e2a4;
 
-	/* ── Color: Rosa Accents (nicho beleza) ─────────────────────────── */
-	--rosa: #c47a92; /* tags, categorias — 4.7:1 sobre nevoa ✓ */
-	--rosa-hover: #d4909f; /* hover — mais claro */
-	--rosa-fundo: #2d1f24; /* badge background — dark warm pink */
+	/* ── Color: Terracota Accents ─────────────────────────── */
+	--rosa: #d47a66; /* Terracota claro */
+	--rosa-hover: #e29584;
+	--rosa-fundo: #3d231e;
 
 	/* ── Color: Feedback — Sucesso ─────────────────────────────────── */
-	--sucesso-texto: #7ecf95; /* 5.2:1 sobre sucesso-fundo ✓ */
-	--sucesso-fundo: #1a2e20;
-	--sucesso-borda: #345c40;
+	--sucesso-texto: #8ed8a3;
+	--sucesso-fundo: #1d3324;
+	--sucesso-borda: #3b5c46;
 
 	/* ── Color: Feedback — Erro ────────────────────────────────────── */
-	--erro-texto: #f0887a; /* 5.0:1 sobre erro-fundo ✓ */
-	--erro-fundo: #2e1a17;
-	--erro-borda: #5c3530;
+	--erro-texto: #e88d7f;
+	--erro-fundo: #3b1d19;
+	--erro-borda: #66332c;
 
 	/* ── Color: Feedback — Aviso ───────────────────────────────────── */
-	--aviso-texto: #e0c050; /* 5.3:1 sobre aviso-fundo ✓ */
-	--aviso-fundo: #2a2415;
-	--aviso-borda: #5c4d20;
+	--aviso-texto: #f2cf6b;
+	--aviso-fundo: #382c16;
+	--aviso-borda: #6e582b;
 
-	/* ── Surfaces (shadow mais forte em dark) ──────────────────────── */
-	--sombra: 0 1px 3px rgba(0, 0, 0, 0.2), 0 8px 24px -12px rgba(0, 0, 0, 0.4);
+	/* ── Surfaces (shadow mais quente em dark) ──────────────────────── */
+	--sombra: 0 4px 12px rgba(15, 8, 5, 0.4), 0 16px 40px -12px rgba(15, 8, 5, 0.6);
 }

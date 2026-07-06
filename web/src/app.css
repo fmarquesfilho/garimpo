@@ -13,8 +13,8 @@
 /* ── Theme: mapeia tokens existentes para Tailwind/shadcn ──── */
 @theme {
 	/* Font families */
-	--font-display: 'Fraunces', Georgia, serif;
-	--font-sans: 'Archivo', system-ui, sans-serif;
+	--font-display: 'Lora', Georgia, serif;
+	--font-sans: 'Alegreya Sans', system-ui, sans-serif;
 	--font-mono: 'Space Mono', ui-monospace, monospace;
 
 	/* Border radius */
@@ -111,8 +111,8 @@ button {
 /* foco visível, sempre */
 :where(a, button, [tabindex]):focus-visible {
 	outline: 2px solid var(--ouro);
-	outline-offset: 2px;
-	border-radius: 6px;
+	outline-offset: 3px;
+	border-radius: 8px;
 }
 
 /* dado em mono, alinhado como um laudo de ensaio */
@@ -152,9 +152,11 @@ button {
 /* ── Theme transitions (desabilitada no load, ativada via JS) ──── */
 html:not(.no-transitions) * {
 	transition:
-		background-color 200ms ease,
-		color 200ms ease,
-		border-color 200ms ease;
+		background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+		color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+		border-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+		box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1),
+		transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 html.no-transitions * {
 	transition: none !important;
@@ -205,8 +207,9 @@ html.no-transitions * {
 .painel {
 	background: var(--nevoa);
 	border: 1px solid var(--linha);
-	border-radius: 12px;
-	padding: var(--r4);
+	border-radius: var(--raio-lg);
+	padding: var(--r6);
+	box-shadow: var(--sombra);
 }
 
 .cor-sucesso {

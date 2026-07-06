@@ -7,9 +7,10 @@
 	import { cn } from '$lib/utils';
 
 	const VARIANTS = {
-		primary: 'bg-primary text-primary-foreground hover:bg-ouro-hover shadow-sm',
-		secondary: 'border border-border bg-background hover:bg-accent hover:text-accent-foreground',
-		danger: 'bg-destructive text-destructive-foreground hover:bg-rosa-hover shadow-sm',
+		primary: 'bg-primary text-primary-foreground hover:bg-ouro-hover shadow-sm hover:shadow-md',
+		secondary:
+			'border border-border bg-background hover:bg-accent hover:text-accent-foreground shadow-sm hover:shadow-md',
+		danger: 'bg-destructive text-destructive-foreground hover:bg-rosa-hover shadow-sm hover:shadow-md',
 		ghost: 'hover:bg-accent hover:text-accent-foreground',
 		link: 'text-primary underline-offset-4 hover:underline'
 	};
@@ -36,7 +37,7 @@
 	{type}
 	{disabled}
 	class={cn(
-		'inline-flex items-center justify-center whitespace-nowrap font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50',
+		'inline-flex items-center justify-center whitespace-nowrap font-semibold transition-all duration-250 ease-out active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50',
 		VARIANTS[variant] ?? VARIANTS.primary,
 		SIZES[size] ?? SIZES.md,
 		className
