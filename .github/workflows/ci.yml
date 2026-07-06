@@ -68,8 +68,6 @@ jobs:
       - uses: jdx/mise-action@v4
       - run: mise run lint:python
       - name: Syntax check
-        env:
-          PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
         run: |
           uv pip install --system -r services/analyzer/requirements.txt
           python -c "import sys; sys.path.insert(0, 'services/analyzer'); import main"

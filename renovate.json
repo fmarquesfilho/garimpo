@@ -80,6 +80,11 @@
       "matchFileNames": ["docs-site/package.json"],
       "matchPackageNames": ["/^@astrojs//", "/^astro$/", "/^sharp$/"],
       "enabled": false
+    },
+    {
+      "description": "Travar Python no 3.13 até pydantic-core suportar 3.14",
+      "matchPackageNames": ["python"],
+      "allowedVersions": "<3.14.0"
     }
   ],
   "ignorePaths": [
