@@ -224,6 +224,7 @@ jobs:
             --secret=GARIMPEI_PG_CONNECTION_STRING \
             --project=${{ env.PROJECT_ID }})
           dotnet tool restore
+          dotnet restore src/Garimpei.sln
           dotnet ef database update \
             --project src/Garimpei.Infrastructure \
             --startup-project src/Garimpei.Api \
