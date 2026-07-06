@@ -31,15 +31,15 @@
 </script>
 
 <article
-	class="overflow-hidden rounded-md border border-border bg-card shadow-sm transition-[transform,box-shadow] duration-150 ease-linear hover:-translate-y-0.5 hover:shadow-[var(--sombra)]"
-	class:!border-[var(--ouro-claro)]={destaque}
+	class="overflow-hidden rounded-md border border-border bg-card shadow-sm transition-[transform,box-shadow] duration-150 ease-linear hover:-translate-y-0.5 hover:shadow-md"
+	class:!border-primary={destaque}
 >
 	{#if candidato.imagem}
 		<a href={candidato.link || '#'} target="_blank" rel="noopener" class="block no-underline">
 			<img
 				src={candidato.imagem}
 				alt={candidato.nome}
-				class="block h-[180px] w-full bg-porcelana object-cover max-sm:h-[140px]"
+				class="block h-[180px] w-full bg-muted object-cover max-sm:h-[140px]"
 				loading="lazy"
 			/>
 		</a>
@@ -47,14 +47,14 @@
 
 	<div class="flex flex-col gap-3 p-4">
 		{#if posicao != null}
-			<span class="dado text-xs font-bold text-tinta-suave opacity-60">#{posicao}</span>
+			<span class="dado text-xs font-bold text-muted-foreground opacity-60">#{posicao}</span>
 		{/if}
 
 		<header>
 			<h3 class="m-0 line-clamp-2 text-base font-semibold leading-tight">{candidato.nome}</h3>
 			<div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
 				{#if candidato.loja}
-					<span class="max-w-[140px] truncate text-xs font-semibold text-tinta-suave">🏪 {candidato.loja}</span>
+					<span class="max-w-[140px] truncate text-xs font-semibold text-muted-foreground">🏪 {candidato.loja}</span>
 				{/if}
 				{#if candidato.origem}
 					<span
@@ -76,13 +76,13 @@
 				{/if}
 				{#if candidato.oferta_expira}
 					<span
-						class="rounded-full bg-ouro-fundo px-1.5 py-px text-[0.65rem] font-bold text-ouro-escuro"
+						class="rounded-full bg-accent px-1.5 py-px text-[0.65rem] font-bold text-accent-foreground"
 						title="Oferta de afiliado expira em {new Date(candidato.oferta_expira).toLocaleDateString('pt-BR')}"
 						>⏳ {tempoRestante(candidato.oferta_expira)}</span
 					>
 				{/if}
 				{#if candidato.categoria}
-					<span class="text-xs font-semibold lowercase text-rosa">{candidato.categoria}</span>
+					<span class="text-xs font-semibold lowercase text-secondary">{candidato.categoria}</span>
 				{/if}
 				{#if candidato.suspeito}
 					<span
@@ -97,9 +97,9 @@
 		<div class="flex flex-col items-baseline justify-between gap-1 sm:flex-row">
 			<div class="flex items-baseline gap-2">
 				<span class="font-mono text-lg font-bold">{brl(candidato.preco)}</span>
-				<span class="text-sm font-bold text-ouro">{pct(candidato.comissao)}</span>
+				<span class="text-sm font-bold text-primary">{pct(candidato.comissao)}</span>
 			</div>
-			<div class="flex gap-3 text-xs text-tinta-suave">
+			<div class="flex gap-3 text-xs text-muted-foreground">
 				<span>{candidato.vendas.toLocaleString('pt-BR')} vendas</span>
 				<span>★ {candidato.avaliacao.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</span>
 			</div>

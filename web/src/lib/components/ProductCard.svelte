@@ -74,8 +74,8 @@
 	<!-- ═══ LAYOUT FULL — card vertical com imagem grande ═══ -->
 	<article
 		class={cn(
-			'bg-card/95 backdrop-blur-md border border-border rounded-2xl overflow-hidden shadow-md transition-all duration-250 ease-out hover:-translate-y-1 hover:shadow-[var(--sombra)]',
-			destaque && 'border-ouro shadow-[0_0_15px_rgba(212,154,32,0.15)]'
+			'bg-card/95 backdrop-blur-md border border-border rounded-2xl overflow-hidden shadow-md transition-all duration-250 ease-out hover:-translate-y-1 hover:shadow-lg',
+			destaque && 'border-primary shadow-sm'
 		)}
 	>
 		{#if produto.imagem}
@@ -88,20 +88,20 @@
 				<img
 					src={produto.imagem}
 					alt={produto.nome}
-					class="w-full h-[220px] object-cover block bg-porcelana max-sm:h-[180px]"
+					class="w-full h-[220px] object-cover block bg-muted max-sm:h-[180px]"
 					loading="lazy"
 				/>
 			</a>
 		{/if}
 		<div class="p-5 flex flex-col gap-4">
 			{#if posicao != null}
-				<span class="text-xs font-bold text-tinta-suave opacity-60">#{posicao}</span>
+				<span class="text-xs font-bold text-muted-foreground opacity-60">#{posicao}</span>
 			{/if}
 			<header>
 				<h3 class="text-base font-semibold leading-tight m-0 line-clamp-2">{produto.nome}</h3>
 				<div class="flex items-center gap-1 gap-y-1 mt-1 flex-wrap">
 					{#if loja}<span
-							class="text-xs font-semibold text-tinta-suave max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap"
+							class="text-xs font-semibold text-muted-foreground max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap"
 							>🏪 {loja}</span
 						>{/if}
 					{#if produto.origem}
@@ -121,12 +121,13 @@
 					{/if}
 					{#if produto.oferta_expira}
 						<span
-							class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-ouro-fundo text-ouro-escuro"
+							class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-accent text-accent-foreground"
 							title="Expira em {new Date(produto.oferta_expira).toLocaleDateString('pt-BR')}"
 							>⏳ {tempoRestante(produto.oferta_expira)}</span
 						>
 					{/if}
-					{#if produto.categoria}<span class="text-xs font-semibold text-rosa lowercase">{produto.categoria}</span>{/if}
+					{#if produto.categoria}<span class="text-xs font-semibold text-secondary lowercase">{produto.categoria}</span
+						>{/if}
 					{#if produto.suspeito}<span
 							class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-erro-fundo text-erro"
 							title="Comissão alta com poucas vendas — pode ser produto sem tração real. Avalie antes de publicar."
@@ -137,9 +138,9 @@
 			<div class="flex justify-between items-baseline max-sm:flex-col max-sm:gap-1">
 				<div class="flex items-baseline gap-2">
 					<span class="text-lg font-bold font-mono">{brl(produto.preco)}</span>
-					<span class="text-sm font-bold text-ouro">{pct(produto.comissao)}</span>
+					<span class="text-sm font-bold text-primary">{pct(produto.comissao)}</span>
 				</div>
-				<div class="flex gap-3 text-xs text-tinta-suave">
+				<div class="flex gap-3 text-xs text-muted-foreground">
 					<span>{produto.vendas?.toLocaleString('pt-BR') ?? 0} vendas</span>
 					<span>★ {produto.avaliacao?.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) ?? '—'}</span>
 				</div>
@@ -150,15 +151,15 @@
 			<footer class="flex gap-2 mt-2">
 				{#if onpublicar}
 					<button
-						class="rounded-lg py-2.5 px-4 text-sm font-semibold border border-ouro-claro bg-ouro-fundo text-ouro-escuro flex-1 transition-all duration-250 active:scale-[0.98] hover:bg-ouro hover:text-branco hover:border-ouro hover:shadow-md"
+						class="rounded-lg py-2.5 px-4 text-sm font-semibold border border-border bg-accent text-accent-foreground flex-1 transition-all duration-250 active:scale-[0.98] hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-md"
 						onclick={() => onpublicar(produto)}>📤 Publicar</button
 					>
 				{/if}
 				{#if onfavoritar}
 					<button
 						class={cn(
-							'rounded-sm py-2 px-2.5 text-sm font-semibold border border-transparent bg-transparent text-tinta-suave hover:text-ouro',
-							isFav && 'text-ouro'
+							'rounded-sm py-2 px-2.5 text-sm font-semibold border border-transparent bg-transparent text-muted-foreground hover:text-primary',
+							isFav && 'text-primary'
 						)}
 						onclick={() => onfavoritar(produto)}
 						title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button
@@ -166,7 +167,7 @@
 				{/if}
 				{#if exibirLink}
 					<button
-						class="rounded-lg py-2.5 px-3 text-sm font-semibold border border-transparent bg-transparent text-tinta-suave transition-colors hover:text-ouro hover:bg-ouro-fundo disabled:opacity-30 disabled:cursor-not-allowed"
+						class="rounded-lg py-2.5 px-3 text-sm font-semibold border border-transparent bg-transparent text-muted-foreground transition-colors hover:text-primary hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
 						onclick={copiarLink}
 						disabled={!produto.link}
 					>
@@ -186,20 +187,20 @@
 		{/if}
 		<div class="flex-1 min-w-0">
 			<h4 class="text-sm m-0 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{produto.nome}</h4>
-			<div class="flex flex-wrap gap-2 text-xs text-tinta-suave">
-				<span class="font-bold text-ouro">{brl(produto.preco)}</span>
+			<div class="flex flex-wrap gap-2 text-xs text-muted-foreground">
+				<span class="font-bold text-primary">{brl(produto.preco)}</span>
 				<span class="font-semibold">{pct(produto.comissao)}</span>
 				{#if produto.vendas}<span>{produto.vendas} vendas</span>{/if}
 				{#if produto.avaliacao}<span>★ {produto.avaliacao?.toFixed(1)}</span>{/if}
 			</div>
-			{#if loja}<span class="text-[0.72rem] text-tinta-suave">🏪 {loja}</span>{/if}
+			{#if loja}<span class="text-[0.72rem] text-muted-foreground">🏪 {loja}</span>{/if}
 		</div>
 		<div class="flex gap-1 shrink-0">
 			{#if onfavoritar}
 				<button
 					class={cn(
-						'border border-border bg-porcelana rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer text-base transition-colors hover:border-ouro hover:text-ouro',
-						isFav && 'text-ouro border-ouro'
+						'border border-border bg-muted rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer text-base transition-colors hover:border-primary hover:text-primary',
+						isFav && 'text-primary border-primary'
 					)}
 					onclick={() => onfavoritar(produto)}
 					title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button
@@ -207,7 +208,7 @@
 			{/if}
 			{#if onpublicar}
 				<button
-					class="border border-border bg-porcelana rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer text-base transition-colors hover:border-ouro hover:text-ouro"
+					class="border border-border bg-muted rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer text-base transition-colors hover:border-primary hover:text-primary"
 					onclick={() => onpublicar(produto)}
 					title="Publicar">📤</button
 				>
@@ -218,10 +219,10 @@
 	<!-- ═══ LAYOUT FEED — card com borda lateral (oportunidades) ═══ -->
 	<div
 		class={cn(
-			'border border-border rounded-xl p-5 bg-card/95 backdrop-blur-md shadow-sm transition-all duration-250 hover:shadow-md hover:border-ouro',
+			'border border-border rounded-xl p-5 bg-card/95 backdrop-blur-md shadow-sm transition-all duration-250 hover:shadow-md hover:border-primary',
 			variacao?.tipo === 'queda' && 'border-l-[4px] border-l-sucesso',
 			variacao?.tipo === 'alta' && 'border-l-[3px] border-l-erro',
-			(!variacao?.tipo || variacao?.tipo === 'novo') && 'border-l-[3px] border-l-ouro'
+			(!variacao?.tipo || variacao?.tipo === 'novo') && 'border-l-[3px] border-l-primary'
 		)}
 	>
 		<div class="flex items-center gap-2 mb-1.5">
@@ -234,10 +235,10 @@
 					>↑ {Math.abs(variacao.pct * 100).toFixed(0)}%</span
 				>
 			{:else}
-				<span class="px-2 py-0.5 rounded-full text-[0.72rem] font-bold bg-ouro-fundo text-ouro-escuro">Novo</span>
+				<span class="px-2 py-0.5 rounded-full text-[0.72rem] font-bold bg-accent text-accent-foreground">Novo</span>
 			{/if}
-			{#if loja}<span class="text-[0.72rem] text-tinta-suave bg-porcelana px-1.5 py-px rounded">{loja}</span>{/if}
-			{#if variacao?.detectado_em}<span class="text-[0.72rem] text-tinta-suave ml-auto"
+			{#if loja}<span class="text-[0.72rem] text-muted-foreground bg-muted px-1.5 py-px rounded">{loja}</span>{/if}
+			{#if variacao?.detectado_em}<span class="text-[0.72rem] text-muted-foreground ml-auto"
 					>{tempoAtras(variacao.detectado_em)}</span
 				>{/if}
 		</div>
@@ -255,20 +256,21 @@
 				<h3 class="text-[0.95rem] font-semibold mb-2 leading-tight line-clamp-2">{produto.nome}</h3>
 				<div class="flex items-center gap-2 text-sm flex-wrap">
 					{#if variacao?.tipo === 'queda'}
-						<span class="line-through text-tinta-suave">{brl(variacao.preco_anterior)}</span>
-						<span class="text-tinta-suave text-[0.8rem]">→</span>
+						<span class="line-through text-muted-foreground">{brl(variacao.preco_anterior)}</span>
+						<span class="text-muted-foreground text-[0.8rem]">→</span>
 						<span class="font-bold text-sucesso">{brl(variacao.preco_atual)}</span>
 						<span class="text-xs text-sucesso font-semibold"
 							>(-{brl(variacao.preco_anterior - variacao.preco_atual)})</span
 						>
 					{:else if variacao?.tipo === 'alta'}
-						<span class="line-through text-tinta-suave">{brl(variacao.preco_anterior)}</span>
-						<span class="text-tinta-suave text-[0.8rem]">→</span>
+						<span class="line-through text-muted-foreground">{brl(variacao.preco_anterior)}</span>
+						<span class="text-muted-foreground text-[0.8rem]">→</span>
 						<span class="font-bold text-erro">{brl(variacao.preco_atual)}</span>
 					{:else}
 						<span class="font-bold">{brl(produto.preco)}</span>
-						{#if produto.comissao > 0}<span class="text-xs text-ouro font-semibold">{pct(produto.comissao)}</span>{/if}
-						{#if produto.vendas > 0}<span class="text-xs text-tinta-suave">{produto.vendas} vendas</span>{/if}
+						{#if produto.comissao > 0}<span class="text-xs text-primary font-semibold">{pct(produto.comissao)}</span
+							>{/if}
+						{#if produto.vendas > 0}<span class="text-xs text-muted-foreground">{produto.vendas} vendas</span>{/if}
 					{/if}
 				</div>
 			</div>
@@ -277,15 +279,15 @@
 		<div class="mt-2.5 flex gap-2">
 			{#if onpublicar}
 				<button
-					class="py-1.5 px-3.5 border border-ouro-claro bg-ouro-fundo text-ouro-escuro rounded-sm text-[0.82rem] font-semibold cursor-pointer hover:bg-ouro-claro"
+					class="py-1.5 px-3.5 border border-border bg-accent text-accent-foreground rounded-sm text-[0.82rem] font-semibold cursor-pointer hover:bg-muted"
 					onclick={() => onpublicar(produto)}>📤 Publicar</button
 				>
 			{/if}
 			{#if onfavoritar}
 				<button
 					class={cn(
-						'py-1.5 px-2.5 border border-border bg-transparent rounded-sm cursor-pointer hover:border-ouro',
-						isFav && 'text-ouro border-ouro'
+						'py-1.5 px-2.5 border border-border bg-transparent rounded-sm cursor-pointer hover:border-primary',
+						isFav && 'text-primary border-primary'
 					)}
 					onclick={() => onfavoritar(produto)}
 					title={isFav ? 'Remover dos favoritos' : 'Favoritar'}>{isFav ? '★' : '☆'}</button

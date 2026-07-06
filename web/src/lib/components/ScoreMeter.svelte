@@ -11,10 +11,10 @@
 		demanda: 'demanda'
 	};
 	const cores = {
-		comissao: 'var(--ouro)',
-		valor_esperado: 'var(--ouro-claro)',
-		avaliacao: 'var(--rosa)',
-		demanda: 'var(--tinta-suave)'
+		comissao: 'var(--color-primary)',
+		valor_esperado: 'var(--color-ouro-claro)',
+		avaliacao: 'var(--color-destructive)',
+		demanda: 'var(--color-muted-foreground)'
 	};
 
 	// componentes aditivos (exclui o multiplicador de nicho)
@@ -25,7 +25,7 @@
 				chave: k,
 				rotulo: rotulos[k] ?? k,
 				valor: Math.max(0, v),
-				cor: cores[k] ?? 'var(--tinta-suave)'
+				cor: cores[k] ?? 'var(--color-muted-foreground)'
 			}))
 	);
 	const somaPartes = $derived(partes.reduce((s, p) => s + p.valor, 0) || 1);
@@ -37,15 +37,15 @@
 	<div class="flex items-baseline gap-2">
 		<span class="rotulo">teor</span>
 		<button
-			class="flex h-4 w-4 cursor-pointer items-center justify-center self-center rounded-full border border-border bg-card p-0 text-[0.7rem] font-bold leading-none text-tinta-suave hover:border-ouro hover:text-ouro"
+			class="flex h-4 w-4 cursor-pointer items-center justify-center self-center rounded-full border border-border bg-card p-0 text-[0.7rem] font-bold leading-none text-muted-foreground hover:border-primary hover:text-primary"
 			type="button"
 			aria-label="O que é o teor?"
 			onclick={() => (mostraAjuda = !mostraAjuda)}>?</button
 		>
-		<span class="dado text-lg font-bold text-ouro">{score.toFixed(3)}</span>
+		<span class="dado text-lg font-bold text-primary">{score.toFixed(3)}</span>
 		{#if mult && mult > 1}
 			<span
-				class="ml-auto rounded-full bg-ouro-fundo px-2 py-0.5 text-xs font-semibold text-ouro-escuro"
+				class="ml-auto rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground"
 				title="bônus por estar no nicho">×{mult.toLocaleString('pt-BR')} nicho</span
 			>
 		{/if}
@@ -53,7 +53,7 @@
 
 	{#if mostraAjuda}
 		<div
-			class="rounded-[10px] border border-border border-l-[3px] border-l-[var(--ouro)] bg-porcelana px-4 py-3 text-[0.8rem] leading-snug text-foreground"
+			class="rounded-[10px] border border-border border-l-[3px] border-l-primary bg-muted px-4 py-3 text-[0.8rem] leading-snug text-foreground"
 		>
 			<p class="mb-2 mt-0">
 				<strong>Teor</strong> é o "grau de ouro" da pepita — um número de 0 a 1 que mede
@@ -72,7 +72,7 @@
 				<span class="dado">×nicho</span>). A barra colorida abaixo mostra o peso de cada sinal nesta pepita.
 			</p>
 			<button
-				class="cursor-pointer rounded-sm border-none bg-[var(--ouro)] px-3 py-1 text-sm font-semibold text-[var(--branco)]"
+				class="cursor-pointer rounded-sm border-none bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground"
 				type="button"
 				onclick={() => (mostraAjuda = false)}>entendi</button
 			>
@@ -80,7 +80,7 @@
 	{/if}
 
 	<div
-		class="h-2.5 overflow-hidden rounded-full bg-[var(--linha)]"
+		class="h-2.5 overflow-hidden rounded-full bg-border"
 		role="meter"
 		aria-valuemin="0"
 		aria-valuemax="1"
@@ -88,7 +88,7 @@
 		aria-label="teor"
 	>
 		<div
-			class="h-full rounded-full bg-gradient-to-r from-[var(--ouro-claro)] to-[var(--ouro)]"
+			class="h-full rounded-full bg-primary"
 			class:animate-[encher_0.7s_cubic-bezier(0.2,0.7,0.2,1)_both]={animar}
 			style="width: {largura}%"
 		></div>
@@ -103,7 +103,7 @@
 			></span>
 		{/each}
 	</div>
-	<ul class="m-0 flex list-none flex-wrap gap-3 p-0 text-xs text-tinta-suave">
+	<ul class="m-0 flex list-none flex-wrap gap-3 p-0 text-xs text-muted-foreground">
 		{#each partes as p}
 			<li class="flex items-center gap-1.5">
 				<span class="inline-block h-2 w-2 rounded-full" style="background: {p.cor}"></span>{p.rotulo}

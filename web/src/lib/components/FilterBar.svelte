@@ -59,7 +59,7 @@
 					type="search"
 					bind:value={busca}
 					placeholder="🔍 Buscar produto… (ex: sérum, perfume, batom)"
-					class="w-full font-sans text-base py-3 pr-10 pl-4 rounded-md border border-border bg-[var(--branco)] text-foreground placeholder:text-tinta-suave placeholder:opacity-60 focus:outline-none focus:border-ouro focus:shadow-[0_0_0_3px_var(--ouro-fundo)]"
+					class="w-full font-sans text-base py-3 pr-10 pl-4 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground placeholder:opacity-60 focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
 					onkeydown={(e) => {
 						if (e.key === 'Escape') {
 							busca = '';
@@ -69,7 +69,7 @@
 				/>
 				{#if busca}
 					<button
-						class="absolute right-2.5 top-1/2 -translate-y-1/2 border-none bg-porcelana text-tinta-suave w-6 h-6 rounded-full text-xs cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
+						class="absolute right-2.5 top-1/2 -translate-y-1/2 border-none bg-muted text-muted-foreground w-6 h-6 rounded-full text-xs cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
 						onclick={() => (busca = '')}
 						type="button"
 						aria-label="Limpar busca">✕</button
@@ -77,8 +77,8 @@
 				{/if}
 			</div>
 			<button
-				class="flex items-center gap-1 py-2.5 px-3.5 border border-border rounded-sm bg-porcelana text-tinta-suave text-sm font-semibold cursor-pointer whitespace-nowrap hover:border-ouro hover:text-foreground max-[480px]:justify-center {avancadoAberto
-					? 'border-ouro bg-ouro-fundo text-ouro-escuro'
+				class="flex items-center gap-1 py-2.5 px-3.5 border border-border rounded-sm bg-muted text-muted-foreground text-sm font-semibold cursor-pointer whitespace-nowrap hover:border-primary hover:text-foreground max-[480px]:justify-center {avancadoAberto
+					? 'border-primary bg-accent text-accent-foreground'
 					: ''}"
 				onclick={() => (avancadoAberto = !avancadoAberto)}
 				type="button"
@@ -86,7 +86,7 @@
 				⚙️ Filtros
 				{#if filtrosAtivos > 0 && !avancadoAberto}
 					<span
-						class="text-[0.65rem] bg-ouro text-[var(--branco)] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+						class="text-[0.65rem] bg-primary text-primary-foreground w-4 h-4 rounded-full flex items-center justify-center font-bold"
 						>{filtrosAtivos}</span
 					>
 				{/if}
@@ -104,12 +104,12 @@
 						type="text"
 						bind:value={catInput}
 						placeholder="todas (digite para filtrar)"
-						class="font-sans text-base py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground w-full placeholder:text-tinta-suave placeholder:opacity-70"
+						class="font-sans text-base py-2 px-3 rounded-sm border border-border bg-muted text-foreground w-full placeholder:text-muted-foreground placeholder:opacity-70"
 						autocomplete="off"
 					/>
 					{#if categoria}
 						<button
-							class="absolute right-2 top-1/2 -translate-y-1/2 border-none bg-porcelana text-tinta-suave w-5 h-5 rounded-full text-[0.65rem] cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
+							class="absolute right-2 top-1/2 -translate-y-1/2 border-none bg-muted text-muted-foreground w-5 h-5 rounded-full text-[0.65rem] cursor-pointer flex items-center justify-center hover:bg-border hover:text-foreground"
 							onclick={limparCategoria}
 							type="button"
 							aria-label="Limpar categoria">✕</button
@@ -118,18 +118,18 @@
 				</div>
 				{#if catInput && sugestoes.length > 0 && catInput.toLowerCase() !== categoria.toLowerCase()}
 					<ul
-						class="absolute z-20 top-full left-0 right-0 mt-1 p-1 list-none bg-[var(--branco)] border border-border rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.08)] max-h-[200px] overflow-y-auto"
+						class="absolute z-20 top-full left-0 right-0 mt-1 p-1 list-none bg-background border border-border rounded-sm shadow-md max-h-[200px] overflow-y-auto"
 						role="listbox"
 					>
 						{#each sugestoes.slice(0, 8) as cat (cat.id)}
 							<li role="option" aria-selected={categoria === cat.nome}>
 								<button
 									type="button"
-									class="w-full py-2 px-2.5 border-none bg-transparent text-left text-sm text-foreground cursor-pointer rounded flex justify-between items-center hover:bg-ouro-fundo hover:text-ouro-escuro"
+									class="w-full py-2 px-2.5 border-none bg-transparent text-left text-sm text-foreground cursor-pointer rounded flex justify-between items-center hover:bg-accent hover:text-accent-foreground"
 									onclick={() => selecionarCategoria(cat.nome)}
 								>
 									{cat.nome}
-									<span class="text-[0.65rem] text-tinta-suave uppercase">{cat.marketplace}</span>
+									<span class="text-[0.65rem] text-muted-foreground uppercase">{cat.marketplace}</span>
 								</button>
 							</li>
 						{/each}
@@ -140,7 +140,7 @@
 				<span class="rotulo">comissão mín.</span>
 				<select
 					bind:value={comissaoMin}
-					class="dado font-mono text-sm py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground"
+					class="dado font-mono text-sm py-2 px-3 rounded-sm border border-border bg-muted text-foreground"
 				>
 					<option value={0.05}>5%</option>
 					<option value={0.07}>7%</option>
@@ -155,7 +155,7 @@
 					min="0"
 					step="1"
 					bind:value={vendasMin}
-					class="font-mono text-base py-2 px-3 rounded-sm border border-border bg-porcelana text-foreground w-[5.5rem]"
+					class="font-mono text-base py-2 px-3 rounded-sm border border-border bg-muted text-foreground w-[5.5rem]"
 				/>
 			</label>
 		</div>

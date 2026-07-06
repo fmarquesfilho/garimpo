@@ -29,16 +29,16 @@
 		tags = tags.filter((t) => t !== tag);
 	}
 
-	let badgeVariant = $derived(variant === 'shop' ? 'pink' : 'gold');
+	let badgeVariant = $derived(variant === 'shop' ? 'secondary' : 'default');
 </script>
 
 <div class="flex flex-col gap-2">
 	{#if label}
-		<span class="text-sm font-semibold text-tinta-suave">{label}</span>
+		<span class="text-sm font-semibold text-muted-foreground">{label}</span>
 	{/if}
 	<div class="flex gap-2">
 		<input
-			class="flex-1 rounded-sm border border-border bg-porcelana px-4 py-3 font-[var(--ui)] text-foreground transition-[border-color] duration-150 ease-linear placeholder:text-tinta-suave/70 focus:border-ouro focus:shadow-[0_0_0_2px_var(--ouro-fundo)] focus:outline-none motion-reduce:transition-none"
+			class="flex-1 rounded-sm border border-border bg-background px-4 py-3 font-[var(--ui)] text-foreground transition-[border-color] duration-150 ease-linear placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none motion-reduce:transition-none"
 			bind:value={valor}
 			{placeholder}
 			onkeydown={(e) => {
@@ -50,7 +50,7 @@
 		/>
 		<button
 			type="button"
-			class="shrink-0 rounded-sm border border-border bg-ouro-fundo px-4 text-lg font-bold text-ouro-escuro transition-[border-color] duration-150 ease-linear hover:border-ouro motion-reduce:transition-none"
+			class="shrink-0 rounded-sm border border-border bg-accent px-4 text-lg font-bold text-accent-foreground transition-[border-color] duration-150 ease-linear hover:border-primary motion-reduce:transition-none"
 			onclick={adicionar}
 			aria-label="Adicionar tag">+</button
 		>

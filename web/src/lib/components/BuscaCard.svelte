@@ -11,10 +11,10 @@
 			{#each busca.keywords ?? [] as kw, i}
 				<button
 					type="button"
-					class="cursor-pointer rounded-full border border-border bg-porcelana px-3 py-1 font-[var(--ui)] font-semibold text-foreground transition-[background,border-color] duration-150 ease-linear hover:border-ouro hover:bg-ouro-fundo hover:text-ouro-escuro motion-reduce:transition-none"
-					class:!bg-ouro-fundo={buscaAtiva === kw}
-					class:!border-ouro={buscaAtiva === kw}
-					class:!text-ouro-escuro={buscaAtiva === kw}
+					class="cursor-pointer rounded-full border border-border bg-muted px-3 py-1 font-[var(--ui)] font-semibold text-foreground transition-[background,border-color] duration-150 ease-linear hover:border-primary hover:bg-accent hover:text-accent-foreground motion-reduce:transition-none"
+					class:!bg-accent={buscaAtiva === kw}
+					class:!border-primary={buscaAtiva === kw}
+					class:!text-accent-foreground={buscaAtiva === kw}
 					onclick={() =>
 						onaplicar?.({ ...busca, keywords: busca.keywords.slice(i).concat(busca.keywords.slice(0, i)) })}
 					title="Aplicar filtros com '{kw}'">{kw}</button
@@ -31,7 +31,7 @@
 	<div class="flex flex-wrap gap-2">
 		{#if busca.fontes?.length}
 			{#each busca.fontes as f}
-				<Badge variant="gold"
+				<Badge variant="default"
 					>{f === 'curadoria' ? '🔍' : f === 'quedas' ? '📉' : f === 'novos' ? '🆕' : '⭐'} {f}</Badge
 				>
 			{/each}
@@ -39,17 +39,17 @@
 			<Badge>{busca.estrategia ?? 'nicho'}</Badge>
 		{/if}
 		{#if busca.cron}
-			<Badge variant="gold">⏱ agendada</Badge>
+			<Badge variant="default">⏱ agendada</Badge>
 		{/if}
 		{#if busca.categorias?.length}
 			{#each busca.categorias as cat}
-				<Badge variant="pink">{cat}</Badge>
+				<Badge variant="secondary">{cat}</Badge>
 			{/each}
 		{:else if busca.categoria}
-			<Badge variant="pink">{busca.categoria}</Badge>
+			<Badge variant="secondary">{busca.categoria}</Badge>
 		{/if}
 		{#if busca.shop_ids?.length}
-			<Badge variant="pink">🏪 {busca.shop_ids.length} {busca.shop_ids.length === 1 ? 'loja' : 'lojas'}</Badge>
+			<Badge variant="secondary">🏪 {busca.shop_ids.length} {busca.shop_ids.length === 1 ? 'loja' : 'lojas'}</Badge>
 		{/if}
 		{#if busca.dias_janela && busca.dias_janela !== 7}
 			<Badge>janela: {busca.dias_janela}d</Badge>
