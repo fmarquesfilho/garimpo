@@ -89,16 +89,12 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 	});
 
 	test('loja adicionada aparece no GET /api/lojas com shop_ids', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
-		await page.waitForLoadState('networkidle');
+		// Chama a API diretamente (o frontend usa GET /api/buscas que tem o mesmo dado)
+		const response = await page.request.get('/api/lojas');
+		expect(response.status()).toBe(200);
 
-		// Intercepta o GET que carrega a lista
-		const getResponse = await page.waitForResponse(
-			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'GET'
-		);
-
-		const data = await getResponse.json();
-		// Deve haver pelo menos uma loja com shop_ids preenchido (dos testes anteriores ou do banco)
+		const data = await response.json();
+		// Deve haver pelo menos uma loja com shop_ids preenchido (dos testes anteriores)
 		const lojasComShopIds = data.lojas.filter((l) => l.shop_ids && l.shop_ids.length > 0);
 		expect(lojasComShopIds.length).toBeGreaterThan(0);
 
