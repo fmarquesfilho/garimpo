@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"log/slog"
+	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -27,6 +32,74 @@ type UnifiedCollectorServer struct {
 
 func NewUnifiedCollectorServer(pipeline *Pipeline, logger *slog.Logger) *UnifiedCollectorServer {
 	return &UnifiedCollectorServer{pipeline: pipeline, logger: logger}
+}
+
+func (s *UnifiedCollectorServer) ResolveShop(ctx context.Context, req *collectorpb.ResolveShopRequest) (*collectorpb.ResolveShopResponse, error) {
+	if req.GetUsernameOrUrl() == "" {
+		return nil, status.Error(codes.InvalidArgument, "username_or_url é obrigatório")
+	}
+
+	mkt := resolveMarketplace(req.GetMarketplace())
+	marketplace := source.ProtoToMarketplace(mkt)
+
+	if marketplace != domain.MarketplaceShopee {
+		return nil, status.Errorf(codes.Unimplemented, "ResolveShop não suportado para %q", marketplace)
+	}
+
+	username := req.GetUsernameOrUrl()
+	if strings.HasPrefix(username, "http") {
+		u, err := url.Parse(username)
+		if err == nil {
+			parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+			if len(parts) > 0 {
+				username = parts[len(parts)-1]
+			}
+		}
+	}
+
+	if username == "" {
+		return nil, status.Error(codes.InvalidArgument, "username inválido")
+	}
+
+	apiURL := "https://shopee.com.br/api/v4/shop/get_shop_detail?username=" + url.QueryEscape(username)
+	reqHttp, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "erro ao criar request: %v", err)
+	}
+	reqHttp.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(reqHttp)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "erro na requisição Shopee API: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "erro ao ler resposta: %v", err)
+	}
+
+	var data struct {
+		Error int `json:"error"`
+		Data  struct {
+			ShopID int64  `json:"shopid"`
+			Name   string `json:"name"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, status.Errorf(codes.Internal, "falha ao fazer parse do JSON: %v", err)
+	}
+
+	if data.Error != 0 || data.Data.ShopID == 0 {
+		return nil, status.Errorf(codes.NotFound, "loja não encontrada (error=%d)", data.Error)
+	}
+
+	return &collectorpb.ResolveShopResponse{
+		ShopId:   data.Data.ShopID,
+		ShopName: data.Data.Name,
+	}, nil
 }
 
 func (s *UnifiedCollectorServer) Fetch(ctx context.Context, req *collectorpb.FetchRequest) (*collectorpb.FetchResponse, error) {

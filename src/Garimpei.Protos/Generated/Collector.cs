@@ -32,39 +32,47 @@ namespace Collector.V1 {
             "mwEKEEZldGNoU2hvcFJlcXVlc3QSFwoHc2hvcF9pZBgBIAEoA1IGc2hvcElk",
             "EhQKBWxpbWl0GAIgASgFUgVsaW1pdBIbCglvd25lcl91aWQYAyABKAlSCG93",
             "bmVyVWlkEjsKC21hcmtldHBsYWNlGAQgASgOMhkuY29sbGVjdG9yLnYxLk1h",
-            "cmtldHBsYWNlUgttYXJrZXRwbGFjZSKCAQoNRmV0Y2hSZXNwb25zZRIxCghw",
-            "cm9kdWN0cxgBIAMoCzIVLmNvbGxlY3Rvci52MS5Qcm9kdWN0Ughwcm9kdWN0",
-            "cxIfCgt0b3RhbF9mb3VuZBgCIAEoBVIKdG90YWxGb3VuZBIdCgpmZXRjaGVk",
-            "X2F0GAMgASgJUglmZXRjaGVkQXQihgEKEUZldGNoU2hvcFJlc3BvbnNlEjEK",
-            "CHByb2R1Y3RzGAEgAygLMhUuY29sbGVjdG9yLnYxLlByb2R1Y3RSCHByb2R1",
-            "Y3RzEh8KC3RvdGFsX2ZvdW5kGAIgASgFUgp0b3RhbEZvdW5kEh0KCmZldGNo",
-            "ZWRfYXQYAyABKAlSCWZldGNoZWRBdCLLAwoHUHJvZHVjdBIXCgdpdGVtX2lk",
-            "GAEgASgDUgZpdGVtSWQSFwoHc2hvcF9pZBgCIAEoA1IGc2hvcElkEhIKBG5h",
-            "bWUYAyABKAlSBG5hbWUSFAoFcHJpY2UYBCABKAFSBXByaWNlEiUKDm9yaWdp",
-            "bmFsX3ByaWNlGAUgASgBUg1vcmlnaW5hbFByaWNlEhIKBHNvbGQYBiABKAVS",
-            "BHNvbGQSFgoGcmF0aW5nGAcgASgBUgZyYXRpbmcSGwoJaW1hZ2VfdXJsGAgg",
-            "ASgJUghpbWFnZVVybBIfCgtwcm9kdWN0X3VybBgJIAEoCVIKcHJvZHVjdFVy",
-            "bBIbCglzaG9wX25hbWUYCiABKAlSCHNob3BOYW1lEikKEGRpc2NvdW50X3Bl",
-            "cmNlbnQYCyABKAFSD2Rpc2NvdW50UGVyY2VudBIeCgpjb21taXNzaW9uGAwg",
-            "ASgBUgpjb21taXNzaW9uEhoKCGNhdGVnb3J5GA0gASgJUghjYXRlZ29yeRIS",
-            "CgRsaW5rGA4gASgJUgRsaW5rEjsKC21hcmtldHBsYWNlGA8gASgOMhkuY29s",
-            "bGVjdG9yLnYxLk1hcmtldHBsYWNlUgttYXJrZXRwbGFjZSp4CgtNYXJrZXRw",
-            "bGFjZRIbChdNQVJLRVRQTEFDRV9VTlNQRUNJRklFRBAAEhYKEk1BUktFVFBM",
-            "QUNFX1NIT1BFRRABEhYKEk1BUktFVFBMQUNFX0FNQVpPThACEhwKGE1BUktF",
-            "VFBMQUNFX01FUkNBRE9MSVZSRRADMqIBChBDb2xsZWN0b3JTZXJ2aWNlEkAK",
-            "BUZldGNoEhouY29sbGVjdG9yLnYxLkZldGNoUmVxdWVzdBobLmNvbGxlY3Rv",
-            "ci52MS5GZXRjaFJlc3BvbnNlEkwKCUZldGNoU2hvcBIeLmNvbGxlY3Rvci52",
-            "MS5GZXRjaFNob3BSZXF1ZXN0Gh8uY29sbGVjdG9yLnYxLkZldGNoU2hvcFJl",
-            "c3BvbnNlQrUBChBjb20uY29sbGVjdG9yLnYxQg5Db2xsZWN0b3JQcm90b1AB",
-            "WkBnaXRodWIuY29tL2ZtYXJxdWVzZmlsaG8vZ2FyaW1wby9nZW4vZ28vY29s",
-            "bGVjdG9yL3YxO2NvbGxlY3RvcnYxogIDQ1hYqgIMQ29sbGVjdG9yLlYxygIM",
-            "Q29sbGVjdG9yXFYx4gIYQ29sbGVjdG9yXFYxXEdQQk1ldGFkYXRh6gINQ29s",
-            "bGVjdG9yOjpWMWIGcHJvdG8z"));
+            "cmtldHBsYWNlUgttYXJrZXRwbGFjZSJ5ChJSZXNvbHZlU2hvcFJlcXVlc3QS",
+            "JgoPdXNlcm5hbWVfb3JfdXJsGAEgASgJUg11c2VybmFtZU9yVXJsEjsKC21h",
+            "cmtldHBsYWNlGAIgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBsYWNlUgtt",
+            "YXJrZXRwbGFjZSJLChNSZXNvbHZlU2hvcFJlc3BvbnNlEhcKB3Nob3BfaWQY",
+            "ASABKANSBnNob3BJZBIbCglzaG9wX25hbWUYAiABKAlSCHNob3BOYW1lIoIB",
+            "Cg1GZXRjaFJlc3BvbnNlEjEKCHByb2R1Y3RzGAEgAygLMhUuY29sbGVjdG9y",
+            "LnYxLlByb2R1Y3RSCHByb2R1Y3RzEh8KC3RvdGFsX2ZvdW5kGAIgASgFUgp0",
+            "b3RhbEZvdW5kEh0KCmZldGNoZWRfYXQYAyABKAlSCWZldGNoZWRBdCKGAQoR",
+            "RmV0Y2hTaG9wUmVzcG9uc2USMQoIcHJvZHVjdHMYASADKAsyFS5jb2xsZWN0",
+            "b3IudjEuUHJvZHVjdFIIcHJvZHVjdHMSHwoLdG90YWxfZm91bmQYAiABKAVS",
+            "CnRvdGFsRm91bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJZmV0Y2hlZEF0IssD",
+            "CgdQcm9kdWN0EhcKB2l0ZW1faWQYASABKANSBml0ZW1JZBIXCgdzaG9wX2lk",
+            "GAIgASgDUgZzaG9wSWQSEgoEbmFtZRgDIAEoCVIEbmFtZRIUCgVwcmljZRgE",
+            "IAEoAVIFcHJpY2USJQoOb3JpZ2luYWxfcHJpY2UYBSABKAFSDW9yaWdpbmFs",
+            "UHJpY2USEgoEc29sZBgGIAEoBVIEc29sZBIWCgZyYXRpbmcYByABKAFSBnJh",
+            "dGluZxIbCglpbWFnZV91cmwYCCABKAlSCGltYWdlVXJsEh8KC3Byb2R1Y3Rf",
+            "dXJsGAkgASgJUgpwcm9kdWN0VXJsEhsKCXNob3BfbmFtZRgKIAEoCVIIc2hv",
+            "cE5hbWUSKQoQZGlzY291bnRfcGVyY2VudBgLIAEoAVIPZGlzY291bnRQZXJj",
+            "ZW50Eh4KCmNvbW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoIY2F0ZWdv",
+            "cnkYDSABKAlSCGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsSOwoLbWFy",
+            "a2V0cGxhY2UYDyABKA4yGS5jb2xsZWN0b3IudjEuTWFya2V0cGxhY2VSC21h",
+            "cmtldHBsYWNlKngKC01hcmtldHBsYWNlEhsKF01BUktFVFBMQUNFX1VOU1BF",
+            "Q0lGSUVEEAASFgoSTUFSS0VUUExBQ0VfU0hPUEVFEAESFgoSTUFSS0VUUExB",
+            "Q0VfQU1BWk9OEAISHAoYTUFSS0VUUExBQ0VfTUVSQ0FET0xJVlJFEAMy9gEK",
+            "EENvbGxlY3RvclNlcnZpY2USUgoLUmVzb2x2ZVNob3ASIC5jb2xsZWN0b3Iu",
+            "djEuUmVzb2x2ZVNob3BSZXF1ZXN0GiEuY29sbGVjdG9yLnYxLlJlc29sdmVT",
+            "aG9wUmVzcG9uc2USQAoFRmV0Y2gSGi5jb2xsZWN0b3IudjEuRmV0Y2hSZXF1",
+            "ZXN0GhsuY29sbGVjdG9yLnYxLkZldGNoUmVzcG9uc2USTAoJRmV0Y2hTaG9w",
+            "Eh4uY29sbGVjdG9yLnYxLkZldGNoU2hvcFJlcXVlc3QaHy5jb2xsZWN0b3Iu",
+            "djEuRmV0Y2hTaG9wUmVzcG9uc2VCtQEKEGNvbS5jb2xsZWN0b3IudjFCDkNv",
+            "bGxlY3RvclByb3RvUAFaQGdpdGh1Yi5jb20vZm1hcnF1ZXNmaWxoby9nYXJp",
+            "bXBvL2dlbi9nby9jb2xsZWN0b3IvdjE7Y29sbGVjdG9ydjGiAgNDWFiqAgxD",
+            "b2xsZWN0b3IuVjHKAgxDb2xsZWN0b3JcVjHiAhhDb2xsZWN0b3JcVjFcR1BC",
+            "TWV0YWRhdGHqAg1Db2xsZWN0b3I6OlYxYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Collector.V1.Marketplace), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchRequest), global::Collector.V1.FetchRequest.Parser, new[]{ "Keyword", "Limit", "SortBy", "OwnerUid", "Marketplace" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopRequest), global::Collector.V1.FetchShopRequest.Parser, new[]{ "ShopId", "Limit", "OwnerUid", "Marketplace" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.ResolveShopRequest), global::Collector.V1.ResolveShopRequest.Parser, new[]{ "UsernameOrUrl", "Marketplace" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.ResolveShopResponse), global::Collector.V1.ResolveShopResponse.Parser, new[]{ "ShopId", "ShopName" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchResponse), global::Collector.V1.FetchResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopResponse), global::Collector.V1.FetchShopResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link", "Marketplace" }, null, null, null, null)
@@ -752,6 +760,476 @@ namespace Collector.V1 {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class ResolveShopRequest : pb::IMessage<ResolveShopRequest>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ResolveShopRequest> _parser = new pb::MessageParser<ResolveShopRequest>(() => new ResolveShopRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ResolveShopRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ResolveShopRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ResolveShopRequest(ResolveShopRequest other) : this() {
+      usernameOrUrl_ = other.usernameOrUrl_;
+      marketplace_ = other.marketplace_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ResolveShopRequest Clone() {
+      return new ResolveShopRequest(this);
+    }
+
+    /// <summary>Field number for the "username_or_url" field.</summary>
+    public const int UsernameOrUrlFieldNumber = 1;
+    private string usernameOrUrl_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string UsernameOrUrl {
+      get { return usernameOrUrl_; }
+      set {
+        usernameOrUrl_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "marketplace" field.</summary>
+    public const int MarketplaceFieldNumber = 2;
+    private global::Collector.V1.Marketplace marketplace_ = global::Collector.V1.Marketplace.Unspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Collector.V1.Marketplace Marketplace {
+      get { return marketplace_; }
+      set {
+        marketplace_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ResolveShopRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ResolveShopRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (UsernameOrUrl != other.UsernameOrUrl) return false;
+      if (Marketplace != other.Marketplace) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (UsernameOrUrl.Length != 0) hash ^= UsernameOrUrl.GetHashCode();
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) hash ^= Marketplace.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (UsernameOrUrl.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(UsernameOrUrl);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(16);
+        output.WriteEnum((int) Marketplace);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (UsernameOrUrl.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(UsernameOrUrl);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(16);
+        output.WriteEnum((int) Marketplace);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (UsernameOrUrl.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(UsernameOrUrl);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Marketplace);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ResolveShopRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.UsernameOrUrl.Length != 0) {
+        UsernameOrUrl = other.UsernameOrUrl;
+      }
+      if (other.Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        Marketplace = other.Marketplace;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            UsernameOrUrl = input.ReadString();
+            break;
+          }
+          case 16: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            UsernameOrUrl = input.ReadString();
+            break;
+          }
+          case 16: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class ResolveShopResponse : pb::IMessage<ResolveShopResponse>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ResolveShopResponse> _parser = new pb::MessageParser<ResolveShopResponse>(() => new ResolveShopResponse());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ResolveShopResponse> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[3]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ResolveShopResponse() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ResolveShopResponse(ResolveShopResponse other) : this() {
+      shopId_ = other.shopId_;
+      shopName_ = other.shopName_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ResolveShopResponse Clone() {
+      return new ResolveShopResponse(this);
+    }
+
+    /// <summary>Field number for the "shop_id" field.</summary>
+    public const int ShopIdFieldNumber = 1;
+    private long shopId_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public long ShopId {
+      get { return shopId_; }
+      set {
+        shopId_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "shop_name" field.</summary>
+    public const int ShopNameFieldNumber = 2;
+    private string shopName_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ShopName {
+      get { return shopName_; }
+      set {
+        shopName_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ResolveShopResponse);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ResolveShopResponse other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (ShopId != other.ShopId) return false;
+      if (ShopName != other.ShopName) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (ShopId != 0L) hash ^= ShopId.GetHashCode();
+      if (ShopName.Length != 0) hash ^= ShopName.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (ShopId != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(ShopId);
+      }
+      if (ShopName.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(ShopName);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (ShopId != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(ShopId);
+      }
+      if (ShopName.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(ShopName);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (ShopId != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(ShopId);
+      }
+      if (ShopName.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ShopName);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ResolveShopResponse other) {
+      if (other == null) {
+        return;
+      }
+      if (other.ShopId != 0L) {
+        ShopId = other.ShopId;
+      }
+      if (other.ShopName.Length != 0) {
+        ShopName = other.ShopName;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            ShopId = input.ReadInt64();
+            break;
+          }
+          case 18: {
+            ShopName = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            ShopId = input.ReadInt64();
+            break;
+          }
+          case 18: {
+            ShopName = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class FetchResponse : pb::IMessage<FetchResponse>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -766,7 +1244,7 @@ namespace Collector.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[2]; }
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1030,7 +1508,7 @@ namespace Collector.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1294,7 +1772,7 @@ namespace Collector.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[4]; }
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

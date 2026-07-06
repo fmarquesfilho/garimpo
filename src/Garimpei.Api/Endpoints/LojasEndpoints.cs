@@ -24,6 +24,7 @@ public static partial class EndpointExtensions
                 {
                     id = b.Id,
                     keywords = b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                    shop_ids = b.ShopIds,
                     sort_by = b.SortBy,
                     limit = b.Limit,
                     active = b.Active,

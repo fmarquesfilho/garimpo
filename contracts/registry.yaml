@@ -131,6 +131,9 @@ boundaries:
     protocol: http
     method: POST
     path: /api/lojas
+    request_schema: contracts/schemas/lojas.request.json
+    response_schema: contracts/schemas/lojas.response.json
+    notes: "Resolve URL/username → shop_id via Collector gRPC (marketplace parametrizável via origem_padrao)."
 
   - id: fe-candidatos
     source: frontend
@@ -199,6 +202,13 @@ boundaries:
     protocol: grpc
     service: collector.v1.CollectorService
     method: Fetch
+
+  - id: api-collector-resolve-shop
+    source: csharp-api
+    target: collector
+    protocol: grpc
+    service: collector.v1.CollectorService
+    method: ResolveShop
 
   # ── C# API → Python Analyzer (HTTP) ────────────────────────────────────────
   - id: api-analyzer-candidatos
@@ -306,6 +316,17 @@ flows:
       - boundary: fe-buscas-get
         action: "Frontend carrega do servidor"
     data_flow: ["read:postgresql:Buscas", "write:postgresql:Buscas"]
+
+  add-loja:
+    name: "Adição de Loja (Resolver Shop ID)"
+    trigger: user
+    steps:
+      - boundary: fe-lojas-post
+        action: "Frontend envia URL ou nome da loja"
+      - boundary: api-collector-resolve-shop
+        action: "C# API solicita resolução de URL/Username para Shop ID via gRPC"
+      - action: "Collector busca dados reais da loja na Shopee"
+    data_flow: ["write:postgresql:Buscas"]
 
   # ── Fluxos automáticos (scheduler/cron) ────────────────────────────────────
 

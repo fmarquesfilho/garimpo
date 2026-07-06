@@ -14,6 +14,8 @@ enum Marketplace {
 }
 
 service CollectorService {
+  // Resolve shop ID by username or URL.
+  rpc ResolveShop(ResolveShopRequest) returns (ResolveShopResponse);
   // Fetch products by search keyword from a given marketplace.
   rpc Fetch(FetchRequest) returns (FetchResponse);
   // Fetch all products from a specific shop.
@@ -35,6 +37,16 @@ message FetchShopRequest {
   string owner_uid = 3;
   // Marketplace of the shop. Defaults to SHOPEE when unspecified.
   Marketplace marketplace = 4;
+}
+
+message ResolveShopRequest {
+  string username_or_url = 1;
+  Marketplace marketplace = 2;
+}
+
+message ResolveShopResponse {
+  int64 shop_id = 1;
+  string shop_name = 2;
 }
 
 message FetchResponse {

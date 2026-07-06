@@ -24,6 +24,7 @@ public static partial class EndpointExtensions
                 {
                     id = b.Id,
                     keyword = b.Keyword,
+                    shop_ids = b.ShopIds,
                     ativo = b.Active,
                     criado_em = b.CreatedAt
                 }),
@@ -31,10 +32,22 @@ public static partial class EndpointExtensions
             });
         }).RequireAuthorization().WithTags("Lojas");
 
-        app.MapPost("/api/lojas", async (AppDbContext db, AdicionarLojaRequest req, CancellationToken ct) =>
+        app.MapPost("/api/lojas", async (
+            AppDbContext db,
+            Collector.V1.CollectorService.CollectorServiceClient collectorClient,
+            AdicionarLojaRequest req,
+            CancellationToken ct) =>
         {
             // "input" pode ser URL da loja ou keyword
             var keyword = req.Input ?? "";
+
+            // Resolve marketplace a partir do campo origem_padrao (default: shopee)
+            var marketplace = (req.OrigemPadrao?.ToLowerInvariant()) switch
+            {
+                "amazon" => Collector.V1.Marketplace.Amazon,
+                "mercadolivre" or "ml" => Collector.V1.Marketplace.Mercadolivre,
+                _ => Collector.V1.Marketplace.Shopee
+            };
 
             var busca = new Busca
             {
@@ -44,10 +57,40 @@ public static partial class EndpointExtensions
                 Limit = 50
             };
 
+            try
+            {
+                var resolveResp = await collectorClient.ResolveShopAsync(new Collector.V1.ResolveShopRequest
+                {
+                    UsernameOrUrl = keyword,
+                    Marketplace = marketplace
+                }, cancellationToken: ct);
+
+                if (resolveResp.ShopId > 0)
+                {
+                    busca.ShopIds = [resolveResp.ShopId];
+                    if (!string.IsNullOrEmpty(resolveResp.ShopName))
+                    {
+                        busca.Keyword = resolveResp.ShopName;
+                    }
+                }
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound || ex.StatusCode == Grpc.Core.StatusCode.InvalidArgument)
+            {
+                return Results.BadRequest(new { error = $"Loja não encontrada ou link inválido no marketplace {marketplace}." });
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Unimplemented)
+            {
+                return Results.BadRequest(new { error = $"Resolução de loja ainda não suportada para {req.OrigemPadrao ?? "shopee"}." });
+            }
+            catch
+            {
+                return Results.BadRequest(new { error = "Falha ao resolver o ID da loja via Collector." });
+            }
+
             db.Buscas.Add(busca);
             await db.SaveChangesAsync(ct);
 
-            return Results.Ok(new { id = busca.Id, keyword, status = "adicionada" });
+            return Results.Ok(new { id = busca.Id, keyword = busca.Keyword, shop_ids = busca.ShopIds, status = "adicionada" });
         }).RequireAuthorization().WithTags("Lojas");
 
         app.MapDelete("/api/lojas", async (AppDbContext db, string id, CancellationToken ct) =>

@@ -14,6 +14,11 @@ public sealed class Busca : IOwnedEntity
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
+    /// Arrays de Shop IDs (ex: lojas monitoradas). Se nulo, trata-se de uma busca por palavra-chave genérica.
+    /// </summary>
+    public long[]? ShopIds { get; set; }
+
+    /// <summary>
     /// Marketplaces to query for this search. Defaults to Shopee only.
     /// Stored as comma-separated string in the database (e.g. "shopee,amazon").
     /// </summary>

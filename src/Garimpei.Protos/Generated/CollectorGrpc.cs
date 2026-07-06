@@ -46,6 +46,10 @@ namespace Collector.V1 {
     }
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Collector.V1.ResolveShopRequest> __Marshaller_collector_v1_ResolveShopRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.ResolveShopRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Collector.V1.ResolveShopResponse> __Marshaller_collector_v1_ResolveShopResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.ResolveShopResponse.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Collector.V1.FetchRequest> __Marshaller_collector_v1_FetchRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.FetchRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Collector.V1.FetchResponse> __Marshaller_collector_v1_FetchResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.FetchResponse.Parser));
@@ -53,6 +57,14 @@ namespace Collector.V1 {
     static readonly grpc::Marshaller<global::Collector.V1.FetchShopRequest> __Marshaller_collector_v1_FetchShopRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.FetchShopRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Collector.V1.FetchShopResponse> __Marshaller_collector_v1_FetchShopResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.FetchShopResponse.Parser));
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Collector.V1.ResolveShopRequest, global::Collector.V1.ResolveShopResponse> __Method_ResolveShop = new grpc::Method<global::Collector.V1.ResolveShopRequest, global::Collector.V1.ResolveShopResponse>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "ResolveShop",
+        __Marshaller_collector_v1_ResolveShopRequest,
+        __Marshaller_collector_v1_ResolveShopResponse);
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::Collector.V1.FetchRequest, global::Collector.V1.FetchResponse> __Method_Fetch = new grpc::Method<global::Collector.V1.FetchRequest, global::Collector.V1.FetchResponse>(
@@ -80,6 +92,18 @@ namespace Collector.V1 {
     [grpc::BindServiceMethod(typeof(CollectorService), "BindService")]
     public abstract partial class CollectorServiceBase
     {
+      /// <summary>
+      /// Resolve shop ID by username or URL.
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Collector.V1.ResolveShopResponse> ResolveShop(global::Collector.V1.ResolveShopRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
       /// <summary>
       /// Fetch products by search keyword from a given marketplace.
       /// </summary>
@@ -133,6 +157,54 @@ namespace Collector.V1 {
       {
       }
 
+      /// <summary>
+      /// Resolve shop ID by username or URL.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Collector.V1.ResolveShopResponse ResolveShop(global::Collector.V1.ResolveShopRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return ResolveShop(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Resolve shop ID by username or URL.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Collector.V1.ResolveShopResponse ResolveShop(global::Collector.V1.ResolveShopRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_ResolveShop, null, options, request);
+      }
+      /// <summary>
+      /// Resolve shop ID by username or URL.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Collector.V1.ResolveShopResponse> ResolveShopAsync(global::Collector.V1.ResolveShopRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return ResolveShopAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Resolve shop ID by username or URL.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Collector.V1.ResolveShopResponse> ResolveShopAsync(global::Collector.V1.ResolveShopRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_ResolveShop, null, options, request);
+      }
       /// <summary>
       /// Fetch products by search keyword from a given marketplace.
       /// </summary>
@@ -243,6 +315,7 @@ namespace Collector.V1 {
     public static grpc::ServerServiceDefinition BindService(CollectorServiceBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
+          .AddMethod(__Method_ResolveShop, serviceImpl.ResolveShop)
           .AddMethod(__Method_Fetch, serviceImpl.Fetch)
           .AddMethod(__Method_FetchShop, serviceImpl.FetchShop).Build();
     }
@@ -254,6 +327,7 @@ namespace Collector.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     public static void BindService(grpc::ServiceBinderBase serviceBinder, CollectorServiceBase serviceImpl)
     {
+      serviceBinder.AddMethod(__Method_ResolveShop, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Collector.V1.ResolveShopRequest, global::Collector.V1.ResolveShopResponse>(serviceImpl.ResolveShop));
       serviceBinder.AddMethod(__Method_Fetch, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Collector.V1.FetchRequest, global::Collector.V1.FetchResponse>(serviceImpl.Fetch));
       serviceBinder.AddMethod(__Method_FetchShop, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Collector.V1.FetchShopRequest, global::Collector.V1.FetchShopResponse>(serviceImpl.FetchShop));
     }

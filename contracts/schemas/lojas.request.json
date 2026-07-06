@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "input": {
+      "type": "string",
+      "description": "URL ou username da loja (ex: https://shopee.com.br/loja_exemplo ou loja_exemplo)"
+    },
+    "cron": {
+      "type": "string",
+      "description": "Frequência opcional para agendamento automático."
+    },
+    "origem_padrao": {
+      "type": "string",
+      "description": "Marketplace de origem padrão (ex: shopee)."
+    }
+  },
+  "required": ["input"],
+  "additionalProperties": false
+}

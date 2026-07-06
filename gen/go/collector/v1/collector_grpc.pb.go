@@ -19,14 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CollectorService_Fetch_FullMethodName     = "/collector.v1.CollectorService/Fetch"
-	CollectorService_FetchShop_FullMethodName = "/collector.v1.CollectorService/FetchShop"
+	CollectorService_ResolveShop_FullMethodName = "/collector.v1.CollectorService/ResolveShop"
+	CollectorService_Fetch_FullMethodName       = "/collector.v1.CollectorService/Fetch"
+	CollectorService_FetchShop_FullMethodName   = "/collector.v1.CollectorService/FetchShop"
 )
 
 // CollectorServiceClient is the client API for CollectorService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CollectorServiceClient interface {
+	// Resolve shop ID by username or URL.
+	ResolveShop(ctx context.Context, in *ResolveShopRequest, opts ...grpc.CallOption) (*ResolveShopResponse, error)
 	// Fetch products by search keyword from a given marketplace.
 	Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error)
 	// Fetch all products from a specific shop.
@@ -39,6 +42,16 @@ type collectorServiceClient struct {
 
 func NewCollectorServiceClient(cc grpc.ClientConnInterface) CollectorServiceClient {
 	return &collectorServiceClient{cc}
+}
+
+func (c *collectorServiceClient) ResolveShop(ctx context.Context, in *ResolveShopRequest, opts ...grpc.CallOption) (*ResolveShopResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveShopResponse)
+	err := c.cc.Invoke(ctx, CollectorService_ResolveShop_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *collectorServiceClient) Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error) {
@@ -65,6 +78,8 @@ func (c *collectorServiceClient) FetchShop(ctx context.Context, in *FetchShopReq
 // All implementations must embed UnimplementedCollectorServiceServer
 // for forward compatibility.
 type CollectorServiceServer interface {
+	// Resolve shop ID by username or URL.
+	ResolveShop(context.Context, *ResolveShopRequest) (*ResolveShopResponse, error)
 	// Fetch products by search keyword from a given marketplace.
 	Fetch(context.Context, *FetchRequest) (*FetchResponse, error)
 	// Fetch all products from a specific shop.
@@ -79,6 +94,9 @@ type CollectorServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCollectorServiceServer struct{}
 
+func (UnimplementedCollectorServiceServer) ResolveShop(context.Context, *ResolveShopRequest) (*ResolveShopResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResolveShop not implemented")
+}
 func (UnimplementedCollectorServiceServer) Fetch(context.Context, *FetchRequest) (*FetchResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Fetch not implemented")
 }
@@ -104,6 +122,24 @@ func RegisterCollectorServiceServer(s grpc.ServiceRegistrar, srv CollectorServic
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&CollectorService_ServiceDesc, srv)
+}
+
+func _CollectorService_ResolveShop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveShopRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServiceServer).ResolveShop(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CollectorService_ResolveShop_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServiceServer).ResolveShop(ctx, req.(*ResolveShopRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _CollectorService_Fetch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -149,6 +185,10 @@ var CollectorService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "collector.v1.CollectorService",
 	HandlerType: (*CollectorServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ResolveShop",
+			Handler:    _CollectorService_ResolveShop_Handler,
+		},
 		{
 			MethodName: "Fetch",
 			Handler:    _CollectorService_Fetch_Handler,
