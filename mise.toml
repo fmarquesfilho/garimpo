@@ -219,9 +219,37 @@ description = "E2E ResolveShop (integração real: API + Collector + Shopee)"
 run = """
 # Pré-requisitos: API C# + PostgreSQL + Firebase Emulator + Collector Go
 
-# 1. Verifica se API está rodando
+# 1. Garante que PostgreSQL está rodando
+if ! docker compose ps postgres 2>/dev/null | grep -q "running"; then
+  echo "🐘 Subindo PostgreSQL..."
+  docker compose up -d postgres
+  for i in $(seq 1 15); do
+    docker compose ps postgres 2>/dev/null | grep -q "healthy" && break
+    sleep 1
+  done
+fi
+
+# 2. Cria override temporário para apontar gRPC + Firebase para o host
+cat > docker-compose.override.yml <<EOF
+services:
+  garimpei-api-v2:
+    environment:
+      Grpc__CollectorAddress: "http://host.docker.internal:50051"
+      Grpc__PublisherAddress: "http://host.docker.internal:50052"
+      FIREBASE_AUTH_EMULATOR_HOST: "host.docker.internal:9099"
+EOF
+
+echo "🐳 Subindo API C# (apontando gRPC + Firebase para o host)..."
+docker compose up -d garimpei-api-v2 --force-recreate
+rm -f docker-compose.override.yml
+
+# Aguarda ficar healthy
+for i in $(seq 1 20); do
+  curl -s http://localhost:8090/api/health > /dev/null 2>&1 && break
+  sleep 1
+done
 if ! curl -s http://localhost:8090/api/health > /dev/null 2>&1; then
-  echo "⚠️  API C# não está rodando na porta 8090. Rode: mise run up"
+  echo "❌ API não ficou healthy."
   exit 1
 fi
 
@@ -267,7 +295,7 @@ fi
 # 4. Build frontend + roda apenas o teste de lojas
 echo "✅ Todos os serviços prontos. Rodando E2E ResolveShop..."
 cd web && npm run build
-FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test lojas-resolve-shop --project=autenticado
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test lojas-resolve-shop
 EXIT_CODE=$?
 
 # Cleanup

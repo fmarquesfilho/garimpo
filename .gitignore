@@ -37,3 +37,4 @@ src/**/*.suo
 .env.local
 firebase-debug.log
 __pycache__
+docker-compose.override.yml

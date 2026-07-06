@@ -36,8 +36,6 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__PostgreSQL: "Host=postgres;Port=5432;Database=garimpei;Username=garimpei;Password=garimpei_dev"
-      Grpc__CollectorAddress: "http://host.docker.internal:50051"
-      Grpc__PublisherAddress: "http://host.docker.internal:50052"
     depends_on:
       postgres:
         condition: service_healthy
