@@ -62,14 +62,14 @@ func (s *UnifiedCollectorServer) ResolveShop(ctx context.Context, req *collector
 	}
 
 	apiURL := "https://shopee.com.br/api/v4/shop/get_shop_detail?username=" + url.QueryEscape(username)
-	reqHttp, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	reqHTTP, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "erro ao criar request: %v", err)
 	}
-	reqHttp.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+	reqHTTP.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(reqHttp)
+	resp, err := client.Do(reqHTTP)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "erro na requisição Shopee API: %v", err)
 	}

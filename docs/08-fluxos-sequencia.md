@@ -229,7 +229,67 @@ consultando novidades = 1000 queries BQ paralelas (cada uma ~200ms).
 
 ---
 
-## 5. Coleta de Cupons + Detecção
+## 5. Adicionar Loja (Resolver Shop ID)
+
+O usuário adiciona uma loja informando URL ou username. O sistema resolve o shop_id
+real via Collector gRPC e persiste a busca com os IDs numéricos.
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuário
+    participant F as 🌐 Frontend
+    participant A as 🔷 API C# (:8080)
+    participant C as ⚙️ Collector Go (:50051)
+    participant S as ☁️ Shopee API (v4 pública)
+    participant PG as 🟢 PostgreSQL
+
+    U->>F: digita "https://shopee.com.br/belezanaweb_oficial"
+    F->>A: POST /api/lojas {input: "https://shopee.com.br/belezanaweb_oficial", origem_padrao: "shopee"}
+    A->>A: resolve marketplace enum (shopee/amazon/ml)
+    A->>C: gRPC ResolveShop(username_or_url="https://shopee.com.br/belezanaweb_oficial", marketplace=SHOPEE)
+    C->>C: parse URL → extrai username "belezanaweb_oficial"
+    C->>S: GET /api/v4/shop/get_shop_detail?username=belezanaweb_oficial
+    S-->>C: {error: 0, data: {shopid: 920292999, name: "Beleza Na Web"}}
+    C-->>A: ResolveShopResponse {shop_id: 920292999, shop_name: "Beleza Na Web"}
+    A->>A: cria Busca com ShopIds=[920292999], Keyword="Beleza Na Web"
+    A->>PG: INSERT INTO Buscas {Keyword, ShopIds, Active, OwnerUid}
+    PG-->>A: persisted
+    A-->>F: {id: "uuid", keyword: "Beleza Na Web", shop_ids: [920292999], status: "adicionada"}
+    F-->>U: ✅ Loja adicionada com sucesso
+```
+
+<details>
+<summary>📋 Detalhes técnicos</summary>
+
+**Data ownership:**
+- 🟢 PostgreSQL: `Buscas` — C# API é o dono exclusivo, grava o perfil de monitoramento
+- O Collector Go **não acessa o PostgreSQL** — faz apenas I/O externo (Shopee API v4)
+- O C# API **não faz scraping direto** — delega ao Collector via gRPC (bounded context)
+
+**Resolução de URL:** O Collector parseia a URL para extrair o username:
+- `https://shopee.com.br/belezanaweb_oficial` → `belezanaweb_oficial`
+- `belezanaweb_oficial` (já é username) → usa diretamente
+
+**API utilizada:** Shopee API pública (não a de afiliados):
+`GET https://shopee.com.br/api/v4/shop/get_shop_detail?username={username}`
+Não requer autenticação HMAC — é endpoint público.
+
+**Tratamento de erros:**
+- `error != 0` ou `shopid == 0` → gRPC NotFound → HTTP 400 para o frontend
+- Marketplace não suportado → gRPC Unimplemented → HTTP 400
+- Falha de rede → gRPC Internal → HTTP 400 genérico
+
+**Conformidade ADR-0018:** ResolveShop vive no binário único do Collector (sem container novo).
+É um RPC utilitário (query síncrona pontual), não um pipeline de coleta.
+
+**Conformidade ADR-0020:** Fronteira `api-collector-resolve-shop` registrada no registry.yaml,
+schemas `lojas.request.json` e `lojas.response.json` documentam o contrato.
+
+</details>
+
+---
+
+## 6. Coleta de Cupons + Detecção
 
 O scheduler coleta cupons de múltiplos marketplaces e o analyzer detecta novos/modificados/expirados.
 
@@ -280,7 +340,7 @@ Se um falha, os outros continuam (graceful degradation).
 
 ---
 
-## 6. Publicar a Partir de Variação de Preço
+## 7. Publicar a Partir de Variação de Preço
 
 O usuário vê uma queda na aba Preços e clica "📤" para publicar aquela oferta.
 
@@ -327,7 +387,7 @@ O produto vai direto para publicação com o preço atual da Shopee.
 
 ---
 
-## 7. Onboarding (Configuração Multi-Tenant)
+## 8. Onboarding (Configuração Multi-Tenant)
 
 Fluxo multi-step de cadastro do tenant. Puramente CRUD no PostgreSQL.
 
@@ -379,7 +439,7 @@ indicando que deverão ser encriptadas (T-0045 pendente).
 
 ---
 
-## 8. Dashboard (Estatísticas e Evolução)
+## 9. Dashboard (Estatísticas e Evolução)
 
 A página de estatísticas mostra métricas agregadas, evolução de preço, e contagem de quedas/altas.
 
@@ -437,7 +497,7 @@ O C# API é stateless (proxying only). Suporta N tenants simultâneos.
 
 ---
 
-## 9. Resolver Link Shopee
+## 10. Resolver Link Shopee
 
 Utilitário para extrair dados de um link curto da Shopee (s.shopee.com.br/xxx).
 
@@ -469,7 +529,7 @@ um produto da curadoria. Resolve o link para obter imagem, nome e preço.
 
 ---
 
-## 10. CRUD de Canais e Templates
+## 11. CRUD de Canais e Templates
 
 Gerenciamento de destinos de publicação e templates de mensagem. Puramente PostgreSQL.
 
@@ -516,12 +576,13 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 | 2. Publicar | ✍ Destinos, Publicacoes | — | Telegram/WhatsApp |
 | 3. Coleta+Alerta | — | ✍ snapshots | Shopee → BQ → Telegram |
 | 4. Monitorar Lojas | 📖 Buscas | 📖 snapshots (via Analyzer) | — |
-| 5. Cupons | ✍ AlertRules, AlertHistory | ✍ coupon_snapshots, 📖 diff | Shopee/Amazon/ML |
-| 6. Publicar Variação | ✍ Destinos, Publicacoes | — | Telegram |
-| 7. Onboarding | ✍ TenantConfigs | — | — |
-| 8. Dashboard | 📖 Publicacoes | 📖 snapshots (via Analyzer) | — |
-| 9. Resolver Link | — | — | Shopee CDN (redirect) |
-| 10. Canais/Templates | ✍ Destinos, Templates | — | — |
+| 5. Adicionar Loja | ✍ Buscas | — | Shopee v4 (via Collector gRPC) |
+| 6. Cupons | ✍ AlertRules, AlertHistory | ✍ coupon_snapshots, 📖 diff | Shopee/Amazon/ML |
+| 7. Publicar Variação | ✍ Destinos, Publicacoes | — | Telegram |
+| 8. Onboarding | ✍ TenantConfigs | — | — |
+| 9. Dashboard | 📖 Publicacoes | 📖 snapshots (via Analyzer) | — |
+| 10. Resolver Link | — | — | Shopee CDN (redirect) |
+| 11. Canais/Templates | ✍ Destinos, Templates | — | — |
 
 **Legenda:** ✍ = escreve, 📖 = lê, — = não envolvido
 
