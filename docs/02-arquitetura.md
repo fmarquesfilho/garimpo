@@ -396,16 +396,18 @@ Request HTTP com JWT Firebase
 
 ### collector (Go, gRPC :50051)
 
-**Responsabilidade:** buscar produtos na API de afiliados da Shopee
+**Responsabilidade:** buscar produtos na API de afiliados da Shopee e resolver dados de lojas
 
 - Autenticação HMAC-SHA256 (AppID + Secret + timestamp)
 - Paginação com throttling (200ms entre páginas, 60s entre lojas)
 - Rotação de catálogo (cursor por loja, full-scan tracking)
 - Suporta busca por keyword ou por shop_id
+- Resolução de URL/username → shop_id via API pública Shopee v4
 
 **RPCs:**
 - `Fetch(keyword, limit)` → produtos rankeados por comissão
 - `FetchShop(shop_id, limit)` → produtos de uma loja específica
+- `ResolveShop(username_or_url, marketplace)` → resolve URL ou username de loja em shop_id numérico (consulta Shopee v4/shop/get_shop_detail)
 
 ### publisher (Go, gRPC :50052)
 

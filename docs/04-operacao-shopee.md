@@ -95,6 +95,40 @@ Se a Shopee expor campo de origem na API, basta:
 
 Monitorar via Admin → Introspecção periodicamente.
 
+## API Pública v4 — Resolução de loja (ResolveShop)
+
+O Collector Go usa a API pública da Shopee para resolver username/URL em shop_id:
+
+```
+GET https://shopee.com.br/api/v4/shop/get_shop_detail?username={username}
+```
+
+**Headers obrigatórios:**
+- `User-Agent`: browser real (necessário para evitar 403)
+
+**Resposta (JSON):**
+```json
+{
+  "error": 0,
+  "data": {
+    "shopid": 123456789,
+    "name": "Nome da Loja"
+  }
+}
+```
+
+**Comportamento:**
+- `error != 0` ou `shopid == 0` → loja não encontrada (retorna gRPC `NotFound`)
+- Endpoint público, sem autenticação necessária (diferente da API de Afiliados)
+- Parsing de URL: `https://shopee.com.br/loja_exemplo` → extrai `loja_exemplo`
+
+**Limitações conhecidas:**
+- Funciona apenas para Shopee Brasil (domínio `shopee.com.br`)
+- Suporte a Amazon/ML ainda não implementado (retorna `Unimplemented`)
+- IP de datacenter pode ser bloqueado em alto volume (sem rate limit formal documentado)
+
+---
+
 ## Schema GraphQL — Campos disponíveis
 
 Extraídos via introspecção real (`/api/admin/shopee-introspect`):
