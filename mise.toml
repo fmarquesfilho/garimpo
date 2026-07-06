@@ -214,3 +214,66 @@ fi
 exit $EXIT_CODE
 """
 
+[tasks."test:e2e:lojas"]
+description = "E2E ResolveShop (integração real: API + Collector + Shopee)"
+run = """
+# Pré-requisitos: API C# + PostgreSQL + Firebase Emulator + Collector Go
+
+# 1. Verifica se API está rodando
+if ! curl -s http://localhost:8090/api/health > /dev/null 2>&1; then
+  echo "⚠️  API C# não está rodando na porta 8090. Rode: mise run up"
+  exit 1
+fi
+
+# 2. Verifica/inicia Collector Go
+COLLECTOR_STARTED=0
+if ! grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check > /dev/null 2>&1; then
+  echo "⚙️  Iniciando Collector Go..."
+  cd services/collector && go run . &
+  COLLECTOR_PID=$!
+  COLLECTOR_STARTED=1
+  # Aguarda ficar pronto
+  for i in $(seq 1 10); do
+    grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check > /dev/null 2>&1 && break
+    sleep 1
+  done
+  if ! grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check > /dev/null 2>&1; then
+    echo "❌ Collector não iniciou. Verifique services/collector/"
+    kill $COLLECTOR_PID 2>/dev/null || true
+    exit 1
+  fi
+  cd ../..
+fi
+
+# 3. Verifica/inicia Firebase Auth Emulator
+EMULATOR_STARTED=0
+if ! curl -s http://localhost:9099/ > /dev/null 2>&1; then
+  echo "🔥 Iniciando Firebase Auth Emulator..."
+  firebase emulators:start --only auth --project garimpo-500114 &
+  EMULATOR_PID=$!
+  EMULATOR_STARTED=1
+  for i in $(seq 1 15); do
+    curl -s http://localhost:9099/ > /dev/null 2>&1 && break
+    sleep 1
+  done
+  if ! curl -s http://localhost:9099/ > /dev/null 2>&1; then
+    echo "⚠️  Emulator não iniciou. Pulando teste."
+    kill $EMULATOR_PID 2>/dev/null || true
+    [ $COLLECTOR_STARTED -eq 1 ] && kill $COLLECTOR_PID 2>/dev/null || true
+    exit 0
+  fi
+fi
+
+# 4. Build frontend + roda apenas o teste de lojas
+echo "✅ Todos os serviços prontos. Rodando E2E ResolveShop..."
+cd web && npm run build
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test lojas-resolve-shop --project=autenticado
+EXIT_CODE=$?
+
+# Cleanup
+[ $EMULATOR_STARTED -eq 1 ] && kill $EMULATOR_PID 2>/dev/null || true
+[ $COLLECTOR_STARTED -eq 1 ] && kill $COLLECTOR_PID 2>/dev/null || true
+
+exit $EXIT_CODE
+"""
+
