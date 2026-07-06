@@ -62,14 +62,14 @@ jobs:
   python:
     name: Python
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v4
       - run: mise run lint:python
       - name: Syntax check
         run: |
-          pip install -r services/analyzer/requirements.txt --quiet
+          uv pip install --system -r services/analyzer/requirements.txt
           python -c "import sys; sys.path.insert(0, 'services/analyzer'); import main"
 
   # ── Proto (lint + sync + breaking) ──────────────────────────────────────
