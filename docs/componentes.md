@@ -206,19 +206,22 @@ app.css @theme    → --color-primary: var(--ouro);   (mapeia para Tailwind)
 
 ### Paleta semântica (shadcn)
 
+Baseada no tema **Garimpo Quente** (metáfora: garimpo, rústico, terracota e ouro; estética quente e humana).
+
 | Token | Light | Dark | Uso |
 |-------|-------|------|-----|
-| `--primary` | `--ouro` (#9e7422) | #d4a845 | Botões, links, foco |
-| `--destructive` | `--rosa` (#944c63) | #c47a92 | Ações destrutivas |
-| `--background` | `--porcelana` (#f5f0ed) | #1a1517 | Fundo da página |
-| `--foreground` | `--tinta` (#2e2226) | #f0ebe8 | Texto primário |
-| `--muted` | `--porcelana` | #1a1517 | Superfícies sutis |
-| `--accent` | `--ouro-fundo` | #2e2618 | Hover states |
-| `--border` | `--linha` (#e3d9d4) | #3d3538 | Bordas |
+| `--primary` | `--ouro` (#ab7815) | #eabb4d | Botões, links, foco |
+| `--destructive` | `--rosa` (#c05c48) | #d47a66 | Ações destrutivas (terracota intenso) |
+| `--background` | `--porcelana` (#fdfaf6) | #241d19 | Fundo da página (areia clara / sépia denso) |
+| `--foreground` | `--tinta` (#3d2b1f) | #f5eee9 | Texto primário (marrom carvão quente) |
+| `--muted` | `--porcelana` (#fdfaf6) | #241d19 | Superfícies sutis |
+| `--accent` | `--ouro-fundo` (#fbf5e6) | #3a2e18 | Hover states |
+| `--border` | `--linha` (#e8dbce) | #4a3b31 | Bordas (terracota suave) |
 
 ### Dark mode
 
-Automático via `data-theme="dark"` no `<html>`. Os tokens são sobrescritos em `:root[data-theme="dark"]` dentro de `tokens.css`. Tailwind lê os valores via `@theme`.
+Automático via `data-theme="dark"` no `<html>`. Os tokens são sobrescritos em `:root[data-theme="dark"]` dentro de `tokens.css`. Tailwind lê os valores via `@theme`. 
+A paleta dark é baseada em tons quentes (sépia/marrom profundo) em vez de cinza/preto frio, e o ouro ganha um destaque mais brilhante e luminoso.
 
 ---
 

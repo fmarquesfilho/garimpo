@@ -1,14 +1,14 @@
 # Impacto da Migração UI — Qualidade de Código e Dívida Técnica
 
-**Data:** 2026-07-03
-**Escopo:** Adoção de Bits UI + Design Tokens no frontend Svelte 5
+**Data:** 2026-07-05
+**Escopo:** Adoção de Bits UI + Design Tokens no frontend Svelte 5 + Tema Garimpo Quente
 **Referência:** T-0037, ADR-0001
 
 ---
 
 ## Resumo Executivo
 
-A migração introduziu uma biblioteca de componentes padronizada (10 primitivos + compostos Bits UI), formalizou design tokens, e eliminou 100% dos hex colors hardcoded. O resultado é uma base de código mais consistente, acessível, e protegida por tooling automatizado contra regressão.
+A migração introduziu uma biblioteca de componentes padronizada (10 primitivos + compostos Bits UI), formalizou design tokens, e eliminou 100% dos hex colors hardcoded. Além disso, revitalizou toda a estética visual do sistema aplicando o tema **Garimpo Quente** (cores mais quentes, terracota, ouro e sépia para o dark mode). O resultado é uma base de código mais consistente, esteticamente apurada, acessível, e protegida por tooling automatizado contra regressão.
 
 ---
 
