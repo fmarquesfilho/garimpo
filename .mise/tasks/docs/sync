@@ -138,33 +138,8 @@ hero:
 - [Sessões de Desenvolvimento](/sessoes/SESSAO_2026-07-03_SHADCN_MIGRATION)
 EOF
 
-# ── API page ──────────────────────────────────────────────────────────────────
-cat > "$DEST/api.md" << 'EOF'
-# API Reference
-
-A especificação OpenAPI 3.1 completa da API do Garimpei está em
-[`api/openapi.yaml`](https://github.com/fmarquesfilho/garimpo/blob/main/api/openapi.yaml).
-
-## Endpoints principais
-
-| Grupo | Base | Descrição |
-|-------|------|-----------|
-| Curadoria | `/api/candidatos`, `/api/v2/curadoria/*` | Busca + ranking |
-| Buscas/Lojas | `/api/buscas`, `/api/lojas` | CRUD monitoramento |
-| Publicação | `/api/publicar`, `/api/publicacoes` | Envio para canais |
-| Favoritos | `/api/favoritos` | Produtos salvos |
-| Destinos | `/api/destinos` | Canais (Telegram/WhatsApp) |
-| Templates | `/api/templates` | Modelos de mensagem |
-| Alertas | `/api/alertas` | Configuração + teste |
-| Onboarding | `/api/onboarding/*` | Configuração multi-tenant |
-| Analytics | `/api/conversoes`, `/api/estatisticas`, `/api/coletas` | Dados |
-| Admin | `/api/admin/me`, `/api/health` | Status |
-
-## Autenticação
-
-Todos os endpoints (exceto `/api/health` e `/api/candidatos`) requerem
-Firebase Auth JWT no header `Authorization: Bearer <token>`.
-EOF
+# ── API page (copiada de docs/09-api-reference.md)
+cp "$ROOT/docs/09-api-reference.md" "$DEST/api.md"
 
 # ── Corrigir links internos ───────────────────────────────────────────────────
 # sed -i portável (macOS BSD sed vs GNU sed)
