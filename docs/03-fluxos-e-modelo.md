@@ -107,6 +107,47 @@ A busca criada é usada pelo Scheduler para coletas periódicas. Detecção de:
 - **Novos produtos** — não existiam na coleta anterior
 - **Variações de preço** — quedas e altas significativas (acima do threshold)
 
+### Pipeline pós-agendamento (detecção de novidades)
+
+Após a busca ser agendada, o fluxo de detecção funciona assim:
+
+```
+Scheduler (cron a cada 8h)
+    │
+    ├─ [1] dispatchJob() → executeJob()
+    │      Se type=shop_collection: Collector.FetchShop(shop_id)
+    │      Se keywords[]: Collector.Fetch(keyword) para cada keyword
+    │
+    ├─ [2] Collector → Shopee GraphQL API (HMAC auth)
+    │      Retorna produtos com preço, comissão, vendas
+    │
+    ├─ [3] Collector → BigQuery INSERT INTO snapshots (append-only)
+    │      produto_id, nome, preco, comissao, keyword, coletado_em
+    │
+    ├─ [4] Scheduler enfileira alerta via Cloud Tasks
+    │      Cloud Tasks POST /process-alert → Scheduler HTTP
+    │
+    └─ [5] Scheduler HTTP → Analyzer GET /quedas → Publisher gRPC
+           (se variação > threshold, envia Telegram)
+```
+
+**Quando o usuário acessa /lojas no frontend:**
+
+```
+Frontend GET /api/lojas/novidades?busca_id=X&dias=7
+    → C# API (proxy transparente)
+    → Analyzer Python GET /novidades?busca_id=X&dias=7
+    → BigQuery: window functions sobre snapshots da janela
+    → Retorna:
+       • produtos_novos[] (apareceu 1x na janela = nunca visto antes)
+       • variacoes[] (|preco_atual - preco_primeiro| / preco_primeiro > 1%)
+```
+
+**Regras de detecção (Analyzer /novidades):**
+- **Produto novo**: `aparicoes == 1` (só apareceu uma vez na janela de N dias)
+- **Variação de preço**: `|variacao| > 0.01` (mais de 1% de diferença entre primeiro e último preço)
+- A query usa `LIKE %busca_id%` no campo `keyword` dos snapshots
+
 ### Alertas de preço
 
 Implementados no backend, desabilitados por padrão (aguardando config por usuário).

@@ -232,7 +232,7 @@ consultando novidades = 1000 queries BQ paralelas (cada uma ~200ms).
 ## 5. Adicionar Loja (Resolver Shop ID)
 
 O usuário adiciona uma loja informando URL ou username. O sistema resolve o shop_id
-real via Collector gRPC e persiste a busca com os IDs numéricos.
+real via Collector gRPC, persiste a busca, e registra um job no Scheduler para coleta periódica.
 
 ```mermaid
 sequenceDiagram
@@ -242,20 +242,30 @@ sequenceDiagram
     participant C as ⚙️ Collector Go (:50051)
     participant S as ☁️ Shopee API (v4 pública)
     participant PG as 🟢 PostgreSQL
+    participant SC as ⏱️ Scheduler (:50054)
 
     U->>F: digita "https://shopee.com.br/belezanaweb_oficial"
-    F->>A: POST /api/lojas {input: "https://shopee.com.br/belezanaweb_oficial", origem_padrao: "shopee"}
+    F->>A: POST /api/lojas {input: "https://shopee.com.br/belezanaweb_oficial", keywords?: ["serum"]}
     A->>A: resolve marketplace enum (shopee/amazon/ml)
-    A->>C: gRPC ResolveShop(username_or_url="https://shopee.com.br/belezanaweb_oficial", marketplace=SHOPEE)
+    A->>C: gRPC ResolveShop(username_or_url, marketplace=SHOPEE)
     C->>C: parse URL → extrai username "belezanaweb_oficial"
     C->>S: GET /api/v4/shop/get_shop_detail?username=belezanaweb_oficial
     S-->>C: {error: 0, data: {shopid: 920292999, name: "Beleza Na Web"}}
     C-->>A: ResolveShopResponse {shop_id: 920292999, shop_name: "Beleza Na Web"}
-    A->>A: cria Busca com ShopIds=[920292999], Keyword="Beleza Na Web"
-    A->>PG: INSERT INTO Buscas {Keyword, ShopIds, Active, OwnerUid}
+    A->>A: cria Busca com ShopIds=[920292999], Keywords=["serum"]
+    A->>PG: INSERT INTO Buscas {Keyword, ShopIds, Keywords, CronExpression, OwnerUid}
     PG-->>A: persisted
+    A->>SC: gRPC SetSchedule(job_id="busca-{Id}", cron="0 */8 * * *", enabled=true, params={shop_id, owner_uid, keywords})
+    SC-->>A: SetScheduleResponse {success: true, job: {status: "active", next_run_at}}
     A-->>F: {id: "uuid", keyword: "Beleza Na Web", shop_ids: [920292999], status: "adicionada"}
     F-->>U: ✅ Loja adicionada com sucesso
+
+    Note over SC: A cada 8h, o Scheduler dispara a coleta →
+    SC->>C: gRPC FetchShop(shop_id=920292999, limit=50)
+    C->>S: POST GraphQL productOfferV2(shopId: 920292999)
+    S-->>C: JSON {products[]}
+    C-->>SC: FetchShopResponse {products[], totalFound}
+    Note over SC: Collector grava snapshots no BigQuery (append-only)
 ```
 
 <details>
@@ -263,27 +273,42 @@ sequenceDiagram
 
 **Data ownership:**
 - 🟢 PostgreSQL: `Buscas` — C# API é o dono exclusivo, grava o perfil de monitoramento
+- ⏱️ Scheduler: dono dos jobs periódicos — registra/pausa jobs via SetSchedule
 - O Collector Go **não acessa o PostgreSQL** — faz apenas I/O externo (Shopee API v4)
 - O C# API **não faz scraping direto** — delega ao Collector via gRPC (bounded context)
 
-**Resolução de URL:** O Collector parseia a URL para extrair o username:
-- `https://shopee.com.br/belezanaweb_oficial` → `belezanaweb_oficial`
-- `belezanaweb_oficial` (já é username) → usa diretamente
+**Integração com Scheduler:**
+- O C# API chama `SetSchedule(enabled=true)` ao criar a busca
+- O C# API chama `SetSchedule(enabled=false)` ao deletar a busca
+- Se o Scheduler estiver indisponível, a Busca persiste no PG (eventual consistency)
+- O Scheduler armazena os params do job (shop_id, owner_uid, keywords) em memória
 
-**API utilizada:** Shopee API pública (não a de afiliados):
-`GET https://shopee.com.br/api/v4/shop/get_shop_detail?username={username}`
-Não requer autenticação HMAC — é endpoint público.
+**Fluxo de coleta periódica (disparado pelo cron do Scheduler):**
+1. Cron trigger → `dispatchJob()` → `executeJob()`
+2. Se `params["type"] == "shop_collection"` → usa FetchShop(shop_id)
+3. Se keywords estão presentes → passa como filtro para Fetch(keyword, shop_id)
+4. Collector consulta Shopee → grava snapshots no BigQuery
+5. Scheduler enfileira alerta via Cloud Tasks (se configurado)
 
-**Tratamento de erros:**
-- `error != 0` ou `shopid == 0` → gRPC NotFound → HTTP 400 para o frontend
-- Marketplace não suportado → gRPC Unimplemented → HTTP 400
-- Falha de rede → gRPC Internal → HTTP 400 genérico
+**Pipeline de detecção (pós-coleta):**
+```
+Scheduler coleta → BigQuery (snapshots)
+                        ↓
+Frontend GET /api/lojas/novidades → C# proxy → Analyzer /novidades
+                                                    ↓
+                                            BigQuery query (window functions)
+                                                    ↓
+                                            {produtos_novos[], variacoes[]}
+```
 
-**Conformidade ADR-0018:** ResolveShop vive no binário único do Collector (sem container novo).
-É um RPC utilitário (query síncrona pontual), não um pipeline de coleta.
+**Modos de monitoramento:**
+- Sem keywords: `FetchShop(shop_id)` — coleta TODOS os produtos da loja
+- Com keywords: `Fetch(keyword, shop_id)` — coleta apenas produtos que matcham
 
-**Conformidade ADR-0020:** Fronteira `api-collector-resolve-shop` registrada no registry.yaml,
-schemas `lojas.request.json` e `lojas.response.json` documentam o contrato.
+**Status atual (gap):**
+O `executeJob()` no Scheduler usa `Collector.Fetch(keyword)` genericamente.
+Para jobs `shop_collection`, deveria usar `Collector.FetchShop(shop_id)`.
+Fix pendente no Scheduler Go.
 
 </details>
 
@@ -576,7 +601,7 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 | 2. Publicar | ✍ Destinos, Publicacoes | — | Telegram/WhatsApp |
 | 3. Coleta+Alerta | — | ✍ snapshots | Shopee → BQ → Telegram |
 | 4. Monitorar Lojas | 📖 Buscas | 📖 snapshots (via Analyzer) | — |
-| 5. Adicionar Loja | ✍ Buscas | — | Shopee v4 (via Collector gRPC) |
+| 5. Adicionar Loja | ✍ Buscas | — | Shopee v4 (via Collector gRPC) + Scheduler SetSchedule |
 | 6. Cupons | ✍ AlertRules, AlertHistory | ✍ coupon_snapshots, 📖 diff | Shopee/Amazon/ML |
 | 7. Publicar Variação | ✍ Destinos, Publicacoes | — | Telegram |
 | 8. Onboarding | ✍ TenantConfigs | — | — |
@@ -593,7 +618,7 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 | Fluxo | Status | Descrição |
 |---|---|---|
 | Publicações agendadas | ⬜ Não implementado | Usuário agenda para data futura; worker deveria enviar no horário. Hoje salva com `status="agendada"` mas nenhum cron processa. |
-| Sync buscas → scheduler | ⬜ Pendente (T-0028) | Quando usuário adiciona loja, scheduler deveria criar cron job automaticamente. |
+| Coleta por shop_id no Scheduler | ⬜ Pendente | O Scheduler executa `Collector.Fetch(keyword)` para todos os jobs. Jobs do tipo `shop_collection` (criados via POST /api/lojas) deveriam usar `Collector.FetchShop(shop_id)`. Atualmente o job envia o job_name como keyword, que não retorna resultados. Corrigir `executeJob()` para rotear por `params["type"]`. |
 | Alertas de cupons → Telegram | ⬜ Parcial (T-0045) | Detecção funciona mas envio para Telegram do tenant ainda não wired. |
 
 ---
