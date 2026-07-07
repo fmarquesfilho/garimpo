@@ -2,9 +2,10 @@
 	import { onMount } from 'svelte';
 	import { buscarEstatisticas, buscarEvolucaoLojas, listarPublicacoes, listarBuscasServidor } from '$lib/api.js';
 	import { brl, num, pctSinal } from '$lib/formatters.js';
-	import { Loading, Alert, MetricCard, DashPanel, MiniChart, RankList } from '$lib/components/ui/index.js';
+	import { Loading, Alert, MetricCard, DashPanel, MiniChart, RankList, Select } from '$lib/components/ui/index.js';
 
 	let dias = $state(7);
+	const diasOpcoes = [7, 30, 90].map((d) => ({ value: String(d), label: `${d} dias` }));
 	let carregando = $state(true);
 	let erro = $state(null);
 
@@ -69,15 +70,16 @@
 <div class="max-w-[900px]">
 	<header class="mb-6 flex items-center justify-between">
 		<h1 class="m-0 text-2xl">📊 Dashboard</h1>
-		<select
-			bind:value={dias}
-			onchange={carregar}
-			class="rounded-sm border border-border bg-porcelana px-3 py-1.5 font-mono text-sm"
-		>
-			<option value={7}>7 dias</option>
-			<option value={30}>30 dias</option>
-			<option value={90}>90 dias</option>
-		</select>
+		<Select
+			value={String(dias)}
+			onchange={(v) => {
+				dias = Number(v);
+				carregar();
+			}}
+			options={diasOpcoes}
+			size="sm"
+			class="w-28"
+		/>
 	</header>
 
 	{#if carregando}
