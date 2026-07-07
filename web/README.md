@@ -7,8 +7,9 @@ SPA SvelteKit 5 servida via Cloudflare Pages.
 - **SvelteKit 2** (adapter-static → SPA)
 - **Svelte 5** (runes mode)
 - **Vite 8**
+- **shadcn-svelte + Bits UI** (component library)
+- **Tailwind CSS 4** (utility-first)
 - **Firebase Auth** (login Google)
-- **TipTap** (editor WYSIWYG para templates)
 
 ## Setup
 
@@ -42,10 +43,12 @@ VITE_API_BASE=http://localhost:5000 npm run dev
 ## Testes
 
 ```bash
-npx vitest run       # Unit (109 testes, <2s)
-npm test             # E2E (Playwright)
-npm run lint         # ESLint + Stylelint
-npm run lint:dead    # Knip (dead code)
+npx vitest run                    # Unit (141 testes, <2s)
+mise run test:e2e                 # E2E completo (Playwright + Firebase Emulator)
+mise run test:e2e:lojas           # E2E integração real (ResolveShop + Shopee API)
+mise run test:e2e:buscas-agendadas  # E2E buscas agendadas (Scheduler + keywords)
+npm run lint:js                   # ESLint
+npm run lint:css                  # Stylelint
 ```
 
 ## Build

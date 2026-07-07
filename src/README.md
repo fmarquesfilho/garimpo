@@ -17,24 +17,25 @@ src/
 ├── Garimpei.Infrastructure/  # EF Core (PostgreSQL), gRPC clients, tenancy
 │   ├── Persistence/          # AppDbContext, migrations
 │   └── Tenancy/              # TenantContext (scoped per-request)
-├── Garimpei.Protos/          # Proto-generated gRPC client stubs (Collector, Publisher)
-└── Garimpei.Tests/           # xUnit (persistence + architecture fitness functions)
+├── Garimpei.Protos/          # Proto-generated gRPC client stubs (Collector, Publisher, Scheduler)
+└── Garimpei.Tests/           # xUnit (68 testes: persistence + architecture + integração)
     ├── Persistence/          # Multi-tenant query filter tests
+    ├── Integration/          # Onboarding, JSON binding, publish flow, buscas agendadas
+    ├── Services/             # CouponDeduplication
     ├── Tenancy/              # TenantContext unit tests
     └── Architecture/         # NetArchTest fitness functions (13 regras)
 ```
 
 ## Endpoints
 
-### Compatibilidade (`/api/*`) — formato usado pelo frontend
-
 | Rota | Descrição |
 |------|-----------|
 | GET `/api/health` | Health check |
 | GET `/api/admin/me` | Verifica se é admin |
 | GET `/api/candidatos` | Busca + ranking (scoring engine) |
-| GET/POST `/api/buscas` | Perfis de busca |
-| GET/POST/DELETE `/api/lojas` | Monitoramento de lojas |
+| GET `/api/categorias` | Categorias por marketplace |
+| GET/POST `/api/buscas` | Perfis de busca (sync servidor) |
+| GET/POST/DELETE `/api/lojas` | Monitoramento de lojas (ResolveShop + Scheduler) |
 | GET `/api/lojas/novidades` | Produtos novos + variações (proxy analyzer) |
 | GET `/api/lojas/evolucao` | Série temporal preço (proxy analyzer) |
 | GET/POST/DELETE `/api/favoritos` | Favoritos |
@@ -47,48 +48,37 @@ src/
 | POST `/api/alertas/testar` | Teste de alerta |
 | POST `/api/alertas/configurar` | Atualizar alertas |
 | GET `/api/onboarding/status` | Status do onboarding |
-| POST `/api/onboarding/termos` | Step 1: aceitar termos |
-| POST `/api/onboarding/shopee` | Step 2: credenciais Shopee |
-| POST `/api/onboarding/telegram` | Step 3: bot Telegram |
-| POST `/api/onboarding/validar` | Step 4: validar credenciais |
+| POST `/api/onboarding/*` | Steps do onboarding (termos, shopee, telegram, whatsapp, validar) |
 | POST `/api/onboarding/excluir-conta` | LGPD: excluir dados |
-| GET `/api/conversoes` | Relatório conversões |
 | GET `/api/conversoes/reais` | Conversões Shopee (proxy analyzer) |
 | GET `/api/estatisticas` | Dashboard (proxy analyzer) |
 | GET `/api/coletas` | Histórico coletas (proxy analyzer) |
 | POST `/api/resolver-link` | Resolver link curto Shopee |
 
-### V2 (`/api/v2/*`) — formato nativo C#
+## gRPC clients (sidecars)
 
-| Rota | Descrição |
-|------|-----------|
-| GET `/api/v2/buscas` | CRUD buscas (EF Core) |
-| GET `/api/v2/curadoria/ranking` | Ranking por keyword |
-| GET `/api/v2/curadoria/ranking/shop` | Ranking por loja |
-| GET `/api/v2/curadoria/quedas` | Quedas de preço (proxy analyzer) |
-| GET `/api/v2/curadoria/novos` | Produtos novos (proxy analyzer) |
-| GET `/api/v2/curadoria/favoritos` | Favoritos do tenant |
-| POST `/api/v2/publicar` | Publicar (gRPC publisher) |
-| GET `/api/v2/publicar/destinos` | Destinos disponíveis |
+| Client | Porta | Uso |
+|--------|-------|-----|
+| `CollectorServiceClient` | 50051 | ResolveShop, Fetch, FetchShop, GenerateAffiliateLink |
+| `PublisherServiceClient` | 50052 | Publish, ListGroups |
+| `SchedulerServiceClient` | 50054 | SetSchedule (criar/pausar jobs de coleta) |
 
 ## Setup local
 
 ```bash
-# Pré-requisitos: .NET SDK 10.0+, PostgreSQL 17+ (ou Docker)
+# Pré-requisitos: .NET SDK 10.0+, mise (task runner)
 
-# Subir PostgreSQL
-docker compose up -d postgres
+# Subir PostgreSQL + API
+mise run up
 
-# Restore + migrations
-dotnet restore
-dotnet ef database update --project Garimpei.Infrastructure --startup-project Garimpei.Api
+# Testes (aplica migrations automaticamente)
+mise run test:csharp
 
-# Rodar (Development mode = bypass auth para teste local)
-dotnet run --project Garimpei.Api
-# → http://localhost:5000
-
-# Testes
-dotnet test
+# Ou manualmente:
+dotnet restore src/Garimpei.sln
+dotnet ef database update --project src/Garimpei.Infrastructure --startup-project src/Garimpei.Api
+dotnet run --project src/Garimpei.Api
+# → http://localhost:5000 (Development mode = bypass auth)
 ```
 
 ## Multi-tenancy
