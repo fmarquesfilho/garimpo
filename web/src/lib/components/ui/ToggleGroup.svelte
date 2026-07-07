@@ -28,8 +28,9 @@
 	function handle(v) {
 		const nv = v ?? '';
 		if (!nullable && !nv) return;
-		if (onchange) onchange(nv);
-		else value = nv;
+		// Atualiza o valor (preserva bind:value) antes de notificar via callback.
+		value = nv;
+		onchange?.(nv);
 	}
 </script>
 

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 public static class SchedulerJobs
 {
     /// <summary>Cron padrão quando a busca não define um (a cada 8h).</summary>
-    public const string DefaultCron = "0 */8 * * *";
+    public static string DefaultCron => "0 */8 * * *";
 
     /// <summary>Registra (ou atualiza) o job periódico da busca no Scheduler.</summary>
     public static Task RegisterAsync(
