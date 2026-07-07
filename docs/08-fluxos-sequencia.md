@@ -303,12 +303,7 @@ Frontend GET /api/lojas/novidades → C# proxy → Analyzer /novidades
 
 **Modos de monitoramento:**
 - Sem keywords: `FetchShop(shop_id)` — coleta TODOS os produtos da loja
-- Com keywords: `Fetch(keyword, shop_id)` — coleta apenas produtos que matcham
-
-**Status atual (gap):**
-O `executeJob()` no Scheduler usa `Collector.Fetch(keyword)` genericamente.
-Para jobs `shop_collection`, deveria usar `Collector.FetchShop(shop_id)`.
-Fix pendente no Scheduler Go.
+- Com keywords: `Fetch(keyword)` para cada keyword — coleta apenas produtos que matcham
 
 </details>
 
@@ -618,7 +613,7 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 | Fluxo | Status | Descrição |
 |---|---|---|
 | Publicações agendadas | ⬜ Não implementado | Usuário agenda para data futura; worker deveria enviar no horário. Hoje salva com `status="agendada"` mas nenhum cron processa. |
-| Coleta por shop_id no Scheduler | ⬜ Pendente | O Scheduler executa `Collector.Fetch(keyword)` para todos os jobs. Jobs do tipo `shop_collection` (criados via POST /api/lojas) deveriam usar `Collector.FetchShop(shop_id)`. Atualmente o job envia o job_name como keyword, que não retorna resultados. Corrigir `executeJob()` para rotear por `params["type"]`. |
+| Coleta por shop_id no Scheduler | ✅ Implementado | O Scheduler executa `Collector.FetchShop(shop_id)` para jobs do tipo `shop_collection`. Jobs com keywords fazem `Fetch(keyword)` para cada keyword individualmente. |
 | Alertas de cupons → Telegram | ⬜ Parcial (T-0045) | Detecção funciona mas envio para Telegram do tenant ainda não wired. |
 
 ---
