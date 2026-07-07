@@ -23,6 +23,8 @@ public static partial class EndpointExtensions
                 {
                     id = b.Id,
                     keywords = b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                    shop_ids = b.ShopIds,
+                    nome = b.ShopIds is { Length: > 0 } ? b.Keyword : null,
                     ativo = b.Active,
                     criado_em = b.CreatedAt,
                     sort_by = b.SortBy,
