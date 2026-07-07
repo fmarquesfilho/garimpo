@@ -74,6 +74,12 @@ Ver [ADR 0007](/docs/decisoes/0007-persistencia-favoritos/).
                                            variações preço)        threshold)
 ```
 
+> **Agendamento unificado (sessão 07/07):** `POST /api/buscas` persiste a `Busca` no
+> PostgreSQL e, quando um `cron` é definido, registra um job **`keyword_search`** no
+> Scheduler (`SetSchedule`) via o helper `SchedulerJobs` — o mesmo usado por `/api/lojas`
+> (job `shop_collection`). Assim **todo agendamento passa pelo Scheduler**, que enfileira
+> os alertas via Cloud Tasks (ADR-0023). Uma busca sem `cron` é apenas manual (sem job).
+
 ### Fontes de dados da busca
 
 | Fonte | Descrição |
@@ -88,7 +94,7 @@ Ver [ADR 0007](/docs/decisoes/0007-persistencia-favoritos/).
 `POST /api/lojas` aceita uma URL ou username de loja e resolve o shop_id
 numérico via Collector gRPC (`ResolveShop`). O fluxo:
 
-1. Frontend envia `input` (URL da loja ou username) + `origem_padrao` (marketplace) + `keywords[]` (opcional)
+1. Frontend envia `input` (URL da loja ou username) + `origem_padrao` (marketplace) + `keywords[]` (opcional) + `cron` (agendamento, padrão a cada 8h)
 2. C# API chama `collector.ResolveShop(username_or_url, marketplace)` via gRPC
 3. Collector (Go) parseia a URL, extrai o username, e consulta a API pública
    Shopee v4 (`/api/v4/shop/get_shop_detail?username=X`)
@@ -98,6 +104,11 @@ numérico via Collector gRPC (`ResolveShop`). O fluxo:
 
 Isso respeita a separação de responsabilidades: Go faz I/O externo com
 marketplaces, C# é dono do PostgreSQL, Scheduler é dono dos jobs periódicos.
+
+> **UI (sessão 07/07):** o formulário "Adicionar loja" coleta palavras-chave
+> (`TagInput`, opcional) e agendamento (`AgendadorBusca`) no mesmo passo em que a
+> loja é adicionada. O registro do job no Scheduler é feito por um helper
+> compartilhado (`SchedulerJobs`) reutilizado por `/api/lojas` e `/api/buscas`.
 
 **Modos de monitoramento:**
 - **Sem keywords** — Scheduler coleta TODOS os produtos da loja (`FetchShop(shop_id)`)

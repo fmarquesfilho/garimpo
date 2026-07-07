@@ -204,8 +204,8 @@ Além da base em `ui/`, os componentes de domínio e layout (localizados em `$li
 - **ProductCard**: Exibição central de ofertas.
 - **CandidateCard**: Visualização de leads de produto.
 - **BuscaCard**: Resumo da busca configurada pelo usuário.
-- **FormAdicionarLoja**: Formulários usando `<Input>`, `<Select>` e validação padronizada.
-- **GerenciarBuscas** / **ListaProdutosLoja** / **AgendadorBusca**: Interações complexas substituídas por `<Dialog>` e modais Bits UI.
+- **FormAdicionarLoja**: Cadastro de loja com `<Input>`/`<Select>` + palavras-chave (`TagInput`) e agendamento (`AgendadorBusca`) integrados no mesmo formulário (sessão 07/07).
+- **GerenciarBuscas** / **ListaProdutosLoja** / **AgendadorBusca**: Buscas por palavra-chave, listagem e seletor de agendamento (com preset "A cada 8h" e prop `permitirNunca`).
 - **ResolverLink**: Ferramenta de processamento de links curtos.
 
 ---
