@@ -17,7 +17,7 @@ app.css
 
 $lib/components/ui/
 ├── Primitivos (Tailwind)        → Button, Alert, Badge, Card, Input
-├── Compostos (Bits UI + TW)     → Select, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
+├── Compostos (Bits UI + TW)     → Select, Checkbox, ToggleGroup, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
 └── Application                  → DashPanel, MetricCard, Loading, EmptyState, ...
 
 $lib/utils.ts                    → cn() (tailwind-merge + clsx)
@@ -123,6 +123,10 @@ $lib/utils.ts                    → cn() (tailwind-merge + clsx)
 | placeholder | string | `''` |
 | size | string | `'md'` |
 | disabled | boolean | `false` |
+| onchange | `(v) => void` \| null | `null` |
+
+> Para valores numéricos, use o par `value={String(n)}` + `onchange={(v) => (n = Number(v))}`
+> (o `value` do Bits UI Select é sempre string).
 
 ### Tabs
 
@@ -150,6 +154,40 @@ $lib/utils.ts                    → cn() (tailwind-merge + clsx)
 | open | boolean (bindable) | `false` |
 | title | string | `''` |
 | description | string | `''` |
+
+### Checkbox
+
+Caixa de seleção acessível (Bits UI) com label clicável. Adicionado na sessão 07/07 para
+substituir `<input type="checkbox">` nativos.
+
+```svelte
+<Checkbox bind:checked={ativo} label="Alertar apenas quedas de preço" />
+```
+
+| Prop | Tipo | Default |
+|------|------|---------|
+| checked | boolean (bindable) | `false` |
+| label | string | `''` |
+| disabled | boolean | `false` |
+
+### ToggleGroup
+
+Seleção única entre opções mutuamente exclusivas (Bits UI — roving tabindex + ARIA).
+Substitui grupos de `<button>` ad hoc. Variante `segment` (pílula segmentada) ou `chips`.
+
+```svelte
+<ToggleGroup bind:value={modo} options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} variant="segment" />
+<ToggleGroup value={cron} onchange={selecionar} options={presets} variant="chips" nullable={false} />
+```
+
+| Prop | Tipo | Default |
+|------|------|---------|
+| value | string (bindable) | `''` |
+| options | `{ value, label }[]` | `[]` |
+| variant | `'segment'` \| `'chips'` | `'chips'` |
+| size | `'sm'` \| `'md'` | `'md'` |
+| nullable | boolean (permite desmarcar) | `true` |
+| onchange | `(v) => void` \| null | `null` |
 
 ### DropdownMenu
 
@@ -189,23 +227,25 @@ $lib/utils.ts                    → cn() (tailwind-merge + clsx)
 Além da base em `ui/`, os componentes de domínio e layout (localizados em `$lib/components/`) foram totalmente migrados para consumir as primitivas shadcn-svelte e os design tokens:
 
 ### Componentes Primitivos e de UI Básica
-- **TagInput**: Campo de tags acessível (shadcn pattern).
+- **TagInput**: Campo de tags acessível — usa `Input` + `Button` (pílulas em `Badge`).
 - **PeriodSelector**: Seleção interativa de janelas de tempo.
 - **ScoreMeter**: Termômetro que exibe o "teor" de oportunidade do produto.
 - **ErrorMessage**: Wrapper de feedback usando `--color-erro`.
 
 ### Navegação e Layout
 - **NavDrawer**: Menu lateral deslizante (mobile/desktop).
-- **FilterBar**: Barra de filtragem de produtos e buscas.
+- **FilterBar**: Barra de filtragem de produtos e buscas — filtro de comissão usa `Select`.
 - **LandingHero** / **HeroProduto**: Headers principais da interface, com suporte a dark mode.
-- **PainelAlertas**: Componente de dashboard para gestão de notificações.
+- **PainelAlertas**: Gestão de alertas de preço — usa `Input` e `Checkbox`.
 
 ### Cards e Componentes de Domínio
 - **ProductCard**: Exibição central de ofertas.
 - **CandidateCard**: Visualização de leads de produto.
 - **BuscaCard**: Resumo da busca configurada pelo usuário.
-- **FormAdicionarLoja**: Formulários usando `<Input>`, `<Select>` e validação padronizada.
-- **GerenciarBuscas** / **ListaProdutosLoja** / **AgendadorBusca**: Interações complexas substituídas por `<Dialog>` e modais Bits UI.
+- **FormAdicionarLoja**: Cadastro de loja com `<Input>`/`<Select>` + palavras-chave (`TagInput`) e agendamento (`AgendadorBusca`) integrados no mesmo formulário (sessão 07/07).
+- **GerenciarBuscas**: Buscas por palavra-chave — fontes em `Checkbox`, janela em `Select`.
+- **AgendadorBusca**: Seletor de agendamento — modo e frequência em `ToggleGroup`, cron avançado em `Input` (preset "A cada 8h", prop `permitirNunca`).
+- **ListaProdutosLoja**: Listagem de produtos da loja monitorada.
 - **ResolverLink**: Ferramenta de processamento de links curtos.
 
 ---

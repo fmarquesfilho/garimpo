@@ -348,6 +348,13 @@ sequenceDiagram
 - O C# API chama `SetSchedule(enabled=false)` ao deletar a busca
 - Se o Scheduler estiver indisponível, a Busca persiste no PG (eventual consistency)
 - O Scheduler armazena os params do job (shop_id, owner_uid, keywords) em memória
+- A montagem do `SetScheduleRequest` é centralizada no helper `SchedulerJobs`
+  (`src/Garimpei.Api/Endpoints/`), reutilizado por `/api/lojas` (job `shop_collection`)
+  e por `/api/buscas` (job `keyword_search`, buscas por palavra-chave sem loja)
+
+**UI (sessão 07/07):** o formulário "Adicionar loja" coleta as palavras-chave
+(`TagInput`, conjunto vazio ou não) e o agendamento (`AgendadorBusca`, padrão a cada 8h)
+no mesmo passo do cadastro — antes esses campos existiam apenas no backend.
 
 **Fluxo de coleta periódica (disparado pelo cron do Scheduler):**
 1. Cron trigger → `dispatchJob()` → `executeJob()`

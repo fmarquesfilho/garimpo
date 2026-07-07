@@ -99,30 +99,10 @@ public static partial class EndpointExtensions
             db.Buscas.Add(busca);
             await db.SaveChangesAsync(ct);
 
-            // Registra job no Scheduler (eventual consistency — se falhar, Busca persiste)
+            // Registra job no Scheduler (eventual consistency — se falhar, Busca persiste).
+            // Loja monitorada sempre coleta periodicamente (default a cada 8h).
             if (busca.ShopIds is { Length: > 0 })
-            {
-                try
-                {
-                    var setReq = new Scheduler.V1.SetScheduleRequest
-                    {
-                        JobId = $"busca-{busca.Id}",
-                        CronExpression = busca.CronExpression ?? "0 */8 * * *",
-                        Enabled = true
-                    };
-                    setReq.Params.Add("shop_id", busca.ShopIds[0].ToString());
-                    setReq.Params.Add("owner_uid", busca.OwnerUid);
-                    setReq.Params.Add("type", "shop_collection");
-                    if (busca.Keywords is { Length: > 0 })
-                        setReq.Params.Add("keywords", string.Join(",", busca.Keywords));
-
-                    await schedulerClient.SetScheduleAsync(setReq, cancellationToken: ct);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Falha ao registrar job no Scheduler para busca {BuscaId}", busca.Id);
-                }
-            }
+                await SchedulerJobs.RegisterAsync(schedulerClient, busca, logger, ct);
 
             return Results.Ok(new { id = busca.Id, keyword = busca.Keyword, shop_ids = busca.ShopIds, source_url = busca.SourceUrl, status = "adicionada" });
         }).RequireAuthorization().WithTags("Lojas");
@@ -145,19 +125,7 @@ public static partial class EndpointExtensions
             await db.SaveChangesAsync(ct);
 
             // Pausa o job no Scheduler
-            try
-            {
-                await schedulerClient.SetScheduleAsync(new Scheduler.V1.SetScheduleRequest
-                {
-                    JobId = $"busca-{guid}",
-                    CronExpression = busca.CronExpression ?? "0 */8 * * *",
-                    Enabled = false
-                }, cancellationToken: ct);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Falha ao pausar job no Scheduler para busca {BuscaId}", guid);
-            }
+            await SchedulerJobs.PauseAsync(schedulerClient, busca, logger, ct);
 
             return Results.Ok(new { status = "removida", id });
         }).RequireAuthorization().WithTags("Lojas");

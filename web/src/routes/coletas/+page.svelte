@@ -1,8 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
 	import { buscarColetas, listarBuscasServidor } from '$lib/api.js';
+	import { Select } from '$lib/components/ui';
 
 	let dias = $state(30);
+	const diasOpcoes = [7, 30, 90].map((d) => ({ value: String(d), label: `${d} dias` }));
 	let coletas = $state([]);
 	let buscas = $state([]);
 	let carregando = $state(true);
@@ -79,18 +81,19 @@
 		Histórico de coletas executadas e status das buscas agendadas. Cada coleta grava um snapshot dos top produtos do
 		momento.
 	</p>
-	<label class="text-sm text-tinta-suave">
+	<span class="flex items-center gap-1.5 text-sm text-tinta-suave">
 		janela:
-		<select
-			bind:value={dias}
-			onchange={carregar}
-			class="dado font-mono py-1.5 px-2.5 rounded-lg border border-border bg-porcelana ml-1.5"
-		>
-			<option value={7}>7 dias</option>
-			<option value={30}>30 dias</option>
-			<option value={90}>90 dias</option>
-		</select>
-	</label>
+		<Select
+			value={String(dias)}
+			onchange={(v) => {
+				dias = Number(v);
+				carregar();
+			}}
+			options={diasOpcoes}
+			size="sm"
+			class="w-28"
+		/>
+	</span>
 </section>
 
 {#if carregando}

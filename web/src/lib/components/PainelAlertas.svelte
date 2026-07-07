@@ -5,7 +5,7 @@
 	 */
 	import { buscarAlertasConfig, testarAlertas, configurarAlertas } from '$lib/api.js';
 	import { onMount } from 'svelte';
-	import { Button, Badge, Alert, Input } from '$lib/components/ui';
+	import { Button, Badge, Alert, Input, Checkbox } from '$lib/components/ui';
 
 	let { buscaSelecionada = null } = $props();
 
@@ -92,10 +92,7 @@
 			</div>
 
 			<div class="flex flex-col gap-1">
-				<label class="flex cursor-pointer items-center gap-2 text-sm">
-					<input type="checkbox" class="h-4 w-4 cursor-pointer accent-primary" bind:checked={alertaApenasQuedas} />
-					Alertar apenas quedas de preço (oportunidades)
-				</label>
+				<Checkbox bind:checked={alertaApenasQuedas} label="Alertar apenas quedas de preço (oportunidades)" />
 			</div>
 
 			<div class="mt-2 flex flex-col gap-3 sm:flex-row">

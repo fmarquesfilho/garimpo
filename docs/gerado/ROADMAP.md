@@ -22,6 +22,7 @@
 - **T-0050** Testar envio real: Telegram + WhatsApp (Publisher end-to-end) · qualidade · S
 - **T-0051** Documentação final: consolidar estado pós-migração · documentacao · S
 - **T-0052** OpenAPI spec integrada: Swagger com todas as APIs (C# + Go gRPC) · documentacao · M
+- **T-0053** Avaliar alternativas ao GitHub Actions (CI/CD + hosting de git) · operacao · S
 
 ## ⚪ Later (radar)
 

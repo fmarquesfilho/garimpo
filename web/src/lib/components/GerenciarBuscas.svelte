@@ -7,7 +7,7 @@
 	import TagInput from './TagInput.svelte';
 	import AgendadorBusca from './AgendadorBusca.svelte';
 	import BuscaCard from './BuscaCard.svelte';
-	import { Button } from '$lib/components/ui';
+	import { Button, Checkbox, Select } from '$lib/components/ui';
 
 	let buscasKw = $derived(($buscasSalvas ?? []).filter((b) => !b.shop_ids?.length));
 
@@ -15,8 +15,10 @@
 	let keywordsNovas = $state([]);
 	let categoriasNovas = $state([]);
 	let cronNova = $state('');
-	let diasJanela = $state(7);
+	let diasJanela = $state('7');
 	let fontes = $state({ curadoria: true, quedas: false, novos: false });
+
+	const diasOpcoes = [1, 2, 3, 7, 14, 30].map((d) => ({ value: String(d), label: `${d} ${d === 1 ? 'dia' : 'dias'}` }));
 
 	let fontesArray = $derived(
 		Object.entries(fontes)
@@ -32,26 +34,30 @@
 			keywords: keywordsNovas,
 			categorias: categoriasNovas.length > 0 ? categoriasNovas : undefined,
 			fontes: fontesArray,
-			dias_janela: diasJanela,
+			dias_janela: Number(diasJanela),
 			estrategia: 'nicho',
 			cron: cronNova
 		});
 		keywordsNovas = [];
 		categoriasNovas = [];
 		cronNova = '';
-		diasJanela = 7;
+		diasJanela = '7';
 		fontes = { curadoria: true, quedas: false, novos: false };
 		mostrarForm = false;
 	}
 </script>
 
 <div class="mb-6">
-	<div class="mb-3 flex items-center justify-between">
-		<h2 class="m-0 text-lg text-foreground">🔍 Buscas Agendadas</h2>
+	<div class="mb-1 flex items-center justify-between">
+		<h2 class="m-0 text-lg text-foreground">🔍 Buscas por palavra-chave</h2>
 		<Button variant="secondary" size="sm" onclick={() => (mostrarForm = !mostrarForm)}>
 			{mostrarForm ? '✕ cancelar' : '+ nova busca'}
 		</Button>
 	</div>
+	<p class="mb-3 text-sm text-muted-foreground">
+		Agende buscas por palavra-chave na Shopee inteira, com ou sem coleta automática. Para monitorar palavras-chave
+		dentro de uma loja específica, use o formulário “Adicionar loja” acima.
+	</p>
 
 	{#if mostrarForm}
 		<div class="mb-4 flex flex-col gap-4 rounded-md border border-border bg-card p-4">
@@ -61,37 +67,18 @@
 			<!-- Fontes -->
 			<div class="flex flex-col gap-1.5">
 				<span class="text-sm font-semibold text-foreground">Fontes de dados:</span>
-				<div class="flex flex-wrap gap-3">
-					<label class="flex cursor-pointer items-center gap-1 text-sm"
-						><input type="checkbox" class="accent-primary" bind:checked={fontes.curadoria} /> 🔍 Curadoria</label
-					>
-					<label class="flex cursor-pointer items-center gap-1 text-sm"
-						><input type="checkbox" class="accent-primary" bind:checked={fontes.quedas} /> 📉 Quedas de preço</label
-					>
-					<label class="flex cursor-pointer items-center gap-1 text-sm"
-						><input type="checkbox" class="accent-primary" bind:checked={fontes.novos} /> 🆕 Produtos novos</label
-					>
+				<div class="flex flex-wrap gap-4">
+					<Checkbox bind:checked={fontes.curadoria} label="🔍 Curadoria" />
+					<Checkbox bind:checked={fontes.quedas} label="📉 Quedas de preço" />
+					<Checkbox bind:checked={fontes.novos} label="🆕 Produtos novos" />
 				</div>
 			</div>
 
 			<!-- Dias janela (para novos) -->
 			{#if fontes.novos}
 				<div class="flex flex-wrap items-center gap-2">
-					<label for="dias-janela" class="text-sm font-semibold text-foreground"
-						>Considerar "novo" se apareceu nos últimos:</label
-					>
-					<select
-						id="dias-janela"
-						class="rounded-lg border border-border px-2.5 py-1.5 text-sm"
-						bind:value={diasJanela}
-					>
-						<option value={1}>1 dia</option>
-						<option value={2}>2 dias</option>
-						<option value={3}>3 dias</option>
-						<option value={7}>7 dias</option>
-						<option value={14}>14 dias</option>
-						<option value={30}>30 dias</option>
-					</select>
+					<span class="text-sm font-semibold text-foreground">Considerar "novo" se apareceu nos últimos:</span>
+					<Select bind:value={diasJanela} options={diasOpcoes} size="sm" class="w-32" />
 				</div>
 			{/if}
 

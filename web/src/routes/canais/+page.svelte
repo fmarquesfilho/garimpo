@@ -3,7 +3,12 @@
 	import { listarDestinos, salvarDestino, deletarDestino } from '$lib/api.js';
 	import { usuario } from '$lib/firebase.js';
 	import SeletorGrupo from '$lib/SeletorGrupo.svelte';
-	import { Alert, Button, Dialog, DropdownMenu } from '$lib/components/ui';
+	import { Alert, Button, Dialog, DropdownMenu, Select } from '$lib/components/ui';
+
+	const tipoOpcoes = [
+		{ value: 'telegram', label: '✈️ Telegram' },
+		{ value: 'whatsapp', label: '💬 WhatsApp' }
+	];
 
 	let destinos = $state([]);
 	let carregando = $state(true);
@@ -156,11 +161,8 @@
 			}}
 		>
 			<div class="flex-1 min-w-[140px] flex flex-col gap-1">
-				<label for="tipo" class="text-xs font-semibold text-tinta-suave">Tipo</label>
-				<select id="tipo" bind:value={tipo} onchange={aoMudarTipo}>
-					<option value="telegram">✈️ Telegram</option>
-					<option value="whatsapp">💬 WhatsApp</option>
-				</select>
+				<span class="text-xs font-semibold text-tinta-suave">Tipo</span>
+				<Select bind:value={tipo} onchange={aoMudarTipo} options={tipoOpcoes} />
 			</div>
 			<div class="flex-1 min-w-[140px] flex flex-col gap-1">
 				<label for="nome" class="text-xs font-semibold text-tinta-suave">Nome</label>

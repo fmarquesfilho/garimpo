@@ -7,7 +7,7 @@
 	 * @prop variant — 'default' | 'shop' (muda a cor da pílula)
 	 * @prop parse — função opcional para processar o valor antes de adicionar
 	 */
-	import { Badge } from '$lib/components/ui';
+	import { Badge, Input, Button } from '$lib/components/ui';
 
 	let { tags = $bindable([]), placeholder = '', label = '', variant = 'default', parse = null } = $props();
 
@@ -36,24 +36,28 @@
 	{#if label}
 		<span class="text-sm font-semibold text-muted-foreground">{label}</span>
 	{/if}
-	<div class="flex gap-2">
-		<input
-			class="flex-1 rounded-sm border border-border bg-background px-4 py-3 font-[var(--ui)] text-foreground transition-[border-color] duration-150 ease-linear placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none motion-reduce:transition-none"
-			bind:value={valor}
-			{placeholder}
-			onkeydown={(e) => {
-				if (e.key === 'Enter') {
-					e.preventDefault();
-					adicionar();
-				}
-			}}
-		/>
-		<button
-			type="button"
-			class="shrink-0 rounded-sm border border-border bg-accent px-4 text-lg font-bold text-accent-foreground transition-[border-color] duration-150 ease-linear hover:border-primary motion-reduce:transition-none"
+	<div class="flex items-stretch gap-2">
+		<div class="flex-1">
+			<Input
+				bind:value={valor}
+				{placeholder}
+				onkeydown={(e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						adicionar();
+					}
+				}}
+			/>
+		</div>
+		<Button
+			variant="secondary"
+			size="md"
+			class="h-10 shrink-0 px-4 text-lg"
 			onclick={adicionar}
-			aria-label="Adicionar tag">+</button
+			aria-label="Adicionar tag"
 		>
+			+
+		</Button>
 	</div>
 	{#if tags.length > 0}
 		<div class="flex flex-wrap gap-2">

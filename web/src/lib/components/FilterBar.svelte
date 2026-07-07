@@ -6,6 +6,9 @@
 	 */
 	import { onMount } from 'svelte';
 	import { buscarCategorias, filtrarCategorias } from '$lib/categorias.js';
+	import { Select } from '$lib/components/ui';
+
+	const comissaoOpcoes = [0.05, 0.07, 0.1, 0.15].map((c) => ({ value: String(c), label: `${c * 100}%` }));
 
 	let {
 		busca = $bindable(''),
@@ -136,18 +139,16 @@
 					</ul>
 				{/if}
 			</label>
-			<label class="flex flex-col gap-1">
+			<div class="flex flex-col gap-1">
 				<span class="rotulo">comissão mín.</span>
-				<select
-					bind:value={comissaoMin}
-					class="dado font-mono text-sm py-2 px-3 rounded-sm border border-border bg-muted text-foreground"
-				>
-					<option value={0.05}>5%</option>
-					<option value={0.07}>7%</option>
-					<option value={0.1}>10%</option>
-					<option value={0.15}>15%</option>
-				</select>
-			</label>
+				<Select
+					value={String(comissaoMin)}
+					onchange={(v) => (comissaoMin = Number(v))}
+					options={comissaoOpcoes}
+					size="sm"
+					class="w-24"
+				/>
+			</div>
 			<label class="flex flex-col gap-1">
 				<span class="rotulo">vendas mín.</span>
 				<input
