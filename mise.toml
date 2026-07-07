@@ -328,3 +328,97 @@ EXIT_CODE=$?
 exit $EXIT_CODE
 """
 
+
+[tasks."test:e2e:buscas-agendadas"]
+description = "E2E Buscas Agendadas (integração: API + Collector + Scheduler)"
+run = """
+# Similar ao test:e2e:lojas mas inclui Scheduler Go
+
+# 1. Garante que PostgreSQL está rodando
+if ! docker compose ps postgres 2>/dev/null | grep -q "running"; then
+  echo "🐘 Subindo PostgreSQL..."
+  docker compose up -d postgres
+  for i in $(seq 1 15); do
+    docker compose ps postgres 2>/dev/null | grep -q "healthy" && break
+    sleep 1
+  done
+fi
+
+# 2. Cria override temporário
+cat > docker-compose.override.yml <<EOF
+services:
+  garimpei-api-v2:
+    environment:
+      Grpc__CollectorAddress: "http://host.docker.internal:50051"
+      Grpc__PublisherAddress: "http://host.docker.internal:50052"
+      Grpc__SchedulerAddress: "http://host.docker.internal:50054"
+      FIREBASE_AUTH_EMULATOR_HOST: "host.docker.internal:9099"
+EOF
+
+echo "🐳 Subindo API C#..."
+docker compose up -d garimpei-api-v2 --force-recreate
+rm -f docker-compose.override.yml
+
+for i in $(seq 1 20); do
+  curl -s http://localhost:8090/api/health > /dev/null 2>&1 && break
+  sleep 1
+done
+if ! curl -s http://localhost:8090/api/health > /dev/null 2>&1; then
+  echo "❌ API não ficou healthy."
+  exit 1
+fi
+
+# 3. Verifica/inicia Collector Go
+COLLECTOR_STARTED=0
+if ! grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check > /dev/null 2>&1; then
+  echo "⚙️  Iniciando Collector Go..."
+  cd services/collector && go run . &
+  COLLECTOR_PID=$!
+  COLLECTOR_STARTED=1
+  for i in $(seq 1 10); do
+    grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check > /dev/null 2>&1 && break
+    sleep 1
+  done
+  cd ../..
+fi
+
+# 4. Verifica/inicia Scheduler Go
+SCHEDULER_STARTED=0
+if ! grpcurl -plaintext localhost:50054 grpc.health.v1.Health/Check > /dev/null 2>&1; then
+  echo "⏱️  Iniciando Scheduler Go..."
+  cd services/scheduler && go run . &
+  SCHEDULER_PID=$!
+  SCHEDULER_STARTED=1
+  for i in $(seq 1 10); do
+    grpcurl -plaintext localhost:50054 grpc.health.v1.Health/Check > /dev/null 2>&1 && break
+    sleep 1
+  done
+  cd ../..
+fi
+
+# 5. Firebase Auth Emulator
+EMULATOR_STARTED=0
+if ! curl -s http://localhost:9099/ > /dev/null 2>&1; then
+  echo "🔥 Iniciando Firebase Auth Emulator..."
+  firebase emulators:start --only auth --project garimpo-500114 &
+  EMULATOR_PID=$!
+  EMULATOR_STARTED=1
+  for i in $(seq 1 15); do
+    curl -s http://localhost:9099/ > /dev/null 2>&1 && break
+    sleep 1
+  done
+fi
+
+# 6. Roda testes
+echo "✅ Todos os serviços prontos. Rodando E2E Buscas Agendadas..."
+cd web && npm run build
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test buscas-agendadas
+EXIT_CODE=$?
+
+# Cleanup
+[ $EMULATOR_STARTED -eq 1 ] && kill $EMULATOR_PID 2>/dev/null || true
+[ $SCHEDULER_STARTED -eq 1 ] && kill $SCHEDULER_PID 2>/dev/null || true
+[ $COLLECTOR_STARTED -eq 1 ] && kill $COLLECTOR_PID 2>/dev/null || true
+
+exit $EXIT_CODE
+"""

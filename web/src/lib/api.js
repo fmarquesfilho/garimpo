@@ -245,11 +245,13 @@ export function configurarAlertas({ chatId, threshold, apenasQuedas } = {}) {
  * @param {string} opts.input
  * @param {string} [opts.cron]
  * @param {string} [opts.origemPadrao]
+ * @param {string[]} [opts.keywords]
  */
-export function adicionarLoja({ input, cron, origemPadrao }) {
+export function adicionarLoja({ input, cron, origemPadrao, keywords }) {
 	const corpo = { input };
 	if (cron) corpo.cron = cron;
 	if (origemPadrao) corpo.origem_padrao = origemPadrao;
+	if (keywords && keywords.length > 0) corpo.keywords = keywords;
 	return postar('/api/lojas', corpo);
 }
 

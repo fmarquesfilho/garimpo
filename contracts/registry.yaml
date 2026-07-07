@@ -218,6 +218,14 @@ boundaries:
     method: GenerateAffiliateLink
     notes: "Gera link curto de afiliada via Shopee generateShortLink com sub_ids para rastreamento de conversões."
 
+  - id: api-scheduler-set-schedule
+    source: csharp-api
+    target: scheduler
+    protocol: grpc
+    service: scheduler.v1.SchedulerService
+    method: SetSchedule
+    notes: "Registra/pausa job de coleta periódica ao criar/remover buscas agendadas."
+
   # ── C# API → Python Analyzer (HTTP) ────────────────────────────────────────
   - id: api-analyzer-candidatos
     source: csharp-api
@@ -326,14 +334,16 @@ flows:
     data_flow: ["read:postgresql:Buscas", "write:postgresql:Buscas"]
 
   add-loja:
-    name: "Adição de Loja (Resolver Shop ID)"
+    name: "Adição de Loja (Resolver Shop ID + Agendar Coleta)"
     trigger: user
     steps:
       - boundary: fe-lojas-post
-        action: "Frontend envia URL ou nome da loja"
+        action: "Frontend envia URL ou nome da loja (+ keywords opcionais)"
       - boundary: api-collector-resolve-shop
         action: "C# API solicita resolução de URL/Username para Shop ID via gRPC"
       - action: "Collector busca dados reais da loja na Shopee"
+      - boundary: api-scheduler-set-schedule
+        action: "C# API registra job de coleta periódica no Scheduler"
     data_flow: ["write:postgresql:Buscas"]
 
   # ── Fluxos automáticos (scheduler/cron) ────────────────────────────────────

@@ -88,16 +88,20 @@ Ver [ADR 0007](/docs/decisoes/0007-persistencia-favoritos/).
 `POST /api/lojas` aceita uma URL ou username de loja e resolve o shop_id
 numérico via Collector gRPC (`ResolveShop`). O fluxo:
 
-1. Frontend envia `input` (URL da loja ou username) + `origem_padrao` (marketplace)
+1. Frontend envia `input` (URL da loja ou username) + `origem_padrao` (marketplace) + `keywords[]` (opcional)
 2. C# API chama `collector.ResolveShop(username_or_url, marketplace)` via gRPC
 3. Collector (Go) parseia a URL, extrai o username, e consulta a API pública
    Shopee v4 (`/api/v4/shop/get_shop_detail?username=X`)
 4. Retorna `shop_id` + `shop_name` para o C# API
-5. C# API persiste uma `Busca` no PostgreSQL com campo `ShopIds` (bigint[])
+5. C# API persiste uma `Busca` no PostgreSQL com campo `ShopIds` (bigint[]) + `Keywords` (text[]) + `CronExpression`
+6. C# API chama `scheduler.SetSchedule(job_id, cron, enabled, params)` para registrar a coleta periódica
 
 Isso respeita a separação de responsabilidades: Go faz I/O externo com
-marketplaces, C# é dono do PostgreSQL. O C# não faz scraping direto — delega
-ao Collector (bounded context).
+marketplaces, C# é dono do PostgreSQL, Scheduler é dono dos jobs periódicos.
+
+**Modos de monitoramento:**
+- **Sem keywords** — Scheduler coleta TODOS os produtos da loja (`FetchShop(shop_id)`)
+- **Com keywords** — Scheduler coleta apenas produtos que matcham as keywords (`Fetch(keyword, shop_id)`)
 
 A busca criada é usada pelo Scheduler para coletas periódicas. Detecção de:
 - **Novos produtos** — não existiam na coleta anterior

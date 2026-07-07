@@ -8,11 +8,16 @@
     },
     "cron": {
       "type": "string",
-      "description": "Frequência opcional para agendamento automático."
+      "description": "Expressão cron para agendamento (default: a cada 8h)."
     },
     "origem_padrao": {
       "type": "string",
       "description": "Marketplace de origem padrão (ex: shopee)."
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Keywords para filtrar coleta (se vazio, coleta todos os produtos da loja)."
     }
   },
   "required": ["input"],

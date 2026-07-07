@@ -5,6 +5,7 @@ using Garimpei.Infrastructure.Sources;
 using Garimpei.Infrastructure.Tenancy;
 using Collector.V1;
 using Publisher.V1;
+using Scheduler.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +40,12 @@ public static class DependencyInjection
         services.AddGrpcClient<PublisherService.PublisherServiceClient>(o =>
         {
             o.Address = new Uri(publisherAddr);
+        });
+
+        var schedulerAddr = configuration["Grpc:SchedulerAddress"] ?? "http://localhost:50054";
+        services.AddGrpcClient<SchedulerService.SchedulerServiceClient>(o =>
+        {
+            o.Address = new Uri(schedulerAddr);
         });
 
         // ─── Keyed IProductSource (Strategy Pattern via .NET Keyed Services) ─

@@ -25,6 +25,17 @@ public sealed class Busca : IOwnedEntity
     public string? SourceUrl { get; set; }
 
     /// <summary>
+    /// Keywords de filtragem para coletas agendadas. Se nulo/vazio, coleta todos os produtos da loja.
+    /// </summary>
+    public string[]? Keywords { get; set; }
+
+    /// <summary>
+    /// Expressão cron para agendamento. Default: "0 */8 * * *" (a cada 8h).
+    /// Se null, usa o default.
+    /// </summary>
+    public string? CronExpression { get; set; }
+
+    /// <summary>
     /// Marketplaces to query for this search. Defaults to Shopee only.
     /// Stored as comma-separated string in the database (e.g. "shopee,amazon").
     /// </summary>

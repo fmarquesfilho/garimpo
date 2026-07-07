@@ -1,6 +1,7 @@
 using Garimpei.Domain.Entities;
 using Garimpei.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Lojas compat endpoints — /api/lojas, /api/lojas/novidades, /api/lojas/evolucao.
@@ -25,6 +26,8 @@ public static partial class EndpointExtensions
                     id = b.Id,
                     keyword = b.Keyword,
                     shop_ids = b.ShopIds,
+                    keywords = b.Keywords,
+                    cron_expression = b.CronExpression,
                     source_url = b.SourceUrl,
                     ativo = b.Active,
                     criado_em = b.CreatedAt
@@ -36,6 +39,8 @@ public static partial class EndpointExtensions
         app.MapPost("/api/lojas", async (
             AppDbContext db,
             Collector.V1.CollectorService.CollectorServiceClient collectorClient,
+            Scheduler.V1.SchedulerService.SchedulerServiceClient schedulerClient,
+            ILogger<AppDbContext> logger,
             AdicionarLojaRequest req,
             CancellationToken ct) =>
         {
@@ -56,7 +61,9 @@ public static partial class EndpointExtensions
                 OwnerUid = "",
                 SortBy = "relevance",
                 Limit = 50,
-                SourceUrl = keyword.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? keyword : null
+                SourceUrl = keyword.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? keyword : null,
+                Keywords = req.Keywords is { Length: > 0 } ? req.Keywords : null,
+                CronExpression = req.Cron
             };
 
             try
@@ -92,10 +99,40 @@ public static partial class EndpointExtensions
             db.Buscas.Add(busca);
             await db.SaveChangesAsync(ct);
 
+            // Registra job no Scheduler (eventual consistency — se falhar, Busca persiste)
+            if (busca.ShopIds is { Length: > 0 })
+            {
+                try
+                {
+                    var setReq = new Scheduler.V1.SetScheduleRequest
+                    {
+                        JobId = $"busca-{busca.Id}",
+                        CronExpression = busca.CronExpression ?? "0 */8 * * *",
+                        Enabled = true
+                    };
+                    setReq.Params.Add("shop_id", busca.ShopIds[0].ToString());
+                    setReq.Params.Add("owner_uid", busca.OwnerUid);
+                    setReq.Params.Add("type", "shop_collection");
+                    if (busca.Keywords is { Length: > 0 })
+                        setReq.Params.Add("keywords", string.Join(",", busca.Keywords));
+
+                    await schedulerClient.SetScheduleAsync(setReq, cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Falha ao registrar job no Scheduler para busca {BuscaId}", busca.Id);
+                }
+            }
+
             return Results.Ok(new { id = busca.Id, keyword = busca.Keyword, shop_ids = busca.ShopIds, source_url = busca.SourceUrl, status = "adicionada" });
         }).RequireAuthorization().WithTags("Lojas");
 
-        app.MapDelete("/api/lojas", async (AppDbContext db, string id, CancellationToken ct) =>
+        app.MapDelete("/api/lojas", async (
+            AppDbContext db,
+            Scheduler.V1.SchedulerService.SchedulerServiceClient schedulerClient,
+            ILogger<AppDbContext> logger,
+            string id,
+            CancellationToken ct) =>
         {
             if (!Guid.TryParse(id, out var guid))
                 return Results.BadRequest(new { error = "id inválido" });
@@ -106,6 +143,21 @@ public static partial class EndpointExtensions
             busca.Active = false;
             busca.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
+
+            // Pausa o job no Scheduler
+            try
+            {
+                await schedulerClient.SetScheduleAsync(new Scheduler.V1.SetScheduleRequest
+                {
+                    JobId = $"busca-{guid}",
+                    CronExpression = busca.CronExpression ?? "0 */8 * * *",
+                    Enabled = false
+                }, cancellationToken: ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Falha ao pausar job no Scheduler para busca {BuscaId}", guid);
+            }
 
             return Results.Ok(new { status = "removida", id });
         }).RequireAuthorization().WithTags("Lojas");
@@ -181,4 +233,5 @@ public sealed record AdicionarLojaRequest
     public string? Input { get; init; }
     public string? Cron { get; init; }
     public string? OrigemPadrao { get; init; }
+    public string[]? Keywords { get; init; }
 }
