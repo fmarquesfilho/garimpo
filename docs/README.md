@@ -50,3 +50,4 @@ cd docs-site
 npm install
 npm run dev
 ```
+<- firebase.json: config do emulator trigger -->
