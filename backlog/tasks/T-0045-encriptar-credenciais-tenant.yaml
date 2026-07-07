@@ -1,0 +1,21 @@
+id: T-0045
+titulo: "Encriptar credenciais do tenant (Shopee, Telegram, WhatsApp)"
+epic: seguranca
+status: next
+prioridade: alta
+estimativa: M
+sprint: "2026-S28"
+valor: >
+  Credenciais (Secret Shopee, Token Telegram, Token WhatsApp) são salvas em
+  plaintext no PostgreSQL. Devem ser encriptadas com ENCRYPTION_KEY antes de
+  persistir e decriptadas ao usar. Também wiring dos alertas de cupons → Telegram.
+criterios:
+  - "ShopeeSecretEnc, TelegramTokenEnc, WhatsappTokenEnc salvos encriptados"
+  - "Decriptação transparente ao usar (C# middleware ou service)"
+  - "Alertas de cupons wired: detecção → Publisher gRPC → Telegram do tenant"
+  - "POST /api/alertas/testar envia mensagem real ao Telegram"
+  - "TODOs(T-0045) removidos do código"
+depende_de: []
+tags: [seguranca, backend, csharp, crypto]
+criada_em: "2026-07-07"
+atualizada_em: "2026-07-07"

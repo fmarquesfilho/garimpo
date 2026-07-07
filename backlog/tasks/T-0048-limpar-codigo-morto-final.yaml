@@ -1,0 +1,23 @@
+id: T-0048
+titulo: "Limpeza final: código morto, warnings, deps desatualizadas"
+epic: qualidade
+status: next
+prioridade: media
+estimativa: S
+sprint: "2026-S28"
+valor: >
+  Garantir zero código morto, zero warnings, e dependências atualizadas.
+  Remover todo resquício da migração Go → C#.
+criterios:
+  - "Zero TODO sem task associada no código"
+  - "Zero warnings no dotnet build (TreatWarningsAsErrors)"
+  - "Zero warnings no golangci-lint"
+  - "Knip (frontend) zero unused exports"
+  - "npm audit zero high/critical"
+  - "go vuln check clean"
+  - "Nenhum arquivo > 400 linhas (check:file-size)"
+  - "docker-compose.yml sem serviços comentados desnecessários"
+depende_de: [T-0045]
+tags: [qualidade, refactoring, cleanup]
+criada_em: "2026-07-07"
+atualizada_em: "2026-07-07"

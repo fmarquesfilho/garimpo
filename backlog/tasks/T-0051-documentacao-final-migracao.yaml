@@ -1,0 +1,23 @@
+id: T-0051
+titulo: "Documentação final: consolidar estado pós-migração"
+epic: documentacao
+status: next
+prioridade: media
+estimativa: S
+sprint: "2026-S28"
+valor: >
+  Revisar e consolidar toda a documentação para refletir o estado final
+  da migração Go → C# + Go microservices. Remover referências ao monolito,
+  atualizar diagramas, garantir que docs-site está sincronizado.
+criterios:
+  - "Zero referências ao monolito Go como sistema ativo"
+  - "Todos os 25 ADRs sincronizados no docs-site"
+  - "Diagrama de arquitetura atualizado (5 containers, sem alerter)"
+  - "mise run check:docs-drift passa sem erros"
+  - "README raiz, src/README, web/README consistentes com estado atual"
+  - "Fluxos de sequência refletem integração Scheduler + GenerateAffiliateLink"
+  - "Guia de desenvolvimento local atualizado (mise run up + test:e2e:*)"
+depende_de: [T-0046]
+tags: [documentacao, qualidade, docs-site]
+criada_em: "2026-07-07"
+atualizada_em: "2026-07-07"
