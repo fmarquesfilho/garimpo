@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+#MISE description="Gera docs/09-api-reference.md a partir dos endpoints e protos"
+# =============================================================================
+# gen/api-reference — Extrai endpoints HTTP, RPCs gRPC e rotas do frontend
+# para gerar a página de referência de APIs automaticamente.
+# =============================================================================
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+OUT="$ROOT/docs/09-api-reference.md"
+
+cat > "$OUT" << 'HEADER'
+# API Reference
+
+Portal unificado de referência de todos os serviços do Garimpei.
+
+## Endpoints HTTP (C# API — :8080)
+
+Autenticação: Bearer token (Firebase JWT). Exceto `/api/health` e `/internal/*`.
+
+HEADER
+
+# ── Extrair endpoints do C# ──────────────────────────────────────────────────
+echo "### Endpoints extraídos do código" >> "$OUT"
+echo "" >> "$OUT"
+echo "| Método | Rota | Arquivo |" >> "$OUT"
+echo "|--------|------|---------|" >> "$OUT"
+
+grep -rn 'Map\(Get\|Post\|Delete\|Put\)(' "$ROOT/src/Garimpei.Api/Endpoints/"*.cs \
+  | grep -v "obj/" \
+  | perl -ne 'if (/Endpoints\/([^:]+):.*Map(Get|Post|Delete|Put)\("([^"]+)"/) { print "| $2 | `$3` | $1 |\n"; }' \
+  | sort -t'|' -k3 \
+  >> "$OUT" 2>/dev/null || true
+
+echo "" >> "$OUT"
+
+# ── Serviços gRPC ────────────────────────────────────────────────────────────
+cat >> "$OUT" << 'GRPC'
+---
+
+## Serviços gRPC (Go sidecars)
+
+Comunicação interna via localhost (Cloud Run multi-container).
+
+GRPC
+
+for proto in "$ROOT"/protos/*/v1/*.proto; do
+  service=$(basename "$(dirname "$(dirname "$proto")")")
+  svc_name=$(grep 'service ' "$proto" | head -1 | awk '{print $2}')
+  echo "### ${service} — \`${svc_name}\`" >> "$OUT"
+  echo "" >> "$OUT"
+  echo "| RPC | Descrição |" >> "$OUT"
+  echo "|-----|-----------|" >> "$OUT"
+  grep -E '^\s+rpc ' "$proto" | awk '{print "| `" $2 "` | |"}' >> "$OUT"
+  echo "" >> "$OUT"
+done
+
+# ── Analyzer Python ──────────────────────────────────────────────────────────
+cat >> "$OUT" << 'ANALYZER'
+### Analyzer (`:8060`) — Python FastAPI
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+ANALYZER
+
+grep -rn '@router\.\(get\|post\)' "$ROOT/services/analyzer/routes/"*.py 2>/dev/null \
+  | perl -ne 'if (/@router\.(get|post)\("([^"]+)"/) { print "| " . uc($1) . " | `$2` | |\n"; }' \
+  >> "$OUT" 2>/dev/null || true
+
+echo "" >> "$OUT"
+
+# ── Frontend ─────────────────────────────────────────────────────────────────
+cat >> "$OUT" << 'FRONTEND'
+---
+
+## Frontend (SvelteKit — Cloudflare Pages)
+
+| Rota | Página |
+|------|--------|
+FRONTEND
+
+find "$ROOT/web/src/routes" -name "+page.svelte" | sort | while read -r f; do
+  route=$(echo "$f" | sed "s|$ROOT/web/src/routes||; s|/+page.svelte||; s|^$|/|")
+  echo "| \`$route\` | |" >> "$OUT"
+done
+
+echo "" >> "$OUT"
+echo "---" >> "$OUT"
+echo "" >> "$OUT"
+echo "## Contratos de Serviço" >> "$OUT"
+echo "" >> "$OUT"
+echo "Definidos em \`contracts/registry.yaml\` (ADR-0020). Validação: \`mise run check:service-contracts\`" >> "$OUT"
+echo "" >> "$OUT"
+echo "Proto files: \`protos/collector/v1/collector.proto\`, \`protos/publisher/v1/publisher.proto\`, \`protos/scheduler/v1/scheduler.proto\`" >> "$OUT"
+
+echo "✅ docs/09-api-reference.md gerado ($(wc -l < "$OUT" | tr -d ' ') linhas)"

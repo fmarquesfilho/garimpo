@@ -107,7 +107,7 @@ depends = [
 # ── Docs ──────────────────────────────────────────────────────────────────────
 
 [tasks.docs]
-description = "Gera toda a documentação (ER, env, board, sync)"
+description = "Gera toda a documentação (ER, env, board, api-reference, sync)"
 depends = ["docs:er", "docs:env", "docs:board", "docs:sync"]
 
 [tasks."docs:er"]

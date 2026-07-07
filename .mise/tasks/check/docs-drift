@@ -32,11 +32,12 @@ echo "🔍 Regenerando docs gerados..."
 go run ./cmd/gen-board > /dev/null 2>&1
 go run ./cmd/gen-er > docs/gerado/ENTIDADES.md 2>/dev/null
 bash .mise/tasks/docs/env > /dev/null 2>&1 || true
+bash .mise/tasks/gen/api-reference > /dev/null 2>&1 || true
 
 # ── 2. Verificar drift em docs/gerado/ ────────────────────────────────────────
 echo ""
 echo "🔍 Verificando drift em docs/gerado/..."
-if ! git diff --quiet docs/gerado/ 2>/dev/null; then
+if ! git diff --quiet docs/gerado/ docs/09-api-reference.md 2>/dev/null; then
   echo -e "${RED}   ✗ docs/gerado/ desatualizado:${NC}"
   git diff --stat docs/gerado/
   ERRORS=$((ERRORS + 1))
