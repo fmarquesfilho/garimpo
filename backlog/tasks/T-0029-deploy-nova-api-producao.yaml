@@ -1,7 +1,7 @@
 id: T-0029
 titulo: "Deploy da nova API C# em produção (com endpoints portados)"
 epic: migracao-arch
-status: next
+status: done
 prioridade: alta
 estimativa: P
 sprint: "2026-S27"

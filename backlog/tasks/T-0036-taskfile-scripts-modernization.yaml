@@ -1,7 +1,7 @@
 id: T-0036
 titulo: "Avaliar migração de scripts bash para Taskfile ou mise"
 epic: E-001
-status: backlog
+status: done
 prioridade: media
 estimativa: M
 sprint: ""

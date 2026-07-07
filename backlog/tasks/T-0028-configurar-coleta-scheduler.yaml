@@ -1,7 +1,7 @@
 id: T-0028
 titulo: "Configurar coleta no scheduler (popular snapshots do zero)"
 epic: produto
-status: next
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S27"
