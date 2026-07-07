@@ -118,8 +118,11 @@ Push para `main` executa automaticamente:
 - Proto: buf lint + sync check + breaking changes
 - Frontend: build + lint + vitest + Playwright
 - Contratos: service-contracts + api-contract + config-consistency + schema-sync + data-ownership
-- Docker: build de todas as 5 imagens
-- Deploy: migrations (Neon) → Cloud Run + Cloudflare Pages
+- Security: Semgrep SAST
+- Deploy backend: migrations (Neon) → Docker build (5 imgs) → Cloud Run **[se backend mudou]**
+- Deploy frontend: build → Cloudflare Pages **[se frontend mudou]**
+
+Pushes em `.kiro/`, `docs/`, `backlog/`, `*.md` não disparam CI.
 
 ## Mise tasks úteis
 

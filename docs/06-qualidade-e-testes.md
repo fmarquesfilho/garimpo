@@ -12,13 +12,21 @@ push main → GitHub Actions (ci.yml)
   ├─ python: ruff lint + syntax check
   ├─ proto: buf lint + sync check (Go + C# stubs atualizados?)
   ├─ frontend: npm ci + build + lint:css + lint:js + vitest + playwright (Firebase Emulator)
-  ├─ api-contract: check-api-contract + check-config-consistency + check-schema-sync
-  ├─ docker: build all 5 images (validação de Dockerfiles)
-  ├─ deploy-web: wrangler pages deploy → Cloudflare Pages (só push main)
-  └─ deploy-docs: sync + build + deploy → Cloudflare Pages (só push main, se docs mudam)
+  ├─ contracts: service-contracts + api-contract + config-consistency + schema-sync + data-ownership
+  ├─ security: Semgrep SAST (JavaScript + TypeScript)
+  ├─ deploy-backend: build Docker (5 imgs) + migrations + Cloud Run [se backend mudou]
+  └─ deploy-web: build + Cloudflare Pages [se frontend mudou]
 ```
 
-Pushes que só tocam `docs/legado/**`, `docs/meta/**` ou `README.md` são ignorados.
+**Otimizações de path filtering:**
+
+Pushes que tocam apenas estes caminhos **não disparam CI**:
+- `docs/`, `docs-site/`, `backlog/`, `.kiro/`, `.vscode/`
+- `*.md`, `LICENSE`, `.gitignore`, `.codacy.yml`, `.semgrepignore`, `renovate.json`
+
+**Deploy condicional (monorepo-aware):**
+- `deploy-backend` detecta via `git diff HEAD~1` se houve mudança em `src/`, `services/`, `protos/`, `deploy/`, `go.*`, `internal/`, ou `contracts/registry`. Se não, **pula o deploy** (~4min economizados).
+- `deploy-web` roda apenas quando o frontend ou contratos mudam.
 
 ---
 
