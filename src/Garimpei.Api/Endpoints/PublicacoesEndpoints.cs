@@ -55,9 +55,13 @@ public static partial class EndpointExtensions
         publicacoes.MapPost("/", async (
             AppDbContext db,
             Publisher.V1.PublisherService.PublisherServiceClient publisher,
+            Collector.V1.CollectorService.CollectorServiceClient collector,
+            ILogger<AppDbContext> logger,
             AgendarPublicacaoRequest req,
             CancellationToken ct) =>
         {
+            var productUrl = req.Link ?? "";
+
             var pub = new Publicacao
             {
                 ProdutoId = req.ProdutoId ?? req.Id ?? "",
@@ -88,6 +92,35 @@ public static partial class EndpointExtensions
                     resolvedGroupId = req.DestinoId;
                 }
 
+                // Gera link de afiliada com sub_ids para rastreamento de conversão
+                if (!string.IsNullOrWhiteSpace(productUrl))
+                {
+                    try
+                    {
+                        var subIds = new[] {
+                            resolvedGroupId.Replace("@", ""),
+                            req.Estrategia ?? "manual",
+                            DateTime.UtcNow.ToString("yyyyMMdd")
+                        };
+                        var linkResp = await collector.GenerateAffiliateLinkAsync(
+                            new Collector.V1.GenerateAffiliateLinkRequest
+                            {
+                                OriginalUrl = productUrl,
+                                Marketplace = Collector.V1.Marketplace.Shopee,
+                                SubIds = { subIds }
+                            }, cancellationToken: ct);
+
+                        if (!string.IsNullOrEmpty(linkResp.ShortLink))
+                            productUrl = linkResp.ShortLink;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "GenerateAffiliateLink falhou, usando link original");
+                    }
+                }
+
+                pub.Link = productUrl; // persiste o link de afiliada gerado
+
                 try
                 {
                     var grpcRequest = new Publisher.V1.PublishRequest
@@ -99,7 +132,7 @@ public static partial class EndpointExtensions
                             Title = req.Nome ?? "",
                             Description = req.LegendaCustom ?? "",
                             ImageUrl = req.Imagem ?? "",
-                            ProductUrl = req.Link ?? "",
+                            ProductUrl = productUrl,
                             Price = (double)req.Preco,
                             OriginalPrice = (double)req.Preco,
                             DiscountPercent = 0
@@ -124,10 +157,12 @@ public static partial class EndpointExtensions
             return Results.Ok(new { publicacao = new { id = pub.Id, status = pub.Status, detalhe = pub.Detalhe ?? "", criada_em = pub.CreatedAt.ToString("o") } });
         });
 
-        // /api/publicar — endpoint compat para publicar imediatamente (envia via gRPC publisher)
+        // /api/publicar — publicar imediatamente (envia via gRPC publisher)
         app.MapPost("/api/publicar", async (
             AppDbContext db,
             Publisher.V1.PublisherService.PublisherServiceClient publisher,
+            Collector.V1.CollectorService.CollectorServiceClient collector,
+            ILogger<AppDbContext> logger,
             PublicarRequest req,
             CancellationToken ct) =>
         {
@@ -148,6 +183,35 @@ public static partial class EndpointExtensions
                 }
             }
 
+            // Gera link de afiliada com tracking via Collector (generateShortLink)
+            var productUrl = req.Link ?? "";
+            if (!string.IsNullOrWhiteSpace(productUrl))
+            {
+                try
+                {
+                    var subIds = new[] {
+                        resolvedGroupId.Replace("@", ""),  // canal
+                        req.Estrategia ?? "manual",        // estratégia
+                        DateTime.UtcNow.ToString("yyyyMMdd") // data
+                    };
+                    var linkResp = await collector.GenerateAffiliateLinkAsync(
+                        new Collector.V1.GenerateAffiliateLinkRequest
+                        {
+                            OriginalUrl = productUrl,
+                            Marketplace = Collector.V1.Marketplace.Shopee,
+                            SubIds = { subIds }
+                        }, cancellationToken: ct);
+
+                    if (!string.IsNullOrEmpty(linkResp.ShortLink))
+                        productUrl = linkResp.ShortLink;
+                }
+                catch (Exception ex)
+                {
+                    // Fallback: usa link original se GenerateAffiliateLink falhar
+                    logger.LogWarning(ex, "GenerateAffiliateLink falhou, usando link original");
+                }
+            }
+
             // Tentativa de envio via publisher gRPC
             try
             {
@@ -160,7 +224,7 @@ public static partial class EndpointExtensions
                         Title = req.Nome ?? "",
                         Description = req.Categoria ?? "",
                         ImageUrl = req.Imagem ?? "",
-                        ProductUrl = req.Link ?? "",
+                        ProductUrl = productUrl,
                         Price = (double)req.Preco,
                         OriginalPrice = (double)req.Preco,
                         DiscountPercent = 0
@@ -177,7 +241,7 @@ public static partial class EndpointExtensions
                     Categoria = req.Categoria,
                     Preco = req.Preco,
                     Comissao = req.Comissao,
-                    Link = req.Link,
+                    Link = productUrl, // link de afiliada gerado (ou original como fallback)
                     Imagem = req.Imagem,
                     Estrategia = req.Estrategia,
                     DestinoId = req.DestinoId,
