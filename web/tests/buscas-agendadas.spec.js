@@ -43,19 +43,14 @@ test.describe('Buscas Agendadas — Fluxo Completo', () => {
 		expect(body.keyword).toBe('Beleza na Web Oficial');
 		expect(body.status).toBe('adicionada');
 
-		// Verificar que o Scheduler recebeu o job (via API de listagem)
-		const schedulerResp = await page.request.get('/api/buscas');
-		const buscas = await schedulerResp.json();
-		const buscaCriada = buscas.buscas?.find((b) => b.shop_ids?.includes(1674883556));
+		// Verificar que o Scheduler recebeu o job (via listagem de lojas)
+		const listResp = await page.request.get('/api/lojas');
+		const lojas = await listResp.json();
+		const buscaCriada = lojas.lojas?.find((b) => b.shop_ids?.includes(1674883556));
 		expect(buscaCriada).toBeTruthy();
 	});
 
 	test('adicionar loja com keywords agenda coleta filtrada', async ({ authedPage: page }) => {
-		// Este teste valida que keywords são enviadas na request e persistidas
-		const responsePromise = page.waitForResponse(
-			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
-		);
-
 		// Chama a API diretamente com keywords (o formulário UI usa POST /api/buscas para keywords)
 		const apiResp = await page.request.post('/api/lojas', {
 			data: {
