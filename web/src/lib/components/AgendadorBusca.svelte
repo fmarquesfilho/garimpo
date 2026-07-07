@@ -1,11 +1,14 @@
 <script>
 	// Seletor visual de agendamento. Gera uma expressão cron sem expor a sintaxe
 	// para quem não conhece. O campo `cron` (bind:value) é sempre válido ou vazio.
-	let { value = $bindable('') } = $props();
+	// `permitirNunca=false` esconde a opção "Nunca" (ex.: loja monitorada, que sempre
+	// coleta periodicamente).
+	let { value = $bindable(''), permitirNunca = true } = $props();
 
 	// Atalhos de frequência mais usados
-	const atalhos = [
-		{ label: 'Nunca', cron: '' },
+	const atalhos = $derived([
+		...(permitirNunca ? [{ label: 'Nunca', cron: '' }] : []),
+		{ label: 'A cada 8h', cron: '0 */8 * * *' },
 		{ label: 'Todo dia às 8h', cron: '0 8 * * *' },
 		{ label: 'Todo dia às 12h', cron: '0 12 * * *' },
 		{ label: 'Todo dia às 18h', cron: '0 18 * * *' },
@@ -13,7 +16,7 @@
 		{ label: 'Seg e Qui às 9h', cron: '0 9 * * 1,4' },
 		{ label: 'Segunda-feira às 8h', cron: '0 8 * * 1' },
 		{ label: 'Todo sábado às 9h', cron: '0 9 * * 6' }
-	];
+	]);
 
 	// Modo: 'atalho' (padrão) ou 'avancado' (campo livre)
 	let modo = $state('atalho');
@@ -89,13 +92,15 @@
 	{#if value}
 		<p class="dado m-0 flex items-center gap-3 text-sm">
 			⏱ {descricao(value)}
-			<button
-				type="button"
-				class="cursor-pointer rounded-md border-none bg-transparent px-1.5 py-0.5 text-xs text-muted-foreground hover:text-erro"
-				onclick={() => (value = '')}>remover</button
-			>
+			{#if permitirNunca}
+				<button
+					type="button"
+					class="cursor-pointer rounded-md border-none bg-transparent px-1.5 py-0.5 text-xs text-muted-foreground hover:text-erro"
+					onclick={() => (value = '')}>remover</button
+				>
+			{/if}
 		</p>
-	{:else}
+	{:else if permitirNunca}
 		<p class="dado m-0 text-sm italic text-muted-foreground">Sem agendamento — a busca só roda quando você clicar.</p>
 	{/if}
 </div>

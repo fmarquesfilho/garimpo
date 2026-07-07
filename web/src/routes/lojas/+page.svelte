@@ -162,6 +162,18 @@
 							onclick={() => selecionarBusca(b)}
 						>
 							<strong class="text-sm">{b.nome || b.id}</strong>
+							{#if b.keywords?.length}
+								<span class="flex flex-wrap gap-1">
+									{#each b.keywords.slice(0, 4) as kw (kw)}
+										<span class="rounded-full bg-muted px-2 py-0.5 text-[0.7rem] text-tinta-suave">{kw}</span>
+									{/each}
+									{#if b.keywords.length > 4}
+										<span class="text-[0.7rem] text-tinta-suave">+{b.keywords.length - 4}</span>
+									{/if}
+								</span>
+							{:else}
+								<span class="text-xs text-tinta-suave">todos os produtos</span>
+							{/if}
 							{#if b.cron}
 								<span class="text-xs text-tinta-suave">⏱ coleta automática</span>
 							{/if}

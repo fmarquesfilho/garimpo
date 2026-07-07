@@ -46,12 +46,16 @@
 </script>
 
 <div class="mb-6">
-	<div class="mb-3 flex items-center justify-between">
-		<h2 class="m-0 text-lg text-foreground">🔍 Buscas Agendadas</h2>
+	<div class="mb-1 flex items-center justify-between">
+		<h2 class="m-0 text-lg text-foreground">🔍 Buscas por palavra-chave</h2>
 		<Button variant="secondary" size="sm" onclick={() => (mostrarForm = !mostrarForm)}>
 			{mostrarForm ? '✕ cancelar' : '+ nova busca'}
 		</Button>
 	</div>
+	<p class="mb-3 text-sm text-muted-foreground">
+		Agende buscas por palavra-chave na Shopee inteira, com ou sem coleta automática. Para monitorar palavras-chave
+		dentro de uma loja específica, use o formulário “Adicionar loja” acima.
+	</p>
 
 	{#if mostrarForm}
 		<div class="mb-4 flex flex-col gap-4 rounded-md border border-border bg-card p-4">

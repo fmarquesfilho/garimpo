@@ -163,6 +163,80 @@ public class BuscasAgendadasTests : IDisposable
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // SchedulerJobs helper (compartilhado por /api/lojas e /api/buscas)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void SchedulerJobs_LojaComKeywords_MontaShopCollection()
+    {
+        var busca = new Busca
+        {
+            Keyword = "Glory of Seoul",
+            OwnerUid = "uid-1",
+            ShopIds = [920292999],
+            Keywords = ["serum", "protetor"]
+        };
+
+        var req = SchedulerJobs.BuildRequest(busca, enabled: true);
+
+        Assert.Equal($"busca-{busca.Id}", req.JobId);
+        Assert.True(req.Enabled);
+        Assert.Equal("shop_collection", req.Params["type"]);
+        Assert.Equal("920292999", req.Params["shop_id"]);
+        Assert.Equal("serum,protetor", req.Params["keywords"]);
+    }
+
+    [Fact]
+    public void SchedulerJobs_BuscaPalavraChave_SemLoja_MontaKeywordSearch()
+    {
+        // Busca por palavra-chave (formato /api/buscas): keywords no campo Keyword.
+        var busca = new Busca
+        {
+            Keyword = "serum,vitamina c",
+            OwnerUid = "uid-2",
+            CronExpression = "0 9 * * *"
+        };
+
+        var req = SchedulerJobs.BuildRequest(busca, enabled: true);
+
+        Assert.Equal("keyword_search", req.Params["type"]);
+        Assert.False(req.Params.ContainsKey("shop_id"));
+        Assert.Equal("serum,vitamina c", req.Params["keywords"]);
+        Assert.Equal("0 9 * * *", req.CronExpression);
+    }
+
+    [Fact]
+    public void SchedulerJobs_SemCron_UsaDefault()
+    {
+        var busca = new Busca
+        {
+            Keyword = "Shop",
+            OwnerUid = "uid-3",
+            ShopIds = [123]
+        };
+
+        var req = SchedulerJobs.BuildRequest(busca, enabled: true);
+
+        Assert.Equal(SchedulerJobs.DefaultCron, req.CronExpression);
+    }
+
+    [Fact]
+    public void SchedulerJobs_LojaSemKeywords_NaoIncluiKeywords()
+    {
+        var busca = new Busca
+        {
+            Keyword = "Shop",
+            OwnerUid = "uid-4",
+            ShopIds = [999]
+        };
+
+        var req = SchedulerJobs.BuildRequest(busca, enabled: true);
+
+        Assert.Equal("shop_collection", req.Params["type"]);
+        Assert.False(req.Params.ContainsKey("keywords"));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // Preservation: soft-delete
     // ═══════════════════════════════════════════════════════════════════════
 

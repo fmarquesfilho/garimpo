@@ -120,8 +120,8 @@ test.describe('Buscas Agendadas — Fluxo Completo', () => {
 		await page.goto('/lojas');
 		await page.waitForLoadState('networkidle');
 
-		// Verifica que o heading "Buscas Agendadas" existe
-		await expect(page.locator('text=Buscas Agendadas')).toBeVisible();
+		// Verifica que o heading da seção de buscas por palavra-chave existe
+		await expect(page.locator('text=Buscas por palavra-chave')).toBeVisible();
 
 		// Verifica que o botão "+ nova busca" existe
 		await expect(page.locator('button:has-text("nova busca")')).toBeVisible();

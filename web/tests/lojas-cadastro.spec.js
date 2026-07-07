@@ -48,7 +48,9 @@ test.describe('Lojas — Cadastro e Agendamento', () => {
 					contentType: 'application/json',
 					body: JSON.stringify({
 						id: 'loja-123456789',
-						shop_id: 123456789
+						keyword: 'Loja Nova Teste',
+						shop_ids: [123456789],
+						status: 'adicionada'
 					})
 				});
 			} else {
@@ -74,13 +76,15 @@ test.describe('Lojas — Cadastro e Agendamento', () => {
 		await page.fill('input[placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"]', '123456789');
 		await page.click('button:has-text("Adicionar")');
 
-		// Espera a mensagem de sucesso
-		await expect(page.locator('text=Loja 123456789 adicionada com sucesso')).toBeVisible();
+		// Espera a mensagem de sucesso (usa o nome resolvido da loja)
+		await expect(page.getByText('Loja "Loja Nova Teste" adicionada com sucesso!')).toBeVisible();
 
 		// Verifica se a loja apareceu na lista
 		await expect(page.locator('button:has-text("Loja Nova Teste")')).toBeVisible();
 
 		// Verifica que os parâmetros corretos foram enviados no POST
 		expect(bodyEnviado.input).toBe('123456789');
+		// Loja monitorada agenda coleta periódica por padrão (a cada 8h)
+		expect(bodyEnviado.cron).toBe('0 */8 * * *');
 	});
 });
