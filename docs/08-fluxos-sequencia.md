@@ -612,7 +612,7 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 
 | Fluxo | Status | Descrição |
 |---|---|---|
-| Publicações agendadas | ⬜ Não implementado | Usuário agenda para data futura; worker deveria enviar no horário. Hoje salva com `status="agendada"` mas nenhum cron processa. |
+| Publicações agendadas | ✅ Implementado | Usuário agenda para data futura → C# persiste + Scheduler.SetSchedule(one-shot cron) → Scheduler dispara POST /internal/publish-scheduled → C# gera link de afiliada + envia via Publisher. |
 | Coleta por shop_id no Scheduler | ✅ Implementado | O Scheduler executa `Collector.FetchShop(shop_id)` para jobs do tipo `shop_collection`. Jobs com keywords fazem `Fetch(keyword)` para cada keyword individualmente. |
 | Alertas de cupons → Telegram | ⬜ Parcial (T-0045) | Detecção funciona mas envio para Telegram do tenant ainda não wired. |
 

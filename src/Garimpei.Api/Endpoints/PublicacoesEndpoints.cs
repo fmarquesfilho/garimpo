@@ -56,6 +56,7 @@ public static partial class EndpointExtensions
             AppDbContext db,
             Publisher.V1.PublisherService.PublisherServiceClient publisher,
             Collector.V1.CollectorService.CollectorServiceClient collector,
+            Scheduler.V1.SchedulerService.SchedulerServiceClient scheduler,
             ILogger<AppDbContext> logger,
             AgendarPublicacaoRequest req,
             CancellationToken ct) =>
@@ -153,6 +154,33 @@ public static partial class EndpointExtensions
 
             db.Publicacoes.Add(pub);
             await db.SaveChangesAsync(ct);
+
+            // Se agendada, registra job no Scheduler para disparo no horário
+            if (req.AgendadaEm.HasValue && pub.Status == "agendada")
+            {
+                try
+                {
+                    // Converte agendada_em para cron one-shot (minuto exato)
+                    var dt = req.AgendadaEm.Value.ToUniversalTime();
+                    var cronExpr = $"{dt.Minute} {dt.Hour} {dt.Day} {dt.Month} *";
+
+                    var setReq = new Scheduler.V1.SetScheduleRequest
+                    {
+                        JobId = $"pub-{pub.Id}",
+                        CronExpression = cronExpr,
+                        Enabled = true
+                    };
+                    setReq.Params.Add("type", "scheduled_publish");
+                    setReq.Params.Add("publicacao_id", pub.Id.ToString());
+                    setReq.Params.Add("owner_uid", pub.OwnerUid);
+
+                    await scheduler.SetScheduleAsync(setReq, cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Falha ao agendar publicação {PubId} no Scheduler", pub.Id);
+                }
+            }
 
             return Results.Ok(new { publicacao = new { id = pub.Id, status = pub.Status, detalhe = pub.Detalhe ?? "", criada_em = pub.CreatedAt.ToString("o") } });
         });

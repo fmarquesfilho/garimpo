@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -17,9 +18,12 @@ import (
 // dispatchJob routes to the correct executor based on job params.
 func (s *SchedulerServer) dispatchJob(job *registeredJob, params map[string]string) {
 	jobType := params["type"]
-	if jobType == "coupon_collection" {
+	switch jobType {
+	case "coupon_collection":
 		s.executeCouponCollectionJob(job, params)
-	} else {
+	case "scheduled_publish":
+		s.executeScheduledPublish(job, params)
+	default:
 		s.executeJob(job, params)
 	}
 }
@@ -224,4 +228,69 @@ func (s *SchedulerServer) triggerCouponDetection(ownerUID, marketplace, fetchedA
 			slog.Int("status", resp.StatusCode),
 			slog.String("marketplace", mktName))
 	}
+}
+
+// executeScheduledPublish calls the C# API internal endpoint to send a scheduled publication.
+// The Scheduler is responsible for WHEN, the C# API handles the actual sending.
+func (s *SchedulerServer) executeScheduledPublish(job *registeredJob, params map[string]string) {
+	s.mu.Lock()
+	job.status = "running"
+	s.mu.Unlock()
+
+	defer func() {
+		s.mu.Lock()
+		job.status = "active"
+		job.lastRun = time.Now().UTC()
+		s.mu.Unlock()
+	}()
+
+	publicacaoID := params["publicacao_id"]
+	if publicacaoID == "" {
+		s.logger.Error("scheduled_publish sem publicacao_id", slog.String("job", job.name))
+		return
+	}
+
+	s.logger.Info("dispatching scheduled publish",
+		slog.String("job", job.name),
+		slog.String("publicacao_id", publicacaoID))
+
+	// Call C# API internal endpoint to execute the publish
+	apiURL := envOrDefault("API_URL", "http://localhost:8080")
+	url := apiURL + "/internal/publish-scheduled"
+
+	body := fmt.Sprintf(`{"publicacao_id":%q}`, publicacaoID)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(body))
+	if err != nil {
+		s.logger.Error("falha ao criar request publish-scheduled", slog.String("error", err.Error()))
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		s.logger.Error("falha ao chamar publish-scheduled", slog.String("error", err.Error()))
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		s.logger.Error("publish-scheduled retornou erro",
+			slog.Int("status", resp.StatusCode),
+			slog.String("body", string(respBody)))
+		return
+	}
+
+	s.logger.Info("scheduled publish dispatched successfully",
+		slog.String("publicacao_id", publicacaoID))
+
+	// Remove one-shot job after execution
+	s.mu.Lock()
+	delete(s.jobs, job.name)
+	s.cron.Remove(job.id)
+	s.mu.Unlock()
 }
