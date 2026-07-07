@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// Favoritos endpoints — CRUD de produtos favoritos do usuário.
-/// Compatibilidade: /api/favoritos (mesmo formato do frontend).
+/// /api/favoritos (mesmo formato do frontend).
 /// </summary>
 public static partial class EndpointExtensions
 {

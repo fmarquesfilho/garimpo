@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// Destinos endpoints — CRUD de canais de publicação (Telegram, WhatsApp, etc.).
-/// Compatibilidade: /api/destinos (mesmo formato do frontend).
+/// /api/destinos (mesmo formato do frontend).
 /// </summary>
 public static partial class EndpointExtensions
 {

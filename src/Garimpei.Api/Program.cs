@@ -127,10 +127,10 @@ app.MapOpenApi();
 // API routes
 app.MapGet("/", () => Results.Ok(new { service = "garimpei-api", version = "v2", status = "ok" }));
 
-// Compatibility routes (/api/*) for frontend during migration
-app.MapCompatEndpoints();
-app.MapBuscasCompatEndpoints();
-app.MapLojasCompatEndpoints();
+// API routes
+app.MapCoreEndpoints();
+app.MapBuscasEndpoints();
+app.MapLojasEndpoints();
 app.MapFavoritosEndpoints();
 app.MapDestinosEndpoints();
 app.MapTemplatesEndpoints();
@@ -143,9 +143,7 @@ app.MapResolverLinkEndpoints();
 // V2 API routes (native C# format)
 app.MapGroup("/api/v2")
     .RequireAuthorization()
-    .MapBuscasEndpoints()
     .MapCuradoriaEndpoints()
-    .MapLojasEndpoints()
     .MapPublicacaoEndpoints()
     .MapCouponRulesEndpoints()
     .MapCouponListingEndpoints();

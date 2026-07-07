@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// Publicações endpoints — agendamento e histórico de publicações.
-/// Compatibilidade: /api/publicacoes e /api/publicar (formato frontend).
+/// /api/publicacoes e /api/publicar (formato frontend).
 /// </summary>
 public static partial class EndpointExtensions
 {
@@ -128,7 +128,7 @@ public static partial class EndpointExtensions
         app.MapPost("/api/publicar", async (
             AppDbContext db,
             Publisher.V1.PublisherService.PublisherServiceClient publisher,
-            PublicarCompatRequest req,
+            PublicarRequest req,
             CancellationToken ct) =>
         {
             // Resolve o destino: se DestinoId informado, busca o Config (chat_id real)
@@ -263,7 +263,7 @@ public sealed record AgendarPublicacaoRequest
     public string? LegendaCustom { get; init; }
 }
 
-public sealed record PublicarCompatRequest
+public sealed record PublicarRequest
 {
     [System.Text.Json.Serialization.JsonPropertyName("id")]
     public string? Id { get; init; }

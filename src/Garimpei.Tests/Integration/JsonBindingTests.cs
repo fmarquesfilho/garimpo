@@ -43,7 +43,7 @@ public class JsonBindingTests
     }
 
     [Fact]
-    public void PublicarCompatRequest_DeserializesSnakeCase()
+    public void PublicarRequest_DeserializesSnakeCase()
     {
         var json = """
         {
@@ -55,7 +55,7 @@ public class JsonBindingTests
         }
         """;
 
-        var req = JsonSerializer.Deserialize<PublicarCompatRequest>(json, SnakeCaseOptions);
+        var req = JsonSerializer.Deserialize<PublicarRequest>(json, SnakeCaseOptions);
 
         Assert.NotNull(req);
         Assert.Equal("Produto X", req!.Nome);

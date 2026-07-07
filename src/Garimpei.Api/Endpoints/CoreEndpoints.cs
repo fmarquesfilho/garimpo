@@ -5,13 +5,11 @@ using Garimpei.Domain.ValueObjects;
 using Garimpei.Infrastructure.Sources;
 
 /// <summary>
-/// Compatibility endpoints — serve /api/* routes during migration.
-/// These mirror the Go legacy API shape so the frontend works without changes.
-/// Will be removed when frontend migrates to /api/v2/*.
+/// Core endpoints — /api/health, /api/admin/me, /api/candidatos, /api/categorias.
 /// </summary>
 public static partial class EndpointExtensions
 {
-    public static WebApplication MapCompatEndpoints(this WebApplication app)
+    public static WebApplication MapCoreEndpoints(this WebApplication app)
     {
         // /api/health — public, no auth
         app.MapGet("/api/health", () => Results.Ok(new

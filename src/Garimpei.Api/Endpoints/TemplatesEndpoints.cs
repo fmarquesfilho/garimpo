@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// Templates endpoints — CRUD de templates de mensagem + preview.
-/// Compatibilidade: /api/templates (mesmo formato do frontend).
+/// /api/templates (mesmo formato do frontend).
 /// </summary>
 public static partial class EndpointExtensions
 {
