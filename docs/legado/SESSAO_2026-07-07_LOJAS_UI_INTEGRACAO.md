@@ -72,6 +72,22 @@ ou não ter palavras-chave. Loja e busca agendada se complementam:
 - `EmptyState` reutilizado nos estados vazios; tokens semânticos
   (`muted-foreground`/`border`/`card`) no lugar de cores cruas.
 
+### 5. Componentização (primitivos do design system)
+
+Passo agressivo de padronização: substituição de markup ad hoc pelos primitivos de
+`ui/`, adicionando os que faltavam.
+
+- **Novos primitivos** (Bits UI): `Checkbox` (caixa acessível com label clicável) e
+  `ToggleGroup` (seleção única com roving tabindex/ARIA; variantes `segment` e `chips`).
+  O `Select` ganhou um callback `onchange`.
+- **AgendadorBusca**: toggle Atalhos/Avançado e chips de frequência → `ToggleGroup`;
+  cron avançado → `Input`; botão remover → `Button` (zero `<button>`/`<input>` crus).
+- **GerenciarBuscas**: fontes de dados → `Checkbox`; janela (dias) → `Select`.
+- **TagInput**: campo e botão de adicionar → `Input` + `Button` (pílulas em `Badge`).
+- **Demais páginas (PR separado):** `estatisticas`, `coletas`, `canais`, `FilterBar`
+  (selects nativos → `Select`) e `PainelAlertas` (checkbox → `Checkbox`). Como dependem
+  dos novos primitivos, foram para um PR empilhado sobre esta branch.
+
 ## Regras arquiteturais respeitadas
 
 - **Ownership:** C# continua dono exclusivo do PostgreSQL (`Buscas`); Collector Go faz o
@@ -87,8 +103,10 @@ ou não ter palavras-chave. Loja e busca agendada se complementam:
 | Arquivo | Mudança |
 |---|---|
 | `web/src/lib/components/FormAdicionarLoja.svelte` | keywords + agendamento + fix mensagem |
-| `web/src/lib/components/AgendadorBusca.svelte` | preset "A cada 8h" + prop `permitirNunca` |
-| `web/src/lib/components/GerenciarBuscas.svelte` | renomeação + copy de complementaridade |
+| `web/src/lib/components/ui/Checkbox.svelte`, `ToggleGroup.svelte` | **novos** primitivos (Bits UI) |
+| `web/src/lib/components/AgendadorBusca.svelte` | preset "A cada 8h" + `permitirNunca` + componentização (`ToggleGroup`/`Input`) |
+| `web/src/lib/components/GerenciarBuscas.svelte` | renomeação + `Checkbox`/`Select` |
+| `web/src/lib/components/TagInput.svelte` | `Input` + `Button` |
 | `web/src/routes/lojas/+page.svelte` | reformulação de layout |
 | `src/Garimpei.Api/Endpoints/SchedulerJobs.cs` | **novo** — helper compartilhado do Scheduler |
 | `src/Garimpei.Api/Endpoints/LojasEndpoints.cs` | usa o helper compartilhado |
