@@ -139,7 +139,7 @@ hero:
 EOF
 
 # ── API page (copiada de docs/09-api-reference.md)
-cp "$ROOT/docs/09-api-reference.md" "$DEST/api.md"
+cp "docs/09-api-reference.md" "$DEST/api.md"
 
 # ── Corrigir links internos ───────────────────────────────────────────────────
 # sed -i portável (macOS BSD sed vs GNU sed)
