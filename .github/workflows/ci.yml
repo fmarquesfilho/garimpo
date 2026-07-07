@@ -220,10 +220,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [changes, go, csharp, python, proto, frontend, contracts]
+    # Deploy sempre, EXCETO quando APENAS web/ mudou (seguro pular).
+    # Na dúvida (múltiplas mudanças, mudanças em .github/, etc.), deploya.
     if: |
       always() &&
       github.ref == 'refs/heads/main' && github.event_name == 'push' &&
-      needs.changes.outputs.backend == 'true' &&
+      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.web != 'true') &&
       !contains(needs.*.result, 'failure')
     permissions:
       contents: read
