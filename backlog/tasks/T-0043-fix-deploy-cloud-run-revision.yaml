@@ -28,7 +28,7 @@ descricao: |
 
   ### Fix
   Adicionar `[JsonPropertyName("destino_id")]` explícito em TODOS os campos
-  dos records `AgendarPublicacaoRequest` e `PublicarCompatRequest`.
+  dos records `AgendarPublicacaoRequest` e `PublicarRequest`.
 
   ### Prevenção
   Teste unitário `JsonBindingTests.cs` que deserializa JSON snake_case e valida

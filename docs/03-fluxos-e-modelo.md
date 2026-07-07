@@ -166,7 +166,7 @@ Frontend (Svelte)
 Cloudflare Worker (proxy)
     │  roteia /api/* → Cloud Run C#
     ▼
-API C# (ASP.NET, CompatEndpoints.cs)
+API C# (ASP.NET, CoreEndpoints.cs)
     │  1. Recebe keyword, monta FetchRequest
     │  2. Chama collector via gRPC: collector.FetchAsync({keyword, limit})
     ▼

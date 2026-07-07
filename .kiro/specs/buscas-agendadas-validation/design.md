@@ -72,7 +72,7 @@ Inputs que NÃO envolvem criação/remoção de lojas devem ser completamente in
 
 ## Hypothesized Root Cause
 
-O endpoint `POST /api/lojas` em `LojasCompatEndpoints.cs` foi portado do monolito Go sem incluir a integração com o Scheduler. No monolito, o scheduling era interno ao mesmo processo. Na nova arquitetura, o Scheduler é um sidecar separado acessível via gRPC na porta 50054 — a chamada `SetSchedule` simplesmente nunca foi adicionada ao endpoint C#.
+O endpoint `POST /api/lojas` em `LojasEndpoints.cs` foi portado do monolito Go sem incluir a integração com o Scheduler. No monolito, o scheduling era interno ao mesmo processo. Na nova arquitetura, o Scheduler é um sidecar separado acessível via gRPC na porta 50054 — a chamada `SetSchedule` simplesmente nunca foi adicionada ao endpoint C#.
 
 Causas específicas:
 
@@ -153,7 +153,7 @@ Assuming our root cause analysis is correct:
 
 ---
 
-**File**: `src/Garimpei.Api/Endpoints/LojasCompatEndpoints.cs`
+**File**: `src/Garimpei.Api/Endpoints/LojasEndpoints.cs`
 
 **Function**: `MapPost("/api/lojas", ...)`
 
@@ -224,7 +224,7 @@ Assuming our root cause analysis is correct:
 
 ---
 
-**File**: `src/Garimpei.Api/Endpoints/LojasCompatEndpoints.cs`
+**File**: `src/Garimpei.Api/Endpoints/LojasEndpoints.cs`
 
 **Record**: `AdicionarLojaRequest`
 

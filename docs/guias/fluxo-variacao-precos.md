@@ -125,7 +125,7 @@ O endpoint `GET /api/lojas/novidades` no C# faz:
 4. Retorna JSON para o frontend
 5. Se o analyzer estiver offline, retorna fallback vazio (sem erro pro usuário)
 
-**Código**: `src/Garimpei.Api/Endpoints/LojasCompatEndpoints.cs`
+**Código**: `src/Garimpei.Api/Endpoints/LojasEndpoints.cs`
 
 ### 6. Frontend (SvelteKit)
 
