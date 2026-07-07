@@ -59,6 +59,7 @@ request é independente. Não há cache (dados sempre frescos da API).
 ## 2. Publicar Oferta (Manual)
 
 O usuário seleciona um produto, escolhe destino e template, e publica para Telegram/WhatsApp.
+O link enviado é um link curto de afiliada gerado via Collector (com sub_ids para rastreamento).
 
 ```mermaid
 sequenceDiagram
@@ -66,19 +67,24 @@ sequenceDiagram
     participant F as 🌐 Frontend
     participant A as 🔷 API C# (:8080)
     participant PG as 🟢 PostgreSQL
+    participant C as ⚙️ Collector (:50051)
+    participant S as ☁️ Shopee API
     participant P as 📤 Publisher Go (:50052)
     participant T as ☁️ Telegram Bot API
 
     U->>F: clica "📤 Publicar" com produto selecionado
-    F->>A: POST /api/publicar {nome, preco, link, imagem, destino_id, template_id}
+    F->>A: POST /api/publicar {nome, preco, link, imagem, destino_id, estrategia}
     A->>PG: SELECT Config FROM Destinos WHERE Id = destino_id
     PG-->>A: Config = "@mileseleciona" (chat_id resolvido)
-    A->>P: gRPC Publish(channel="telegram", groupId="@mileseleciona", content={title, imageUrl, productUrl, price})
-    P->>P: Dispatcher resolve Sender por tipo
-    P->>T: POST /bot{token}/sendPhoto {chat_id, photo, caption, reply_markup}
+    A->>C: gRPC GenerateAffiliateLink(url, sub_ids=["mileseleciona","nicho","20260707"])
+    C->>S: POST GraphQL generateShortLink(originUrl, subIds)
+    S-->>C: {shortLink: "https://s.shopee.com.br/xyz123"}
+    C-->>A: GenerateAffiliateLinkResponse {short_link}
+    A->>P: gRPC Publish(groupId="@mileseleciona", content={productUrl=short_link})
+    P->>T: POST /bot{token}/sendPhoto {chat_id, photo, caption com link curto}
     T-->>P: {ok: true, message_id: 12345}
     P-->>A: PublishResponse {success: true, messageId: "12345"}
-    A->>PG: INSERT INTO Publicacoes {status="enviada", detalhe=messageId}
+    A->>PG: INSERT INTO Publicacoes {status="enviada", link=short_link}
     A-->>F: {success: true, publicacao_id: "uuid", message_id: "12345"}
     F-->>U: ✅ "Publicação enviada!"
 ```
@@ -89,19 +95,79 @@ sequenceDiagram
 **Data ownership:**
 - 🟢 PostgreSQL: `Destinos` (leitura do chat_id), `Publicacoes` (escrita do registro)
 - O Publisher Go **nunca** acessa o PostgreSQL — recebe o chat_id já resolvido via gRPC
+- O Collector Go gera o link de afiliada via Shopee GraphQL (I/O externo)
+
+**Link de afiliada (GenerateAffiliateLink):**
+- Recebe a URL original do produto + sub_ids para rastreamento
+- Sub IDs: `[canal, estrategia, data]` → voltam no `conversionReport.utmContent`
+- Se falhar (Collector indisponível), usa o link original como fallback
 
 **Resolução de destino:** O `destino_id` do frontend é um UUID do PostgreSQL. O C#
 resolve para o `Config` real (chat_id ou telefone) antes de chamar o Publisher.
-O Publisher não conhece UUIDs — só conhece chat_ids/telefones.
 
 **Fallback:** Se `sendPhoto` falha (CDN Shopee bloqueada), o Publisher tenta
 `sendMessage` com texto puro (graceful degradation).
 
-**WhatsApp:** Mesmo fluxo mas com Meta Graph API v25.0:
-`POST https://graph.facebook.com/v25.0/{phoneNumberId}/messages`
-
 **Escalabilidade:** Publisher é stateless. Telegram limita 30 msg/s global e
 1 msg/s por chat. O Cloud Tasks cuida do throttle em cenários automáticos.
+
+</details>
+
+---
+
+## 2.1. Publicar Oferta Agendada
+
+O usuário agenda uma publicação para o futuro. O Scheduler dispara no horário correto.
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuário
+    participant F as 🌐 Frontend
+    participant A as 🔷 API C# (:8080)
+    participant PG as 🟢 PostgreSQL
+    participant SC as ⏱️ Scheduler (:50054)
+    participant C as ⚙️ Collector (:50051)
+    participant P as 📤 Publisher (:50052)
+    participant T as ☁️ Telegram
+
+    U->>F: seleciona data/hora futura e clica "Agendar"
+    F->>A: POST /api/publicacoes {nome, link, destino_id, agendada_em: "2026-07-08T14:30:00Z"}
+    A->>PG: INSERT Publicacoes {status="agendada", agendada_em}
+    A->>SC: gRPC SetSchedule(job_id="pub-{id}", cron="30 14 8 7 *", type="scheduled_publish")
+    SC-->>A: SetScheduleResponse {success, job: {status: "active"}}
+    A-->>F: {publicacao: {id, status: "agendada"}}
+    F-->>U: ⏱️ "Publicação agendada para 08/07 às 14:30"
+
+    Note over SC: Às 14:30 do dia 08/07...
+    SC->>A: POST /internal/publish-scheduled {publicacao_id}
+    A->>PG: SELECT Publicacao WHERE Id = pubId AND Status = "agendada"
+    A->>PG: SELECT Config FROM Destinos WHERE Id = destino_id
+    A->>C: gRPC GenerateAffiliateLink(url, sub_ids)
+    C-->>A: {short_link}
+    A->>P: gRPC Publish(groupId=chat_id, content={productUrl=short_link})
+    P->>T: POST sendPhoto
+    T-->>P: {ok: true}
+    A->>PG: UPDATE Publicacoes SET status="enviada", link=short_link
+    Note over SC: Remove job one-shot (cleanup)
+```
+
+<details>
+<summary>📋 Detalhes técnicos</summary>
+
+**Separação de responsabilidades:**
+- C# API: CRUD + resolve dados + gera link + chama Publisher (O QUÊ)
+- Scheduler Go: cron one-shot + disparo no horário correto (QUANDO)
+- Collector Go: GenerateAffiliateLink (I/O externo com Shopee)
+- Publisher Go: envio Telegram/WhatsApp (COMO entregar)
+
+**Cron one-shot:** O SetSchedule recebe `cron="30 14 8 7 *"` (minuto 30, hora 14,
+dia 8, mês 7, qualquer dia da semana). O Scheduler executa uma vez e remove o job.
+
+**Eventual consistency:** Se o Scheduler estiver indisponível ao criar, a Publicacao
+persiste no PG com status "agendada" — pode ser reconciliada depois.
+
+**Endpoint interno:** `/internal/publish-scheduled` não requer auth (rede interna
+Cloud Run). O Scheduler faz HTTP POST com `{publicacao_id}`.
 
 </details>
 
@@ -593,7 +659,8 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 | Caso de Uso | PostgreSQL (C#) | BigQuery (Go→Python) | APIs Externas |
 |---|---|---|---|
 | 1. Descobrir | — | — | Shopee/Amazon (real-time) |
-| 2. Publicar | ✍ Destinos, Publicacoes | — | Telegram/WhatsApp |
+| 2. Publicar | ✍ Destinos, Publicacoes | — | Telegram/WhatsApp + Shopee (GenerateAffiliateLink) |
+| 2.1. Publicar Agendada | ✍ Publicacoes | — | Scheduler (timer) + Telegram/WhatsApp + Shopee |
 | 3. Coleta+Alerta | — | ✍ snapshots | Shopee → BQ → Telegram |
 | 4. Monitorar Lojas | 📖 Buscas | 📖 snapshots (via Analyzer) | — |
 | 5. Adicionar Loja | ✍ Buscas | — | Shopee v4 (via Collector gRPC) + Scheduler SetSchedule |

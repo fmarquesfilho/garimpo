@@ -155,6 +155,35 @@ Quando ativos: variação de preço > threshold → notificação Telegram.
 
 Ver [ADR 0008](/docs/decisoes/0008-alertas-desabilitados/).
 
+### Publicação com link de afiliada
+
+Ao publicar um produto (imediato ou agendado), o C# API:
+1. Resolve o destino (UUID → chat_id real)
+2. Chama `Collector.GenerateAffiliateLink(url, sub_ids)` — gera link curto rastreável
+3. Chama `Publisher.Publish(chat_id, productUrl=link_curto)` — envia Telegram/WhatsApp
+4. Persiste a Publicacao com o link de afiliada gerado
+
+**Sub IDs para rastreamento de conversão:**
+- `sub_ids[0]` = canal (nome do destino, ex: "mileseleciona")
+- `sub_ids[1]` = estratégia (ex: "nicho", "agendada", "manual")
+- `sub_ids[2]` = data (YYYYMMDD)
+
+Os sub_ids voltam no `conversionReport` da Shopee como `utmContent`, permitindo
+identificar qual publicação gerou qual venda.
+
+Se `GenerateAffiliateLink` falhar (Collector indisponível), o link original é usado.
+
+### Publicações agendadas
+
+O usuário pode agendar publicações para envio futuro:
+1. POST /api/publicacoes com `agendada_em` → salva `status="agendada"` no PG
+2. C# chama `Scheduler.SetSchedule(job_id="pub-{id}", cron=one-shot)` — o Scheduler detém o timer
+3. No horário, Scheduler faz POST `/internal/publish-scheduled` no C# API
+4. C# busca a Publicacao, gera link de afiliada, resolve destino, publica via Publisher
+5. Atualiza `status="enviada"` e Scheduler remove o job one-shot
+
+Separação: C# diz O QUÊ publicar, Scheduler decide QUANDO disparar.
+
 ## Fluxo de busca de produtos (curadoria)
 
 ### Ciclo completo de uma busca
@@ -208,7 +237,8 @@ Frontend
 | Perfil de busca (keywords, filtros) | **PostgreSQL** (tabela `Buscas`) | Quando o usuário salva uma busca |
 | Perfil de loja (shop_ids resolvidos) | **PostgreSQL** (tabela `Buscas`) | POST /api/lojas resolve shop_id via Collector e salva |
 | Snapshot de mercado (top produtos) | **BigQuery** (tabela `snapshots`) | Scheduler executa coletas agendadas (cron) |
-| Publicações enviadas | **PostgreSQL** (tabela `Publicacoes`) | Ao clicar "Enviar" |
+| Publicações enviadas | **PostgreSQL** (tabela `Publicacoes`) | Ao clicar "Enviar" (link de afiliada gerado via GenerateAffiliateLink) |
+| Publicações agendadas | **PostgreSQL** (tabela `Publicacoes`) | Ao agendar para data futura → Scheduler dispara no horário |
 | Favoritos | **PostgreSQL** (tabela `Favoritos`) | Ao clicar ★ |
 | Destinos (canais Telegram/WhatsApp) | **PostgreSQL** (tabela `Destinos`) | Configuração em /canais |
 | Conversões reais (vendas) | **BigQuery** (tabela `conversoes`) | Scheduler consulta Shopee periodicamente |
