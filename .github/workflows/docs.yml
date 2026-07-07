@@ -7,7 +7,7 @@ on:
       - 'docs/**'
       - 'docs-site/**'
       - 'backlog/**'
-      - 'api/openapi.yaml'
+      - 'docs-site/docs/api.md'
       - '.mise/tasks/docs/**'
       - '.github/workflows/docs.yml'
 

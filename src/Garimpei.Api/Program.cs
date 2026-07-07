@@ -67,7 +67,7 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddOtlpExporter());
 
-// OpenAPI spec generation for Swagger/Scalar UI
+// OpenAPI spec (dev: disponível em /openapi/v1.json para inspeção local)
 builder.Services.AddOpenApi();
 
 // CORS (dev only — production uses same-origin via Cloudflare Worker)

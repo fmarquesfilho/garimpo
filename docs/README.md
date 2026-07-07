@@ -22,7 +22,6 @@ contracts/
   registry.yaml              ← Contratos de serviço (ADR-0020)
   schemas/                   ← JSON Schemas para payloads HTTP
 api/
-  openapi.yaml               ← Fonte única do contrato da API (OpenAPI 3.1)
 docs-site/                   ← Site Rspress (build com `mise run docs:sync`)
 ```
 
