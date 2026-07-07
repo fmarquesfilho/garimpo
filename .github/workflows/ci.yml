@@ -67,7 +67,6 @@ jobs:
             web:
               - 'web/**'
 
-jobs:
   # ── Go (build + test + lint + arch) ──────────────────────────────────────
   go:
     name: Go
