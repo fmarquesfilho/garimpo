@@ -101,3 +101,4 @@ Implementar o fluxo completo de monitoramento de lojas (ResolveShop → Schedule
 - T-0050: Testar envio real Publisher
 - T-0051: Documentação final
 - T-0052: API reference gerado automaticamente
+
