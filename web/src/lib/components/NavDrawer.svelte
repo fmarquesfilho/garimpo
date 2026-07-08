@@ -32,7 +32,7 @@
 					href="/"
 					class="block rounded-sm px-3 py-3 font-semibold text-muted-foreground no-underline hover:bg-muted hover:text-foreground"
 					class:!bg-accent={$page.url.pathname === '/'}
-					class:!text-foreground={$page.url.pathname === '/'}>🔍 Descobrir</a
+					class:!text-foreground={$page.url.pathname === '/'}>🔍 Garimpar</a
 				>
 			</div>
 			<div class="flex flex-col gap-0.5 border-b border-border py-3 last:border-b-0">
@@ -84,12 +84,6 @@
 			<div class="flex flex-col gap-0.5 border-b border-border py-3 last:border-b-0">
 				<span class="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground opacity-70"
 					>Configurações</span
-				>
-				<a
-					href="/lojas"
-					class="block rounded-sm px-3 py-3 font-semibold text-muted-foreground no-underline hover:bg-muted hover:text-foreground"
-					class:!bg-accent={$page.url.pathname === '/lojas'}
-					class:!text-foreground={$page.url.pathname === '/lojas'}>🏪 Lojas</a
 				>
 				<a
 					href="/canais"

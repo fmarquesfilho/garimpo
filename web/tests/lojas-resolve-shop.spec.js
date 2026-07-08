@@ -20,8 +20,11 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 	test.slow();
 
 	test('resolve link direto shopee.com.br → shop_id + shop_name', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		// Expandir seção Configuração
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
 
 		// Intercepta a resposta do POST para validar o payload
 		const responsePromise = page.waitForResponse(
@@ -44,8 +47,11 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 	});
 
 	test('resolve link curto s.shopee.com.br → shop_id + shop_name', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		// Expandir seção Configuração
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
 
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
@@ -67,8 +73,11 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 	});
 
 	test('resolve username puro → shop_id + shop_name', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		// Expandir seção Configuração
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
 
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
@@ -108,8 +117,11 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 	});
 
 	test('link inválido retorna erro amigável', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		// Expandir seção Configuração
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
 
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'

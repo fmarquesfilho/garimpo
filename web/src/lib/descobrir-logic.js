@@ -20,10 +20,11 @@ export function encontrarLojaPorNome(termo, buscasComLojas) {
 /**
  * Monta a lista final de resultados aplicando todos os filtros client-side.
  * @param {Object} opts
- * @param {{curadoria: boolean, quedas: boolean, novos: boolean, favoritos: boolean}} opts.fontes
+ * @param {{curadoria: boolean, quedas: boolean, novos: boolean, favoritos: boolean, lojas?: boolean}} opts.fontes
  * @param {any[]} opts.dadosCuradoria
  * @param {any[]} opts.dadosQuedas
  * @param {any[]} opts.dadosNovos
+ * @param {any[]} [opts.dadosLojas]
  * @param {any[]} [opts.favoritos]
  * @param {string} [opts.busca]
  * @param {string[]} [opts.categorias]
@@ -35,6 +36,7 @@ export function montarResultados({
 	dadosCuradoria,
 	dadosQuedas,
 	dadosNovos,
+	dadosLojas,
 	favoritos,
 	busca,
 	categorias,
@@ -45,6 +47,9 @@ export function montarResultados({
 	if (fontes.curadoria) todos.push(...dadosCuradoria);
 	if (fontes.quedas) todos.push(...dadosQuedas);
 	if (fontes.novos) todos.push(...dadosNovos);
+	if (fontes.lojas && dadosLojas?.length) {
+		todos.push(...dadosLojas.map((p) => (p._fonte ? p : { ...p, _fonte: 'loja' })));
+	}
 	if (fontes.favoritos) {
 		const favs = (favoritos ?? []).map((f) => ({ ...f, id: f.produto_id, _fonte: 'favorito' }));
 		todos.push(...favs);

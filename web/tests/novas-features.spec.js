@@ -19,16 +19,21 @@ test.describe('Página Oportunidades', () => {
 	});
 });
 
-test.describe('Página Lojas', () => {
-	test('rota /lojas existe e carrega', async ({ page }) => {
-		await page.goto('/lojas');
+test.describe('Página Garimpar (unificada)', () => {
+	test('rota / carrega e mostra título', async ({ page }) => {
+		await page.goto('/');
 		await expect(page.locator('text=Entrar com Google')).toBeVisible();
 	});
 
-	test('sem erros JS na página de lojas', async ({ page }) => {
+	test('rota /lojas retorna 404 (removida)', async ({ page }) => {
+		const response = await page.goto('/lojas');
+		expect(response.status()).toBe(404);
+	});
+
+	test('sem erros JS na página principal', async ({ page }) => {
 		const errors = [];
 		page.on('pageerror', (err) => errors.push(err.message));
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForTimeout(1000);
 		expect(errors).toHaveLength(0);
 	});
@@ -54,7 +59,7 @@ test.describe('Curadoria — redesign simplificado', () => {
 
 test.describe('Menu drawer', () => {
 	test('sem erros JS em nenhuma rota', async ({ page }) => {
-		const rotas = ['/', '/oportunidades', '/lojas', '/publicar', '/publicacoes', '/coletas', '/estatisticas'];
+		const rotas = ['/', '/oportunidades', '/publicar', '/publicacoes', '/coletas', '/estatisticas'];
 		for (const rota of rotas) {
 			const errors = [];
 			page.on('pageerror', (err) => errors.push(err.message));

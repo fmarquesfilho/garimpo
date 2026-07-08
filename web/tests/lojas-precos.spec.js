@@ -1,12 +1,12 @@
 import { test, expect } from './fixtures.js';
 
 /**
- * Testes E2E do fluxo de variação de preços.
+ * Testes E2E do fluxo de monitoramento de lojas na página unificada.
  *
- * Valida a página /lojas com aba "📉 Preços":
- * - Exibe variações de preço (quedas e altas)
- * - Exibe produtos novos na aba "🆕 Novidades"
- * - Botão "📤 Publicar" navega com dados preenchidos
+ * Valida:
+ * - Toggle 🏪 Lojas exibe produtos das lojas monitoradas
+ * - Seletor de loja filtra por loja específica
+ * - Quedas e novos das lojas aparecem nos respectivos toggles
  * - Graceful degradation quando analyzer está offline
  */
 
@@ -57,43 +57,10 @@ const mockNovidades = {
 			link: 'https://shopee.com.br/product/123456/SP-001',
 			loja: 'ImportsPerfumaria',
 			detectado_em: '2026-07-04T00:00:00Z'
-		},
-		{
-			produto_id: 'SP-002',
-			nome: 'Dolce & Gabbana Light Blue 75ml',
-			preco_anterior: 299.0,
-			preco_atual: 194.0,
-			variacao: -0.3512,
-			variacao_pct: -0.3512,
-			imagem: 'https://cf.shopee.com.br/file/dg-light-blue.jpg',
-			link: 'https://shopee.com.br/product/123456/SP-002',
-			loja: 'ImportsPerfumaria',
-			detectado_em: '2026-07-04T00:00:00Z'
-		},
-		{
-			produto_id: 'SP-004',
-			nome: 'Carolina Herrera Good Girl 80ml',
-			preco_anterior: 420.0,
-			preco_atual: 462.0,
-			variacao: 0.1,
-			variacao_pct: 0.1,
-			imagem: 'https://cf.shopee.com.br/file/ch-good-girl.jpg',
-			link: 'https://shopee.com.br/product/123456/SP-004',
-			loja: 'ImportsPerfumaria',
-			detectado_em: '2026-07-04T00:00:00Z'
 		}
 	],
 	total_novos: 1,
-	total_variacoes: 3
-};
-
-const mockNovidadesVazio = {
-	busca_id: '',
-	dias: 7,
-	produtos_novos: [],
-	variacoes: [],
-	total_novos: 0,
-	total_variacoes: 0
+	total_variacoes: 1
 };
 
 const mockCandidatos = {
@@ -107,7 +74,7 @@ const mockCandidatos = {
 			comissao: 0.12,
 			vendas: 3520,
 			avaliacao: 4.8,
-			loja: 'ImportsPerfumaria',
+			loja: 'Glory of Seoul',
 			imagem: '',
 			link: ''
 		},
@@ -118,7 +85,7 @@ const mockCandidatos = {
 			comissao: 0.1,
 			vendas: 1920,
 			avaliacao: 4.9,
-			loja: 'ImportsPerfumaria',
+			loja: 'Glory of Seoul',
 			imagem: '',
 			link: ''
 		}
@@ -167,193 +134,81 @@ async function interceptarAPIs(page, { novidadesResponse = mockNovidades } = {})
 
 // ── Testes ────────────────────────────────────────────────────────────────
 
-test.describe('Lojas — Aba Preços (variação de preços)', () => {
-	test('exibe lojas monitoradas após login', async ({ authedPage: page }) => {
+test.describe('Fonte Lojas — toggle e seleção na página unificada', () => {
+	test('toggle 🏪 Lojas exibe produtos das lojas monitoradas', async ({ authedPage: page }) => {
 		await interceptarAPIs(page);
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
 
-		// Deve mostrar a loja "Glory of Seoul"
-		await expect(page.locator('text=Glory of Seoul')).toBeVisible({ timeout: 10000 });
+		// Ativar fonte Lojas
+		const toggleLojas = page.locator('button:has-text("🏪 Lojas")');
+		await toggleLojas.click();
+		await page.waitForTimeout(800);
+
+		// Deve exibir produtos da loja
+		await expect(page.locator('.grade')).toBeVisible({ timeout: 5000 });
+		await expect(page.locator('text=Perfume CK One 100ml')).toBeVisible();
 	});
 
-	test('selecionar loja mostra abas (Produtos, Novidades, Preços)', async ({ authedPage: page }) => {
+	test('seletor de loja aparece quando toggle ativo', async ({ authedPage: page }) => {
 		await interceptarAPIs(page);
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
 
-		// Clicar na loja
-		await page.locator('text=Glory of Seoul').click();
+		// Ativar fonte Lojas
+		await page.locator('button:has-text("🏪 Lojas")').click();
 		await page.waitForTimeout(500);
 
-		// Abas devem estar visíveis (usar role tab para ser específico)
-		await expect(page.getByRole('tab', { name: /Produtos/ })).toBeVisible();
-		await expect(page.getByRole('tab', { name: /Novidades/ })).toBeVisible();
-		await expect(page.getByRole('tab', { name: /Preços/ })).toBeVisible();
+		// Seletor com "Todas" e "Glory of Seoul" deve aparecer
+		await expect(page.locator('button:has-text("Todas")')).toBeVisible();
+		await expect(page.locator('button:has-text("Glory of Seoul")')).toBeVisible();
 	});
 
-	test('aba Preços exibe tabela de variações', async ({ authedPage: page }) => {
+	test('selecionar loja específica filtra resultados', async ({ authedPage: page }) => {
 		await interceptarAPIs(page);
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
 
-		// Selecionar loja
-		await page.locator('text=Glory of Seoul').click();
+		await page.locator('button:has-text("🏪 Lojas")').click();
 		await page.waitForTimeout(500);
 
-		// Clicar na aba Preços
-		await page.locator('text=📉 Preços').click();
+		// Clicar em "Glory of Seoul" no seletor
+		await page.locator('button:has-text("Glory of Seoul")').click();
 		await page.waitForTimeout(500);
 
-		// Deve exibir a tabela com variações
-		await expect(page.locator('table')).toBeVisible({ timeout: 5000 });
-
-		// Deve ter os cabeçalhos corretos
-		await expect(page.locator('th', { hasText: 'Produto' })).toBeVisible();
-		await expect(page.locator('th', { hasText: 'Antes' })).toBeVisible();
-		await expect(page.locator('th', { hasText: 'Agora' })).toBeVisible();
-		await expect(page.locator('th', { hasText: 'Variação' })).toBeVisible();
+		// Resultados devem ser da loja selecionada
+		const cards = page.locator('.grade > *');
+		expect(await cards.count()).toBeGreaterThan(0);
 	});
 
-	test('aba Preços mostra contagem de variações', async ({ authedPage: page }) => {
+	test('quedas aparecem no toggle 📉 Quedas com badge', async ({ authedPage: page }) => {
 		await interceptarAPIs(page);
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(800);
 
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(500);
-		await page.getByRole('tab', { name: /Preços/ }).click();
-		await page.waitForTimeout(500);
-
-		// Deve mostrar "3 variação(ões)"
-		await expect(page.locator('text=/3.*variação/')).toBeVisible();
+		// O toggle Quedas deve ter badge (loja monitorada gera quedas)
+		const badgeQuedas = page.locator('button:has-text("📉 Quedas") .fonte-badge');
+		await expect(badgeQuedas).toBeVisible({ timeout: 5000 });
 	});
 
-	test('quedas de preço aparecem em verde com seta ↓', async ({ authedPage: page }) => {
+	test('novos aparecem no toggle 🆕 Novos', async ({ authedPage: page }) => {
 		await interceptarAPIs(page);
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(800);
 
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(500);
-		await page.locator('text=📉 Preços').click();
-		await page.waitForTimeout(500);
-
-		// Deve ter badge com seta para baixo (queda)
-		const quedas = page.locator('span:has-text("↓")');
-		expect(await quedas.count()).toBeGreaterThanOrEqual(2);
-	});
-
-	test('altas de preço aparecem com seta ↑', async ({ authedPage: page }) => {
-		await interceptarAPIs(page);
-		await page.goto('/lojas');
-		await page.waitForLoadState('networkidle');
-
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(500);
-		await page.locator('text=📉 Preços').click();
-		await page.waitForTimeout(500);
-
-		// Carolina Herrera +10% — deve ter seta para cima
-		const altas = page.locator('span:has-text("↑")');
-		expect(await altas.count()).toBeGreaterThanOrEqual(1);
-	});
-
-	test('botão publicar navega para /publicar com dados', async ({ authedPage: page }) => {
-		await interceptarAPIs(page);
-
-		// Interceptar navegação para /publicar
-		await page.route('**/api/destinos*', async (route) => {
-			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ destinos: [] }) });
-		});
-		await page.route('**/api/templates*', async (route) => {
-			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ templates: [] }) });
-		});
-
-		await page.goto('/lojas');
-		await page.waitForLoadState('networkidle');
-
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(500);
-		await page.locator('text=📉 Preços').click();
-		await page.waitForTimeout(500);
-
-		// Clicar no botão 📤 da primeira variação
-		const btnPublicar = page.locator('button[title="Publicar esta oferta"]').first();
-		await expect(btnPublicar).toBeVisible();
-		await btnPublicar.click();
-
-		// Deve navegar para /publicar
-		await page.waitForURL('**/publicar*', { timeout: 5000 });
-		expect(page.url()).toContain('/publicar');
-	});
-
-	test('aba Novidades exibe produtos novos', async ({ authedPage: page }) => {
-		await interceptarAPIs(page);
-		await page.goto('/lojas');
-		await page.waitForLoadState('networkidle');
-
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(500);
-
-		// Clicar na aba Novidades
-		await page.getByRole('tab', { name: /Novidades/ }).click();
-		await page.waitForTimeout(500);
-
-		// Deve exibir o produto novo
-		await expect(page.locator('text=Jean Paul Gaultier Le Male 125ml')).toBeVisible({ timeout: 5000 });
-	});
-
-	test('badge na aba Preços mostra contagem', async ({ authedPage: page }) => {
-		await interceptarAPIs(page);
-		await page.goto('/lojas');
-		await page.waitForLoadState('networkidle');
-
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(1000);
-
-		// A aba Preços deve ter um badge com a contagem "3"
-		const abaPrecos = page.locator('button', { hasText: '📉 Preços' });
-		await expect(abaPrecos).toBeVisible();
-		// O badge é renderizado dentro do tab — verificar que o texto contém o número
-		await expect(abaPrecos).toContainText('3');
+		// O toggle Novos deve ter badge
+		const badgeNovos = page.locator('button:has-text("🆕 Novos") .fonte-badge');
+		await expect(badgeNovos).toBeVisible({ timeout: 5000 });
 	});
 });
 
-test.describe('Lojas — Graceful degradation (analyzer offline)', () => {
-	test('sem variações mostra mensagem amigável', async ({ authedPage: page }) => {
-		await interceptarAPIs(page, { novidadesResponse: mockNovidadesVazio });
-		await page.goto('/lojas');
-		await page.waitForLoadState('networkidle');
-
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(500);
-		await page.locator('text=📉 Preços').click();
-		await page.waitForTimeout(500);
-
-		// Deve mostrar mensagem de "nenhuma variação"
-		await expect(page.locator('text=Nenhuma variação de preço')).toBeVisible();
-	});
-
-	test('sem produtos novos mostra mensagem amigável', async ({ authedPage: page }) => {
-		await interceptarAPIs(page, { novidadesResponse: mockNovidadesVazio });
-		await page.goto('/lojas');
-		await page.waitForLoadState('networkidle');
-
-		await page.locator('text=Glory of Seoul').click();
-		await page.waitForTimeout(500);
-		await page.locator('text=🆕 Novidades').click();
-		await page.waitForTimeout(500);
-
-		await expect(page.locator('text=Nenhum produto novo')).toBeVisible();
-	});
-
+test.describe('Fonte Lojas — graceful degradation', () => {
 	test('erro no analyzer não crasha a página', async ({ authedPage: page }) => {
-		// Simular timeout do analyzer
 		await page.route('**/api/lojas/novidades*', async (route) => {
 			await route.abort('timedout');
 		});
-
 		await page.route('**/api/buscas', async (route) => {
 			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockBuscas) });
 		});
@@ -366,29 +221,54 @@ test.describe('Lojas — Graceful degradation (analyzer offline)', () => {
 		await page.route('**/api/admin/me', async (route) => {
 			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ admin: false }) });
 		});
-		await page.route('**/api/alertas*', async (route) => {
-			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ regras: [] }) });
-		});
-		await page.route('**/api/lojas', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({ lojas: mockBuscas.buscas, total: 1 })
-			});
-		});
 
 		const errors = [];
 		page.on('pageerror', (err) => errors.push(err.message));
 
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
-
-		await page.locator('text=Glory of Seoul').click();
 		await page.waitForTimeout(2000);
 
-		// Página não deve ter crashado
 		expect(errors).toHaveLength(0);
-		// A aba Preços ainda deve existir
-		await expect(page.locator('text=📉 Preços')).toBeVisible();
+	});
+
+	test('sem lojas monitoradas + toggle 🏪 ativo mostra empty state', async ({ authedPage: page }) => {
+		// Mock sem lojas
+		await page.route('**/api/buscas', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ buscas: [], total: 0 })
+			});
+		});
+		await page.route('**/api/candidatos*', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ estrategia: 'nicho', total_bruto: 0, candidatos: [] })
+			});
+		});
+		await page.route('**/api/favoritos*', async (route) => {
+			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ favoritos: [] }) });
+		});
+		await page.route('**/api/admin/me', async (route) => {
+			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ admin: false }) });
+		});
+
+		await page.goto('/');
+		await page.waitForLoadState('networkidle');
+
+		// Desativar todas as fontes e ativar só Lojas
+		const fontes = page.locator('.fonte-btn.ativa');
+		const count = await fontes.count();
+		for (let i = 0; i < count; i++) {
+			await fontes.nth(0).click();
+			await page.waitForTimeout(100);
+		}
+		await page.locator('button:has-text("🏪 Lojas")').click();
+		await page.waitForTimeout(800);
+
+		// Deve mostrar mensagem de nenhuma loja
+		await expect(page.locator('text=Nenhuma loja monitorada')).toBeVisible({ timeout: 5000 });
 	});
 });

@@ -22,8 +22,11 @@ test.describe('Buscas Agendadas — Fluxo Completo', () => {
 	test.slow();
 
 	test('adicionar loja sem keywords agenda coleta de todos os produtos', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		// Expandir seção Configuração (componentes movidos da antiga /lojas)
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
 
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
@@ -117,8 +120,11 @@ test.describe('Buscas Agendadas — Fluxo Completo', () => {
 	});
 
 	test('componente GerenciarBuscas renderiza corretamente', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		// Expandir seção Configuração (componentes movidos da antiga /lojas)
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
 
 		// Verifica que o heading da seção de buscas por palavra-chave existe
 		await expect(page.locator('text=Buscas por palavra-chave')).toBeVisible();

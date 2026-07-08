@@ -69,8 +69,11 @@ test.describe('Lojas — Cadastro e Agendamento', () => {
 			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ candidatos: [] }) });
 		});
 
-		await page.goto('/lojas');
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
+		// Expandir seção Configuração
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
 
 		// Preenche formulário de Adicionar Loja
 		await page.fill('input[placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"]', '123456789');

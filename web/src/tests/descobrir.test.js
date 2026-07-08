@@ -611,3 +611,226 @@ describe('Descobrir — Detecção de loja por nome', () => {
 		expect(encontrarLojaPorNome('', lojas)).toBeNull();
 	});
 });
+
+// ── Fonte Lojas (cenário unificação) ──────────────────────────────────────
+
+// eslint-disable-next-line max-lines-per-function
+describe('Descobrir — Fonte Lojas (toggle e filtragem)', () => {
+	const dadosLojas = [
+		{
+			id: 'L1',
+			nome: 'Sérum SKIN1004 Premium',
+			preco: 95,
+			comissao: 0.12,
+			vendas: 300,
+			loja: 'SKIN1004 Official',
+			_fonte: 'loja',
+			_loja_id: 'loja-123'
+		},
+		{
+			id: 'L2',
+			nome: 'Perfume CK One 100ml',
+			preco: 189,
+			comissao: 0.08,
+			vendas: 1500,
+			loja: 'Glory of Seoul',
+			_fonte: 'loja',
+			_loja_id: 'loja-456'
+		},
+		{
+			id: 'L3',
+			nome: 'Tônico COSRX AHA',
+			preco: 55,
+			comissao: 0.1,
+			vendas: 800,
+			loja: 'COSRX Store',
+			_fonte: 'loja',
+			_loja_id: 'loja-789'
+		}
+	];
+
+	const base = {
+		dadosCuradoria: [],
+		dadosQuedas: [],
+		dadosNovos: [],
+		dadosLojas,
+		busca: '',
+		categorias: [],
+		comissaoMin: 0,
+		vendasMin: 0
+	};
+
+	it('fontes.lojas=true inclui produtos de lojas nos resultados', () => {
+		const r = montarResultados({
+			...base,
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true }
+		});
+		expect(r).toHaveLength(3);
+		expect(r.every((p) => p._fonte === 'loja')).toBe(true);
+	});
+
+	it('fontes.lojas=false exclui produtos de lojas', () => {
+		const r = montarResultados({
+			...base,
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: false }
+		});
+		expect(r).toHaveLength(0);
+	});
+
+	it('keyword filtra produtos de lojas (por nome)', () => {
+		const r = montarResultados({
+			...base,
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true },
+			busca: 'SKIN1004'
+		});
+		expect(r).toHaveLength(1);
+		expect(r[0].id).toBe('L1');
+	});
+
+	it('keyword filtra produtos de lojas (por loja)', () => {
+		const r = montarResultados({
+			...base,
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true },
+			busca: 'Glory'
+		});
+		expect(r).toHaveLength(1);
+		expect(r[0].id).toBe('L2');
+	});
+
+	it('comissaoMin filtra produtos de lojas', () => {
+		const r = montarResultados({
+			...base,
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true },
+			comissaoMin: 0.1
+		});
+		expect(r).toHaveLength(2);
+		expect(r.find((p) => p.id === 'L2')).toBeUndefined();
+	});
+
+	it('vendasMin filtra produtos de lojas', () => {
+		const r = montarResultados({
+			...base,
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true },
+			vendasMin: 1000
+		});
+		expect(r).toHaveLength(1);
+		expect(r[0].id).toBe('L2');
+	});
+});
+
+// eslint-disable-next-line max-lines-per-function
+describe('Descobrir — Fonte Lojas (combinações e edge cases)', () => {
+	const dadosLojas = [
+		{
+			id: 'L1',
+			nome: 'Sérum SKIN1004 Premium',
+			preco: 95,
+			comissao: 0.12,
+			vendas: 300,
+			loja: 'SKIN1004 Official',
+			_fonte: 'loja',
+			_loja_id: 'loja-123'
+		},
+		{
+			id: 'L2',
+			nome: 'Perfume CK One 100ml',
+			preco: 189,
+			comissao: 0.08,
+			vendas: 1500,
+			loja: 'Glory of Seoul',
+			_fonte: 'loja',
+			_loja_id: 'loja-456'
+		},
+		{
+			id: 'L3',
+			nome: 'Tônico COSRX AHA',
+			preco: 55,
+			comissao: 0.1,
+			vendas: 800,
+			loja: 'COSRX Store',
+			_fonte: 'loja',
+			_loja_id: 'loja-789'
+		}
+	];
+
+	it('fonte lojas combina com outras fontes', () => {
+		const curadoria = [{ id: 'C1', nome: 'Produto Curadoria', preco: 50, loja: 'X', _fonte: 'curadoria' }];
+		const r = montarResultados({
+			dadosCuradoria: curadoria,
+			dadosQuedas: [],
+			dadosNovos: [],
+			dadosLojas,
+			fontes: { curadoria: true, quedas: false, novos: false, favoritos: false, lojas: true },
+			busca: '',
+			categorias: [],
+			comissaoMin: 0,
+			vendasMin: 0
+		});
+		expect(r).toHaveLength(4);
+	});
+
+	it('dadosLojas ausente (undefined) não crasha', () => {
+		const r = montarResultados({
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true },
+			dadosCuradoria: [],
+			dadosQuedas: [],
+			dadosNovos: [],
+			dadosLojas: undefined,
+			busca: ''
+		});
+		expect(r).toHaveLength(0);
+	});
+
+	it('dadosLojas vazio retorna vazio', () => {
+		const r = montarResultados({
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true },
+			dadosCuradoria: [],
+			dadosQuedas: [],
+			dadosNovos: [],
+			dadosLojas: [],
+			busca: ''
+		});
+		expect(r).toHaveLength(0);
+	});
+
+	it('backward compat: sem dadosLojas e sem fontes.lojas funciona como antes', () => {
+		const curadoria = [{ id: 'C1', nome: 'Produto', preco: 50, loja: 'X', _fonte: 'curadoria' }];
+		const r = montarResultados({
+			fontes: { curadoria: true, quedas: false, novos: false, favoritos: false },
+			dadosCuradoria: curadoria,
+			dadosQuedas: [],
+			dadosNovos: [],
+			busca: ''
+		});
+		expect(r).toHaveLength(1);
+		expect(r[0].id).toBe('C1');
+	});
+});
+
+// ── Empty state sem lojas (cenário 38) ────────────────────────────────────
+
+describe('Descobrir — Empty states', () => {
+	it('cenário 38: sem lojas monitoradas + Quedas/Novos retorna vazio', () => {
+		// Simula: fontes Quedas e Novos ativas, mas nenhum dado (sem lojas monitoradas)
+		const r = montarResultados({
+			fontes: { curadoria: false, quedas: true, novos: true, favoritos: false, lojas: false },
+			dadosCuradoria: [],
+			dadosQuedas: [],
+			dadosNovos: [],
+			busca: ''
+		});
+		expect(r).toHaveLength(0);
+	});
+
+	it('cenário 38: sem lojas + fonte Lojas ativa retorna vazio', () => {
+		const r = montarResultados({
+			fontes: { curadoria: false, quedas: false, novos: false, favoritos: false, lojas: true },
+			dadosCuradoria: [],
+			dadosQuedas: [],
+			dadosNovos: [],
+			dadosLojas: [],
+			busca: ''
+		});
+		expect(r).toHaveLength(0);
+	});
+});

@@ -127,7 +127,6 @@ Comunicação interna via localhost (Cloud Run multi-container).
 | `/coletas` | |
 | `/configurar` | |
 | `/estatisticas` | |
-| `/lojas` | |
 | `/publicacoes` | |
 | `/publicar` | |
 

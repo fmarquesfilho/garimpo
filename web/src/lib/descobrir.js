@@ -120,3 +120,38 @@ export async function carregarOportunidades(buscasComLojas, nomesLojas) {
  * Monta a lista final de resultados aplicando todos os filtros client-side.
  * Re-exported from descobrir-logic.js for backward compat.
  */
+
+/**
+ * Carrega produtos das lojas monitoradas (fonte 🏪).
+ * Cache de 2 minutos para evitar re-fetch em toggle rápido.
+ */
+let cacheLojas = { em: 0, produtos: [] };
+
+export async function carregarProdutosLojas(buscasComLojas) {
+	const cacheValido = Date.now() - cacheLojas.em < 120000 && cacheLojas.produtos.length > 0;
+	if (cacheValido) return cacheLojas.produtos;
+
+	const promises = buscasComLojas.map((b) =>
+		buscarCandidatos({
+			estrategia: 'nicho',
+			top: 50,
+			fonte: 'shopee-shop',
+			shopIds: b.shop_ids.join(','),
+			semFiltro: true
+		})
+			.then((r) =>
+				(r.candidatos ?? []).map((c) => ({
+					...c,
+					_fonte: 'loja',
+					_loja_id: b.id,
+					loja: c.loja || b.nome || b.id
+				}))
+			)
+			.catch(() => [])
+	);
+
+	const resultados = await Promise.all(promises);
+	const produtos = resultados.flat();
+	cacheLojas = { em: Date.now(), produtos };
+	return produtos;
+}

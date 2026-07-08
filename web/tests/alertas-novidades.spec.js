@@ -80,17 +80,16 @@ test.describe('Alertas e Novidades — Fluxo Completo', () => {
 		expect([200, 400]).toContain(response.status());
 	});
 
-	test('frontend /lojas exibe abas Novidades e Preços', async ({ authedPage: page }) => {
-		await page.goto('/lojas');
+	test('frontend exibe seção de configuração com GerenciarBuscas', async ({ authedPage: page }) => {
+		await page.goto('/');
 		await page.waitForLoadState('networkidle');
 
-		// Verifica que as abas existem (com emoji no texto)
-		await expect(page.locator('text=Novidades')).toBeVisible();
-		await expect(page.locator('text=Preços'))
-			.toBeVisible({ timeout: 5000 })
-			.catch(() => {
-				// Pode estar como "📉 Preços" ou escondida se não há loja selecionada
-			});
+		// Expandir seção Configuração
+		const configBtn = page.locator('button:has-text("Configuração")');
+		if (await configBtn.isVisible()) await configBtn.click();
+
+		// Verifica que GerenciarBuscas está presente
+		await expect(page.locator('text=Buscas por palavra-chave')).toBeVisible({ timeout: 5000 });
 	});
 
 	test('GET /api/lojas/evolucao retorna série temporal', async ({ authedPage: page }) => {
