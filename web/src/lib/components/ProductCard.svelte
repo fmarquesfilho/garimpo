@@ -100,6 +100,18 @@
 			<header>
 				<h3 class="text-base font-semibold leading-tight m-0 line-clamp-2">{produto.nome}</h3>
 				<div class="flex items-center gap-1 gap-y-1 mt-1 flex-wrap">
+					{#if variacao?.tipo === 'queda'}
+						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-sucesso-fundo text-sucesso"
+							>↓ {Math.abs(variacao.pct * 100).toFixed(0)}%</span
+						>
+					{:else if variacao?.tipo === 'alta'}
+						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-erro-fundo text-erro"
+							>↑ {Math.abs(variacao.pct * 100).toFixed(0)}%</span
+						>
+					{:else if variacao?.tipo === 'novo'}
+						<span class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-accent text-accent-foreground">Novo</span
+						>
+					{/if}
 					{#if loja}<span
 							class="text-xs font-semibold text-muted-foreground max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap"
 							>🏪 {loja}</span
@@ -137,13 +149,23 @@
 			</header>
 			<div class="flex justify-between items-baseline max-sm:flex-col max-sm:gap-1">
 				<div class="flex items-baseline gap-2">
-					<span class="text-lg font-bold font-mono">{brl(produto.preco)}</span>
-					<span class="text-sm font-bold text-primary">{pct(produto.comissao)}</span>
+					{#if variacao?.tipo === 'queda' || variacao?.tipo === 'alta'}
+						<span class="text-sm font-mono line-through text-muted-foreground">{brl(variacao.preco_anterior)}</span>
+						<span class="text-xs text-muted-foreground">→</span>
+						<span class="text-lg font-bold font-mono {variacao.tipo === 'queda' ? 'text-sucesso' : 'text-erro'}"
+							>{brl(variacao.preco_atual)}</span
+						>
+					{:else}
+						<span class="text-lg font-bold font-mono">{brl(produto.preco)}</span>
+					{/if}
+					{#if produto.comissao > 0}<span class="text-sm font-bold text-primary">{pct(produto.comissao)}</span>{/if}
 				</div>
-				<div class="flex gap-3 text-xs text-muted-foreground">
-					<span>{produto.vendas?.toLocaleString('pt-BR') ?? 0} vendas</span>
-					<span>★ {produto.avaliacao?.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) ?? '—'}</span>
-				</div>
+				{#if !variacao}
+					<div class="flex gap-3 text-xs text-muted-foreground">
+						<span>{produto.vendas?.toLocaleString('pt-BR') ?? 0} vendas</span>
+						<span>★ {produto.avaliacao?.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) ?? '—'}</span>
+					</div>
+				{/if}
 			</div>
 			{#if exibirScore && produto.score}
 				<ScoreMeter score={produto.score} componentes={produto.componentes} animar={destaque} />
