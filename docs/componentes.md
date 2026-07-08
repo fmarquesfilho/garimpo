@@ -215,8 +215,7 @@ controles secundários sem poluir a visão principal.
 
 ```svelte
 <Collapsible title="⚙️ Configuração">
-  <FormAdicionarLoja />
-  <GerenciarBuscas />
+  <BuscaUnificada />
   <PainelAlertas />
 </Collapsible>
 ```
@@ -272,16 +271,18 @@ Além da base em `ui/`, os componentes de domínio e layout (localizados em `$li
 
 ### Navegação e Layout
 - **NavDrawer**: Menu lateral deslizante (mobile/desktop).
-- **FilterBar**: Barra de filtragem de produtos e buscas — filtro de comissão usa `Select`.
 - **LandingHero** / **HeroProduto**: Headers principais da interface, com suporte a dark mode.
 - **PainelAlertas**: Gestão de alertas de preço — usa `Input` e `Checkbox`.
+
+### Busca e Filtragem
+- **BuscaUnificada**: Componente unificado de busca — keywords, lojas (plural, multi-marketplace), filtros (comissão, vendas, categorias), fontes de dados (ToggleGroup), salvar/agendar. Substitui FilterBar + FormAdicionarLoja + GerenciarBuscas.
+  - **`BuscaUnificada.svelte.js`** — módulo reativo de estado (`criarEstado`, `criarDerivados`, `criarHandlers`). Padrão `.svelte.js` separa lógica reativa do template.
+  - **`busca-unificada-logic.js`** — funções puras: `configToPayload`, `payloadToConfig`, `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`, `gerarLabelBusca`.
 
 ### Cards e Componentes de Domínio
 - **ProductCard**: Exibição central de ofertas.
 - **CandidateCard**: Visualização de leads de produto.
 - **BuscaCard**: Resumo da busca configurada pelo usuário.
-- **FormAdicionarLoja**: Cadastro de loja com `<Input>`/`<Select>` + palavras-chave (`TagInput`) e agendamento (`AgendadorBusca`) integrados no mesmo formulário (sessão 07/07).
-- **GerenciarBuscas**: Buscas por palavra-chave — fontes em `Checkbox`, janela em `Select`.
 - **AgendadorBusca**: Seletor de agendamento — modo e frequência em `ToggleGroup`, cron avançado em `Input` (preset "A cada 8h", prop `permitirNunca`).
 - **ResolverLink**: Ferramenta de processamento de links curtos.
 

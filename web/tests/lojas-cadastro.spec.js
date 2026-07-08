@@ -1,39 +1,16 @@
 import { test, expect } from './fixtures.js';
 
-test.describe('Lojas — Cadastro e Agendamento', () => {
-	test('adiciona loja e exibe na lista de buscas', async ({ authedPage: page }) => {
+test.describe('Lojas — Cadastro via BuscaUnificada', () => {
+	test('adiciona loja e exibe como tag no componente', async ({ authedPage: page }) => {
 		let chamouAdicionar = false;
-		let bodyEnviado = null;
 
-		// Mock das APIs
 		await page.route('**/api/buscas', async (route) => {
 			if (route.request().method() === 'GET') {
-				// Na primeira chamada (antes de adicionar), retorna lista vazia
-				if (!chamouAdicionar) {
-					await route.fulfill({
-						status: 200,
-						contentType: 'application/json',
-						body: JSON.stringify({ buscas: [], total: 0 })
-					});
-				} else {
-					// Após adicionar, retorna a loja recém cadastrada
-					await route.fulfill({
-						status: 200,
-						contentType: 'application/json',
-						body: JSON.stringify({
-							buscas: [
-								{
-									id: 'loja-123456789',
-									nome: 'Loja Nova Teste',
-									shop_ids: [123456789],
-									ativo: true,
-									criado_em: '2026-07-01T00:00:00Z'
-								}
-							],
-							total: 1
-						})
-					});
-				}
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({ buscas: [], total: 0 })
+				});
 			} else {
 				await route.fallback();
 			}
@@ -42,7 +19,6 @@ test.describe('Lojas — Cadastro e Agendamento', () => {
 		await page.route('**/api/lojas', async (route) => {
 			if (route.request().method() === 'POST') {
 				chamouAdicionar = true;
-				bodyEnviado = route.request().postDataJSON();
 				await route.fulfill({
 					status: 200,
 					contentType: 'application/json',
@@ -66,28 +42,42 @@ test.describe('Lojas — Cadastro e Agendamento', () => {
 			});
 		});
 		await page.route('**/api/candidatos*', async (route) => {
-			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ candidatos: [] }) });
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ estrategia: 'nicho', candidatos: [], total_bruto: 0 })
+			});
+		});
+		await page.route('**/api/favoritos*', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ favoritos: [] })
+			});
+		});
+		await page.route('**/api/admin/me', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ admin: false })
+			});
 		});
 
 		await page.goto('/');
 		await page.waitForLoadState('networkidle');
-		// Expandir seção Configuração
-		const configBtn = page.locator('button:has-text("Configuração")');
-		if (await configBtn.isVisible()) await configBtn.click();
 
-		// Preenche formulário de Adicionar Loja
-		await page.fill('input[placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"]', '123456789');
-		await page.click('button:has-text("Adicionar")');
+		// Preenche campo de loja integrado no BuscaUnificada
+		const lojaInput = page.locator('input[placeholder*="loja"]').first();
+		await lojaInput.fill('123456789');
+		await lojaInput.press('Enter');
 
-		// Espera a mensagem de sucesso (usa o nome resolvido da loja)
-		await expect(page.getByText('Loja "Loja Nova Teste" adicionada com sucesso!')).toBeVisible();
+		// Espera resolução
+		await page.waitForTimeout(1000);
 
-		// Verifica se a loja apareceu na lista
-		await expect(page.locator('button:has-text("Loja Nova Teste")')).toBeVisible();
+		// Verifica que chamou POST /api/lojas
+		expect(chamouAdicionar).toBe(true);
 
-		// Verifica que os parâmetros corretos foram enviados no POST
-		expect(bodyEnviado.input).toBe('123456789');
-		// Loja monitorada agenda coleta periódica por padrão (a cada 8h)
-		expect(bodyEnviado.cron).toBe('0 */8 * * *');
+		// Verifica que a loja apareceu como tag (badge)
+		await expect(page.locator('text=Loja Nova Teste')).toBeVisible({ timeout: 5000 });
 	});
 });

@@ -27,19 +27,23 @@ chips de lojas aparecem para filtrar por loja específica.
 - ⚠ **Suspeito** — comissão alta com zero vendas/nota (produto-fantasma)
 - ✦ **Exploração** — produto fora do ranking usual (epsilon-greedy para diversificar)
 
-### ⚙️ Configuração
+### BuscaUnificada
 
-A seção colapsável "Configuração" (na mesma página) agrupa as ferramentas de gestão:
+O componente de busca unificada (no topo da página) agrupa todas as configurações de pesquisa:
 
-- **Adicionar loja** — cadastro de loja monitorada (URL ou ID + país de origem + cron)
-- **Gerenciar buscas** — palavras-chave, fontes e janela de tempo
-- **Alertas de preço** — configuração de notificações (ver abaixo)
+- **Keywords** — palavras-chave para descoberta de produtos
+- **Lojas** — seletor plural (multi-marketplace); adicione via URL ou ID numérico, com país de origem
+- **Filtros colapsáveis** — comissão mínima, vendas mínimas, categorias
+- **Fontes de dados** — toggle entre Descobrir e Lojas (ToggleGroup)
+- **Salvar** — grava a configuração como busca nomeada (exibida como chip)
+- **Agendar** — define frequência de execução automática (cron)
+
+Buscas salvas aparecem como chips clicáveis abaixo do campo de keywords, permitindo
+alternar rapidamente entre configurações.
 
 ## Lojas monitoradas
 
-Para adicionar uma loja, expanda a seção ⚙️ Configuração na página principal:
-
-### Adicionar loja
+Para adicionar uma loja, use o seletor de lojas dentro da BuscaUnificada:
 
 1. Cole a URL (`shopee.com.br/shop/123456`) ou o ID numérico
 2. Selecione o país de origem (ex: "🇰🇷 Coreia") — herdado por todos os produtos
@@ -56,7 +60,7 @@ com resumo global e top variações.
 
 ## Alertas de preço
 
-Configure em ⚙️ Configuração → Alertas para receber notificações no Telegram quando um produto
+Configure em ⚙️ Configuração → Alertas (seção colapsável) para receber notificações no Telegram quando um produto
 monitorado cai de preço acima do threshold.
 
 Configuração:

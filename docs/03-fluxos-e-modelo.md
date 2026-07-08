@@ -105,9 +105,9 @@ numérico via Collector gRPC (`ResolveShop`). O fluxo:
 Isso respeita a separação de responsabilidades: Go faz I/O externo com
 marketplaces, C# é dono do PostgreSQL, Scheduler é dono dos jobs periódicos.
 
-> **UI (sessão 07/07):** o formulário "Adicionar loja" coleta palavras-chave
-> (`TagInput`, opcional) e agendamento (`AgendadorBusca`) no mesmo passo em que a
-> loja é adicionada. O registro do job no Scheduler é feito por um helper
+> **UI (sessão 08/07):** o componente `BuscaUnificada` integra seleção de lojas
+> (URL/ID), palavras-chave (`TagInput`) e agendamento (`AgendadorBusca`) no mesmo
+> formulário unificado. O registro do job no Scheduler é feito por um helper
 > compartilhado (`SchedulerJobs`) reutilizado por `/api/lojas` e `/api/buscas`.
 
 **Modos de monitoramento:**
@@ -142,7 +142,7 @@ Scheduler (cron a cada 8h)
            (se variação > threshold, envia Telegram)
 ```
 
-**Quando o usuário acessa /lojas no frontend:**
+**Quando o usuário acessa a página Garimpar (/):**
 
 ```
 Frontend GET /api/lojas/novidades?busca_id=X&dias=7

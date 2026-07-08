@@ -90,15 +90,14 @@ test.describe('FilterBar colapsável', () => {
 });
 
 test.describe('Rotas de API respondem', () => {
-	test('GET /api/health retorna 200', async ({ request }) => {
+	test('GET /api/health retorna 200 ou fallback sem backend', async ({ request }) => {
 		const resp = await request.get('/api/health');
-		// Em preview mode (sem Go backend), retorna 404 — verificamos que a rota não crasheia o frontend
-		// O importante é que o frontend não mostra erro ao tentar carregar
-		expect([200, 404]).toContain(resp.status());
+		// Em preview mode (sem backend Go/C#), pode retornar 404 ou 502 — o importante é não crashar
+		expect([200, 404, 502]).toContain(resp.status());
 	});
 
 	test('GET /api/docs retorna algo', async ({ request }) => {
 		const resp = await request.get('/api/docs');
-		expect([200, 404]).toContain(resp.status());
+		expect([200, 404, 502]).toContain(resp.status());
 	});
 });

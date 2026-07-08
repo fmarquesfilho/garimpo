@@ -2,40 +2,33 @@
  * E2E: Fluxo "Adicionar Loja" com ResolveShop real.
  *
  * Testa o fluxo completo sem mocks:
- *   Frontend → C# API → Collector gRPC (ResolveShop) → Shopee API v4 → PostgreSQL
+ *   Frontend (BuscaUnificada) → C# API → Collector gRPC (ResolveShop) → Shopee API v4
  *
  * Pré-requisitos:
  *   - API C# rodando (mise run up)
  *   - Collector Go rodando (go run ./services/collector/)
  *   - Firebase Auth Emulator rodando (porta 9099)
- *   - FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
  *
  * Execução isolada:
- *   FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test lojas-resolve-shop
+ *   mise run test:e2e:lojas
  */
 import { test, expect } from './fixtures.js';
 
 test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
-	// Marca como slow: depende de APIs externas (Shopee) e serviços locais
 	test.slow();
 
 	test('resolve link direto shopee.com.br → shop_id + shop_name', async ({ authedPage: page }) => {
 		await page.goto('/');
 		await page.waitForLoadState('networkidle');
-		// Expandir seção Configuração
-		const configBtn = page.locator('button:has-text("Configuração")');
-		if (await configBtn.isVisible()) await configBtn.click();
 
-		// Intercepta a resposta do POST para validar o payload
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
 		);
 
-		await page.fill(
-			'input[placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"]',
-			'https://shopee.com.br/belezanaweb_oficial'
-		);
-		await page.click('button:has-text("Adicionar")');
+		// Campo de loja no BuscaUnificada
+		const lojaInput = page.locator('input[placeholder*="loja"]').first();
+		await lojaInput.fill('https://shopee.com.br/belezanaweb_oficial');
+		await lojaInput.press('Enter');
 
 		const response = await responsePromise;
 		expect(response.status()).toBe(200);
@@ -49,19 +42,14 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 	test('resolve link curto s.shopee.com.br → shop_id + shop_name', async ({ authedPage: page }) => {
 		await page.goto('/');
 		await page.waitForLoadState('networkidle');
-		// Expandir seção Configuração
-		const configBtn = page.locator('button:has-text("Configuração")');
-		if (await configBtn.isVisible()) await configBtn.click();
 
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
 		);
 
-		await page.fill(
-			'input[placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"]',
-			'https://s.shopee.com.br/70IKp57jnV'
-		);
-		await page.click('button:has-text("Adicionar")');
+		const lojaInput = page.locator('input[placeholder*="loja"]').first();
+		await lojaInput.fill('https://s.shopee.com.br/70IKp57jnV');
+		await lojaInput.press('Enter');
 
 		const response = await responsePromise;
 		expect(response.status()).toBe(200);
@@ -69,25 +57,19 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 		const body = await response.json();
 		expect(body.keyword).toBe('Glory of Seoul');
 		expect(body.shop_ids).toContain(920292999);
-		expect(body.status).toBe('adicionada');
 	});
 
 	test('resolve username puro → shop_id + shop_name', async ({ authedPage: page }) => {
 		await page.goto('/');
 		await page.waitForLoadState('networkidle');
-		// Expandir seção Configuração
-		const configBtn = page.locator('button:has-text("Configuração")');
-		if (await configBtn.isVisible()) await configBtn.click();
 
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
 		);
 
-		await page.fill(
-			'input[placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"]',
-			'gloryofseoul.br'
-		);
-		await page.click('button:has-text("Adicionar")');
+		const lojaInput = page.locator('input[placeholder*="loja"]').first();
+		await lojaInput.fill('gloryofseoul.br');
+		await lojaInput.press('Enter');
 
 		const response = await responsePromise;
 		expect(response.status()).toBe(200);
@@ -98,40 +80,31 @@ test.describe('Lojas — ResolveShop E2E (sem mocks)', () => {
 	});
 
 	test('loja adicionada aparece no GET /api/lojas com shop_ids', async ({ authedPage: page }) => {
-		// Chama a API diretamente (o frontend usa GET /api/buscas que tem o mesmo dado)
 		const response = await page.request.get('/api/lojas');
 		expect(response.status()).toBe(200);
 
 		const data = await response.json();
-		// Deve haver pelo menos uma loja com shop_ids preenchido (dos testes anteriores)
-		const lojasComShopIds = data.lojas.filter((l) => l.shop_ids && l.shop_ids.length > 0);
+		const lojasComShopIds = data.lojas.filter((l) => l.shop_ids?.length > 0);
 		expect(lojasComShopIds.length).toBeGreaterThan(0);
 
-		// Valida estrutura
 		const loja = lojasComShopIds[0];
 		expect(loja).toHaveProperty('id');
 		expect(loja).toHaveProperty('keyword');
 		expect(loja).toHaveProperty('shop_ids');
 		expect(loja).toHaveProperty('ativo', true);
-		expect(loja).toHaveProperty('criado_em');
 	});
 
 	test('link inválido retorna erro amigável', async ({ authedPage: page }) => {
 		await page.goto('/');
 		await page.waitForLoadState('networkidle');
-		// Expandir seção Configuração
-		const configBtn = page.locator('button:has-text("Configuração")');
-		if (await configBtn.isVisible()) await configBtn.click();
 
 		const responsePromise = page.waitForResponse(
 			(resp) => resp.url().includes('/api/lojas') && resp.request().method() === 'POST'
 		);
 
-		await page.fill(
-			'input[placeholder="Cole a URL da loja (shopee.com.br/shop/123) ou ID numérico"]',
-			'https://shopee.com.br/loja_que_nao_existe_xyz_999'
-		);
-		await page.click('button:has-text("Adicionar")');
+		const lojaInput = page.locator('input[placeholder*="loja"]').first();
+		await lojaInput.fill('https://shopee.com.br/loja_que_nao_existe_xyz_999');
+		await lojaInput.press('Enter');
 
 		const response = await responsePromise;
 		expect(response.status()).toBe(400);

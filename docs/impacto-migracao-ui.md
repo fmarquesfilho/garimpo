@@ -110,7 +110,7 @@ A migração introduziu uma biblioteca de componentes padronizada (10 primitivos
 | `knip` | Imports/exports não usados | CI + `npm run lint:dead` |
 | `audit:ui --strict` | Hex colors (exit 1 se > 0) | CI |
 | `eslint --max-warnings=0` | Unused vars, a11y warnings | CI + `npm run lint:js` |
-| `vitest` (108 tests) | Lógica de negócio | CI + `npm run test:unit` |
+| `vitest` (174 tests) | Lógica de negócio | CI + `npm run test:unit` |
 
 ---
 
@@ -121,7 +121,7 @@ A migração introduziu uma biblioteca de componentes padronizada (10 primitivos
 | Item | Razão para aceitar | Próximo passo |
 |---|---|---|
 | 51 `<button>` inline | Toggles estilizados e buttons em layouts multi-variante (ProductCard) onde `<Button>` não agrega valor | T-0038 avalia caso a caso |
-| 28 `<input>` inline | FilterBar autocomplete requer input customizado | Manter, documentar como exceção |
+| 28 `<input>` inline | BuscaUnificada autocomplete requer input customizado | Manter, documentar como exceção |
 | 5 `<select>` nativo | Selects simples em forms (tipo canal, dias_janela) | T-0038 fase 2a |
 | 85 erros svelte-check em src/ | Pre-existentes (tipos em libs, test fixtures) — 0 em `components/ui/` | Resolver incrementalmente |
 | `title=` sem Tooltip em 9 arquivos | Tooltips informativos em spans/badges — acessibilidade já ok via texto | T-0038 fase 2b |
@@ -136,7 +136,7 @@ A migração introduziu uma biblioteca de componentes padronizada (10 primitivos
 | Falta de documentação | ADR + docs/componentes.md + docs/linting.md |
 | `confirm()` para ações destrutivas | Dialog acessível (canais) |
 | Tabs sem ARIA | Bits UI Tabs com keyboard nav (lojas, publicacoes) |
-| Select sem keyboard nav | Bits UI Select acessível (publicar, FormAdicionarLoja) |
+| Select sem keyboard nav | Bits UI Select acessível (publicar, BuscaUnificada) |
 
 ---
 
@@ -178,7 +178,7 @@ lógica de filtragem. A unificação simplifica a experiência: tudo em uma tela
 | Páginas | 2 (`/` + `/lojas`) | **1** (`/` — "Garimpar") |
 | Rota `/lojas` | Página dedicada | Removida (404) |
 | Seleção de fonte | Navegar entre páginas | `ToggleGroup type="multiple"` com badges |
-| Configuração (loja, buscas, alertas) | Dividida entre páginas | Seção colapsável `⚙️ Configuração` (Collapsible) |
+| Configuração (loja, buscas, alertas) | Dividida entre páginas | BuscaUnificada (integra filtros, lojas e agendamento) + `⚙️ Configuração` colapsável para alertas |
 | NavDrawer | "Descobrir" + "Lojas" | "Garimpar" (link único) |
 | `ListaProdutosLoja.svelte` | Componente ativo | **Deletado** (dead code) |
 
@@ -196,6 +196,62 @@ lógica de filtragem. A unificação simplifica a experiência: tudo em uma tela
 
 Nenhuma alteração. Os endpoints `/api/lojas`, `/api/buscas` e `/api/candidatos` continuam
 inalterados — a mudança foi exclusivamente de apresentação no frontend.
+
+---
+
+## BuscaUnificada — Integração de filtros, lojas e agendamento
+
+**Data:** 2026-07-12
+**Referência:** T-0040
+
+### Motivação
+
+A página Garimpar usava três componentes separados para configurar buscas: `FilterBar` (filtros de comissão e keywords), `FormAdicionarLoja` (cadastro de lojas monitoradas) e `GerenciarBuscas` (palavras-chave, fontes, janela de tempo). Essa fragmentação obrigava o usuário a navegar entre seções e gerava acoplamento de estado entre componentes. A unificação em `BuscaUnificada` consolida toda a experiência de configuração em um formulário coeso.
+
+### Mudanças realizadas
+
+| Aspecto | Antes | Depois |
+|---|---|---|
+| Componentes de busca/config | 3 (`FilterBar`, `FormAdicionarLoja`, `GerenciarBuscas`) | **1** (`BuscaUnificada`) |
+| Arquivo da página `+page.svelte` | ~150 linhas com lógica de orquestração | ~50 linhas (grid + BuscaUnificada) |
+| Gerenciamento de estado | Disperso entre componentes | `.svelte.js` module (`criarEstado`, `criarDerivados`, `criarHandlers`) |
+| Lógica pura | Embutida nos templates | `busca-unificada-logic.js` (testável isoladamente) |
+| Seleção de lojas | Formulário dedicado, uma loja por vez | Seletor plural multi-marketplace integrado |
+| Filtros avançados | Colapsável separado | Seção colapsável dentro do componente |
+| Buscas salvas | Lista em GerenciarBuscas | Chips clicáveis inline |
+
+### Padrão `.svelte.js`
+
+Adotado para separar lógica reativa do template:
+
+- **`BuscaUnificada.svelte.js`** — estado reativo com runes (`$state`, `$derived`), handlers de eventos
+- **`busca-unificada-logic.js`** — funções puras (sem dependência de Svelte): `configToPayload`, `payloadToConfig`, `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`, `gerarLabelBusca`
+
+ESLint atualizado: arquivos `.svelte.js` recebem `max-lines-per-function: 150` (vs 50 padrão) dado que encapsulam state factories.
+
+### Backend — campos adicionados
+
+| Entidade/Endpoint | Campo novo | Tipo |
+|---|---|---|
+| `Busca` (entity) | `ComissaoMin` | `decimal?` |
+| `Busca` (entity) | `VendasMin` | `int?` |
+| `Busca` (entity) | `Categorias` | `string[]?` |
+| `Busca` (entity) | `Fontes` | `string[]?` |
+| `POST /api/buscas` | `shop_ids[]` | array de IDs |
+| `POST /api/buscas` | `comissao_min` | decimal |
+| `POST /api/buscas` | `vendas_min` | int |
+| `POST /api/buscas` | `categorias[]` | array de strings |
+| `POST /api/buscas` | `fontes[]` | array de strings |
+| `POST /api/buscas` | `marketplaces` | string |
+
+### Impacto em código
+
+| Métrica | Valor |
+|---|---|
+| Componentes removidos | 3 (`FilterBar`, `FormAdicionarLoja`, `GerenciarBuscas`) |
+| Componentes criados | 1 (`BuscaUnificada` + `.svelte.js` + logic) |
+| Testes passando | 174 |
+| Linhas na página principal | ~50 (antes ~150) |
 
 ---
 

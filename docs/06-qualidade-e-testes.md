@@ -41,8 +41,8 @@ Pushes que tocam apenas estes caminhos **não disparam CI**:
 | C# (Domain + Infra) | xUnit | 10 | Multi-tenant, persistence, isolation |
 | C# (Arquitetura) | xUnit + NetArchTest | 13 | Fitness functions (regras Clean Architecture) |
 | C# (Integração) | xUnit | 38 | Onboarding, JSON binding, dedup, publish flow |
-| Frontend (unit) | Vitest | ~109 | Componentes, stores, utils, lógica filtros |
-| Frontend (E2E) | Playwright | ~36 | Smoke + Descobrir + Lojas/Preços + ResolveShop |
+| Frontend (unit) | Vitest | ~174 | Componentes, stores, utils, lógica filtros, BuscaUnificada |
+| Frontend (E2E) | Playwright | ~36 | Smoke + Descobrir + Lojas/ResolveShop + Buscas agendadas |
 | Cross-stack (drift) | Shell scripts (mise) | 7 | Contracts, ownership, stale refs, schema sync |
 
 ### BDD (Behaviour-Driven Development)
@@ -152,7 +152,7 @@ Verifica sincronização de schemas entre os 3 datastores e os componentes:
 |---------|------|-----------|
 | Testes Go | ~200 | `go test ./...` |
 | Testes C# | 61 (multi-tenant + arch + integration + JSON) | `dotnet test` |
-| Testes frontend | ~109 unitários + ~36 E2E | `vitest --run` + `playwright test` |
+| Testes frontend | ~174 unitários + ~36 E2E | `vitest --run` + `playwright test` |
 | Drift API | 0 rotas faltantes | `mise run check:api-contract` |
 | Drift config | 0 inconsistências | `mise run check:config-consistency` |
 | Drift schema | 0 desincronizações | `mise run check:schema-sync` |
@@ -198,7 +198,31 @@ mise run test:e2e
 ```
 
 **Requer:** Firebase CLI instalada (`npm i -g firebase-tools`).
-**Cenários:** login → descobrir → filtros → lojas → preços → publicar.
+**Cenários:** login → BuscaUnificada → filtros → lojas → salvar busca → publicar.
+
+#### Estrutura dos testes E2E (`web/tests/`)
+
+| Arquivo | O que testa | Mocks |
+|---------|-------------|-------|
+| `descobrir.spec.js` | Busca por keyword, filtros avançados, toggle fontes, badges, categorias | API mockada |
+| `lojas-precos.spec.js` | Toggle 🏪 Lojas, seletor de loja, badges quedas/novos, graceful degradation | API mockada |
+| `lojas-cadastro.spec.js` | Adicionar loja via campo integrado (BuscaUnificada), tag exibida | API mockada |
+| `lojas-resolve-shop.spec.js` | ResolveShop real (Collector + Shopee API v4) — links diretos/curtos/username | Sem mocks |
+| `buscas-agendadas.spec.js` | Adicionar loja com/sem keywords, remover, POST /api/buscas com shop_ids | Sem mocks |
+| `alertas-novidades.spec.js` | GET /api/lojas/novidades, alertas config, GerenciarBuscas visível | Sem mocks |
+| `publicar.spec.js` | Fluxo de publicação manual (destino + template) | API mockada |
+| `publicar-agendada.spec.js` | Publicação agendada (Scheduler one-shot) | Sem mocks |
+| `novas-features.spec.js` | Smoke: /lojas retorna 404, sem erros JS em rotas | Sem mocks |
+| `canais.spec.js` | CRUD de destinos (Telegram/WhatsApp) | Sem mocks |
+| `smoke.spec.js` | Páginas carregam sem crash | Sem mocks |
+
+**Padrão de interação com BuscaUnificada nos testes:**
+- Campo de loja: `page.locator('input[placeholder*="loja"]').first()`
+- Confirmar adição: `.press('Enter')` (não mais botão "Adicionar")
+- Não há mais seção "⚙️ Configuração" para expandir — tudo está no componente
+
+**Regra:** testes E2E **não rodam no CI** (dependem de APIs externas ou Firebase Emulator).
+São para validação manual local via `mise run test:e2e:*`.
 
 ### E2E ResolveShop (integração real com Collector + Shopee)
 

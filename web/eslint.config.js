@@ -17,17 +17,25 @@ export default [
 			'no-useless-escape': 'warn', // downgrade para warning
 
 			// ── Complexidade — mantém código manutenível ──────────────────
-			'complexity': ['warn', { max: 15 }], // cyclomatic complexity
+			complexity: ['warn', { max: 15 }], // cyclomatic complexity
 			'max-depth': ['warn', { max: 4 }], // nesting depth
 			'max-lines-per-function': ['warn', { max: 80, skipBlankLines: true, skipComments: true }],
-			'max-params': ['warn', { max: 4 }], // function parameters
+			'max-params': ['warn', { max: 4 }] // function parameters
 		}
 	},
 	{
 		files: ['**/*.svelte'],
 		rules: {
 			// Svelte-specific complexity
-			'svelte/max-lines-per-block': ['warn', { script: 180, style: 80, template: 300 }],
+			'svelte/max-lines-per-block': ['warn', { script: 180, style: 80, template: 300 }]
+		}
+	},
+	{
+		files: ['**/*.svelte.js', '**/*.svelte.ts'],
+		rules: {
+			// Reactive state factories use getter/setter patterns that expand beyond 80 lines.
+			// These files are Svelte-compiled and have different structural constraints.
+			'max-lines-per-function': ['warn', { max: 150, skipBlankLines: true, skipComments: true }]
 		}
 	},
 	{

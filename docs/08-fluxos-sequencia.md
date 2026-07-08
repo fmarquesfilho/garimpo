@@ -256,7 +256,7 @@ sequenceDiagram
     participant AN as 🐍 Analyzer (:8060)
     participant BQ as 🔵 BigQuery
 
-    U->>F: navega para /lojas
+    U->>F: navega para / (Garimpar)
     F->>A: GET /api/buscas
     A->>PG: SELECT * FROM Buscas WHERE Active=true AND OwnerUid=@uid
     PG-->>A: [{id, keyword, shop_ids, criado_em}]
@@ -352,9 +352,10 @@ sequenceDiagram
   (`src/Garimpei.Api/Endpoints/`), reutilizado por `/api/lojas` (job `shop_collection`)
   e por `/api/buscas` (job `keyword_search`, buscas por palavra-chave sem loja)
 
-**UI (sessão 07/07):** o formulário "Adicionar loja" coleta as palavras-chave
-(`TagInput`, conjunto vazio ou não) e o agendamento (`AgendadorBusca`, padrão a cada 8h)
-no mesmo passo do cadastro — antes esses campos existiam apenas no backend.
+**UI (sessão 08/07):** o componente `BuscaUnificada` integra seleção de lojas
+(URL/ID, plural, multi-marketplace), palavras-chave e agendamento num único formulário
+na página `/` (Garimpar). A adição de loja resolve o shop_id via Collector e persiste
+na mesma busca com os filtros ativos.
 
 **Fluxo de coleta periódica (disparado pelo cron do Scheduler):**
 1. Cron trigger → `dispatchJob()` → `executeJob()`

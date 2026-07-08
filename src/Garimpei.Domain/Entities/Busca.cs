@@ -42,6 +42,26 @@ public sealed class Busca : IOwnedEntity
     public string Marketplaces { get; set; } = Domain.Marketplaces.Shopee;
 
     /// <summary>
+    /// Comissão mínima para filtragem (ex: 0.07 = 7%). Null = sem filtro.
+    /// </summary>
+    public decimal? ComissaoMin { get; set; }
+
+    /// <summary>
+    /// Vendas mínimas para filtragem. Null = sem filtro.
+    /// </summary>
+    public int? VendasMin { get; set; }
+
+    /// <summary>
+    /// Categorias de filtragem (OR). Null = sem filtro.
+    /// </summary>
+    public string[]? Categorias { get; set; }
+
+    /// <summary>
+    /// Fontes de dados ativas: "curadoria", "quedas", "novos", "lojas", "favoritos". Null = todas.
+    /// </summary>
+    public string[]? Fontes { get; set; }
+
+    /// <summary>
     /// Returns the list of marketplace identifiers for this search.
     /// </summary>
     public string[] GetMarketplaceList() =>

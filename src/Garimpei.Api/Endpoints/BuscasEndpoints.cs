@@ -35,6 +35,11 @@ public static partial class EndpointExtensions
                         shop_ids = b.ShopIds,
                         nome = hasShop ? b.Keyword : null,
                         cron = b.CronExpression,
+                        comissao_min = b.ComissaoMin,
+                        vendas_min = b.VendasMin,
+                        categorias = b.Categorias,
+                        fontes = b.Fontes,
+                        marketplaces = b.Marketplaces,
                         ativo = b.Active,
                         criado_em = b.CreatedAt,
                         sort_by = b.SortBy,
@@ -97,7 +102,13 @@ public static partial class EndpointExtensions
                     OwnerUid = "",
                     SortBy = req.SortBy ?? "relevance",
                     Limit = req.Limit ?? 50,
-                    CronExpression = cron
+                    CronExpression = cron,
+                    ShopIds = req.ShopIds,
+                    ComissaoMin = req.ComissaoMin,
+                    VendasMin = req.VendasMin,
+                    Categorias = req.Categorias,
+                    Fontes = req.Fontes,
+                    Marketplaces = req.Marketplaces ?? "shopee"
                 };
                 db.Buscas.Add(busca);
             }
@@ -106,17 +117,20 @@ public static partial class EndpointExtensions
                 busca.Active = true;
                 busca.UpdatedAt = DateTime.UtcNow;
                 busca.CronExpression = cron;
-                // Atualiza keywords se mudaram
-                if (busca.Keyword != kw)
-                {
-                    busca.Keyword = kw;
-                }
+                if (busca.Keyword != kw) busca.Keyword = kw;
+                if (req.ShopIds is { Length: > 0 }) busca.ShopIds = req.ShopIds;
+                if (req.ComissaoMin is not null) busca.ComissaoMin = req.ComissaoMin;
+                if (req.VendasMin is not null) busca.VendasMin = req.VendasMin;
+                if (req.Categorias is not null) busca.Categorias = req.Categorias;
+                if (req.Fontes is not null) busca.Fontes = req.Fontes;
+                if (req.Marketplaces is not null) busca.Marketplaces = req.Marketplaces;
             }
 
             await db.SaveChangesAsync(ct);
 
             // Todo agendamento passa pelo Scheduler (ADR-0023). Busca por palavra-chave
             // só vira job periódico quando o usuário define um cron; sem cron é manual.
+            // Se tem shop_ids, é shop_collection; se não, keyword_search.
             if (busca.CronExpression is not null)
                 await SchedulerJobs.RegisterAsync(schedulerClient, busca, logger, ct);
             else
@@ -134,7 +148,13 @@ public sealed record SyncBuscaRequest
     public string? Id { get; init; }
     public string? Keyword { get; init; }
     public string[]? Keywords { get; init; }
+    public long[]? ShopIds { get; init; }
     public string? Cron { get; init; }
     public string? SortBy { get; init; }
     public int? Limit { get; init; }
+    public decimal? ComissaoMin { get; init; }
+    public int? VendasMin { get; init; }
+    public string[]? Categorias { get; init; }
+    public string[]? Fontes { get; init; }
+    public string? Marketplaces { get; init; }
 }
