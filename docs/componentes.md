@@ -17,7 +17,7 @@ app.css
 
 $lib/components/ui/
 ├── Primitivos (Tailwind)        → Button, Alert, Badge, Card, Input
-├── Compostos (Bits UI + TW)     → Select, Checkbox, ToggleGroup, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
+├── Compostos (Bits UI + TW)     → Select, Checkbox, ToggleGroup, Collapsible, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
 └── Application                  → DashPanel, MetricCard, Loading, EmptyState, ...
 
 $lib/utils.ts                    → cn() (tailwind-merge + clsx)
@@ -172,22 +172,60 @@ substituir `<input type="checkbox">` nativos.
 
 ### ToggleGroup
 
-Seleção única entre opções mutuamente exclusivas (Bits UI — roving tabindex + ARIA).
+Seleção entre opções (Bits UI — roving tabindex + ARIA).
 Substitui grupos de `<button>` ad hoc. Variante `segment` (pílula segmentada) ou `chips`.
 
+Suporta dois modos:
+- **`type="single"`** (padrão) — seleção única mutuamente exclusiva.
+- **`type="multiple"`** — múltiplas opções ativas simultaneamente (value é `string[]`).
+
+Opções podem exibir **badges** informativos (ex: contagem de itens) via `badge` nas options.
+
 ```svelte
+<!-- Seleção única -->
 <ToggleGroup bind:value={modo} options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} variant="segment" />
 <ToggleGroup value={cron} onchange={selecionar} options={presets} variant="chips" nullable={false} />
+
+<!-- Seleção múltipla com badges (fontes na página Garimpar) -->
+<ToggleGroup
+  type="multiple"
+  bind:value={fontesAtivas}
+  options={[
+    { value: 'descobrir', label: '🔍 Descobrir', badge: totalDescobrir },
+    { value: 'lojas', label: '🏪 Lojas', badge: totalLojas }
+  ]}
+  variant="chips"
+/>
 ```
 
 | Prop | Tipo | Default |
 |------|------|---------|
-| value | string (bindable) | `''` |
-| options | `{ value, label }[]` | `[]` |
+| type | `'single'` \| `'multiple'` | `'single'` |
+| value | string \| string[] (bindable) | `''` / `[]` |
+| options | `{ value, label, badge? }[]` | `[]` |
 | variant | `'segment'` \| `'chips'` | `'chips'` |
 | size | `'sm'` \| `'md'` | `'md'` |
 | nullable | boolean (permite desmarcar) | `true` |
 | onchange | `(v) => void` \| null | `null` |
+
+### Collapsible
+
+Seção colapsável acessível (Bits UI — `aria-expanded` + animação). Útil para agrupar
+controles secundários sem poluir a visão principal.
+
+```svelte
+<Collapsible title="⚙️ Configuração">
+  <FormAdicionarLoja />
+  <GerenciarBuscas />
+  <PainelAlertas />
+</Collapsible>
+```
+
+| Prop | Tipo | Default |
+|------|------|---------|
+| title | string | `''` |
+| open | boolean (bindable) | `false` |
+| class | string | `''` |
 
 ### DropdownMenu
 
@@ -245,7 +283,6 @@ Além da base em `ui/`, os componentes de domínio e layout (localizados em `$li
 - **FormAdicionarLoja**: Cadastro de loja com `<Input>`/`<Select>` + palavras-chave (`TagInput`) e agendamento (`AgendadorBusca`) integrados no mesmo formulário (sessão 07/07).
 - **GerenciarBuscas**: Buscas por palavra-chave — fontes em `Checkbox`, janela em `Select`.
 - **AgendadorBusca**: Seletor de agendamento — modo e frequência em `ToggleGroup`, cron avançado em `Input` (preset "A cada 8h", prop `permitirNunca`).
-- **ListaProdutosLoja**: Listagem de produtos da loja monitorada.
 - **ResolverLink**: Ferramenta de processamento de links curtos.
 
 ---

@@ -1,9 +1,19 @@
 # Manual do usuário
 
-## Página Descobrir (/)
+## Página Garimpar (/)
 
-A página principal mostra produtos ranqueados por **teor** (score composto de
-comissão × vendas × avaliação) da keyword/categoria configurada.
+A página principal unifica descoberta e lojas monitoradas em uma única interface.
+Produtos são ranqueados por **teor** (score composto de comissão × vendas × avaliação).
+
+### Fontes de produtos
+
+Use o toggle de fontes para alternar a origem dos produtos exibidos no grid:
+
+- **🔍 Descobrir** — produtos da keyword/categoria configurada (ranking por teor)
+- **🏪 Lojas** — produtos das lojas monitoradas (novidades e variações de preço)
+
+Ambas as fontes podem estar ativas simultaneamente. Quando 🏪 Lojas está ativo,
+chips de lojas aparecem para filtrar por loja específica.
 
 ### Ações disponíveis
 
@@ -17,9 +27,17 @@ comissão × vendas × avaliação) da keyword/categoria configurada.
 - ⚠ **Suspeito** — comissão alta com zero vendas/nota (produto-fantasma)
 - ✦ **Exploração** — produto fora do ranking usual (epsilon-greedy para diversificar)
 
+### ⚙️ Configuração
+
+A seção colapsável "Configuração" (na mesma página) agrupa as ferramentas de gestão:
+
+- **Adicionar loja** — cadastro de loja monitorada (URL ou ID + país de origem + cron)
+- **Gerenciar buscas** — palavras-chave, fontes e janela de tempo
+- **Alertas de preço** — configuração de notificações (ver abaixo)
+
 ## Lojas monitoradas
 
-Em "Lojas", adicione URLs ou IDs de lojas Shopee para monitoramento contínuo.
+Para adicionar uma loja, expanda a seção ⚙️ Configuração na página principal:
 
 ### Adicionar loja
 
@@ -38,7 +56,7 @@ com resumo global e top variações.
 
 ## Alertas de preço
 
-Configure em "Alertas" para receber notificações no Telegram quando um produto
+Configure em ⚙️ Configuração → Alertas para receber notificações no Telegram quando um produto
 monitorado cai de preço acima do threshold.
 
 Configuração:

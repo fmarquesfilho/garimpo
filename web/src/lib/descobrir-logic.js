@@ -76,3 +76,46 @@ export function montarResultados({
 
 	return todos;
 }
+
+/**
+ * Gera opções para o ToggleGroup de fontes com badges de contagem.
+ */
+export function buildFonteOpcoes({ contagemCuradoria, contagemQuedas, contagemNovos, contagemLojas, totalFavoritos }) {
+	return [
+		{
+			value: 'curadoria',
+			label: '🔍 Busca',
+			badge: contagemCuradoria,
+			badgeColor: 'ouro',
+			title: 'Busca por palavra-chave na API de afiliados Shopee'
+		},
+		{
+			value: 'quedas',
+			label: '📉 Quedas',
+			badge: contagemQuedas,
+			badgeColor: 'sucesso',
+			title: 'Produtos que caíram de preço nas lojas monitoradas'
+		},
+		{
+			value: 'novos',
+			label: '🆕 Novos',
+			badge: contagemNovos,
+			badgeColor: 'rosa',
+			title: 'Produtos novos detectados nas lojas monitoradas'
+		},
+		{
+			value: 'favoritos',
+			label: '⭐ Favoritos',
+			badge: totalFavoritos,
+			badgeColor: 'ouro',
+			title: 'Produtos que você salvou como favorito'
+		},
+		{
+			value: 'lojas',
+			label: '🏪 Lojas',
+			badge: contagemLojas,
+			badgeColor: 'ouro',
+			title: 'Produtos das lojas que você monitora'
+		}
+	];
+}

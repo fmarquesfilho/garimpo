@@ -160,6 +160,45 @@ A migração introduziu uma biblioteca de componentes padronizada (10 primitivos
 
 ---
 
+## Unificação Descobrir + Lojas → Garimpar (/)
+
+**Data:** 2026-07-09
+**Referência:** T-0039
+
+### Motivação
+
+As páginas "Descobrir" (`/`) e "Lojas" (`/lojas`) compartilhavam grid de produtos, ações
+(publicar, favoritar) e layout. A separação gerava navegação desnecessária e duplicação de
+lógica de filtragem. A unificação simplifica a experiência: tudo em uma tela.
+
+### Mudanças realizadas
+
+| Aspecto | Antes | Depois |
+|---|---|---|
+| Páginas | 2 (`/` + `/lojas`) | **1** (`/` — "Garimpar") |
+| Rota `/lojas` | Página dedicada | Removida (404) |
+| Seleção de fonte | Navegar entre páginas | `ToggleGroup type="multiple"` com badges |
+| Configuração (loja, buscas, alertas) | Dividida entre páginas | Seção colapsável `⚙️ Configuração` (Collapsible) |
+| NavDrawer | "Descobrir" + "Lojas" | "Garimpar" (link único) |
+| `ListaProdutosLoja.svelte` | Componente ativo | **Deletado** (dead code) |
+
+### Impacto em código
+
+| Métrica | Valor |
+|---|---|
+| Linhas substituídas pelo ToggleGroup | ~75 (botões raw de seleção de fonte) |
+| Componentes removidos | 1 (`ListaProdutosLoja`) |
+| Componentes novos/estendidos | `ToggleGroup` (mode multiple + badges), `Collapsible` |
+| Rotas removidas | 1 (`/lojas`) |
+| Testes E2E atualizados | Sim (navegação e fluxos de loja migrados para `/`) |
+
+### Backend
+
+Nenhuma alteração. Os endpoints `/api/lojas`, `/api/buscas` e `/api/candidatos` continuam
+inalterados — a mudança foi exclusivamente de apresentação no frontend.
+
+---
+
 ## Próximos Passos (T-0038)
 
 1. Migrar os 5 `<select>` nativos restantes → `<Select>`

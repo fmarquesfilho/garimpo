@@ -122,6 +122,48 @@ export async function carregarOportunidades(buscasComLojas, nomesLojas) {
  */
 
 /**
+ * Orchestrates parallel loading of all data sources based on active fontes.
+ * Returns { curadoria, quedas, novos, lojas } arrays.
+ */
+export async function carregarFontes({ fontes, busca, comissaoMin, categorias, buscasComLojas, nomesLojas }) {
+	const resultados = { curadoria: [], quedas: [], novos: [], lojas: [] };
+	const promises = [];
+
+	if (fontes.curadoria && (busca.trim() || categorias.length > 0)) {
+		promises.push(
+			carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas }).then((r) => {
+				resultados.curadoria = r;
+			})
+		);
+	}
+
+	if ((fontes.quedas || fontes.novos) && buscasComLojas.length > 0) {
+		promises.push(
+			carregarOportunidades(buscasComLojas, nomesLojas).then((r) => {
+				resultados.quedas = r.quedas;
+				resultados.novos = r.novos;
+			})
+		);
+	}
+
+	if (fontes.lojas && buscasComLojas.length > 0) {
+		promises.push(
+			carregarProdutosLojas(buscasComLojas).then((r) => {
+				resultados.lojas = r;
+			})
+		);
+	}
+
+	const timeoutMs = 25000;
+	await Promise.race([
+		Promise.all(promises),
+		new Promise((_, rej) => setTimeout(() => rej(new Error('A busca demorou demais. Tente novamente.')), timeoutMs))
+	]);
+
+	return resultados;
+}
+
+/**
  * Carrega produtos das lojas monitoradas (fonte 🏪).
  * Cache de 2 minutos para evitar re-fetch em toggle rápido.
  */

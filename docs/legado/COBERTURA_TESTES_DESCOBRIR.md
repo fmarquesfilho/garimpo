@@ -201,3 +201,31 @@ foram atualizados para expandir essa seção antes de interagir com os component
 
 A rota `/lojas` retorna 404 (completamente removida). O teste em
 `novas-features.spec.js` valida isso explicitamente.
+
+
+---
+
+## Observação: carregamento paralelo de múltiplas lojas
+
+A fonte "🏪 Lojas" na página unificada chama `GET /api/candidatos?fonte=shopee-shop&shopIds=X`
+em paralelo para cada loja monitorada (via `carregarProdutosLojas`). Cada chamada faz o
+C# API chamar o Collector gRPC com `FetchShop(shop_id)`, que consulta a Shopee GraphQL API.
+
+**Risco potencial:** Se o usuário monitora muitas lojas (ex: 10+), o frontend dispara 10
+requests paralelos → C# abre 10 gRPC streams ao Collector → Collector faz 10 requests
+simultâneos à Shopee API. A Shopee tem rate limit (200ms entre páginas, 60s entre lojas).
+O Collector já implementa throttling internamente, mas com 10 requests paralelos vindos
+de fora ele pode enfileirar ou falhar com 429.
+
+**Mitigações existentes:**
+- Cache de 2 minutos no frontend (não re-busca em toggle rápido)
+- `catch(() => [])` por loja (uma falha não bloqueia as outras)
+- O Collector Go tem throttling built-in (200ms entre requests)
+
+**Se isso se tornar problema em produção:**
+1. Criar endpoint batch: `GET /api/candidatos/lojas?shopIds=123,456,789` que o C# envie
+   ao Collector sequencialmente (respeitando throttle interno)
+2. Ou usar o Scheduler para pré-coletar e servir do BigQuery (snapshots) em vez de real-time
+
+**Status:** Não é bloqueante hoje (poucos usuários, poucas lojas). Documentado para
+monitoramento futuro. Se necessário, abrir task.
