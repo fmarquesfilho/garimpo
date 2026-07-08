@@ -7,11 +7,13 @@
 	import TagInput from './TagInput.svelte';
 	import AgendadorBusca from './AgendadorBusca.svelte';
 	import BuscaCard from './BuscaCard.svelte';
+	import PainelNovidades from './PainelNovidades.svelte';
 	import { Button, Checkbox, Select } from '$lib/components/ui';
 
 	let buscasKw = $derived(($buscasSalvas ?? []).filter((b) => !b.shop_ids?.length));
 
 	let mostrarForm = $state(false);
+	let buscaSelecionada = $state(null);
 	let keywordsNovas = $state([]);
 	let categoriasNovas = $state([]);
 	let cronNova = $state('');
@@ -44,13 +46,23 @@
 		diasJanela = '7';
 		fontes = { curadoria: true, quedas: false, novos: false };
 		mostrarForm = false;
+		buscaSelecionada = null;
+	}
+
+	function selecionarBusca(busca) {
+		buscaSelecionada = buscaSelecionada?.id === busca.id ? null : busca;
+	}
+
+	function removerBusca(id) {
+		if (buscaSelecionada?.id === id) buscaSelecionada = null;
+		buscasSalvas.remover(id);
 	}
 </script>
 
 <div class="mb-6">
 	<div class="mb-1 flex items-center justify-between">
 		<h2 class="m-0 text-lg text-foreground">🔍 Buscas por palavra-chave</h2>
-		<Button variant="secondary" size="sm" onclick={() => (mostrarForm = !mostrarForm)}>
+		<Button variant="secondary" size="sm" onclick={() => { mostrarForm = !mostrarForm; buscaSelecionada = null; }}>
 			{mostrarForm ? '✕ cancelar' : '+ nova busca'}
 		</Button>
 	</div>
@@ -98,9 +110,13 @@
 	{#if buscasKw.length > 0}
 		<div class="flex flex-col gap-3">
 			{#each buscasKw as b (b.id)}
-				<BuscaCard busca={b} onremover={(id) => buscasSalvas.remover(id)} />
+				<BuscaCard busca={b} selecionado={buscaSelecionada?.id === b.id} onremover={removerBusca} onselecionar={selecionarBusca} />
 			{/each}
 		</div>
+
+		{#if buscaSelecionada}
+			<PainelNovidades buscaId={buscaSelecionada.id} keywords={buscaSelecionada.keywords ?? []} />
+		{/if}
 	{:else if !mostrarForm}
 		<p class="text-sm italic text-muted-foreground">Nenhuma busca agendada. Clique em "+ nova busca" para criar.</p>
 	{/if}

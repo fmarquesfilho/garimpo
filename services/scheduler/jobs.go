@@ -97,22 +97,49 @@ func (s *SchedulerServer) executeJob(job *registeredJob, params map[string]strin
 		}
 
 	default:
-		// Coleta por keyword (legado / buscas por palavra-chave)
-		keyword = params["keyword"]
-		if keyword == "" {
-			keyword = job.name
+		// Coleta por keyword(s) — buscas por palavra-chave (sem loja).
+		// Suporta params["keywords"] (plural, comma-separated) ou params["keyword"] (singular, legado).
+		keywords := params["keywords"]
+		if keywords != "" {
+			// Múltiplas keywords: itera como shop_collection faz
+			for _, kw := range strings.Split(keywords, ",") {
+				kw = strings.TrimSpace(kw)
+				if kw == "" {
+					continue
+				}
+				s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", kw))
+				resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
+					Keyword:     kw,
+					Limit:       50,
+					Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
+					OwnerUid:    params["owner_uid"],
+				})
+				if err != nil {
+					s.logger.Error("keyword job falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
+					continue
+				}
+				totalFound += resp.GetTotalFound()
+			}
+			keyword = keywords
+		} else {
+			// Keyword única (legado)
+			keyword = params["keyword"]
+			if keyword == "" {
+				keyword = job.name
+			}
+			s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", keyword))
+			resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
+				Keyword:     keyword,
+				Limit:       50,
+				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
+				OwnerUid:    params["owner_uid"],
+			})
+			if err != nil {
+				s.logger.Error("job falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
+				return
+			}
+			totalFound = resp.GetTotalFound()
 		}
-		s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", keyword))
-		resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-			Keyword:     keyword,
-			Limit:       50,
-			Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
-		})
-		if err != nil {
-			s.logger.Error("job falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
-			return
-		}
-		totalFound = resp.GetTotalFound()
 	}
 
 	s.logger.Info("job concluído", slog.String("job", job.name), slog.Int("produtos", int(totalFound)))
