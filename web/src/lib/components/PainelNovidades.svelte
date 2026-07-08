@@ -26,7 +26,7 @@
 			const r = await buscarNovidades({ buscaId, dias: 7 });
 			produtosNovos = r?.produtos_novos ?? [];
 			variacoes = r?.variacoes ?? [];
-		} catch (e) {
+		} catch {
 			erro = 'Falha ao carregar novidades.';
 			produtosNovos = [];
 			variacoes = [];

@@ -62,7 +62,14 @@
 <div class="mb-6">
 	<div class="mb-1 flex items-center justify-between">
 		<h2 class="m-0 text-lg text-foreground">🔍 Buscas por palavra-chave</h2>
-		<Button variant="secondary" size="sm" onclick={() => { mostrarForm = !mostrarForm; buscaSelecionada = null; }}>
+		<Button
+			variant="secondary"
+			size="sm"
+			onclick={() => {
+				mostrarForm = !mostrarForm;
+				buscaSelecionada = null;
+			}}
+		>
 			{mostrarForm ? '✕ cancelar' : '+ nova busca'}
 		</Button>
 	</div>
@@ -110,7 +117,12 @@
 	{#if buscasKw.length > 0}
 		<div class="flex flex-col gap-3">
 			{#each buscasKw as b (b.id)}
-				<BuscaCard busca={b} selecionado={buscaSelecionada?.id === b.id} onremover={removerBusca} onselecionar={selecionarBusca} />
+				<BuscaCard
+					busca={b}
+					selecionado={buscaSelecionada?.id === b.id}
+					onremover={removerBusca}
+					onselecionar={selecionarBusca}
+				/>
 			{/each}
 		</div>
 

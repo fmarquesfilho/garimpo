@@ -2,7 +2,15 @@
 	/** Cartão de uma busca salva. Exibe keywords, badges e ações. */
 	import { Badge, Button } from '$lib/components/ui';
 
-	let { busca, buscaAtiva = '', selecionado = false, onaplicar = null, onproximakw = null, onremover = null, onselecionar = null } = $props();
+	let {
+		busca,
+		buscaAtiva = '',
+		selecionado = false,
+		onaplicar = null,
+		onproximakw = null,
+		onremover = null,
+		onselecionar = null
+	} = $props();
 
 	function cronLabel(cron) {
 		if (!cron) return null;
@@ -15,7 +23,11 @@
 	}
 </script>
 
-<div class="flex flex-col gap-2 rounded-md border border-border bg-card px-4 py-3" class:!border-primary={selecionado} class:bg-accent={selecionado}>
+<div
+	class="flex flex-col gap-2 rounded-md border border-border bg-card px-4 py-3"
+	class:!border-primary={selecionado}
+	class:bg-accent={selecionado}
+>
 	<div class="flex items-start justify-between gap-3">
 		<div class="flex flex-1 flex-wrap gap-2">
 			{#each busca.keywords ?? [] as kw, i}
@@ -33,7 +45,13 @@
 		</div>
 		<div class="flex shrink-0 items-center gap-1">
 			{#if busca.cron && onselecionar}
-				<Button variant="ghost" size="sm" onclick={() => onselecionar?.(busca)} aria-label="Ver resultados" title="Ver novidades coletadas">📊</Button>
+				<Button
+					variant="ghost"
+					size="sm"
+					onclick={() => onselecionar?.(busca)}
+					aria-label="Ver resultados"
+					title="Ver novidades coletadas">📊</Button
+				>
 			{/if}
 			{#if (busca.keywords?.length ?? 0) > 1}
 				<Button variant="ghost" size="sm" onclick={() => onproximakw?.(busca)} aria-label="Próxima keyword">→</Button>

@@ -43,103 +43,14 @@ func (s *SchedulerServer) executeJob(job *registeredJob, params map[string]strin
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	jobType := params["type"]
 	var totalFound int32
 	var keyword string
 
-	switch jobType {
+	switch params["type"] {
 	case "shop_collection":
-		// Coleta por loja: usa FetchShop(shop_id) ou Fetch(keyword) se keywords presentes
-		shopID := params["shop_id"]
-		keywords := params["keywords"]
-		keyword = shopID // usado para alertas
-
-		if keywords != "" {
-			// Coleta filtrada: busca cada keyword dentro da loja
-			for _, kw := range strings.Split(keywords, ",") {
-				kw = strings.TrimSpace(kw)
-				if kw == "" {
-					continue
-				}
-				s.logger.Info("fetching filtered", slog.String("job", job.name), slog.String("keyword", kw), slog.String("shop_id", shopID))
-				resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-					Keyword:     kw,
-					Limit:       50,
-					Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
-					OwnerUid:    params["owner_uid"],
-				})
-				if err != nil {
-					s.logger.Error("fetch filtered falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
-					continue
-				}
-				totalFound += resp.GetTotalFound()
-			}
-			keyword = keywords
-		} else if shopID != "" {
-			// Coleta completa da loja: usa FetchShop
-			shopIDInt, err := strconv.ParseInt(shopID, 10, 64)
-			if err != nil {
-				s.logger.Error("shop_id inválido", slog.String("job", job.name), slog.String("shop_id", shopID))
-				return
-			}
-			s.logger.Info("fetching shop", slog.String("job", job.name), slog.Int64("shop_id", shopIDInt))
-			resp, err := s.collector.FetchShop(ctx, &collectorpb.FetchShopRequest{
-				ShopId:      shopIDInt,
-				Limit:       50,
-				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
-				OwnerUid:    params["owner_uid"],
-			})
-			if err != nil {
-				s.logger.Error("fetch shop falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
-				return
-			}
-			totalFound = resp.GetTotalFound()
-		}
-
+		totalFound, keyword = s.executeShopCollection(ctx, job, params)
 	default:
-		// Coleta por keyword(s) — buscas por palavra-chave (sem loja).
-		// Suporta params["keywords"] (plural, comma-separated) ou params["keyword"] (singular, legado).
-		keywords := params["keywords"]
-		if keywords != "" {
-			// Múltiplas keywords: itera como shop_collection faz
-			for _, kw := range strings.Split(keywords, ",") {
-				kw = strings.TrimSpace(kw)
-				if kw == "" {
-					continue
-				}
-				s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", kw))
-				resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-					Keyword:     kw,
-					Limit:       50,
-					Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
-					OwnerUid:    params["owner_uid"],
-				})
-				if err != nil {
-					s.logger.Error("keyword job falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
-					continue
-				}
-				totalFound += resp.GetTotalFound()
-			}
-			keyword = keywords
-		} else {
-			// Keyword única (legado)
-			keyword = params["keyword"]
-			if keyword == "" {
-				keyword = job.name
-			}
-			s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", keyword))
-			resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-				Keyword:     keyword,
-				Limit:       50,
-				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
-				OwnerUid:    params["owner_uid"],
-			})
-			if err != nil {
-				s.logger.Error("job falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
-				return
-			}
-			totalFound = resp.GetTotalFound()
-		}
+		totalFound, keyword = s.executeKeywordSearch(ctx, job, params)
 	}
 
 	s.logger.Info("job concluído", slog.String("job", job.name), slog.Int("produtos", int(totalFound)))
@@ -162,6 +73,106 @@ func (s *SchedulerServer) executeJob(job *registeredJob, params map[string]strin
 			}
 		}
 	}
+}
+
+// executeShopCollection coleta produtos de uma loja (por shop_id ou keywords filtradas).
+func (s *SchedulerServer) executeShopCollection(ctx context.Context, job *registeredJob, params map[string]string) (int32, string) {
+	shopID := params["shop_id"]
+	keywords := params["keywords"]
+	keyword := shopID
+
+	if keywords != "" {
+		// Coleta filtrada: busca cada keyword dentro da loja
+		var totalFound int32
+		for _, kw := range strings.Split(keywords, ",") {
+			kw = strings.TrimSpace(kw)
+			if kw == "" {
+				continue
+			}
+			s.logger.Info("fetching filtered", slog.String("job", job.name), slog.String("keyword", kw), slog.String("shop_id", shopID))
+			resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
+				Keyword:     kw,
+				Limit:       50,
+				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
+				OwnerUid:    params["owner_uid"],
+			})
+			if err != nil {
+				s.logger.Error("fetch filtered falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
+				continue
+			}
+			totalFound += resp.GetTotalFound()
+		}
+		return totalFound, keywords
+	}
+
+	if shopID == "" {
+		return 0, keyword
+	}
+
+	// Coleta completa da loja: usa FetchShop
+	shopIDInt, err := strconv.ParseInt(shopID, 10, 64)
+	if err != nil {
+		s.logger.Error("shop_id inválido", slog.String("job", job.name), slog.String("shop_id", shopID))
+		return 0, keyword
+	}
+	s.logger.Info("fetching shop", slog.String("job", job.name), slog.Int64("shop_id", shopIDInt))
+	resp, err := s.collector.FetchShop(ctx, &collectorpb.FetchShopRequest{
+		ShopId:      shopIDInt,
+		Limit:       50,
+		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
+		OwnerUid:    params["owner_uid"],
+	})
+	if err != nil {
+		s.logger.Error("fetch shop falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
+		return 0, keyword
+	}
+	return resp.GetTotalFound(), keyword
+}
+
+// executeKeywordSearch coleta produtos por keywords (sem loja).
+// Suporta params["keywords"] (plural, comma-separated) ou params["keyword"] (singular, legado).
+func (s *SchedulerServer) executeKeywordSearch(ctx context.Context, job *registeredJob, params map[string]string) (int32, string) {
+	keywords := params["keywords"]
+	if keywords != "" {
+		var totalFound int32
+		for _, kw := range strings.Split(keywords, ",") {
+			kw = strings.TrimSpace(kw)
+			if kw == "" {
+				continue
+			}
+			s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", kw))
+			resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
+				Keyword:     kw,
+				Limit:       50,
+				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
+				OwnerUid:    params["owner_uid"],
+			})
+			if err != nil {
+				s.logger.Error("keyword job falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
+				continue
+			}
+			totalFound += resp.GetTotalFound()
+		}
+		return totalFound, keywords
+	}
+
+	// Keyword única (legado)
+	keyword := params["keyword"]
+	if keyword == "" {
+		keyword = job.name
+	}
+	s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", keyword))
+	resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
+		Keyword:     keyword,
+		Limit:       50,
+		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
+		OwnerUid:    params["owner_uid"],
+	})
+	if err != nil {
+		s.logger.Error("job falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
+		return 0, keyword
+	}
+	return resp.GetTotalFound(), keyword
 }
 
 // executeCouponCollectionJob collects coupons from all configured marketplaces sequentially.

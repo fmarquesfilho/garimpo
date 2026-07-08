@@ -110,40 +110,75 @@ EVOLUCAO_RESPONSE = {
     "dias_janela": 30,
     "lojas": [
         {
-            "loja": "ImportsPerfumaria",
+            "busca_id": "loja-920292999",
             "produtos": 6,
             "preco_medio": 280.48,
             "variacao_media_pct": -0.09,
-            "serie": [
-                {"dia": THREE_DAYS_AGO.strftime("%Y-%m-%d"), "preco_medio": 300.78, "produtos": 5},
-                {"dia": NOW.strftime("%Y-%m-%d"), "preco_medio": 280.48, "produtos": 6},
+            "pontos": [
+                {"data": THREE_DAYS_AGO.strftime("%Y-%m-%d"), "preco_medio": 300.78},
+                {"data": NOW.strftime("%Y-%m-%d"), "preco_medio": 280.48},
+            ],
+        }
+    ],
+    "keywords": [
+        {
+            "busca_id": "serum vitamina c",
+            "produtos": 4,
+            "preco_medio": 75.30,
+            "variacao_media_pct": -0.052,
+            "pontos": [
+                {"data": THREE_DAYS_AGO.strftime("%Y-%m-%d"), "preco_medio": 79.40},
+                {"data": NOW.strftime("%Y-%m-%d"), "preco_medio": 75.30},
             ],
         }
     ],
     "resumo": {
         "total_lojas": 1,
-        "total_produtos": 6,
-        "preco_medio_global": 280.48,
-        "variacao_media_global_pct": -0.09,
-        "total_quedas": 2,
+        "total_produtos": 10,
+        "preco_medio_global": 198.25,
+        "variacao_media_global_pct": -0.07,
+        "total_quedas": 3,
         "total_altas": 1,
+    },
+    "resumo_keywords": {
+        "total_quedas": 1,
+        "total_altas": 0,
     },
 }
 
 ESTATISTICAS_RESPONSE = {
     "dias_janela": 30,
+    "total_amostras": 10,
     "categorias": [
         {
             "categoria": "perfumaria",
-            "total_produtos": 6,
-            "preco_medio": 280.48,
+            "total_produtos": 10,
+            "preco_medio": 198.25,
             "comissao_media": 0.115,
             "vendas_total": 14450,
         }
     ],
     "resumo": {
-        "total_coletas": 2,
-        "total_produtos_unicos": 6,
-        "preco_medio_global": 280.48,
+        "total_produtos": 10,
+        "preco_medio": 198.25,
+        "comissao_media": 0.115,
+        "vendas_media": 1445.0,
+        "nota_media": 4.6,
+        "preco_mediana": 189.90,
+        "comissao_mediana": 0.10,
+    },
+    "por_fonte": {
+        "lojas": {
+            "total_produtos": 6,
+            "preco_medio": 280.48,
+            "comissao_media": 0.115,
+            "total_coletas": 1,
+        },
+        "keywords": {
+            "total_produtos": 4,
+            "preco_medio": 75.30,
+            "comissao_media": 0.095,
+            "total_coletas": 2,
+        },
     },
 }

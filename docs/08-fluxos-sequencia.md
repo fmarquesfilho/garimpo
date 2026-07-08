@@ -534,7 +534,8 @@ indicando que deverão ser encriptadas (T-0045 pendente).
 
 ## 9. Dashboard (Estatísticas e Evolução)
 
-A página de estatísticas mostra métricas agregadas, evolução de preço, e contagem de quedas/altas.
+A página de estatísticas mostra métricas agregadas, evolução de preço, e contagem de
+quedas/altas — segmentadas por fonte (lojas monitoradas vs buscas por keyword).
 
 ```mermaid
 sequenceDiagram
@@ -549,25 +550,32 @@ sequenceDiagram
     par Chamadas paralelas
         F->>A: GET /api/estatisticas?dias=7
         A->>AN: GET /estatisticas?dias=7
-        AN->>BQ: SELECT AVG(preco), AVG(comissao), COUNT(DISTINCT produto_id) ...
-        BQ-->>AN: {total_produtos, preco_medio, comissao_media, ...}
-        AN-->>A: JSON
-        A-->>F: {resumo: {...}}
+        AN->>BQ: SELECT AVG(preco), COUNT(DISTINCT produto_id) ... (global)
+        AN->>BQ: SELECT fonte, COUNT(*), AVG(preco) ... GROUP BY fonte (segmentado)
+        BQ-->>AN: {resumo: {...}, por_fonte: {lojas: {...}, keywords: {...}}}
+        AN-->>A: JSON (proxy transparente)
+        A-->>F: {resumo, por_fonte}
     and
         F->>A: GET /api/lojas/evolucao?dias=7
         A->>AN: GET /evolucao?dias=7
         AN->>BQ: SELECT DATE(coletado_em), keyword, AVG(preco) ... GROUP BY dia, keyword
-        AN->>BQ: COUNTIF(variacao < -0.01) AS total_quedas, COUNTIF(variacao > 0.01) AS total_altas
-        BQ-->>AN: {lojas: [...], resumo: {total_quedas, total_altas}}
-        AN-->>A: JSON
-        A-->>F: {lojas: [...], resumo: {...}}
+        AN->>BQ: SELECT fonte, COUNTIF(variacao < -0.01), COUNTIF(variacao > 0.01) GROUP BY fonte
+        BQ-->>AN: {lojas: [...], keywords: [...], resumo: {...}, resumo_keywords: {...}}
+        AN-->>A: JSON (proxy transparente)
+        A-->>F: {lojas, keywords, resumo, resumo_keywords}
     and
         F->>A: GET /api/publicacoes?status=
         A->>PG: SELECT * FROM Publicacoes ORDER BY CreatedAt DESC
         PG-->>A: [{status, nome, ...}]
         A-->>F: {publicacoes: [...]}
+    and
+        F->>A: GET /api/buscas
+        A->>PG: SELECT * FROM Buscas WHERE Active=true
+        PG-->>A: [{id, keyword, shop_ids, cron, ...}]
+        A-->>F: {buscas: [...]}
     end
-    F-->>U: Dashboard com MetricCards, MiniCharts, RankList
+    F->>F: segmenta métricas por fonte (lojas vs keywords)
+    F-->>U: Dashboard com MetricCards, MiniCharts (lojas + keywords), RankList
 ```
 
 <details>
@@ -575,12 +583,35 @@ sequenceDiagram
 
 **Data ownership:**
 - 🔵 BigQuery: Analyzer lê snapshots para estatísticas e evolução
-- 🟢 PostgreSQL: publicações (C# API lê para contagem e ranking)
+- 🟢 PostgreSQL: publicações e buscas (C# API lê para contagem e metadata)
+- O C# API faz **proxy transparente** — não transforma dados do Analyzer
 
-**Proxy transparente:** O C# API faz proxy para o Analyzer sem transformar dados.
-Se o Analyzer estiver offline, retorna fallback vazio (graceful degradation).
+**Classificação por fonte (Analyzer query-time):**
 
-**3 chamadas paralelas:** O frontend dispara as 3 requisições simultaneamente
+O campo `keyword` dos snapshots no BigQuery identifica a fonte:
+- Começa com `loja-` → snapshot de coleta de loja (ex: `loja-920292999`)
+- Não começa com `loja-` → snapshot de busca por keyword (ex: `serum vitamina c`)
+
+```sql
+CASE WHEN keyword LIKE 'loja-%' THEN 'loja' ELSE 'keyword' END AS fonte
+```
+
+Essa classificação é determinística (o Collector Go define o prefixo na gravação)
+e não requer coluna extra no BigQuery.
+
+**Campos novos no /estatisticas:**
+- `por_fonte.lojas`: {total_produtos, preco_medio, comissao_media, total_coletas}
+- `por_fonte.keywords`: {total_produtos, preco_medio, comissao_media, total_coletas}
+- Campos existentes (`total_amostras`, `resumo`) mantidos para backward compat
+
+**Campos novos no /evolucao:**
+- `keywords[]`: mesma shape que `lojas[]` (busca_id, pontos, variacao_media_pct)
+- `resumo_keywords`: {total_quedas, total_altas} apenas de keyword searches
+- `resumo` continua global (lojas + keywords combinados)
+
+**Invariante de soma:** `por_fonte.lojas.total_produtos + por_fonte.keywords.total_produtos == total_amostras`
+
+**4 chamadas paralelas:** O frontend dispara as 4 requisições simultaneamente
 (`Promise.all`). O dashboard carrega assim que todas respondem.
 
 **Escalabilidade:** Queries BQ são independentes e podem rodar em paralelo.
@@ -674,7 +705,7 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 | 6. Cupons | ✍ AlertRules, AlertHistory | ✍ coupon_snapshots, 📖 diff | Shopee/Amazon/ML |
 | 7. Publicar Variação | ✍ Destinos, Publicacoes | — | Telegram |
 | 8. Onboarding | ✍ TenantConfigs | — | — |
-| 9. Dashboard | 📖 Publicacoes | 📖 snapshots (via Analyzer) | — |
+| 9. Dashboard | 📖 Publicacoes, Buscas | 📖 snapshots (via Analyzer, segmentado por fonte) | — |
 | 10. Resolver Link | — | — | Shopee CDN (redirect) |
 | 11. Canais/Templates | ✍ Destinos, Templates | — | — |
 
