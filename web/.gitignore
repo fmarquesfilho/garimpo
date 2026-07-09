@@ -2,6 +2,7 @@ node_modules/
 .svelte-kit/
 build/
 .env
+.env.e2e.local
 test-results/
 tests/.auth/
 emulator.log

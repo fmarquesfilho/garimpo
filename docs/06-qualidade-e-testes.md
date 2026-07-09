@@ -226,6 +226,64 @@ mise run test:e2e
 **Regra:** testes E2E **não rodam no CI** (dependem de APIs externas ou Firebase Emulator).
 São para validação manual local via `mise run test:e2e:*`.
 
+### E2E contra produção (Firebase Auth real + APIs reais)
+
+Testa os mesmos cenários dos testes locais, mas sem mocks — contra o ambiente
+de produção real (`https://garimpei.app.br`). Usa um **usuário de teste dedicado**
+no Firebase Auth (email/senha), sem nenhuma brecha de segurança.
+
+```bash
+# Setup (uma vez):
+cp web/.env.e2e web/.env.e2e.local
+# Preencher E2E_PASSWORD com a senha do usuário de teste
+
+# Rodar:
+cd web && npm run test:e2e:prod
+
+# Com browser visível (debug):
+cd web && npm run test:e2e:prod -- --headed
+
+# Um teste específico:
+cd web && npm run test:e2e:prod -- -g "busca por keyword"
+```
+
+**Arquivo:** `web/tests/prod/descobrir.spec.js`
+
+**Pré-requisitos:**
+1. Criar usuário de teste no Firebase Console (Authentication → Users → Add user)
+2. Copiar `.env.e2e` → `.env.e2e.local` e preencher `E2E_PASSWORD`
+3. Produção deployada e acessível
+
+**Como funciona:**
+1. `auth.setup.js` faz login real via `signInWithEmailAndPassword`
+2. Salva storageState em `tests/.auth/prod-user.json` (gitignored)
+3. Testes subsequentes reutilizam o token — sem login repetido
+4. Testes validam contra `rules/busca-rules.json` (mesma fonte de verdade)
+
+**Cenários cobertos:**
+
+| # | Cenário | O que valida |
+|---|---------|-------------|
+| Boot | Página carrega autenticada | Login real funciona |
+| #1 | Busca keyword → resultados | API curadoria real |
+| #2 | Busca vazia → empty state | Guard temContextoBusca |
+| Debounce | Digita rápido → aguarda | 400ms conforme rules |
+| Loja URL | Adicionar loja via link curto | Collector + Shopee resolve |
+| Loja+keyword | Escopo keyword_na_loja | Intent table respeitada |
+| Filtros | Comissão em % | Normalização real |
+| Categorias | Chips da API | Endpoint /api/categorias |
+| Salvar | Pill + restaurar + remover | CRUD /api/buscas |
+| Input | ✕ limpa, ESC limpa | Interação básica |
+| Fontes | Toggles visíveis e ativos | Defaults respeitados |
+| Regras | JSON consistente com UI | Spec executável |
+
+**Diferença dos testes locais:**
+- Locais: API mockada, bypassa auth, preview server → testa lógica do frontend
+- Produção: API real, auth real, dados reais → testa integração end-to-end
+
+**Não substitui os testes locais** — complementa. Locais rodam em <15s (CI-friendly).
+Produção depende de rede, banco, Shopee, Firebase (validação pré/pós deploy).
+
 ### E2E ResolveShop (integração real com Collector + Shopee)
 
 Testa o fluxo de adição de loja **sem mocks** — valida a comunicação real entre

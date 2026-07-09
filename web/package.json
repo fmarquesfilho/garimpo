@@ -22,6 +22,7 @@
 		"test": "playwright test",
 		"test:unit": "vitest run",
 		"test:e2e:local": "playwright test --config=playwright.local.config.js",
+		"test:e2e:prod": "playwright test --config=playwright.prod.config.js",
 		"test:ui": "playwright test --ui"
 	},
 	"devDependencies": {
@@ -37,6 +38,7 @@
 		"axe-core": "^4.12.1",
 		"clsx": "^2.1.1",
 		"csstype": "^3.2.3",
+		"dotenv": "^16.5.0",
 		"eslint": "^10.5.0",
 		"eslint-plugin-svelte": "^3.19.0",
 		"fast-check": "^4.8.0",
