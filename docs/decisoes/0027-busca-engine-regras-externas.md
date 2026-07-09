@@ -140,13 +140,72 @@ Se alguém alterar o frontend sem respeitar o JSON, os testes falham.
 
 ### Positivas
 
-- **6 bugs corrigidos de uma vez** (estado centralizado elimina incoerências)
+- **9 bugs corrigidos** (6 estado + 3 arquitetura: store desync, lojas ctx, erro engolido)
 - **243 unit tests** cobrindo engine, lógica de filtros, e regras
-- **23 E2E locais** validando fluxos no browser com API mockada
+- **24 E2E locais** passando — todos sem skip, sem hacks de mock
 - **Drift check** no CI impede regressões silenciosas
 - **Documentação executável** — o JSON é a spec E o código lê dele
 - **Evoluível**: se a complexidade crescer, o JSON pode ser consumido por um
   engine externo sem mudar a estrutura
+
+### Correções de arquitetura (sessão final)
+
+| Bug | Causa raiz | Fix |
+|-----|-----------|-----|
+| Quedas/Novos não carregavam | `executarBusca` usava store externo (`$buscasSalvas`) que não era sincronizado no init | `INICIALIZAR` agora chama `sincronizarStoreExterno()` antes de `executarBusca` |
+| Loja adicionada não mostrava novidades | `buscasComLojas` vinha só do store — lojas do `ctx.shopIds` (ainda não salvas) eram ignoradas | `buildBuscasComLojas()` combina store + ctx.shopIds |
+| API 500 mostrava "0 resultados" | `carregarCuradoria` engolia todos os erros (`catch { return [] }`) | `isServerError(e)` propaga erros HTTP ≥400; engole apenas erros de rede |
+
+A filosofia: **o código é a correção, não o teste**. Os testes expõem bugs reais;
+os fixes são no código da aplicação.
+
+## Como as regras externas validam a interação entre componentes
+
+O `rules/busca-rules.json` não é apenas "config externalizada" — é a **spec
+executável** que garante coerência entre os componentes de UI:
+
+```
+rules/busca-rules.json (fonte de verdade)
+    │
+    ├─► web/src/lib/busca-config.js (importa em build-time)
+    │       └─► BuscaEngine usa para avaliar intent, guards, normalização
+    │
+    ├─► web/src/tests/ (unit tests importam rules para validar)
+    │       └─► "engine.intent === rules.intent[row].result" 
+    │
+    ├─► web/tests/local/ (E2E importam rules via fs.readFileSync)
+    │       └─► Validam que a UI se comporta conforme as regras
+    │
+    └─► .mise/tasks/check/rules-schema (CI valida propriedades)
+            └─► Completude, consistência, tipos corretos
+```
+
+**O que isso garante:**
+
+1. **Intent table controla fontes de dados**: Se `keyword_na_loja` declara
+   `sources: ["curadoria", "lojas"]`, a engine deve ativar exatamente essas fontes.
+   O E2E valida isso.
+
+2. **Guards bloqueiam estados incoerentes**: Se `podeSalvar.requiresAny = ["keyword", "shopIds"]`,
+   o botão Salvar não funciona sem contexto. O unit test prova.
+
+3. **Normalização é determinística**: Se `comissao.divideBy100IfGt1 = true`,
+   digitar "7" no filtro resulta em 0.07 — nunca "7.0000000". O E2E valida que
+   o select mostra "7%" e não o float cru.
+
+4. **Transições definem refetch vs client-side**: Se `MUDAR_FILTRO.refetch = false`,
+   mudar a comissão NÃO chama a API (só refiltra dados locais). O unit test prova
+   que `executarBusca` não é chamado novamente.
+
+5. **Defaults são a configuração inicial**: Se `fontes.novos = true`, o toggle
+   "🆕 Novos" começa ativo. O E2E valida que novidades aparecem sem clicar.
+
+**Se uma regra mudar no JSON:**
+- O CI quebra se o schema ficar inválido
+- Os unit tests quebram se o código não refletir a mudança
+- Os E2E quebram se a UI não se comportar conforme a nova regra
+
+Isso fecha o ciclo: regra declarada → código obedece → testes provam.
 
 ### Negativas
 
