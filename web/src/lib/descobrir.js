@@ -23,33 +23,35 @@ export async function carregarCuradoria({ busca, comissaoMin, categorias, buscas
 		const termo = (busca ?? '').trim();
 		const cat0 = categorias?.length > 0 ? categorias[0] : undefined;
 		const lojaIds = resolverLojaIds(termo, shopIds, buscasComLojas);
-
-		const params =
-			lojaIds?.length > 0
-				? {
-						estrategia: 'nicho',
-						top: 50,
-						fonte: 'shopee-shop',
-						shopIds: lojaIds.join(','),
-						semFiltro: true,
-						categoria: cat0
-					}
-				: {
-						estrategia: 'nicho',
-						top: 20,
-						keyword: termo || cat0 || undefined,
-						comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
-						categoria: cat0
-					};
+		const params = buildCuradoriaParams(lojaIds, termo, comissaoMin, cat0);
 
 		const r = await buscarCandidatos(params);
 		return (r.candidatos ?? []).map((c) => ({ ...c, _fonte: 'curadoria' }));
 	} catch (e) {
-		// Propaga erros de servidor (para que a engine mostre ao usuário)
-		// Engole apenas erros de rede/timeout (fetch failed, abort)
 		if (isServerError(e)) throw e;
 		return [];
 	}
+}
+
+/** Monta parâmetros de busca: com loja (escopada) ou global (keyword). */
+function buildCuradoriaParams(lojaIds, termo, comissaoMin, cat0) {
+	if (lojaIds?.length > 0) {
+		return {
+			estrategia: 'nicho',
+			top: 50,
+			fonte: 'shopee-shop',
+			shopIds: lojaIds.join(','),
+			semFiltro: true,
+			categoria: cat0
+		};
+	}
+	return {
+		estrategia: 'nicho',
+		top: 20,
+		keyword: termo || cat0 || undefined,
+		comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
+		categoria: cat0
+	};
 }
 
 /** Determina se um erro deve ser propagado ao usuário (servidor respondeu com falha). */
