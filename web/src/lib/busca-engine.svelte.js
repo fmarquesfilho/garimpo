@@ -20,6 +20,7 @@ import {
 	gerarLabelBusca,
 	cronLabel
 } from './busca-unificada-logic.js';
+import { DEFAULTS, normalizarComissao, normalizarVendas, checarGuard, intentBusca } from './busca-config.js';
 
 // ── Estados possíveis ─────────────────────────────────────────────────────
 export const STATES = { IDLE: 'idle', SEARCHING: 'searching', RESULTS: 'results', SAVING: 'saving', ERROR: 'error' };
@@ -30,11 +31,11 @@ function criarContextoInicial() {
 		keyword: '',
 		shopIds: [],
 		shopNomes: {},
-		comissaoMin: 0.07,
-		vendasMin: 0,
+		comissaoMin: DEFAULTS.comissaoMin,
+		vendasMin: DEFAULTS.vendasMin,
 		categorias: [],
 		categoriasDisponiveis: [],
-		fontes: { curadoria: true, quedas: true, novos: true, lojas: false, favoritos: false },
+		fontes: { ...DEFAULTS.fontes },
 		cron: '',
 		resultados: [],
 		contagens: { curadoria: 0, quedas: 0, novos: 0, lojas: 0 },
@@ -47,18 +48,13 @@ function criarContextoInicial() {
 }
 
 // ── Guards ────────────────────────────────────────────────────────────────
+// Delegam para a config declarativa (busca-config.js). `lojaInputValida` opera
+// sobre o event, então permanece imperativo.
 export const guards = {
-	temContextoBusca: (ctx) => ctx.keyword.trim().length > 0 || ctx.shopIds.length > 0,
+	temContextoBusca: (ctx) => checarGuard('temContextoBusca', ctx),
 	lojaInputValida: (_ctx, event) => (event.value ?? '').trim().length > 0,
-	podeSalvar: (ctx) => ctx.keyword.trim().length > 0 || ctx.shopIds.length > 0
+	podeSalvar: (ctx) => checarGuard('podeSalvar', ctx)
 };
-
-// ── Normalização ──────────────────────────────────────────────────────────
-function normalizarComissao(v) {
-	if (typeof v !== 'number' || isNaN(v)) return 0.07;
-	if (v > 1) v = v / 100;
-	return Math.round(Math.max(0, Math.min(1, v)) * 10000) / 10000;
-}
 
 // ── Classe Engine ─────────────────────────────────────────────────────────
 export class BuscaEngine {
@@ -85,6 +81,10 @@ export class BuscaEngine {
 		return Object.entries(this.ctx.fontes)
 			.filter(([, v]) => v)
 			.map(([k]) => k);
+	}
+	/** Intent de busca derivado do contexto (keyword × loja) — ver busca-config.js. */
+	get intent() {
+		return intentBusca(this.ctx);
 	}
 
 	/** @type {import('./busca-engine-effects.js').Effects} */
@@ -176,7 +176,7 @@ export class BuscaEngine {
 
 	#mudarFiltro(event) {
 		if ('comissaoMin' in event) this.ctx.comissaoMin = normalizarComissao(event.comissaoMin);
-		if ('vendasMin' in event) this.ctx.vendasMin = Math.max(0, Math.floor(event.vendasMin ?? 0));
+		if ('vendasMin' in event) this.ctx.vendasMin = normalizarVendas(event.vendasMin);
 		if ('categorias' in event) this.ctx.categorias = event.categorias ?? [];
 		// Filtros aplicam client-side sobre dados brutos (sem re-fetch)
 		this.#refiltrar();
@@ -264,7 +264,7 @@ export class BuscaEngine {
 				this.ctx.contagens = { curadoria: 0, quedas: 0, novos: 0, lojas: 0 };
 				this.status = STATES.IDLE;
 			}
-		}, 400);
+		}, DEFAULTS.debounceMs);
 	}
 
 	async #executarBusca() {
