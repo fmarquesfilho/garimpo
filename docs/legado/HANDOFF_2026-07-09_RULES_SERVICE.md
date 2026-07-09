@@ -16,6 +16,8 @@ be8d5d0 fix(busca): escopo de loja (#2) + round-trip de keywords no backend (#6/
 346dd96 docs: handoff da página Garimpar/BuscaEngine + arquitetura em componentes.md
 f80c7db fix: categorias como seletor (#4), sync store após salvar (#8), label salvar (#10)
 7b65558 spec: rules-service (Go + zen-go + JDM versionado)
+bc41aed docs: handoff sessão rules-service + estado completo da branch
+f9dbf6d feat: regras de busca como JSON externo + E2E validando contra rules
 ```
 
 ## ✅ Concluído nesta sessão
@@ -40,58 +42,37 @@ f80c7db fix: categorias como seletor (#4), sync store após salvar (#8), label s
 
 ## ⬜ Pendente — Rules Service (spec em `.kiro/specs/rules-service/`)
 
-### Task 1: Proto
-- Criar `protos/rules/v1/rules.proto`
-- `buf generate` para Go e C# stubs
+> **DECISÃO:** O rules-service como sidecar gRPC foi descartado por over-engineering.
+> Substituído por `rules/busca-rules.json` (JSON declarativo externo).
+> Ver `docs/legado/SESSAO_2026-07-09_REGRAS_EXTERNAS.md` para detalhes.
+>
+> O spec permanece em `.kiro/specs/rules-service/` como referência futura caso a
+> complexidade justifique (multi-tenant com regras por cliente, operadores não-dev).
 
-### Task 2: JDM
-- Criar `rules/busca-rules.json` (Decision Tables: intent + guards; Expression Nodes: normalização)
-- Formato GoRules JDM
+### ✅ Implementado (abordagem simplificada)
 
-### Task 3: Go server
-- `services/rules/main.go` + `server.go`
-- gorules/zen-go + atomic pointer + health check + SIGHUP handler
-- `go build ./services/rules/...`
-
-### Task 4: Go testes
-- Table-driven (4 intents, guard consistency, normalização)
-- Property-based (determinismo com rapid)
-- Reload concorrente
-
-### Task 5: C# proxy
-- `POST /api/rules/evaluate` → gRPC localhost:50055
-- DI registration + RequireAuthorization
-
-### Task 6: Frontend integração
-- `evaluateRules(ctx)` no effects module
-- Cache 30s + fallback local
-- BuscaEngine chama rules para intent/validation em ADICIONAR_LOJA e SALVAR
-
-### Task 7: Docker + Deploy
-- Dockerfile + Cloud Run config (porta 50055, CPU 0.25, RAM 128Mi)
-- CI: build image rules-service
-
-### Task 8: Docs + Drift checks
-- Atualizar arquitetura, fluxos, contracts registry
-- `mise run prepush` verde
+- `rules/busca-rules.json` — fonte de verdade (intent, guards, normalize, defaults)
+- `rules/busca-rules.schema.json` — JSON Schema
+- `busca-config.js` importa do JSON externo
+- `.mise/tasks/check/rules-schema` — drift check no CI
+- E2E tests validam UI contra o JSON (`web/tests/local/busca-rules.spec.js`)
+- Documentação completa atualizada
 
 ## Decisões de arquitetura (RESPEITAR)
 
 1. **Engine headless (classe Svelte 5).** `BuscaEngine` em `busca-engine.svelte.js` é testável com `new BuscaEngine(mockEffects())`. View (`BuscaUnificada.svelte`) é burra.
 
-2. **Sidecar Go separado do scheduler.** Scheduler = QUANDO executar. Rules = O QUÊ decidir. Porta 50055.
+2. **Regras como JSON externo.** `rules/busca-rules.json` é a fonte de verdade. Frontend importa em build-time. E2E testam contra o JSON. Sem engine externo, sem sidecar.
 
-3. **gorules/zen-go.** Binding Go do zen-engine Rust. JDM (JSON Decision Model) carregado do disco. Hot-reload via SIGHUP sem downtime.
+3. **Sem rules-service sidecar.** Complexidade desproporcional para 4 intents e 2 guards. Se no futuro multi-tenant com regras por cliente justificar, o spec em `.kiro/specs/rules-service/` serve de referência.
 
-4. **JDM versionado no git.** Arquivo `rules/busca-rules.json` editável por PR. Decision Tables para intent/guards. Expression Nodes para normalização.
+4. **JDM descartado. JSON puro.** O formato GoRules JDM não é necessário — JSON com dados puros é suficiente e legível por qualquer linguagem.
 
-5. **C# API como proxy transparente.** `POST /api/rules/evaluate` → gRPC. Sem lógica no proxy.
+5. **Config (`busca-config.js`) permanece como adapter.** Importa do JSON externo e re-exporta no formato da engine. Funções puras (normalização, guards, intent) operam sobre os dados importados.
 
-6. **Frontend com fallback.** Guards simples (temContextoBusca) ficam locais para zero-latência. Decisões complexas (intent, validation) consultam backend. Cache 30s.
+6. **Ports & Adapters.** Effects são injetáveis. Mock para testes. Real para produção.
 
-7. **Config (`busca-config.js`) permanece** para guards/defaults locais. O rules service é para decisões complexas e centralizadas. Não substituir tudo — complementar.
-
-8. **Ports & Adapters.** Effects são injetáveis. Mock para testes. Real para produção.
+7. **CI valida regras.** `mise run check:rules-schema` verifica completude da intent table, consistência dos guards, e formato do JSON.
 
 ## Como verificar (no ambiente dev)
 
@@ -99,12 +80,14 @@ f80c7db fix: categorias como seletor (#4), sync store após salvar (#8), label s
 # Frontend (tudo deve passar):
 cd web && npm run check && npm run lint:js && npm run format:check && npx vitest run && npm run build
 
-# E2E local (3 specs):
+# E2E local (3 specs originais + 5 rules):
 cd web && npm run test:e2e:local
 
-# Go (após implementar rules-service):
-go build ./services/rules/...
-go test ./services/rules/...
+# Drift check rules:
+.mise/tasks/check/rules-schema
+
+# Go (sem regressão):
+go build ./... && go test ./...
 
 # Backend C# (requer Docker + dotnet):
 cd src && dotnet build && dotnet test
@@ -125,12 +108,16 @@ mise run prepush
 
 | Arquivo | Papel |
 |---------|-------|
+| `rules/busca-rules.json` | **Fonte de verdade** — regras externas (intent, guards, normalize, defaults, transições) |
+| `rules/busca-rules.schema.json` | JSON Schema para validação |
 | `web/src/lib/busca-engine.svelte.js` | FSM (classe Svelte 5 com $state) |
 | `web/src/lib/busca-engine-effects.js` | API calls injetáveis |
-| `web/src/lib/busca-config.js` | Config declarativa (guards, defaults, intent table) |
+| `web/src/lib/busca-config.js` | Adapter: importa JSON externo → re-exporta para engine |
 | `web/src/lib/components/BuscaUnificada.svelte` | View pura |
 | `web/src/lib/busca-unificada-logic.js` | Funções puras (payload, labels) |
 | `web/src/lib/descobrir-logic.js` | montarResultados (filtro client-side) |
 | `web/src/lib/descobrir.js` | Orquestração de fontes (fetch) |
-| `.kiro/specs/rules-service/` | Spec completa (design + requirements + tasks) |
-| `web/tests/local/` | E2E com bypass auth |
+| `.mise/tasks/check/rules-schema` | Drift check para regras |
+| `web/tests/local/busca-rules.spec.js` | E2E contra regras externas |
+| `web/tests/local/garimpar.spec.js` | E2E harness original |
+| `.kiro/specs/rules-service/` | Spec original (referência futura, não implementar) |
