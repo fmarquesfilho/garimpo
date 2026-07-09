@@ -1,65 +1,59 @@
 /**
- * Auth setup — faz login real via Firebase (email/senha) e salva o estado.
+ * Auth setup — obtém token Firebase real e salva para os testes.
  *
- * Roda uma vez antes de todos os testes de produção. Os testes subsequentes
- * reutilizam o storageState salvo (cookies + localStorage com token Firebase).
+ * Estratégia: faz signInWithEmailAndPassword via REST API do Firebase (Identity Toolkit),
+ * obtém idToken + refreshToken, e salva num arquivo JSON que os testes leem.
+ * Cada teste injeta o token via page.evaluate no contexto do browser.
  *
- * Credenciais vêm de .env.e2e.local (gitignored).
+ * Isso bypassa o problema do IndexedDB (Playwright storageState não captura
+ * tokens Firebase que ficam em IndexedDB).
  */
-import { test as setup, expect } from '@playwright/test';
+import { test as setup } from '@playwright/test';
+import { writeFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const authFile = 'tests/.auth/prod-user.json';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const tokenFile = resolve(__dirname, '../.auth/prod-token.json');
 
-setup('login via Firebase (email/senha)', async ({ page }) => {
+setup('obter token Firebase via REST', async () => {
 	const email = process.env.E2E_EMAIL;
 	const password = process.env.E2E_PASSWORD;
-	const baseURL = process.env.E2E_BASE_URL || 'https://garimpei.app.br';
 
 	if (!email || !password) {
 		throw new Error(
-			'E2E_EMAIL e E2E_PASSWORD são obrigatórios.\n' +
-				'Copie .env.e2e para .env.e2e.local e preencha as credenciais.\n' +
-				'Criar usuário de teste: Firebase Console → Authentication → Add user'
+			'E2E_EMAIL e E2E_PASSWORD são obrigatórios.\n' + 'Copie .env.e2e para .env.e2e.local e preencha as credenciais.'
 		);
 	}
 
-	await page.goto(baseURL);
+	// Firebase Auth REST API (Identity Toolkit v1)
+	const apiKey = 'AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A';
+	const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ email, password, returnSecureToken: true })
+	});
 
-	// Aguarda a página carregar e o Firebase SDK inicializar
-	await page.waitForLoadState('networkidle');
+	if (!resp.ok) {
+		const err = await resp.json();
+		throw new Error(`Firebase login falhou: ${err.error?.message || resp.status}`);
+	}
 
-	// Faz login via Firebase signInWithEmailAndPassword (executado no contexto do browser)
-	const loginResult = await page.evaluate(
-		async ({ email, password }) => {
-			// Aguarda o Firebase Auth estar disponível
-			const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js');
-			const { getAuth, signInWithEmailAndPassword } =
-				await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js');
+	const data = await resp.json();
 
-			const app = initializeApp({
-				apiKey: 'AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A',
-				authDomain: 'garimpo-500114.firebaseapp.com',
-				projectId: 'garimpo-500114'
-			});
-			const auth = getAuth(app);
-			const cred = await signInWithEmailAndPassword(auth, email, password);
-			const token = await cred.user.getIdToken();
-			return { uid: cred.user.uid, email: cred.user.email, token };
-		},
-		{ email, password }
+	// Salva token para uso nos testes
+	writeFileSync(
+		tokenFile,
+		JSON.stringify(
+			{
+				idToken: data.idToken,
+				refreshToken: data.refreshToken,
+				uid: data.localId,
+				email: data.email,
+				expiresAt: Date.now() + parseInt(data.expiresIn) * 1000
+			},
+			null,
+			2
+		)
 	);
-
-	// Verifica que o login funcionou
-	expect(loginResult.uid).toBeTruthy();
-	expect(loginResult.token).toBeTruthy();
-
-	// Recarrega a página para que o app reconheça o usuário logado
-	await page.reload();
-	await page.waitForLoadState('networkidle');
-
-	// Verifica que a UI mostra conteúdo autenticado (sem botão de login)
-	await expect(page.getByPlaceholder(/Buscar produto/i)).toBeVisible({ timeout: 15000 });
-
-	// Salva o estado do browser (localStorage com tokens Firebase + cookies)
-	await page.context().storageState({ path: authFile });
 });

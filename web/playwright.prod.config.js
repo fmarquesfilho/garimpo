@@ -3,13 +3,12 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 
 // Carrega .env.e2e.local (credenciais reais, gitignored)
-// Fallback: .env.e2e (template sem senha — falha no login)
 config({ path: resolve(import.meta.dirname, '.env.e2e.local') });
 config({ path: resolve(import.meta.dirname, '.env.e2e') });
 
 /**
  * Config dos E2E de PRODUÇÃO — roda contra APIs e serviços reais.
- * NÃO mocka nada. Usa Firebase Auth real (email/senha).
+ * NÃO mocka nada. Usa Firebase Auth real (token obtido via REST).
  *
  * Pré-requisitos:
  *   1. Copiar .env.e2e → .env.e2e.local e preencher E2E_PASSWORD
@@ -36,10 +35,7 @@ export default defineConfig({
 		},
 		{
 			name: 'prod',
-			use: {
-				browserName: 'chromium',
-				storageState: 'tests/.auth/prod-user.json'
-			},
+			use: { browserName: 'chromium' },
 			dependencies: ['auth-setup']
 		}
 	]

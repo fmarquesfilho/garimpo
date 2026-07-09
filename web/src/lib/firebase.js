@@ -88,7 +88,7 @@ export async function logout() {
 
 /** Retorna o ID token JWT do usuário logado (para enviar ao backend). */
 export async function getIdToken() {
-	if (testeUser) return 'e2e-fake-token'; // modo de teste local (sem Firebase)
+	if (testeUser) return browser && window.__E2E_ID_TOKEN__ ? window.__E2E_ID_TOKEN__ : 'e2e-fake-token';
 	if (!auth?.currentUser) return null;
 	try {
 		// Timeout de 5s para evitar que token refresh pendure a UI
