@@ -1,0 +1,79 @@
+{
+  "type": "object",
+  "required": ["version", "intent", "guards", "normalize", "defaults", "transicoes"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "intent": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["keyword", "shop", "result", "sources"],
+        "properties": {
+          "keyword": { "type": "boolean" },
+          "shop": { "type": "boolean" },
+          "result": { "type": "string", "enum": ["keyword_na_loja", "keyword_global", "loja_completa", "nenhum"] },
+          "sources": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "guards": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "requiresAny": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["requiresAny"]
+      }
+    },
+    "normalize": {
+      "type": "object",
+      "properties": {
+        "comissao": {
+          "type": "object",
+          "required": ["divideBy100IfGt1", "min", "max", "decimals"],
+          "properties": {
+            "divideBy100IfGt1": { "type": "boolean" },
+            "min": { "type": "number" },
+            "max": { "type": "number" },
+            "decimals": { "type": "integer" }
+          }
+        },
+        "vendas": {
+          "type": "object",
+          "required": ["floor", "min"],
+          "properties": {
+            "floor": { "type": "boolean" },
+            "min": { "type": "number" }
+          }
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "required": ["comissaoMin", "vendasMin", "fontes", "debounceMs", "timeoutMs"],
+      "properties": {
+        "comissaoMin": { "type": "number" },
+        "vendasMin": { "type": "number" },
+        "fontes": { "type": "object" },
+        "debounceMs": { "type": "integer" },
+        "timeoutMs": { "type": "integer" }
+      }
+    },
+    "transicoes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["refetch", "imediato"],
+        "properties": {
+          "refetch": { "type": "boolean" },
+          "imediato": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

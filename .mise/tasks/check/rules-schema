@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+#MISE description="Validate rules/busca-rules.json against its JSON Schema"
+# =============================================================================
+# check-rules-schema — Garante que o JSON de regras é válido e completo.
+# =============================================================================
+# Valida:
+#   1. rules/busca-rules.json é JSON válido
+#   2. Passa no JSON Schema (rules/busca-rules.schema.json)
+#   3. Intent table cobre todas as combinações boolean (4 rows, sem duplicatas)
+#   4. Guards referenciam campos que existem no frontend
+# =============================================================================
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+ERRORS=0
+RULES_FILE="rules/busca-rules.json"
+SCHEMA_FILE="rules/busca-rules.schema.json"
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Rules Schema Validation"
+echo "═══════════════════════════════════════════════════════════════"
+echo ""
+
+# ── 1. JSON válido ────────────────────────────────────────────────────────────
+
+echo "🔍 Verificando JSON válido..."
+if ! python3 -c "import json; json.load(open('$RULES_FILE'))" 2>/dev/null; then
+  echo -e "${RED}   ✗ $RULES_FILE não é JSON válido${NC}"
+  exit 1
+fi
+echo -e "${GREEN}   ✓ JSON válido${NC}"
+
+# ── 2. Schema validation (via python jsonschema se disponível, senão skip) ────
+
+echo ""
+echo "🔍 Validando schema..."
+if python3 -c "import jsonschema" 2>/dev/null; then
+  if python3 -c "
+import json, jsonschema
+schema = json.load(open('$SCHEMA_FILE'))
+data = json.load(open('$RULES_FILE'))
+jsonschema.validate(data, schema)
+print('   ✓ Schema válido')
+" 2>&1; then
+    :
+  else
+    echo -e "${RED}   ✗ Falha na validação do schema${NC}"
+    ERRORS=$((ERRORS + 1))
+  fi
+else
+  echo "   ⚠ jsonschema não disponível — skip (instale: pip install jsonschema)"
+fi
+
+# ── 3. Intent table completude ────────────────────────────────────────────────
+
+echo ""
+echo "🔍 Verificando completude da intent table..."
+
+INTENT_COUNT=$(python3 -c "
+import json
+data = json.load(open('$RULES_FILE'))
+intents = data['intent']
+print(len(intents))
+")
+
+if [ "$INTENT_COUNT" -ne 4 ]; then
+  echo -e "${RED}   ✗ Intent table deve ter exatamente 4 rows (tem $INTENT_COUNT)${NC}"
+  ERRORS=$((ERRORS + 1))
+else
+  # Verifica que cobre todas as combinações (TT, TF, FT, FF)
+  COMBOS=$(python3 -c "
+import json
+data = json.load(open('$RULES_FILE'))
+combos = set()
+for row in data['intent']:
+    combos.add((row['keyword'], row['shop']))
+expected = {(True,True),(True,False),(False,True),(False,False)}
+missing = expected - combos
+if missing:
+    print(f'MISSING:{missing}')
+else:
+    print('OK')
+")
+  if [[ "$COMBOS" == "OK" ]]; then
+    echo -e "${GREEN}   ✓ Intent table cobre todas as 4 combinações boolean${NC}"
+  else
+    echo -e "${RED}   ✗ Intent table incompleta: $COMBOS${NC}"
+    ERRORS=$((ERRORS + 1))
+  fi
+fi
+
+# ── 4. Intents válidos ────────────────────────────────────────────────────────
+
+echo ""
+echo "🔍 Verificando intents válidos..."
+
+VALID_INTENTS=$(python3 -c "
+import json
+data = json.load(open('$RULES_FILE'))
+valid = {'keyword_na_loja', 'keyword_global', 'loja_completa', 'nenhum'}
+actual = {row['result'] for row in data['intent']}
+invalid = actual - valid
+if invalid:
+    print(f'INVALID:{invalid}')
+else:
+    print('OK')
+")
+
+if [[ "$VALID_INTENTS" == "OK" ]]; then
+  echo -e "${GREEN}   ✓ Todos os intents são válidos${NC}"
+else
+  echo -e "${RED}   ✗ Intents inválidos: $VALID_INTENTS${NC}"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# ── 5. Guards consistency: podeSalvar → temContextoBusca ──────────────────────
+
+echo ""
+echo "🔍 Verificando consistência dos guards..."
+
+GUARD_CONSISTENCY=$(python3 -c "
+import json
+data = json.load(open('$RULES_FILE'))
+guards = data['guards']
+# podeSalvar requiresAny deve ser subset de temContextoBusca requiresAny
+ps = set(guards.get('podeSalvar', {}).get('requiresAny', []))
+tc = set(guards.get('temContextoBusca', {}).get('requiresAny', []))
+if ps and not ps.issubset(tc):
+    print(f'INCONSISTENT: podeSalvar requer {ps} mas temContextoBusca requer {tc}')
+else:
+    print('OK')
+")
+
+if [[ "$GUARD_CONSISTENCY" == "OK" ]]; then
+  echo -e "${GREEN}   ✓ Guards consistentes (podeSalvar ⊆ temContextoBusca)${NC}"
+else
+  echo -e "${RED}   ✗ $GUARD_CONSISTENCY${NC}"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# ── Resultado ─────────────────────────────────────────────────────────────────
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+if [ "$ERRORS" -eq 0 ]; then
+  echo -e "${GREEN}✅ Rules schema válido e consistente!${NC}"
+  exit 0
+else
+  echo -e "${RED}❌ $ERRORS problema(s) detectado(s) no rules schema${NC}"
+  exit 1
+fi

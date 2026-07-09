@@ -1,62 +1,30 @@
 /**
  * busca-config.js — Configuração declarativa da BuscaEngine (página Garimpar).
  *
- * Fonte única e versionada (git) das REGRAS da busca: defaults, normalização,
- * guards simples, flags por transição e a tabela de decisão do "intent" de busca.
- * Cada regra é revisável por PR e serve de spec para os testes.
+ * Importa regras de `rules/busca-rules.json` (fonte única, external ao código).
+ * O JSON é testável independentemente por qualquer linguagem/tool:
+ *   - E2E importam o JSON para validar comportamento do frontend
+ *   - CI valida o schema em tempo de build (drift check)
+ *   - Qualquer serviço futuro pode ler o mesmo arquivo
  *
- * Princípio de projeto:
- *   CONFIG para valores e tabelas de decisão (dados).
- *   CÓDIGO para fluxo de controle (a FSM em si).
- * Guards/normalizações simples viram dados aqui; orquestração assíncrona fica
- * nos effects; as transições de estado ficam no switch da engine.
+ * Este módulo re-exporta as regras no formato consumido pela BuscaEngine e
+ * fornece funções puras de avaliação (normalização, guards, intent).
  */
 
-// ── Defaults do contexto ─────────────────────────────────────────────────────
-export const DEFAULTS = {
-	comissaoMin: 0.07,
-	vendasMin: 0,
-	fontes: { curadoria: true, quedas: true, novos: true, lojas: false, favoritos: false },
-	debounceMs: 400,
-	timeoutMs: 25000
-};
+import rules from '../../../rules/busca-rules.json';
 
-// ── Especificação de normalização ────────────────────────────────────────────
-export const NORMALIZE = {
-	comissao: { divideBy100IfGt1: true, min: 0, max: 1, decimals: 4 },
-	vendas: { floor: true, min: 0 }
-};
+// ── Re-export das regras externas ────────────────────────────────────────────
+export const DEFAULTS = rules.defaults;
+export const NORMALIZE = rules.normalize;
+export const GUARDS = rules.guards;
+export const TRANSICOES = rules.transicoes;
 
-// ── Guards declarativos (condições simples sobre o contexto) ──────────────────
-// `requiresAny`: ao menos um dos campos precisa estar "preenchido"
-// (string não-vazia ou array não-vazio).
-export const GUARDS = {
-	temContextoBusca: { requiresAny: ['keyword', 'shopIds'] },
-	podeSalvar: { requiresAny: ['keyword', 'shopIds'] }
-};
-
-// ── Flags por transição (evento → comportamento) ──────────────────────────────
-// refetch: o evento muda os DADOS (precisa ir à API) vs. só refiltra client-side.
-// imediato: dispara a busca sem esperar o debounce.
-export const TRANSICOES = {
-	DIGITAR: { refetch: true, imediato: false },
-	ADICIONAR_LOJA: { refetch: true, imediato: true },
-	REMOVER_LOJA: { refetch: true, imediato: false },
-	MUDAR_FILTRO: { refetch: false, imediato: false }, // filtros são client-side
-	MUDAR_FONTES: { refetch: true, imediato: false },
-	CARREGAR_SALVA: { refetch: true, imediato: true }
-};
-
-// ── Tabela de decisão do "intent" de busca ────────────────────────────────────
-// Resolve o escopo da coleta a partir do contexto. É a regra que conserta o bug
-// "adicionei a loja mas aparecem produtos de fora dela": com keyword E loja, a
-// busca deve ser ESCOPADA na loja, não global.
-export const INTENT_TABLE = [
-	{ when: { keyword: true, shop: true }, intent: 'keyword_na_loja' },
-	{ when: { keyword: true, shop: false }, intent: 'keyword_global' },
-	{ when: { keyword: false, shop: true }, intent: 'loja_completa' },
-	{ when: { keyword: false, shop: false }, intent: 'nenhum' }
-];
+// Tabela de intent no formato esperado pela engine
+export const INTENT_TABLE = rules.intent.map((r) => ({
+	when: { keyword: r.keyword, shop: r.shop },
+	intent: r.result,
+	sources: r.sources
+}));
 
 // ── Funções puras derivadas da config (testáveis sem DOM/API) ─────────────────
 

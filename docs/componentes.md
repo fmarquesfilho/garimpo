@@ -389,7 +389,8 @@ A página Garimpar (`routes/+page.svelte`) é controlada por uma máquina de est
 |--------|-------|
 | `lib/busca-engine.svelte.js` | **BuscaEngine** — FSM Svelte 5 (classe com runes). `send(event)`, guards, `ctx` reativo. Testável com `new BuscaEngine(mockEffects())`, sem DOM. |
 | `lib/busca-engine-effects.js` | **Effects** (Ports & Adapters) — chamadas de API isoladas e injetáveis. Fronteira para trocar backend de busca (Shopee → Solr/Lucene) sem tocar a engine. |
-| `lib/busca-config.js` | **Config declarativa** — defaults, normalização, guards (`requiresAny`), transições e `INTENT_TABLE` (keyword × loja). Fonte única versionada; sem lib de rules externa. |
+| `lib/busca-config.js` | **Config declarativa** — importa `rules/busca-rules.json` (fonte externa) e re-exporta no formato da engine. Funções puras de avaliação (normalização, guards, intent). |
+| `rules/busca-rules.json` | **Regras externas** — JSON declarativo com intent table, guards, normalização, defaults e transições. Testável por E2E e validado em CI. |
 | `lib/busca-unificada-logic.js` | Funções puras (payload↔config, labels, resumo). |
 | `components/BuscaUnificada.svelte` | **View burra** — só despacha events e renderiza `engine.ctx`. |
 

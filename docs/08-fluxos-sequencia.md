@@ -25,6 +25,7 @@ sequenceDiagram
     participant S as ☁️ Shopee API
 
     U->>F: digita "sérum vitamina c"
+    F->>F: BuscaEngine resolve intent via rules/busca-rules.json (keyword_global)
     F->>A: GET /api/candidatos?keyword=sérum+vitamina+c&top=20
     A->>C: gRPC Fetch(keyword, limit=50, marketplace=SHOPEE)
     C->>S: POST GraphQL productOfferV2 (HMAC-SHA256 auth)

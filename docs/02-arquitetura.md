@@ -578,6 +578,22 @@ Estas regras rodam como parte do `dotnet test` e quebram o CI se violadas:
 | Knip | Dead code/exports no frontend |
 | check-file-size | Máx 400 linhas por arquivo (exceto gen/) |
 
+### Regras de negócio externalizadas
+
+Regras de decisão da busca (`rules/busca-rules.json`) são dados puros versionados no git,
+separados do código de runtime. Qualquer linguagem/tool pode ler e validar:
+
+| Consumidor | Como acessa | Propósito |
+|------------|-------------|-----------|
+| Frontend (`busca-config.js`) | `import` em build-time | Avaliação zero-latência no browser |
+| E2E tests (Playwright) | `fs.readFileSync` | Validar comportamento contra regras |
+| CI drift check | `mise run check:rules-schema` | Schema + completude + consistência |
+| Futuro: backend/outros | Leitura JSON | Mesma fonte de verdade |
+
+**Decisão:** sem rules engine externo. As regras são simples (4 intents, 2 guards, 2 normalizações),
+mudam por PR, e são avaliadas por funções puras no código. O JSON é a *spec testável*, não um
+engine opaco. Ver ADR futura se complexidade justificar externalização real.
+
 ### Validação de drift (scripts CI)
 
 O CI executa 3 scripts de verificação que detectam inconsistências cross-stack:
@@ -588,6 +604,7 @@ O CI executa 3 scripts de verificação que detectam inconsistências cross-stac
 | `mise run check:config-consistency` | Nome errado do dataset BQ, portas divergentes, URLs hardcoded |
 | `mise run check:schema-sync` | Entidades C# sem DbSet, IOwnedEntity sem QueryFilter, tabelas BQ faltantes |
 | `mise run check:data-ownership` | Go/Python acessando PG, C# acessando BQ, collectors lendo PG |
+| `mise run check:rules-schema` | JSON de regras inválido, intent table incompleta, guards inconsistentes |
 
 **Decisão de design:** O SQL schema (`deploy/bigquery_schema.sql`) é a **fonte de verdade**
 (superset). O Go `EnsureSchema` pode ser um **subset** — ele só cria as tabelas que os
