@@ -120,7 +120,11 @@ docs/
 ```bash
 # Frontend (tudo passa):
 cd web && npm run check && npm run lint:js && npm run format:check && npx vitest run && npm run build
-# → 208 unit tests, 0 errors, 0 warnings, build ok
+# → 243 unit tests, 0 errors, 0 warnings, build ok
+
+# E2E local (24/24):
+cd web && npm run test:e2e:local
+# → 24 passed, 0 failed, 0 skipped
 
 # Drift check rules:
 .mise/tasks/check/rules-schema
@@ -129,10 +133,6 @@ cd web && npm run check && npm run lint:js && npm run format:check && npx vitest
 # Go (sem regressão):
 go build ./... && go test ./...
 # → ok
-
-# E2E local (requer preview rodando):
-cd web && npm run test:e2e:local
-# → 3 specs originais + 5 novos
 ```
 
 ## Commits

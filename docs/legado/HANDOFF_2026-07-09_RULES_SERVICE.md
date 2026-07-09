@@ -18,16 +18,27 @@ f80c7db fix: categorias como seletor (#4), sync store após salvar (#8), label s
 7b65558 spec: rules-service (Go + zen-go + JDM versionado)
 bc41aed docs: handoff sessão rules-service + estado completo da branch
 f9dbf6d feat: regras de busca como JSON externo + E2E validando contra rules
+159cff0 docs: sessão regras externas + atualizar handoff com decisão final
+78c537f test: expandir suite — 35 unit tests (cenários doc) + 15 E2E locais
+5dbb7f8 docs(adr): 0027 — BuscaEngine headless + regras externas como JSON
+d8f03a1 fix(e2e): corrigir mocks para refletir fluxo real da app
+1f7bdd4 fix: corrigir 3 bugs reais da engine (store desync, lojas ctx, erro engolido)
+cd35bf7 docs(adr): atualizar 0027 com fixes reais + fluxo de validação regras→UI
 ```
 
 ## ✅ Concluído nesta sessão
 
-### Bugs corrigidos
+### Bugs corrigidos (UI)
 - **#2** — Adicionar loja agora escopa busca (keyword + shopIds combinados)
 - **#4** — Categorias como chips selecionáveis (de categoriasDisponiveis), não TagInput livre
 - **#6/#7** — Round-trip de keywords no backend (POST /api/buscas persiste b.Keywords)
 - **#8** — Sync store `buscasSalvas` após salvar/remover (sincronizarStoreExterno)
 - **#10** — Botão salvar com label "💾 Salvar" (não apenas ícone)
+
+### Bugs corrigidos (arquitetura)
+- **Store desync** — `INICIALIZAR` agora chama `sincronizarStoreExterno()` antes de `executarBusca`
+- **Lojas ctx ignoradas** — `buildBuscasComLojas()` combina store + ctx.shopIds (lojas não salvas participam de quedas/novos)
+- **Erro engolido** — `carregarCuradoria` propaga erros HTTP ≥400 via `isServerError()` (antes mostrava "0 resultados")
 
 ### Infraestrutura
 - **Config declarativa** (`busca-config.js`) — defaults, normalização, guards, INTENT_TABLE
@@ -35,8 +46,8 @@ f9dbf6d feat: regras de busca como JSON externo + E2E validando contra rules
 - **Spec rules-service** — design + requirements + tasks completos para Go + zen-go
 
 ### Métricas
-- 208 unit tests passando
-- 3 E2E locais passando
+- 243 unit tests passando
+- 24 E2E locais passando (0 skips)
 - svelte-check 0/0, eslint 0 warnings, build ok
 - Backend: precisa validar no CI (dotnet não disponível localmente)
 
