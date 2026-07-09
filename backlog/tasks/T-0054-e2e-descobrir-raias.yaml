@@ -1,0 +1,56 @@
+id: T-0054
+titulo: "E2E locais: reescrever para a página Descobrir em raias"
+epic: E-001
+status: backlog
+prioridade: media
+estimativa: M
+sprint: ""
+criado_em: "2026-07-09"
+valor: |
+  O redesign da página Descobrir em raias (PR #42, ADR-0004) mudou a UI e os
+  fluxos. Os E2E locais existentes miram a UI antiga e falham. Como não rodam na
+  CI, o merge não é bloqueado — mas a rede de segurança da página core fica
+  descoberta até serem reescritos.
+descricao: |
+  Após o redesign em raias (PR #42), os E2E locais em `web/tests/local/` apontam
+  para seletores/fluxos antigos e precisam ser atualizados para a nova UI.
+
+  ## Seletores/fluxos que mudaram
+
+  - Placeholder de loja: `/Adicionar loja/` → `Buscar loja monitorada, ou colar
+    link/ID para adicionar uma nova…`
+  - Chip de loja `🏪 Le Botanic` → componente `LojaCard` (nome + marketplace +
+    bandeira + monitoramento)
+  - Adicionar loja nova: antes por Enter no input; agora via opção de entrada
+    livre do `Combobox` ("↳ resolver e adicionar loja …")
+  - Categorias: agora `Combobox` (nome + marketplaces) + `CategoriaCard`, não
+    mais chips toggle
+  - Buscas salvas: chips → `BuscaCard` com 4 seções + editar (edit mode) / rodar
+  - Botões de grupo (Filtros/Lojas/Buscas) com contador; colapsar/limpar por raia
+
+  ## Arquivos afetados
+
+  - `web/tests/local/busca-rules.spec.js`
+  - `web/tests/local/descobrir-cenarios.spec.js`
+  - `web/tests/local/garimpar.spec.js`
+
+  O harness (`fixtures.js` com `garimparPage` + `mockApi`) continua válido — foi
+  usado para validar o render do redesign via screenshots.
+
+  ## Cenários mínimos a cobrir (novos fluxos)
+
+  - Adicionar categoria via Combobox → card com marketplaces + contador Filtros++
+  - Adicionar loja monitorada via dropdown → LojaCard no escopo
+  - Colar link/ID → opção "resolver e adicionar" → resolve via POST /api/lojas
+  - Busca só-categorias (sem keyword/loja) → retorna resultados (rules v2)
+  - Salvar busca → BuscaCard com seções corretas
+  - Editar busca (edit mode) → altera e re-salva a mesma (update in-place por id)
+  - Colapsar tudo / limpar raia / limpar tudo
+
+criterios_aceite:
+  - Os 3 specs locais passam contra a nova UI (`npm run test:e2e:local`)
+  - Cobrem os cenários novos listados (categorias, lojas monitoradas + link,
+    só-categorias, edit mode)
+  - Validam contra `rules/busca-rules.json` v2 (guards, contextoCategorias)
+
+dependencias: []

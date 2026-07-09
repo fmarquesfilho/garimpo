@@ -28,6 +28,7 @@
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
+- **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
 
 ## ✅ Concluídas
 

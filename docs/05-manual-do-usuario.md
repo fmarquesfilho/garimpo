@@ -27,23 +27,33 @@ chips de lojas aparecem para filtrar por loja específica.
 - ⚠ **Suspeito** — comissão alta com zero vendas/nota (produto-fantasma)
 - ✦ **Exploração** — produto fora do ranking usual (epsilon-greedy para diversificar)
 
-### BuscaUnificada
+### Controles em raias
 
-O componente de busca unificada (no topo da página) agrupa todas as configurações de pesquisa:
+As configurações de pesquisa ficam no topo da página, organizadas em **raias**
+horizontais. No console superior há o campo de palavras-chave e três botões — **Filtros**,
+**Lojas** e **Buscas** — cada um abrindo sua raia e mostrando um contador de quantas
+configurações estão aplicadas. Ainda no topo: **colapsar tudo** e **limpar tudo**.
 
-- **Keywords** — palavras-chave para descoberta de produtos
-- **Lojas** — seletor plural (multi-marketplace); adicione via URL ou ID numérico, com país de origem
-- **Filtros colapsáveis** — comissão mínima, vendas mínimas, categorias
-- **Fontes de dados** — toggle entre Descobrir e Lojas (ToggleGroup)
-- **Salvar** — grava a configuração como busca nomeada (exibida como chip)
-- **Agendar** — define frequência de execução automática (cron)
+- **Raia Filtros** — toggles de fontes (🆕 Novos, 📉 Quedas, ⭐ Favoritos), filtros
+  quantitativos (comissão mínima, vendas mínimas) e **categorias**. Ao digitar uma
+  categoria, o autocomplete mostra o nome e os marketplaces a que ela pertence; cada
+  categoria adicionada vira um card.
+- **Raia Lojas** — escopa a busca em lojas específicas. Digite para buscar entre as **lojas
+  monitoradas** (nome + marketplace) ou **cole um link/ID para adicionar uma loja nova**
+  ("↳ resolver e adicionar"). Cada loja no escopo aparece como card com nome, marketplace,
+  **bandeira de origem** e um indicador de monitoramento. Com lojas no escopo, a busca só
+  roda nelas.
+- **Raia Buscas** — buscas salvas e agendadas, cada uma num card com as seções que tiver
+  (palavras-chave, categorias, lojas, marketplaces) e a info de agendamento. **Rodar**
+  reexecuta a busca; **✎ editar** entra no edit mode para alterar e re-salvar a mesma busca
+  (inclusive reagendar); **✕** remove.
 
-Buscas salvas aparecem como chips clicáveis abaixo do campo de keywords, permitindo
-alternar rapidamente entre configurações.
+Cada raia tem seu próprio **limpar raia**.
 
 ## Lojas monitoradas
 
-Para adicionar uma loja, use o seletor de lojas dentro da BuscaUnificada:
+Para adicionar uma loja nova ao monitoramento, na raia Lojas cole o link ou ID e escolha
+"↳ resolver e adicionar":
 
 1. Cole a URL (`shopee.com.br/shop/123456`) ou o ID numérico
 2. Selecione o país de origem (ex: "🇰🇷 Coreia") — herdado por todos os produtos

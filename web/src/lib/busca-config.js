@@ -18,6 +18,8 @@ export const DEFAULTS = rules.defaults;
 export const NORMALIZE = rules.normalize;
 export const GUARDS = rules.guards;
 export const TRANSICOES = rules.transicoes;
+export const MARKETPLACES = rules.marketplaces;
+export const CONTEXTO_CATEGORIAS = rules.contextoCategorias;
 
 // Tabela de intent no formato esperado pela engine
 export const INTENT_TABLE = rules.intent.map((r) => ({
@@ -68,6 +70,23 @@ export function intentBusca(ctx) {
 	const shop = (ctx?.shopIds ?? []).length > 0;
 	const row = INTENT_TABLE.find((r) => r.when.keyword === keyword && r.when.shop === shop);
 	return row?.intent ?? 'nenhum';
+}
+
+/**
+ * Sources efetivos a consultar dado o contexto.
+ * Segue a intent table (keyword × loja); quando o intent é `nenhum` mas há
+ * categorias selecionadas, cai no contexto de categorias (sources globais),
+ * pois uma busca só-categorias é válida (lista produtos das categorias).
+ */
+export function sourcesBusca(ctx) {
+	const keyword = (ctx?.keyword ?? '').trim().length > 0;
+	const shop = (ctx?.shopIds ?? []).length > 0;
+	const row = INTENT_TABLE.find((r) => r.when.keyword === keyword && r.when.shop === shop);
+	const sources = row?.sources ?? [];
+	if (sources.length === 0 && (ctx?.categorias ?? []).length > 0) {
+		return CONTEXTO_CATEGORIAS.sources;
+	}
+	return sources;
 }
 
 /** Label de comissão para exibição (0.07 → "7%"), evitando "7.0000000". */

@@ -1,8 +1,8 @@
 # Componentes UI — Garimpei
 
-**Atualizado:** 2026-07-03
+**Atualizado:** 2026-07-09
 **Stack:** Svelte 5 (runes) + Bits UI + Tailwind CSS v4 (shadcn-svelte style)
-**Referência:** ADR-0022, spec `shadcn-svelte-migration`
+**Referência:** ADR-0022, ADR-0004 (página Descobrir em raias), ADR-0027 (BuscaEngine), spec `shadcn-svelte-migration`
 
 ---
 
@@ -17,7 +17,7 @@ app.css
 
 $lib/components/ui/
 ├── Primitivos (Tailwind)        → Button, Alert, Badge, Card, Input
-├── Compostos (Bits UI + TW)     → Select, Checkbox, ToggleGroup, Collapsible, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
+├── Compostos (Bits UI + TW)     → Select, Combobox, Checkbox, ToggleGroup, Collapsible, Tabs, Dialog, DropdownMenu, Tooltip, ThemeToggle
 └── Application                  → DashPanel, MetricCard, Loading, EmptyState, ...
 
 $lib/utils.ts                    → cn() (tailwind-merge + clsx)
@@ -127,6 +127,53 @@ $lib/utils.ts                    → cn() (tailwind-merge + clsx)
 
 > Para valores numéricos, use o par `value={String(n)}` + `onchange={(v) => (n = Number(v))}`
 > (o `value` do Bits UI Select é sempre string).
+
+### Combobox
+
+Autocomplete **de adição** — filtra `items` conforme o texto e chama `onselect(item)`.
+Diferente do `Select`, não mantém um valor selecionado: cada escolha é uma ação de
+adicionar (categorias, lojas…). Cada opção é renderizada por um snippet `option`, o que
+permite mostrar metadados (ex.: nome à esquerda + marketplaces à direita).
+
+Suporta **entrada livre** (`allowFree`): quando o texto não casa com nenhum item e
+`isFree(texto)` retorna `true`, oferece uma opção extra que chama `onfree(texto)`. É o
+mecanismo do "↳ resolver e adicionar loja" na raia de Lojas (colar link/ID de loja nova).
+Navegação por teclado (↑/↓/Enter/Esc).
+
+```svelte
+<Combobox
+  items={categoriasDisponiveis}
+  placeholder="Adicionar categoria…"
+  onselect={(c) => engine.send({ type: 'ADICIONAR_CATEGORIA', nome: c.nome, categoria: c })}
+>
+  {#snippet option(c)}
+    <span class="font-semibold">{c.nome}</span>
+    <span>{#each c.marketplaces as m}<span class="mchip">{m}</span>{/each}</span>
+  {/snippet}
+</Combobox>
+
+<!-- Com entrada livre (raia de Lojas) -->
+<Combobox
+  items={lojasDisponiveis}
+  allowFree isFree={pareceLoja}
+  freeLabel={(t) => `↳ resolver e adicionar loja "${t}"`}
+  onselect={(l) => engine.send({ type: 'ADICIONAR_LOJA', loja: l })}
+  onfree={(t) => engine.send({ type: 'ADICIONAR_LOJA', value: t })}
+/>
+```
+
+| Prop | Tipo | Default |
+|------|------|---------|
+| items | `any[]` | `[]` |
+| getLabel | `(item) => string` | `i => i.nome ?? String(i)` |
+| onselect | `(item) => void` | `null` |
+| option | snippet(item) | `null` (usa getLabel) |
+| placeholder | string | `''` |
+| allowFree | boolean | `false` |
+| isFree | `(texto) => boolean` | `t => t.trim().length > 0` |
+| freeLabel | `(texto) => string` | `t => "adicionar …"` |
+| onfree | `(texto) => void` | `null` |
+| size | `'sm'`\|`'md'`\|`'lg'` | `'md'` |
 
 ### Tabs
 
@@ -274,15 +321,38 @@ Além da base em `ui/`, os componentes de domínio e layout (localizados em `$li
 - **LandingHero** / **HeroProduto**: Headers principais da interface, com suporte a dark mode.
 - **PainelAlertas**: Gestão de alertas de preço — usa `Input` e `Checkbox`.
 
-### Busca e Filtragem
-- **BuscaUnificada**: Componente unificado de busca — keywords, lojas (plural, multi-marketplace), filtros (comissão, vendas, categorias), fontes de dados (ToggleGroup), salvar/agendar. Substitui FilterBar + FormAdicionarLoja + GerenciarBuscas.
-  - **`BuscaUnificada.svelte.js`** — módulo reativo de estado (`criarEstado`, `criarDerivados`, `criarHandlers`). Padrão `.svelte.js` separa lógica reativa do template.
-  - **`busca-unificada-logic.js`** — funções puras: `configToPayload`, `payloadToConfig`, `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`, `gerarLabelBusca`.
+### Busca e Filtragem — página Descobrir em raias
+
+A página Descobrir (`/`) é organizada em **raias horizontais** (metáfora de piscina).
+Ver **ADR-0004** para o layout e **ADR-0027** para a máquina de estados.
+
+- **BuscaUnificada**: view das 4 raias. É "burra" — só despacha `engine.send(event)` e
+  renderiza `engine.ctx`/getters. Estrutura:
+  - **Console superior** — input de keyword + 3 botões de grupo (Filtros/Lojas/Buscas)
+    com contador (`engine.contadorFiltros/Lojas/Buscas`), além de "colapsar tudo" e
+    "limpar tudo". Cada botão abre/fecha sua raia.
+  - **Raia Filtros** — 2 sub-raias: em cima toggles de fontes (Novos/Quedas/Favoritos) +
+    quantitativos (comissão mín., vendas mín.); embaixo `Combobox` de categorias + cards.
+  - **Raia Lojas** — `Combobox` (lojas monitoradas + entrada livre p/ resolver loja nova
+    por link/ID) + `LojaCard`s no escopo.
+  - **Raia Buscas** — `BuscaCard`s salvas/agendadas + salvar/editar (edit mode).
+  - **`busca-unificada-logic.js`** — funções puras: `configToPayload` (carrega `id` p/
+    update in-place), `payloadToConfig`, `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`,
+    `gerarLabelBusca`.
+- **Lane**: casca de uma raia — cabeçalho (título, tag, contador, ações) + corpo
+  colapsável (`open` bindable, para permitir o "colapsar tudo").
+- **CategoriaCard**: categoria adicionada ao filtro — nome + badges dos marketplaces a
+  que a categoria pertence (multi-marketplace).
+- **LojaCard**: loja no escopo — nome, marketplace, bandeira de origem (🇰🇷/🇯🇵/🇨🇳,
+  ver Operação Shopee) e indicador de monitoramento (⏱ com o ciclo, ou "sem monitor").
 
 ### Cards e Componentes de Domínio
 - **ProductCard**: Exibição central de ofertas.
 - **CandidateCard**: Visualização de leads de produto.
-- **BuscaCard**: Resumo da busca configurada pelo usuário.
+- **BuscaCard**: cartão de uma busca salva (raia Buscas). Dividido em seções exibidas só
+  quando presentes — **palavras-chave, categorias, lojas, marketplaces** — mais a
+  informação de agendamento (⏱ cron). Ações: **rodar**, **editar** (edit mode → altera e
+  re-salva a mesma busca via `id`, podendo reagendar) e **remover**.
 - **AgendadorBusca**: Seletor de agendamento — modo e frequência em `ToggleGroup`, cron avançado em `Input` (preset "A cada 8h", prop `permitirNunca`).
 - **ResolverLink**: Ferramenta de processamento de links curtos.
 
@@ -389,10 +459,25 @@ A página Garimpar (`routes/+page.svelte`) é controlada por uma máquina de est
 |--------|-------|
 | `lib/busca-engine.svelte.js` | **BuscaEngine** — FSM Svelte 5 (classe com runes). `send(event)`, guards, `ctx` reativo. Testável com `new BuscaEngine(mockEffects())`, sem DOM. |
 | `lib/busca-engine-effects.js` | **Effects** (Ports & Adapters) — chamadas de API isoladas e injetáveis. Fronteira para trocar backend de busca (Shopee → Solr/Lucene) sem tocar a engine. |
-| `lib/busca-config.js` | **Config declarativa** — importa `rules/busca-rules.json` (fonte externa) e re-exporta no formato da engine. Funções puras de avaliação (normalização, guards, intent). |
-| `rules/busca-rules.json` | **Regras externas** — JSON declarativo com intent table, guards, normalização, defaults e transições. Testável por E2E e validado em CI. |
+| `lib/busca-config.js` | **Config declarativa** — importa `rules/busca-rules.json` (fonte externa) e re-exporta no formato da engine. Funções puras: normalização, guards, `intentBusca`, `sourcesBusca`. |
+| `rules/busca-rules.json` | **Regras externas** (v2) — intent table, guards, normalização, defaults, transições, `marketplaces` (suportados + default) e `contextoCategorias`. Testável por E2E e validado em CI. |
 | `lib/busca-unificada-logic.js` | Funções puras (payload↔config, labels, resumo). |
-| `components/BuscaUnificada.svelte` | **View burra** — só despacha events e renderiza `engine.ctx`. |
+| `components/BuscaUnificada.svelte` | **View burra** — 4 raias; só despacha events e renderiza `engine.ctx`/getters. |
+| `components/{Lane,CategoriaCard,LojaCard,BuscaCard}.svelte` | Componentes de raia (casca, cards de categoria/loja/busca salva). |
+
+**Eventos da engine:** `INICIALIZAR`, `DIGITAR`, `ADICIONAR_LOJA` (por objeto monitorado ou
+por `value` a resolver), `REMOVER_LOJA`, `ADICIONAR_CATEGORIA`, `REMOVER_CATEGORIA`,
+`MUDAR_FILTRO`, `MUDAR_FONTES`, `MUDAR_MARKETPLACES`, `SALVAR` (cria ou atualiza via
+`editandoId`), `CARREGAR_SALVA`, `EDITAR_SALVA` (edit mode), `REMOVER_SALVA`, `RETRY`, `LIMPAR`.
+
+**Getters para a view:** `categoriaCards`, `lojaCards`, `contadorFiltros/Lojas/Buscas`,
+`fontesAtivas`, `intent`, `resumo`.
+
+**Regras notáveis (v2):**
+- Busca **só-categorias** é válida — `guards.temContextoBusca`/`podeSalvar` aceitam
+  `categorias`; `sourcesBusca` cai nos sources globais quando não há keyword nem loja.
+- **Multi-marketplace** — categorias e lojas carregam seus marketplaces; `configToPayload`
+  envia `marketplaces` (filtro) e o `BuscaCard` exibe a seção correspondente.
 
 **Testes locais sem stack:** o harness (`tests/local/`, `playwright.local.config.js`)
 usa bypass de auth (`window.__E2E_AUTH_USER__` — ver `lib/firebase.js`) + `mockApi()`.

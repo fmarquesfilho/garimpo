@@ -260,6 +260,27 @@ URLs reais da Shopee usadas em testes de integração:
 
 Resolução testável via `mise run test:e2e:resolve-shop` (requer collector rodando).
 
+## Atualização 2026-07-09 — regras v2 (redesign em raias)
+
+O redesign da página Descobrir em raias (ADR-0004) estendeu as regras para `version: 2.0.0`,
+de forma aditiva e ainda validada pelo drift check:
+
+- **Busca só-categorias é um contexto válido.** `guards.temContextoBusca` e
+  `guards.podeSalvar` passaram a aceitar `categorias` (além de `keyword`/`shopIds`). Novo
+  bloco `contextoCategorias.sources` define os sources globais usados quando há categorias
+  mas nem keyword nem loja — avaliado pela função pura `sourcesBusca(ctx)`. A intent table
+  de 4 linhas (keyword × loja) permanece intacta.
+- **Multi-marketplace.** Novo bloco `marketplaces` (`suportados` + `default`). Categorias e
+  lojas carregam seus marketplaces; o payload de salvar leva o filtro `marketplaces`. O
+  drift check ganhou a checagem `marketplaces.default ∈ suportados`.
+- **Novas transições/eventos.** `ADICIONAR_CATEGORIA`, `REMOVER_CATEGORIA`,
+  `MUDAR_MARKETPLACES` nas `transicoes`; a engine ganhou ainda `EDITAR_SALVA` (edit mode) e
+  `SALVAR` com update in-place via `editandoId` (reusa o `id` da busca).
+- **Effects novos.** `carregarCategorias` agrupa por marketplace; `listarLojasMonitoradas`
+  deriva as lojas do dropdown a partir das buscas salvas (sem endpoint novo).
+
+Ver `componentes.md` para a lista de eventos/getters e os componentes de raia.
+
 ## Arquivos-chave
 
 | Arquivo | Papel |

@@ -20,41 +20,11 @@ import {
 	gerarLabelBusca,
 	cronLabel
 } from './busca-unificada-logic.js';
-import { DEFAULTS, normalizarComissao, normalizarVendas, checarGuard, intentBusca } from './busca-config.js';
+import { DEFAULTS, normalizarComissao, normalizarVendas, intentBusca } from './busca-config.js';
+import { STATES, criarContextoInicial, guards } from './busca-engine-state.js';
 
-// ── Estados possíveis ─────────────────────────────────────────────────────
-export const STATES = { IDLE: 'idle', SEARCHING: 'searching', RESULTS: 'results', SAVING: 'saving', ERROR: 'error' };
-
-// ── Context inicial ───────────────────────────────────────────────────────
-function criarContextoInicial() {
-	return {
-		keyword: '',
-		shopIds: [],
-		shopNomes: {},
-		comissaoMin: DEFAULTS.comissaoMin,
-		vendasMin: DEFAULTS.vendasMin,
-		categorias: [],
-		categoriasDisponiveis: [],
-		fontes: { ...DEFAULTS.fontes },
-		cron: '',
-		resultados: [],
-		contagens: { curadoria: 0, quedas: 0, novos: 0, lojas: 0 },
-		dadosBrutos: { curadoria: [], quedas: [], novos: [], lojas: [], favoritos: [] },
-		buscasSalvas: [],
-		lojaResolvendo: false,
-		lojaErro: '',
-		error: null
-	};
-}
-
-// ── Guards ────────────────────────────────────────────────────────────────
-// Delegam para a config declarativa (busca-config.js). `lojaInputValida` opera
-// sobre o event, então permanece imperativo.
-export const guards = {
-	temContextoBusca: (ctx) => checarGuard('temContextoBusca', ctx),
-	lojaInputValida: (_ctx, event) => (event.value ?? '').trim().length > 0,
-	podeSalvar: (ctx) => checarGuard('podeSalvar', ctx)
-};
+// Re-export para consumidores que importavam da engine.
+export { STATES, guards };
 
 // ── Classe Engine ─────────────────────────────────────────────────────────
 export class BuscaEngine {
@@ -87,6 +57,44 @@ export class BuscaEngine {
 		return intentBusca(this.ctx);
 	}
 
+	// ── Derivados para as raias (view) ────────────────────────────────────────
+
+	/** Cards de categoria selecionada: `{ nome, marketplaces[] }[]`. */
+	get categoriaCards() {
+		return this.ctx.categorias.map((nome) => ({ nome, marketplaces: this.ctx.categoriaMeta[nome] ?? [] }));
+	}
+
+	/** Cards de loja no escopo: `{ id, nome, marketplace, origem, monitorada, cron }[]`. */
+	get lojaCards() {
+		return this.ctx.shopIds.map((id) => ({
+			id,
+			nome: this.ctx.shopNomes[id] || id,
+			...(this.ctx.shopMeta[id] ?? { marketplace: 'shopee', origem: null, monitorada: false, cron: '' })
+		}));
+	}
+
+	/** Contador da raia Filtros: fontes ativas não-default + quantitativos + categorias. */
+	get contadorFiltros() {
+		let n = this.ctx.categorias.length + this.ctx.marketplacesFiltro.length;
+		if (this.ctx.comissaoMin !== DEFAULTS.comissaoMin) n++;
+		if (this.ctx.vendasMin > 0) n++;
+		// fontes que diferem do default
+		for (const [k, v] of Object.entries(this.ctx.fontes)) {
+			if (v !== DEFAULTS.fontes[k]) n++;
+		}
+		return n;
+	}
+
+	/** Contador da raia Lojas: lojas no escopo. */
+	get contadorLojas() {
+		return this.ctx.shopIds.length;
+	}
+
+	/** Contador da raia Buscas: buscas salvas. */
+	get contadorBuscas() {
+		return this.ctx.buscasSalvas.length;
+	}
+
 	/** @type {import('./busca-engine-effects.js').Effects} */
 	#effects;
 	#debounceTimer = null;
@@ -96,31 +104,29 @@ export class BuscaEngine {
 	}
 
 	// ── API pública ─────────────────────────────────────────────────────────
+	/** Mapa event.type → handler. Mantém `send` com baixa complexidade. */
+	get #handlers() {
+		return {
+			INICIALIZAR: () => this.#inicializar(),
+			DIGITAR: (e) => this.#digitar(e),
+			ADICIONAR_LOJA: (e) => this.#adicionarLoja(e),
+			REMOVER_LOJA: (e) => this.#removerLoja(e),
+			ADICIONAR_CATEGORIA: (e) => this.#adicionarCategoria(e),
+			REMOVER_CATEGORIA: (e) => this.#removerCategoria(e),
+			MUDAR_FILTRO: (e) => this.#mudarFiltro(e),
+			MUDAR_FONTES: (e) => this.#mudarFontes(e),
+			MUDAR_MARKETPLACES: (e) => this.#mudarMarketplaces(e),
+			SALVAR: () => this.#salvar(),
+			CARREGAR_SALVA: (e) => this.#carregarSalva(e),
+			EDITAR_SALVA: (e) => this.#editarSalva(e),
+			REMOVER_SALVA: (e) => this.#removerSalva(e),
+			RETRY: () => this.#executarBusca(),
+			LIMPAR: () => this.#limpar()
+		};
+	}
+
 	async send(event) {
-		switch (event.type) {
-			case 'INICIALIZAR':
-				return this.#inicializar();
-			case 'DIGITAR':
-				return this.#digitar(event);
-			case 'ADICIONAR_LOJA':
-				return this.#adicionarLoja(event);
-			case 'REMOVER_LOJA':
-				return this.#removerLoja(event);
-			case 'MUDAR_FILTRO':
-				return this.#mudarFiltro(event);
-			case 'MUDAR_FONTES':
-				return this.#mudarFontes(event);
-			case 'SALVAR':
-				return this.#salvar();
-			case 'CARREGAR_SALVA':
-				return this.#carregarSalva(event);
-			case 'REMOVER_SALVA':
-				return this.#removerSalva(event);
-			case 'RETRY':
-				return this.#executarBusca();
-			case 'LIMPAR':
-				return this.#limpar();
-		}
+		return this.#handlers[event.type]?.(event);
 	}
 
 	// ── Transições privadas ─────────────────────────────────────────────────
@@ -138,6 +144,9 @@ export class BuscaEngine {
 			// Sincroniza o store externo para que executarBusca veja as buscas com lojas
 			await this.#effects.sincronizarStoreExterno();
 
+			// Lojas monitoradas para o autocomplete da raia Lojas (deriva das buscas salvas)
+			this.ctx.lojasDisponiveis = this.#effects.listarLojasMonitoradas?.() ?? [];
+
 			await this.#executarBusca();
 		} catch (e) {
 			this.ctx.error = e?.message ?? 'Falha ao inicializar';
@@ -150,15 +159,44 @@ export class BuscaEngine {
 		this.#debounce();
 	}
 
+	/** Loja já-monitorada escolhida no dropdown: adiciona direto, sem resolver. */
+	#adicionarLojaMonitorada(loja) {
+		const { id, nome, marketplace, origem, monitorada, cron } = loja;
+		if (this.ctx.shopIds.includes(id)) return;
+		this.ctx.shopIds = [...this.ctx.shopIds, id];
+		this.ctx.shopNomes = { ...this.ctx.shopNomes, [id]: nome };
+		this.ctx.shopMeta = {
+			...this.ctx.shopMeta,
+			[id]: {
+				marketplace: marketplace ?? 'shopee',
+				origem: origem ?? null,
+				monitorada: Boolean(monitorada),
+				cron: cron ?? ''
+			}
+		};
+		return this.#executarBusca();
+	}
+
 	async #adicionarLoja(event) {
+		if (event.loja?.id) return this.#adicionarLojaMonitorada(event.loja);
 		if (!guards.lojaInputValida(this.ctx, event)) return;
 		this.ctx.lojaResolvendo = true;
 		this.ctx.lojaErro = '';
 		try {
 			const r = await this.#effects.resolverLoja(event.value);
 			if (r.shop_ids?.length) {
+				const id = r.shop_ids[0];
 				this.ctx.shopIds = [...this.ctx.shopIds, ...r.shop_ids];
-				this.ctx.shopNomes = { ...this.ctx.shopNomes, [r.shop_ids[0]]: r.keyword };
+				this.ctx.shopNomes = { ...this.ctx.shopNomes, [id]: r.keyword };
+				this.ctx.shopMeta = {
+					...this.ctx.shopMeta,
+					[id]: {
+						marketplace: r.marketplace ?? event.marketplace ?? 'shopee',
+						origem: r.origem ?? r.origem_padrao ?? event.origem ?? null,
+						monitorada: Boolean(r.cron),
+						cron: r.cron ?? ''
+					}
+				};
 			}
 			this.ctx.lojaResolvendo = false;
 			// Busca imediata (sem debounce) com keyword + nova loja
@@ -174,6 +212,34 @@ export class BuscaEngine {
 		const nomes = { ...this.ctx.shopNomes };
 		delete nomes[event.shopId];
 		this.ctx.shopNomes = nomes;
+		const meta = { ...this.ctx.shopMeta };
+		delete meta[event.shopId];
+		this.ctx.shopMeta = meta;
+		this.#debounce();
+	}
+
+	#adicionarCategoria(event) {
+		const nome = event.nome ?? event.categoria?.nome;
+		if (!nome || this.ctx.categorias.includes(nome)) return;
+		this.ctx.categorias = [...this.ctx.categorias, nome];
+		if (event.categoria?.marketplaces) {
+			this.ctx.categoriaMeta = { ...this.ctx.categoriaMeta, [nome]: event.categoria.marketplaces };
+		}
+		// Categoria é contexto de busca → refetch imediato (ver rules.transicoes)
+		this.#executarBusca();
+	}
+
+	#removerCategoria(event) {
+		const nome = event.nome;
+		this.ctx.categorias = this.ctx.categorias.filter((c) => c !== nome);
+		const meta = { ...this.ctx.categoriaMeta };
+		delete meta[nome];
+		this.ctx.categoriaMeta = meta;
+		this.#debounce();
+	}
+
+	#mudarMarketplaces(event) {
+		this.ctx.marketplacesFiltro = event.marketplaces ?? [];
 		this.#debounce();
 	}
 
@@ -196,6 +262,8 @@ export class BuscaEngine {
 		this.status = STATES.SAVING;
 		try {
 			const payload = configToPayload({
+				// editandoId presente → sincronizarBusca faz update in-place (mesmo id)
+				id: this.ctx.editandoId ?? undefined,
 				keywords: this.ctx.keyword ? [this.ctx.keyword] : [],
 				shopIds: this.ctx.shopIds,
 				comissaoMin: this.ctx.comissaoMin,
@@ -203,7 +271,7 @@ export class BuscaEngine {
 				categorias: this.ctx.categorias,
 				fontes: this.fontesAtivas,
 				cron: this.ctx.cron,
-				marketplaces: 'shopee'
+				marketplaces: this.ctx.marketplacesFiltro.length ? this.ctx.marketplacesFiltro : 'shopee'
 			});
 			await this.#effects.salvarBusca(payload);
 			// Sincroniza store externo (para que executarBusca veja a nova loja)
@@ -211,6 +279,7 @@ export class BuscaEngine {
 			// Recarregar lista de buscas salvas
 			const buscas = await this.#effects.carregarBuscasSalvas();
 			this.ctx.buscasSalvas = (buscas ?? []).map(payloadToConfig);
+			this.ctx.editandoId = null;
 			this.salvarAberto = false;
 			this.status = STATES.RESULTS;
 		} catch (e) {
@@ -220,14 +289,29 @@ export class BuscaEngine {
 	}
 
 	#carregarSalva(event) {
-		const config = event.config;
-		// Restaura TUDO
+		this.#restaurarConfig(event.config);
+		// Carregar (rodar) não entra em edit mode — salvar criaria uma nova
+		this.ctx.editandoId = null;
+		this.#executarBusca();
+	}
+
+	/** Edit mode: restaura a config E marca o id para update in-place ao salvar. */
+	#editarSalva(event) {
+		this.#restaurarConfig(event.config);
+		this.ctx.editandoId = event.config.id ?? null;
+		this.salvarAberto = true;
+		this.#executarBusca();
+	}
+
+	/** Restaura o contexto a partir de uma config salva (compartilhado por carregar/editar). */
+	#restaurarConfig(config) {
 		this.ctx.keyword = (config.keywords ?? [])[0] ?? '';
 		this.ctx.shopIds = config.shopIds ?? [];
 		this.ctx.shopNomes = config.shopNomes ?? {};
 		this.ctx.comissaoMin = config.comissaoMin || 0.07;
 		this.ctx.vendasMin = config.vendasMin || 0;
 		this.ctx.categorias = config.categorias ?? [];
+		this.ctx.marketplacesFiltro = Array.isArray(config.marketplaces) ? config.marketplaces : [];
 		this.ctx.cron = config.cron ?? '';
 		if (config.fontes?.length) {
 			this.ctx.fontes = {
@@ -238,8 +322,6 @@ export class BuscaEngine {
 				favoritos: config.fontes.includes('favoritos')
 			};
 		}
-		// Busca imediata com contexto restaurado
-		this.#executarBusca();
 	}
 
 	async #removerSalva(event) {

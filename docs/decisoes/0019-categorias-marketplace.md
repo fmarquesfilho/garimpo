@@ -76,6 +76,11 @@ Quando Amazon for integrada:
 2. O autocomplete mostra todas unificadas com badge do marketplace
 3. Futuramente: tabela de equivalência cross-marketplace para buscas federadas
 
+**Realizado (2026-07-09):** a página Descobrir agrupa as categorias por nome e exibe os
+marketplaces a que cada uma pertence — tanto no dropdown do autocomplete quanto no card da
+categoria adicionada (`agruparCategoriasPorMarketplace`, componente `Combobox`/
+`CategoriaCard`). Ver ADR-0004 e `componentes.md`.
+
 ## Consequências
 
 - Frontend não tem mais categorias hardcoded

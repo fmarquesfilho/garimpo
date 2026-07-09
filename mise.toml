@@ -34,7 +34,12 @@ run = "go build ./..."
 
 [tasks."build:csharp"]
 description = "Build da solution C#"
-run = "dotnet build --nologo src/Garimpei.sln"
+# -m:1 + -nodeReuse:false evitam MSB4166 ("Child node exited prematurely"): sob a
+# concorrência do `prepush` (go build/test + svelte-check + prettier em paralelo), os
+# worker nodes do MSBuild com node-reuse eram estarvados e o scheduler os declarava
+# mortos. Nó único, sem reuso — build determinístico dentro do hook.
+env = { MSBUILDDISABLENODEREUSE = "1" }
+run = "dotnet build --nologo -m:1 -nodeReuse:false src/Garimpei.sln"
 
 # ── Test ──────────────────────────────────────────────────────────────────────
 
