@@ -142,6 +142,30 @@ else
   ERRORS=$((ERRORS + 1))
 fi
 
+# ── 6. Marketplaces: default ∈ suportados ─────────────────────────────────────
+
+echo ""
+echo "🔍 Verificando marketplaces..."
+
+MKT_CHECK=$(python3 -c "
+import json
+data = json.load(open('$RULES_FILE'))
+mkt = data.get('marketplaces')
+if not mkt:
+    print('MISSING: bloco marketplaces ausente')
+elif mkt['default'] not in mkt['suportados']:
+    print(f\"INVALID: default '{mkt['default']}' nao esta em suportados {mkt['suportados']}\")
+else:
+    print('OK')
+")
+
+if [[ "$MKT_CHECK" == "OK" ]]; then
+  echo -e "${GREEN}   ✓ marketplaces.default ∈ suportados${NC}"
+else
+  echo -e "${RED}   ✗ $MKT_CHECK${NC}"
+  ERRORS=$((ERRORS + 1))
+fi
+
 # ── Resultado ─────────────────────────────────────────────────────────────────
 
 echo ""

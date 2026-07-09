@@ -11,6 +11,7 @@
  */
 export function configToPayload(config) {
 	const payload = {};
+	if (config.id) payload.id = config.id;
 	const kws = (config.keywords ?? []).filter((k) => k.trim());
 	if (kws.length > 0) payload.keywords = kws;
 	if (config.shopIds?.length > 0) payload.shop_ids = config.shopIds;
@@ -89,7 +90,8 @@ export function cronLabel(cron) {
 export function gerarLabelBusca(config) {
 	const kw = (config.keywords ?? []).slice(0, 2).join(', ');
 	const lojas = config.shopIds?.length ?? 0;
-	let label = kw || '(sem keywords)';
+	const cats = config.categorias?.length ?? 0;
+	let label = kw || (cats > 0 ? `${cats} ${cats === 1 ? 'categoria' : 'categorias'}` : '(sem keywords)');
 	if (lojas > 0) label += ` + ${lojas} ${lojas === 1 ? 'loja' : 'lojas'}`;
 	return label;
 }

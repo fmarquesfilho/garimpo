@@ -1,89 +1,125 @@
 <script>
-	/** Cartão de uma busca salva. Exibe keywords, badges e ações. */
-	import { Badge, Button } from '$lib/components/ui';
+	/**
+	 * BuscaCard — cartão de uma busca salva. Dividido em seções (palavras-chave,
+	 * categorias, lojas, marketplaces) exibidas só quando presentes, mais a
+	 * informação de agendamento. Ações: rodar, editar (edit mode) e remover.
+	 *
+	 * Consome o formato de config (payloadToConfig): keywords[], categorias[],
+	 * shopIds[], shopNomes{}, marketplaces (string|string[]), cron, id.
+	 *
+	 * @prop busca — config da busca salva
+	 * @prop editando — true quando este card está em edit mode
+	 * @prop onrodar, oneditar, onremover — (busca) => void
+	 */
+	import { cronLabel, gerarLabelBusca } from '$lib/busca-engine.svelte.js';
+	import { cn } from '$lib/utils';
 
-	let {
-		busca,
-		buscaAtiva = '',
-		selecionado = false,
-		onaplicar = null,
-		onproximakw = null,
-		onremover = null,
-		onselecionar = null
-	} = $props();
+	let { busca, editando = false, onrodar = null, oneditar = null, onremover = null } = $props();
 
-	function cronLabel(cron) {
-		if (!cron) return null;
-		if (cron === '0 */8 * * *') return 'a cada 8h';
-		if (cron === '0 */12 * * *') return 'a cada 12h';
-		if (cron === '0 */6 * * *') return 'a cada 6h';
-		if (cron === '0 9 * * *') return 'diária 9h';
-		if (cron === '0 0 * * *') return 'diária 0h';
-		return cron;
-	}
+	let keywords = $derived(busca.keywords ?? []);
+	let categorias = $derived(busca.categorias ?? []);
+	let lojas = $derived((busca.shopIds ?? []).map((id) => busca.shopNomes?.[id] || id));
+	let marketplaces = $derived(
+		Array.isArray(busca.marketplaces) ? busca.marketplaces : busca.marketplaces ? [busca.marketplaces] : []
+	);
+	let titulo = $derived(gerarLabelBusca(busca));
 </script>
 
 <div
-	class="flex flex-col gap-2 rounded-md border border-border bg-card px-4 py-3"
-	class:!border-primary={selecionado}
-	class:bg-accent={selecionado}
+	class={cn(
+		'relative flex min-w-[250px] max-w-[340px] flex-1 flex-col rounded-sm border border-border bg-card px-3 py-2.5',
+		editando && '!border-primary ring-2 ring-ring/20'
+	)}
 >
-	<div class="flex items-start justify-between gap-3">
-		<div class="flex flex-1 flex-wrap gap-2">
-			{#each busca.keywords ?? [] as kw, i}
-				<button
-					type="button"
-					class="cursor-pointer rounded-full border border-border bg-muted px-3 py-1 font-[var(--ui)] font-semibold text-foreground transition-[background,border-color] duration-150 ease-linear hover:border-primary hover:bg-accent hover:text-accent-foreground motion-reduce:transition-none"
-					class:!bg-accent={buscaAtiva === kw}
-					class:!border-primary={buscaAtiva === kw}
-					class:!text-accent-foreground={buscaAtiva === kw}
-					onclick={() =>
-						onaplicar?.({ ...busca, keywords: busca.keywords.slice(i).concat(busca.keywords.slice(0, i)) })}
-					title="Aplicar filtros com '{kw}'">{kw}</button
-				>
-			{/each}
-		</div>
-		<div class="flex shrink-0 items-center gap-1">
-			{#if busca.cron && onselecionar}
-				<Button
-					variant="ghost"
-					size="sm"
-					onclick={() => onselecionar?.(busca)}
-					aria-label="Ver resultados"
-					title="Ver novidades coletadas">📊</Button
-				>
-			{/if}
-			{#if (busca.keywords?.length ?? 0) > 1}
-				<Button variant="ghost" size="sm" onclick={() => onproximakw?.(busca)} aria-label="Próxima keyword">→</Button>
-			{/if}
-			<Button variant="ghost" size="sm" onclick={() => onremover?.(busca.id)} aria-label="Remover busca">✕</Button>
-		</div>
+	<div class="absolute right-1.5 top-1.5 flex items-center gap-0.5">
+		<button
+			type="button"
+			class="rounded px-1 text-xs text-muted-foreground hover:bg-accent hover:text-primary"
+			onclick={() => oneditar?.(busca)}
+			aria-label="Editar busca"
+			title="Editar">✎</button
+		>
+		<button
+			type="button"
+			class="rounded px-1 text-sm leading-none text-muted-foreground hover:text-destructive"
+			onclick={() => onremover?.(busca)}
+			aria-label="Remover busca"
+			title="Remover">✕</button
+		>
 	</div>
-	<div class="flex flex-wrap gap-2">
-		{#if busca.fontes?.length}
-			{#each busca.fontes as f}
-				<Badge variant="default"
-					>{f === 'curadoria' ? '🔍' : f === 'quedas' ? '📉' : f === 'novos' ? '🆕' : '⭐'} {f}</Badge
-				>
-			{/each}
-		{:else}
-			<Badge>{busca.estrategia ?? 'nicho'}</Badge>
-		{/if}
+
+	<div class="flex items-center gap-1.5 pr-11 font-[var(--display)] text-base font-bold text-foreground">
+		{titulo}
 		{#if busca.cron}
-			<Badge variant="default">⏱ {cronLabel(busca.cron)}</Badge>
+			<span
+				class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
+				>⏱ {cronLabel(busca.cron)}</span
+			>
 		{/if}
-		{#if busca.categorias?.length}
-			{#each busca.categorias as cat}
-				<Badge variant="secondary">{cat}</Badge>
-			{/each}
-		{:else if busca.categoria}
-			<Badge variant="secondary">{busca.categoria}</Badge>
+	</div>
+
+	<div class="mt-2.5 flex flex-col gap-1.5 text-sm">
+		{#if keywords.length}
+			<div class="flex items-start gap-2">
+				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
+					>palavras</span
+				>
+				<span class="flex flex-wrap gap-1">
+					{#each keywords as k (k)}<span
+							class="rounded-full border border-[var(--ouro-claro)] bg-[var(--ouro-fundo)] px-2 py-0.5 text-xs font-semibold text-[var(--ouro-escuro)]"
+							>{k}</span
+						>{/each}
+				</span>
+			</div>
 		{/if}
-		{#if busca.shop_ids?.length}
-			<Badge variant="secondary">🏪 {busca.shop_ids.length} {busca.shop_ids.length === 1 ? 'loja' : 'lojas'}</Badge>
+		{#if categorias.length}
+			<div class="flex items-start gap-2">
+				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
+					>categorias</span
+				>
+				<span class="flex flex-wrap gap-1">
+					{#each categorias as c (c)}<span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
+							>{c}</span
+						>{/each}
+				</span>
+			</div>
 		{/if}
-		{#if busca.dias_janela && busca.dias_janela !== 7}
-			<Badge>janela: {busca.dias_janela}d</Badge>
+		{#if lojas.length}
+			<div class="flex items-start gap-2">
+				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
+					>lojas</span
+				>
+				<span class="flex flex-wrap gap-1">
+					{#each lojas as l (l)}<span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
+							>🏪 {l}</span
+						>{/each}
+				</span>
+			</div>
+		{/if}
+		{#if marketplaces.length}
+			<div class="flex items-start gap-2">
+				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
+					>marketplaces</span
+				>
+				<span class="flex flex-wrap gap-1">
+					{#each marketplaces as m (m)}<span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
+							>{m}</span
+						>{/each}
+				</span>
+			</div>
+		{/if}
+	</div>
+
+	<div class="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
+		{#if editando}
+			<span class="font-semibold text-[var(--ouro-escuro)]">✎ editando — altere e salve</span>
+		{:else}
+			<span>{busca.cron ? 'coleta periódica' : 'busca manual salva'}</span>
+			<button
+				type="button"
+				class="rounded border border-primary bg-[var(--ouro-fundo)] px-3 py-1 text-xs font-semibold text-[var(--ouro-escuro)] hover:bg-primary hover:text-primary-foreground"
+				onclick={() => onrodar?.(busca)}>↻ rodar</button
+			>
 		{/if}
 	</div>
 </div>

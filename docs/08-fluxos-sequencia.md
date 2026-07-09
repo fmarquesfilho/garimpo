@@ -42,6 +42,11 @@ sequenceDiagram
 **Data ownership:** Nenhum dado é armazenado neste fluxo. É uma consulta real-time
 pura (stateless). O C# API não grava no PostgreSQL nem no BigQuery.
 
+**Contexto de busca (rules v2):** o intent é resolvido por keyword × loja, mas uma busca
+**só por categorias** (sem keyword nem loja) também é válida e dispara os sources globais
+(`contextoCategorias` em `rules/busca-rules.json`) — ver ADR-0027. As categorias e lojas
+escolhidas carregam seu marketplace, e o filtro `marketplaces` acompanha o payload.
+
 **Scoring:** `Score = 0.45×norm(comissão) + 0.35×norm(EV) + 0.20×norm(rating)`
 onde EV = preço × comissão × vendas.
 
@@ -52,6 +57,70 @@ Header: `Authorization: SHA256 Credential={AppId}, Timestamp={ts}, Signature={si
 
 **Escalabilidade:** O Collector é stateless — pode escalar horizontalmente. Cada
 request é independente. Não há cache (dados sempre frescos da API).
+
+</details>
+
+---
+
+## 1.1. Configurar e Salvar/Editar Busca (raias)
+
+A página Descobrir organiza os controles em **raias** (Filtros, Lojas, Buscas). Toda
+interação passa pela `BuscaEngine` (FSM headless) via `send(event)`; a view é burra. Salvar
+persiste a configuração; **editar** (edit mode) atualiza a mesma busca in-place (via `id`),
+podendo reagendar. Ver ADR-0004 (layout) e ADR-0027 (engine/regras v2).
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuário
+    participant V as 🌐 View (BuscaUnificada)
+    participant E as ⚙️ BuscaEngine (FSM)
+    participant R as 📜 rules/busca-rules.json
+    participant A as 🔷 API C# (:8080)
+
+    Note over U,V: Raia Filtros — categoria
+    U->>V: escolhe categoria no Combobox (nome + marketplaces)
+    V->>E: send(ADICIONAR_CATEGORIA {nome, categoria})
+    E->>E: ctx.categorias += nome · ctx.categoriaMeta[nome] = marketplaces
+    E->>R: sourcesBusca(ctx) → sources globais (contexto só-categorias válido)
+    E-->>V: ctx.categoriaCards, contadorFiltros++ (refetch)
+
+    Note over U,V: Raia Lojas — escopo
+    U->>V: escolhe loja monitorada (ou "↳ resolver e adicionar" por link)
+    V->>E: send(ADICIONAR_LOJA {loja})  /  send(ADICIONAR_LOJA {value})
+    E-->>V: ctx.lojaCards (marketplace, bandeira, monitoramento), contadorLojas++
+
+    Note over U,V: Raia Buscas — salvar / editar
+    U->>V: "salvar busca atual" (+ agenda opcional)
+    V->>E: send(SALVAR)
+    E->>R: guards.podeSalvar(ctx) — aceita keyword|shopIds|categorias
+    E->>A: POST /api/buscas {keywords, shop_ids, categorias, marketplaces, cron, id?}
+    A-->>E: ok · recarrega buscas salvas
+    E-->>V: ctx.buscasSalvas → BuscaCards (seções + agenda)
+
+    U->>V: ✎ editar num card salvo
+    V->>E: send(EDITAR_SALVA {config})
+    E->>E: restaura contexto + ctx.editandoId = config.id (edit mode)
+    U->>V: altera filtros/agenda → "salvar alterações"
+    V->>E: send(SALVAR)
+    E->>A: POST /api/buscas {..., id}  → update in-place (mesma busca)
+```
+
+<details>
+<summary>📋 Detalhes técnicos</summary>
+
+**Client-side, sem backend por interação:** adicionar categoria/loja e alternar filtros só
+mudam o `ctx` e reexecutam a busca conforme as `transicoes` do JSON (imediato vs debounce).
+A rede só é tocada ao **salvar/editar** (`POST /api/buscas`) e ao **resolver loja nova**
+(`POST /api/lojas`, ver fluxo 5).
+
+**Update in-place:** `SALVAR` inclui `id` quando `ctx.editandoId` está setado (edit mode);
+`sincronizarBusca` faz upsert por `id`, então editar não gera duplicata — e reagenda a
+coleta periódica se o cron mudou.
+
+**Multi-marketplace:** categorias e lojas carregam seus marketplaces; o `BuscaCard` mostra
+a seção `marketplaces`, e o payload leva o filtro. Fontes das listas de autocomplete:
+`/api/categorias` (agrupado por marketplace) e lojas monitoradas derivadas das buscas
+salvas (sem endpoint novo).
 
 </details>
 
@@ -353,10 +422,12 @@ sequenceDiagram
   (`src/Garimpei.Api/Endpoints/`), reutilizado por `/api/lojas` (job `shop_collection`)
   e por `/api/buscas` (job `keyword_search`, buscas por palavra-chave sem loja)
 
-**UI (sessão 08/07):** o componente `BuscaUnificada` integra seleção de lojas
-(URL/ID, plural, multi-marketplace), palavras-chave e agendamento num único formulário
-na página `/` (Garimpar). A adição de loja resolve o shop_id via Collector e persiste
-na mesma busca com os filtros ativos.
+**UI (redesign em raias, sessão 09/07):** a raia **Lojas** da página Descobrir tem um
+autocomplete que lista as **lojas já monitoradas** (adição direta, sem resolver) e, quando
+o texto parece um link/ID, oferece a opção **"↳ resolver e adicionar loja"** — que dispara
+exatamente o fluxo acima (`POST /api/lojas` → `ResolveShop`). Ou seja, cadastrar loja nova
+por link continua funcionando; o dropdown só adicionou o atalho para as já monitoradas.
+Ver ADR-0004 e `componentes.md`.
 
 **Fluxo de coleta periódica (disparado pelo cron do Scheduler):**
 1. Cron trigger → `dispatchJob()` → `executeJob()`

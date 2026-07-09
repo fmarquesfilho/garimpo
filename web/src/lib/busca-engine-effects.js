@@ -8,6 +8,7 @@
 import { adicionarLoja, sincronizarBusca, listarBuscasServidor } from './api.js';
 import { buscarCategorias } from './categorias.js';
 import { carregarCuradoria, carregarOportunidades, carregarProdutosLojas } from './descobrir.js';
+import { agruparCategoriasPorMarketplace, listarLojasMonitoradas } from './descobrir-logic.js';
 
 /**
  * Cria effects concretos para produção.
@@ -29,9 +30,15 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 			if (sincronizarStore) await sincronizarStore();
 		},
 
-		/** Carrega categorias Shopee para autocomplete. */
+		/** Carrega categorias agrupadas por marketplace para autocomplete (`{ nome, marketplaces[] }[]`). */
 		async carregarCategorias() {
-			return buscarCategorias();
+			const cruas = await buscarCategorias();
+			return agruparCategoriasPorMarketplace(cruas);
+		},
+
+		/** Lista lojas monitoradas (deriva das buscas salvas) para o autocomplete da raia Lojas. */
+		listarLojasMonitoradas() {
+			return listarLojasMonitoradas(getBuscasSalvas());
 		},
 
 		/** Executa busca em todas as fontes ativas. */

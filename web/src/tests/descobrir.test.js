@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { montarResultados, encontrarLojaPorNome } from '$lib/descobrir-logic.js';
+import {
+	montarResultados,
+	encontrarLojaPorNome,
+	agruparCategoriasPorMarketplace,
+	listarLojasMonitoradas
+} from '$lib/descobrir-logic.js';
+import { sourcesBusca } from '$lib/busca-config.js';
 
 /**
  * Testes da lógica da página Descobrir.
@@ -832,5 +838,52 @@ describe('Descobrir — Empty states', () => {
 			busca: ''
 		});
 		expect(r).toHaveLength(0);
+	});
+});
+
+describe('agruparCategoriasPorMarketplace', () => {
+	it('une a mesma categoria presente em múltiplos marketplaces', () => {
+		const r = agruparCategoriasPorMarketplace([
+			{ nome: 'Beleza', marketplace: 'shopee' },
+			{ nome: 'Beleza', marketplace: 'amazon' },
+			{ nome: 'Casa', marketplace: 'shopee' }
+		]);
+		expect(r).toEqual([
+			{ nome: 'Beleza', marketplaces: ['amazon', 'shopee'] },
+			{ nome: 'Casa', marketplaces: ['shopee'] }
+		]);
+	});
+
+	it('tolera lista vazia/indefinida e strings', () => {
+		expect(agruparCategoriasPorMarketplace()).toEqual([]);
+		expect(agruparCategoriasPorMarketplace(['Pet'])).toEqual([{ nome: 'Pet', marketplaces: [] }]);
+	});
+});
+
+describe('listarLojasMonitoradas', () => {
+	it('deriva lojas das buscas salvas, dedup por id, monitorada = tem cron', () => {
+		const r = listarLojasMonitoradas([
+			{ shop_ids: ['10'], nome: 'Le Botanic', marketplaces: 'shopee', origem_padrao: '🇰🇷', cron: '0 */6 * * *' },
+			{ shop_ids: ['10', '20'], nome: 'Outra', marketplaces: 'amazon' }
+		]);
+		expect(r).toHaveLength(2);
+		expect(r.find((l) => l.id === '10')).toMatchObject({ nome: 'Le Botanic', origem: '🇰🇷', monitorada: true });
+		expect(r.find((l) => l.id === '20')).toMatchObject({ monitorada: false });
+	});
+});
+
+describe('sourcesBusca — busca só-categorias é válida', () => {
+	it('categorias sem keyword/loja cai nos sources globais', () => {
+		expect(sourcesBusca({ keyword: '', shopIds: [], categorias: ['Beleza'] })).toEqual([
+			'curadoria',
+			'quedas',
+			'novos'
+		]);
+	});
+	it('sem nenhum contexto retorna vazio', () => {
+		expect(sourcesBusca({ keyword: '', shopIds: [], categorias: [] })).toEqual([]);
+	});
+	it('keyword mantém a intent table normal', () => {
+		expect(sourcesBusca({ keyword: 'serum', shopIds: [], categorias: [] })).toEqual(['curadoria', 'quedas', 'novos']);
 	});
 });

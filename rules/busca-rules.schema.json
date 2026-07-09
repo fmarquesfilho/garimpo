@@ -18,6 +18,23 @@
         "additionalProperties": false
       }
     },
+    "contextoCategorias": {
+      "type": "object",
+      "required": ["sources"],
+      "properties": {
+        "sources": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "marketplaces": {
+      "type": "object",
+      "required": ["suportados", "default"],
+      "properties": {
+        "suportados": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "default": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "guards": {
       "type": "object",
       "additionalProperties": {

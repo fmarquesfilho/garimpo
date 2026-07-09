@@ -8,6 +8,7 @@ export { default as Input } from './Input.svelte';
 
 // Composites (Bits UI + Tailwind)
 export { default as Collapsible } from './Collapsible.svelte';
+export { default as Combobox } from './Combobox.svelte';
 export { default as Dialog } from './Dialog.svelte';
 export { default as ToggleGroup } from './ToggleGroup.svelte';
 export { default as DropdownMenu } from './DropdownMenu.svelte';

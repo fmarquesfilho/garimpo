@@ -78,6 +78,52 @@ export function montarResultados({
 }
 
 /**
+ * Agrupa a lista crua de categorias (`{ id, nome, slug, marketplace }[]` de
+ * /api/categorias) em itens de autocomplete `{ nome, marketplaces[] }`, unindo
+ * uma mesma categoria presente em mais de um marketplace.
+ * @param {Array<{nome?:string, marketplace?:string}|string>} [categorias]
+ * @returns {{nome:string, marketplaces:string[]}[]}
+ */
+export function agruparCategoriasPorMarketplace(categorias) {
+	const mapa = new Map();
+	for (const c of categorias ?? []) {
+		const obj = typeof c === 'string' ? { nome: c } : c;
+		const nome = obj.nome;
+		if (!nome) continue;
+		if (!mapa.has(nome)) mapa.set(nome, new Set());
+		if (obj.marketplace) mapa.get(nome).add(obj.marketplace);
+	}
+	return [...mapa.entries()]
+		.map(([nome, mkts]) => ({ nome, marketplaces: [...mkts].sort() }))
+		.sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+/**
+ * Deriva a lista de lojas monitoradas para o autocomplete, a partir das buscas
+ * salvas (uma busca pode conter várias lojas). Dedup por shopId.
+ * @param {any[]} buscasSalvas — registros de /api/buscas
+ * @returns {{id:string, nome:string, marketplace:string, origem:string|null, monitorada:boolean, cron:string}[]}
+ */
+export function listarLojasMonitoradas(buscasSalvas) {
+	const vistos = new Map();
+	for (const b of buscasSalvas ?? []) {
+		const ids = b.shop_ids ?? b.shopIds ?? [];
+		for (const id of ids) {
+			if (vistos.has(id)) continue;
+			vistos.set(id, {
+				id: String(id),
+				nome: b.nome || String(id),
+				marketplace: b.marketplaces || b.marketplace || 'shopee',
+				origem: b.origem_padrao ?? b.origemPadrao ?? null,
+				monitorada: Boolean(b.cron),
+				cron: b.cron ?? ''
+			});
+		}
+	}
+	return [...vistos.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+/**
  * Gera opções para o ToggleGroup de fontes com badges de contagem.
  */
 export function buildFonteOpcoes({ contagemCuradoria, contagemQuedas, contagemNovos, contagemLojas, totalFavoritos }) {

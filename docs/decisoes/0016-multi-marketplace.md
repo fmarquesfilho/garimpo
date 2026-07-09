@@ -158,8 +158,8 @@ Permite análise de variações cross-marketplace (mesmo produto em lojas difere
 
 | Mudança | Esforço | Impacto |
 |---------|---------|---------|
-| Badge de marketplace nos cards | P | Visual |
-| Seletor de marketplace na busca | M | UX |
+| Badge de marketplace nos cards | P | Visual — **feito** (categorias/lojas/buscas na página Descobrir, ver ADR-0004) |
+| Seletor de marketplace na busca | M | UX — parcial (categorias/lojas carregam marketplace; filtro `marketplaces` no payload) |
 | Onboarding com steps opcionais | M | Wizard |
 
 ### BigQuery
