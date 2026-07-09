@@ -228,6 +228,11 @@ São para validação manual local via `mise run test:e2e:*`.
 
 ### E2E contra produção (Firebase Auth real + APIs reais)
 
+> **Este é o teste mais valioso do projeto.** Roda contra `garimpei.app.br` real,
+> com auth real, banco real, APIs reais. Se o deploy quebrar QUALQUER fluxo da
+> página Garimpar, estes 15 testes detectam em 18 segundos — antes de qualquer
+> usuário reportar. São a última linha de defesa pós-deploy.
+
 Testa os mesmos cenários dos testes locais, mas sem mocks — contra o ambiente
 de produção real (`https://garimpei.app.br`). Usa um **usuário de teste dedicado**
 no Firebase Auth (email/senha), sem nenhuma brecha de segurança.

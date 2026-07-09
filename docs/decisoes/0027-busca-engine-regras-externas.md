@@ -2,6 +2,35 @@
 
 **Status:** aceite  
 **Data:** 2026-07-09  
+**Impacto:** Alto — elimina classe inteira de bugs de regressão na página principal
+
+## Por que esta é a decisão mais importante do frontend
+
+A página Garimpar é a experiência central do produto. Antes desta ADR, qualquer
+mudança em filtros, fontes, lojas ou salvamento podia quebrar o estado da UI
+silenciosamente — sem que nenhum teste detectasse. Os bugs só apareciam quando
+um usuário real clicava na combinação certa de controles.
+
+O que esta decisão muda:
+
+1. **O JSON é o contrato.** `rules/busca-rules.json` define formalmente O QUE a
+   página deve fazer. Não é documentação — é código executável que os testes leem.
+
+2. **A engine é o runtime.** `BuscaEngine` é uma FSM testável que impede estados
+   impossíveis via guards. A view é burra — não tem lógica.
+
+3. **Os testes são a prova.** 243 unit + 24 E2E locais + 15 E2E produção — todos
+   validando contra o mesmo JSON. Se alguém mudar uma regra sem atualizar o
+   frontend, **os testes quebram no mesmo minuto.**
+
+4. **E2E rodam contra produção.** Não é um ambiente de staging — são testes reais
+   contra `garimpei.app.br` com auth Firebase, APIs reais, banco real. Se o deploy
+   quebrar algo, os E2E prod detectam em 18 segundos.
+
+Sem esta decisão, o projeto acumularia bugs de regressão a cada feature nova.
+Com ela, a rede de segurança é automática e cresce com cada teste adicionado.
+
+---
 
 ## Contexto
 

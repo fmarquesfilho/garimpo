@@ -1,5 +1,32 @@
 # Sessão 09/Julho 2026 — Regras de busca como JSON externo + E2E desacoplados
 
+## Por que isso importa
+
+Esta sessão resolve um problema estrutural que existia desde o início do projeto:
+**como garantir que a UI se comporta corretamente sem depender de testes manuais
+ou de um backend rodando?**
+
+Antes:
+- Regras de decisão (intent, guards, normalização) estavam hardcoded no código JS
+- Impossível validar regras sem subir o app inteiro
+- Bugs de estado reapareciam porque não existia spec formal testável
+- Não havia como provar que o frontend respeita as regras sem testar manualmente
+- E2E dependiam de mocks ad hoc que não refletiam o comportamento real
+
+Depois:
+- **Um JSON declarativo** (`rules/busca-rules.json`) é a fonte de verdade
+- **O código importa dele** — se o JSON mudar, o código muda junto (ou quebra)
+- **Testes validam contra o JSON** — se o frontend divergir das regras, falha
+- **E2E rodam contra produção** com auth real (Firebase) em 18 segundos
+- **9 bugs foram encontrados e corrigidos** pela simples existência dos testes
+- **3 bugs de arquitetura** só foram descobertos porque os E2E forçaram o fluxo real
+
+O impacto prático: **qualquer mudança em regras, filtros, fontes ou estado da
+BuscaEngine é agora detectável automaticamente** — tanto em tempo de build (CI)
+quanto em produção (E2E prod). Nenhum bug de regressão passa silenciosamente.
+
+---
+
 ## Objetivo
 
 Externalizar as regras de decisão da BuscaEngine para um JSON declarativo
