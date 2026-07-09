@@ -26,7 +26,15 @@ const firebaseConfig = {
 let app;
 let auth;
 
-if (browser) {
+/**
+ * Modo de teste E2E local (sem Firebase, sem emulador): o harness Playwright
+ * injeta `window.__E2E_AUTH_USER__` via addInitScript ANTES do boot. Nunca é
+ * definido em produção — o app real segue pelo caminho normal do Firebase.
+ * Permite rodar os E2E localmente antes do push.
+ */
+const testeUser = browser && window.__E2E_AUTH_USER__ ? window.__E2E_AUTH_USER__ : null;
+
+if (browser && !testeUser) {
 	app = initializeApp(firebaseConfig);
 	auth = getAuth(app);
 
@@ -44,7 +52,8 @@ if (browser) {
 
 // Store reativo do usuário logado (ou null)
 function criarUserStore() {
-	const { subscribe, set } = writable(null);
+	// No modo de teste, começa já autenticado com a conta de teste injetada.
+	const { subscribe, set } = writable(testeUser);
 
 	if (browser && auth) {
 		onAuthStateChanged(auth, (user) => {
@@ -79,6 +88,7 @@ export async function logout() {
 
 /** Retorna o ID token JWT do usuário logado (para enviar ao backend). */
 export async function getIdToken() {
+	if (testeUser) return 'e2e-fake-token'; // modo de teste local (sem Firebase)
 	if (!auth?.currentUser) return null;
 	try {
 		// Timeout de 5s para evitar que token refresh pendure a UI
