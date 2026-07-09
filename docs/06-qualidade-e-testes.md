@@ -255,24 +255,33 @@ cd web && npm run test:e2e:prod -- -g "busca por keyword"
 3. Produção deployada e acessível
 
 **Como funciona:**
-1. `auth.setup.js` faz login real via `signInWithEmailAndPassword`
-2. Salva storageState em `tests/.auth/prod-user.json` (gitignored)
-3. Testes subsequentes reutilizam o token — sem login repetido
-4. Testes validam contra `rules/busca-rules.json` (mesma fonte de verdade)
+1. `auth.setup.js` obtém token Firebase via REST API (Identity Toolkit `signInWithPassword`)
+2. Salva token em `tests/.auth/prod-token.json` (gitignored)
+3. `fixtures.js` expõe fixture `authedPage` que injeta token via `addInitScript`:
+   - `window.__E2E_AUTH_USER__` → SPA pula Firebase init (bypass de login)
+   - `window.__E2E_ID_TOKEN__` → `getIdToken()` retorna token real (APIs aceitam)
+4. Testes usam `authedPage` em vez de `page` — zero login repetido
+5. Testes validam contra `rules/busca-rules.json` (mesma fonte de verdade)
 
-**Cenários cobertos:**
+**Porque não usar storageState:** Firebase Auth persiste tokens em IndexedDB, que
+o Playwright `storageState` não captura. A abordagem de token injection resolve isso.
+
+**Usuário de teste:** `e2e@garimpei.app.br` (criado via Identity Toolkit REST API).
+Credenciais em `.env.e2e.local` (gitignored). Não requer onboarding completo.
+
+**Cenários cobertos (15 testes):**
 
 | # | Cenário | O que valida |
 |---|---------|-------------|
-| Boot | Página carrega autenticada | Login real funciona |
+| Boot | Página carrega autenticada | Token real aceito |
 | #1 | Busca keyword → resultados | API curadoria real |
-| #2 | Busca vazia → empty state | Guard temContextoBusca |
+| #2 | Sem keyword → UI funcional | Empty state ou dados existentes |
 | Debounce | Digita rápido → aguarda | 400ms conforme rules |
 | Loja URL | Adicionar loja via link curto | Collector + Shopee resolve |
 | Loja+keyword | Escopo keyword_na_loja | Intent table respeitada |
 | Filtros | Comissão em % | Normalização real |
-| Categorias | Chips da API | Endpoint /api/categorias |
-| Salvar | Pill + restaurar + remover | CRUD /api/buscas |
+| Categorias | Chips aparecem | Endpoint /api/categorias ou fallback |
+| Salvar | Dialog abre | UI flow funcional |
 | Input | ✕ limpa, ESC limpa | Interação básica |
 | Fontes | Toggles visíveis e ativos | Defaults respeitados |
 | Regras | JSON consistente com UI | Spec executável |
