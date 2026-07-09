@@ -375,4 +375,26 @@ npx shadcn-svelte@latest add <component>
 | `npm run lint:js` (ESLint) | Unused vars, a11y | CI + pre-push |
 | `npm run lint:dead` (knip) | Dead code | CI + pre-push |
 | `npm run test:unit` (vitest) | Lógica de negócio | CI + pre-push |
-| `npm run test` (Playwright) | E2E com auth | CI |
+| `npm run test` (Playwright) | E2E com auth (emulador Firebase) | CI |
+| `npm run test:e2e:local` (Playwright) | E2E local sem Firebase/backend (auth bypass + API mockada) | local, pré-push |
+
+---
+
+## Página Garimpar — BuscaEngine (arquitetura)
+
+A página Garimpar (`routes/+page.svelte`) é controlada por uma máquina de estados
+*headless* (padrão MVVM/FSM), separada da view:
+
+| Arquivo | Papel |
+|--------|-------|
+| `lib/busca-engine.svelte.js` | **BuscaEngine** — FSM Svelte 5 (classe com runes). `send(event)`, guards, `ctx` reativo. Testável com `new BuscaEngine(mockEffects())`, sem DOM. |
+| `lib/busca-engine-effects.js` | **Effects** (Ports & Adapters) — chamadas de API isoladas e injetáveis. Fronteira para trocar backend de busca (Shopee → Solr/Lucene) sem tocar a engine. |
+| `lib/busca-config.js` | **Config declarativa** — defaults, normalização, guards (`requiresAny`), transições e `INTENT_TABLE` (keyword × loja). Fonte única versionada; sem lib de rules externa. |
+| `lib/busca-unificada-logic.js` | Funções puras (payload↔config, labels, resumo). |
+| `components/BuscaUnificada.svelte` | **View burra** — só despacha events e renderiza `engine.ctx`. |
+
+**Testes locais sem stack:** o harness (`tests/local/`, `playwright.local.config.js`)
+usa bypass de auth (`window.__E2E_AUTH_USER__` — ver `lib/firebase.js`) + `mockApi()`.
+
+> Estado, pendências e causas-raiz dos bugs em aberto: ver
+> `docs/legado/HANDOFF_2026-07-09_GARIMPAR_ENGINE.md`.
