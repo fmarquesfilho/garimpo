@@ -203,6 +203,8 @@ export class BuscaEngine {
 				marketplaces: 'shopee'
 			});
 			await this.#effects.salvarBusca(payload);
+			// Sincroniza store externo (para que executarBusca veja a nova loja)
+			await this.#effects.sincronizarStoreExterno();
 			// Recarregar lista de buscas salvas
 			const buscas = await this.#effects.carregarBuscasSalvas();
 			this.ctx.buscasSalvas = (buscas ?? []).map(payloadToConfig);
@@ -210,7 +212,7 @@ export class BuscaEngine {
 			this.status = STATES.RESULTS;
 		} catch (e) {
 			this.ctx.error = e?.message ?? 'Falha ao salvar';
-			this.status = STATES.RESULTS; // volta para results, não error
+			this.status = STATES.RESULTS;
 		}
 	}
 
@@ -239,6 +241,7 @@ export class BuscaEngine {
 
 	async #removerSalva(event) {
 		await this.#effects.removerBusca(event.config);
+		await this.#effects.sincronizarStoreExterno();
 		const buscas = await this.#effects.carregarBuscasSalvas();
 		this.ctx.buscasSalvas = (buscas ?? []).map(payloadToConfig);
 	}

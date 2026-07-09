@@ -14,13 +14,19 @@ import { carregarCuradoria, carregarOportunidades, carregarProdutosLojas } from 
  * @param {object} deps — dependências reativas (stores)
  * @param {() => any[]} deps.getBuscasSalvas — getter reativo de buscas do store
  * @param {() => any[]} deps.getFavoritos — getter reativo de favoritos do store
+ * @param {Function} [deps.sincronizarStore] - sync externo após salvar/remover
  */
-export function criarEffects({ getBuscasSalvas, getFavoritos }) {
+export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }) {
 	return {
 		/** Carrega buscas salvas do servidor. */
 		async carregarBuscasSalvas() {
 			const r = await listarBuscasServidor();
 			return r?.buscas ?? [];
+		},
+
+		/** Sincroniza o store externo de buscas com o servidor (para que executarBusca veja dados frescos). */
+		async sincronizarStoreExterno() {
+			if (sincronizarStore) await sincronizarStore();
 		},
 
 		/** Carrega categorias Shopee para autocomplete. */
