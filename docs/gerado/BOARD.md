@@ -13,7 +13,7 @@ T-0051
 |---|---|---|---|---|
 | T-0007 Recomendação personalizada baseada em histórico (G) | T-0002 Persistir conversões da Shopee no BigQuery (M) | T-0034 Descobrir: corrigir filtros + badge drift + remover nota mínima (M) | | T-0001 Docs: site Starlight + geradores + consolidação (G) |
 | T-0031 Compartilhamento de credenciais Shopee entre tenants (P) | T-0024 Testar publicação WhatsApp via Meta Cloud API (P) | | | T-0003 Backlog como código (schema + gen-board) (M) |
-| | T-0027 Publisher multi-tenant: tokens do tenant em vez de env vars globais (M) | | | T-0004 ScopedStore por owner_uid (multi-tenant) (G) |
+| T-0054 E2E locais: reescrever para a página Descobrir em raias (M) | T-0027 Publisher multi-tenant: tokens do tenant em vez de env vars globais (M) | | | T-0004 ScopedStore por owner_uid (multi-tenant) (G) |
 | | T-0030 Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo (M) | | | T-0005 Alertas configuráveis por usuário (M) |
 | | T-0033 Validar multi-marketplace + coupon monitoring com banco limpo (M) | | | T-0006 Integrar docs-check e docs-board na CI (P) |
 | | T-0041 UI polish: format:check no CI + dark mode audit + Lighthouse (P) | | | T-0008 Refactor: tratamento de erros idiomático + telemetria (G) |
@@ -50,7 +50,7 @@ T-0051
 ---
 
 **Métricas:**
-- 📋 backlog: 2
+- 📋 backlog: 3
 - ⏭️ next: 15
 - 🔨 doing: 1
 - 👀 review: 0
