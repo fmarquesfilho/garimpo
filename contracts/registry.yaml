@@ -44,6 +44,13 @@ services:
     name: "Frontend (Svelte)"
     runtime: cloudflare-pages
 
+  - id: rules
+    name: "Regras de Busca (JSON declarativo)"
+    runtime: static
+    path: rules/busca-rules.json
+    schema: rules/busca-rules.schema.json
+    notes: "Fonte de verdade para intent table, guards, normalização. Consumido pelo frontend em build-time e validado no CI."
+
 # ── Fronteiras (boundaries) ───────────────────────────────────────────────────
 # Cada entrada é um ponto de comunicação entre dois serviços.
 # O validador verifica que o path/method existe no código correspondente.

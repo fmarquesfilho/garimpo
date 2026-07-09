@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "intent": [
+    { "keyword": true, "shop": true, "result": "keyword_na_loja", "sources": ["curadoria", "lojas"] },
+    { "keyword": true, "shop": false, "result": "keyword_global", "sources": ["curadoria", "quedas", "novos"] },
+    { "keyword": false, "shop": true, "result": "loja_completa", "sources": ["lojas", "quedas", "novos"] },
+    { "keyword": false, "shop": false, "result": "nenhum", "sources": [] }
+  ],
+  "guards": {
+    "temContextoBusca": { "requiresAny": ["keyword", "shopIds"] },
+    "podeSalvar": { "requiresAny": ["keyword", "shopIds"] }
+  },
+  "normalize": {
+    "comissao": { "divideBy100IfGt1": true, "min": 0, "max": 1, "decimals": 4 },
+    "vendas": { "floor": true, "min": 0 }
+  },
+  "defaults": {
+    "comissaoMin": 0.07,
+    "vendasMin": 0,
+    "fontes": { "curadoria": true, "quedas": true, "novos": true, "lojas": false, "favoritos": false },
+    "debounceMs": 400,
+    "timeoutMs": 25000
+  },
+  "transicoes": {
+    "DIGITAR": { "refetch": true, "imediato": false },
+    "ADICIONAR_LOJA": { "refetch": true, "imediato": true },
+    "REMOVER_LOJA": { "refetch": true, "imediato": false },
+    "MUDAR_FILTRO": { "refetch": false, "imediato": false },
+    "MUDAR_FONTES": { "refetch": true, "imediato": false },
+    "CARREGAR_SALVA": { "refetch": true, "imediato": true }
+  }
+}

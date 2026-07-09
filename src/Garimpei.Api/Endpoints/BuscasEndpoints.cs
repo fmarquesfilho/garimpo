@@ -82,7 +82,8 @@ public static partial class EndpointExtensions
 
             // Salvar (upsert por keyword)
             var keywords = req.Keywords ?? (req.Keyword is not null ? [req.Keyword] : []);
-            var kw = string.Join(",", keywords.Where(k => !string.IsNullOrWhiteSpace(k)));
+            var keywordsArray = keywords.Where(k => !string.IsNullOrWhiteSpace(k)).ToArray();
+            var kw = string.Join(",", keywordsArray);
             if (string.IsNullOrWhiteSpace(kw))
                 return Results.BadRequest(new { error = "keyword é obrigatório" });
 
@@ -99,6 +100,9 @@ public static partial class EndpointExtensions
                 busca = new Busca
                 {
                     Keyword = kw,
+                    // Keywords[] é o filtro (usado pelo GET de shop-buscas e pelo Scheduler).
+                    // Sem isso, uma busca com loja voltava do GET como "(sem keywords)".
+                    Keywords = keywordsArray,
                     OwnerUid = "",
                     SortBy = req.SortBy ?? "relevance",
                     Limit = req.Limit ?? 50,
@@ -118,6 +122,7 @@ public static partial class EndpointExtensions
                 busca.UpdatedAt = DateTime.UtcNow;
                 busca.CronExpression = cron;
                 if (busca.Keyword != kw) busca.Keyword = kw;
+                busca.Keywords = keywordsArray;
                 if (req.ShopIds is { Length: > 0 }) busca.ShopIds = req.ShopIds;
                 if (req.ComissaoMin is not null) busca.ComissaoMin = req.ComissaoMin;
                 if (req.VendasMin is not null) busca.VendasMin = req.VendasMin;

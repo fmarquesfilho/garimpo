@@ -11,37 +11,52 @@ import { encontrarLojaPorNome } from './descobrir-logic.js';
  * Carrega produtos da curadoria (Shopee API).
  * Se o termo bate com uma loja monitorada, busca via shop_ids.
  */
-export async function carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas }) {
+// Escopo de loja: prioriza os shopIds explícitos do contexto (loja recém
+// adicionada, mesmo não salva); senão tenta casar o termo com uma loja salva.
+function resolverLojaIds(termo, shopIds, buscasComLojas) {
+	if (shopIds?.length > 0) return shopIds;
+	return encontrarLojaPorNome(termo, buscasComLojas)?.shop_ids ?? null;
+}
+
+export async function carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas, shopIds = null }) {
 	try {
 		const termo = (busca ?? '').trim();
-		const lojaMatch = encontrarLojaPorNome(termo, buscasComLojas);
+		const cat0 = categorias?.length > 0 ? categorias[0] : undefined;
+		const lojaIds = resolverLojaIds(termo, shopIds, buscasComLojas);
+		const params = buildCuradoriaParams(lojaIds, termo, comissaoMin, cat0);
 
-		let params;
-		if (lojaMatch) {
-			params = {
-				estrategia: 'nicho',
-				top: 50,
-				fonte: 'shopee-shop',
-				shopIds: lojaMatch.shop_ids.join(','),
-				semFiltro: true,
-				categoria: categorias?.length > 0 ? categorias[0] : undefined
-			};
-		} else {
-			// Se não há keyword mas há categoria, usa a categoria como keyword
-			const keywordEfetiva = termo || (categorias?.length > 0 ? categorias[0] : '');
-			params = {
-				estrategia: 'nicho',
-				top: 20,
-				keyword: keywordEfetiva || undefined,
-				comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
-				categoria: categorias?.length > 0 ? categorias[0] : undefined
-			};
-		}
 		const r = await buscarCandidatos(params);
 		return (r.candidatos ?? []).map((c) => ({ ...c, _fonte: 'curadoria' }));
-	} catch {
+	} catch (e) {
+		if (isServerError(e)) throw e;
 		return [];
 	}
+}
+
+/** Monta parâmetros de busca: com loja (escopada) ou global (keyword). */
+function buildCuradoriaParams(lojaIds, termo, comissaoMin, cat0) {
+	if (lojaIds?.length > 0) {
+		return {
+			estrategia: 'nicho',
+			top: 50,
+			fonte: 'shopee-shop',
+			shopIds: lojaIds.join(','),
+			semFiltro: true,
+			categoria: cat0
+		};
+	}
+	return {
+		estrategia: 'nicho',
+		top: 20,
+		keyword: termo || cat0 || undefined,
+		comissaoMin: comissaoMin > 0 ? comissaoMin : undefined,
+		categoria: cat0
+	};
+}
+
+/** Determina se um erro deve ser propagado ao usuário (servidor respondeu com falha). */
+function isServerError(e) {
+	return e?.status >= 400 || (e?.message ?? '').includes('HTTP');
 }
 
 /**

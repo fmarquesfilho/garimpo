@@ -15,7 +15,11 @@
 
 	let { onresultados = null, oncarregando = null, onerro = null } = $props();
 
-	const effects = criarEffects({ getBuscasSalvas: () => $buscasSalvas, getFavoritos: () => $favoritos });
+	const effects = criarEffects({
+		getBuscasSalvas: () => $buscasSalvas,
+		getFavoritos: () => $favoritos,
+		sincronizarStore: () => buscasSalvas.sincronizarDoServidor()
+	});
 	const engine = new BuscaEngine(effects);
 
 	onMount(() => engine.send({ type: 'INICIALIZAR' }));
@@ -85,7 +89,12 @@
 			<Button variant="secondary" size="sm" onclick={() => (engine.filtrosAberto = !engine.filtrosAberto)}>
 				⚙️ Filtros {#if engine.filtrosAtivos > 0 && !engine.filtrosAberto}<Badge>{engine.filtrosAtivos}</Badge>{/if}
 			</Button>
-			<Button variant="secondary" size="sm" onclick={() => (engine.salvarAberto = !engine.salvarAberto)}>💾</Button>
+			<Button
+				variant="secondary"
+				size="sm"
+				onclick={() => (engine.salvarAberto = !engine.salvarAberto)}
+				title="Salvar busca">💾 Salvar</Button
+			>
 			<Button variant="ghost" size="sm" onclick={() => (engine.colapsado = true)} aria-label="Colapsar">▲</Button>
 		</div>
 
@@ -145,7 +154,29 @@
 					/>
 				</div>
 				<div class="flex-1">
-					<TagInput bind:tags={engine.ctx.categorias} label="Categorias" placeholder="ex: cosméticos, perfumaria" />
+					<span class="text-xs font-semibold text-muted-foreground">categorias</span>
+					{#if engine.ctx.categoriasDisponiveis.length > 0}
+						<div class="mt-1 flex flex-wrap gap-1.5">
+							{#each engine.ctx.categoriasDisponiveis as cat (cat.nome ?? cat)}
+								{@const nome = cat.nome ?? cat}
+								{@const ativa = engine.ctx.categorias.includes(nome)}
+								<button
+									type="button"
+									class="rounded-full border px-2.5 py-1 text-xs font-medium transition-colors {ativa
+										? 'border-primary bg-accent text-accent-foreground'
+										: 'border-border bg-muted text-muted-foreground hover:border-primary'}"
+									onclick={() => {
+										const novas = ativa
+											? engine.ctx.categorias.filter((c) => c !== nome)
+											: [...engine.ctx.categorias, nome];
+										engine.send({ type: 'MUDAR_FILTRO', categorias: novas });
+									}}>{nome}</button
+								>
+							{/each}
+						</div>
+					{:else}
+						<TagInput bind:tags={engine.ctx.categorias} placeholder="ex: cosméticos, perfumaria" />
+					{/if}
 				</div>
 			</div>
 		{/if}

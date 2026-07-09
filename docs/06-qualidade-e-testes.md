@@ -43,7 +43,8 @@ Pushes que tocam apenas estes caminhos **não disparam CI**:
 | C# (Integração) | xUnit | 38 | Onboarding, JSON binding, dedup, publish flow |
 | Frontend (unit) | Vitest | ~174 | Componentes, stores, utils, lógica filtros, BuscaUnificada |
 | Frontend (E2E) | Playwright | ~36 | Smoke + Descobrir + Lojas/ResolveShop + Buscas agendadas |
-| Cross-stack (drift) | Shell scripts (mise) | 7 | Contracts, ownership, stale refs, schema sync |
+| Frontend (E2E local) | Playwright | 8 | BuscaEngine flows + regras externas (`busca-rules.json`) |
+| Cross-stack (drift) | Shell scripts (mise) | 8 | Contracts, ownership, stale refs, schema sync, rules |
 
 ### BDD (Behaviour-Driven Development)
 
@@ -156,6 +157,7 @@ Verifica sincronização de schemas entre os 3 datastores e os componentes:
 | Drift API | 0 rotas faltantes | `mise run check:api-contract` |
 | Drift config | 0 inconsistências | `mise run check:config-consistency` |
 | Drift schema | 0 desincronizações | `mise run check:schema-sync` |
+| Drift rules | 0 problemas no JSON de regras | `mise run check:rules-schema` |
 | Pre-push | 9/9 checks | `mise run prepush` |
 | Arquivos > 400 linhas | 0 | CI bloqueia |
 | Warnings C# | 0 | TreatWarningsAsErrors |

@@ -14,6 +14,7 @@ function mockEffects(overrides = {}) {
 		resolverLoja: vi.fn().mockResolvedValue({ shop_ids: [920292999], keyword: 'Le Botanic' }),
 		salvarBusca: vi.fn().mockResolvedValue({}),
 		removerBusca: vi.fn().mockResolvedValue({}),
+		sincronizarStoreExterno: vi.fn().mockResolvedValue(undefined),
 		...overrides
 	};
 }
