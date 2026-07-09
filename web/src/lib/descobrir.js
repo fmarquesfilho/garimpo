@@ -44,9 +44,17 @@ export async function carregarCuradoria({ busca, comissaoMin, categorias, buscas
 
 		const r = await buscarCandidatos(params);
 		return (r.candidatos ?? []).map((c) => ({ ...c, _fonte: 'curadoria' }));
-	} catch {
+	} catch (e) {
+		// Propaga erros de servidor (para que a engine mostre ao usuário)
+		// Engole apenas erros de rede/timeout (fetch failed, abort)
+		if (isServerError(e)) throw e;
 		return [];
 	}
+}
+
+/** Determina se um erro deve ser propagado ao usuário (servidor respondeu com falha). */
+function isServerError(e) {
+	return e?.status >= 400 || (e?.message ?? '').includes('HTTP');
 }
 
 /**

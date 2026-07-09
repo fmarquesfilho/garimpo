@@ -72,11 +72,9 @@ test.describe('Descobrir — Fontes de dados', () => {
 		await expect(page.getByText(/Nenhum resultado/i)).toBeVisible({ timeout: 5000 });
 	});
 
-	test.skip('#4: quedas aparecem quando há busca salva com loja', async ({ garimparPage: page }) => {
-		// SKIP: Este cenário depende do store externo $buscasSalvas ser populado ANTES
-		// de executarBusca. No E2E local, o store vem de localStorage (vazio) e o mock
-		// de /api/buscas popula engine.ctx mas não o store Svelte que effects usa.
-		// Bug real de acoplamento store↔engine — issue para corrigir.
+	test('#4: quedas aparecem quando há busca salva com loja', async ({ garimparPage: page }) => {
+		// Agora funciona: lojas do ctx participam de buscasComLojas (buildBuscasComLojas)
+		// E sincronizarStoreExterno é chamado no INICIALIZAR
 		await mockApi(page, {
 			'/api/buscas': {
 				buscas: [
@@ -112,12 +110,12 @@ test.describe('Descobrir — Fontes de dados', () => {
 		});
 		await page.goto('/');
 
-		// Clica na pill que aparece (busca salva "cosrx")
+		// Clica na pill (busca salva que o servidor retornou → store sincronizado no init)
 		const pill = page.locator('button', { hasText: 'cosrx' });
 		await expect(pill).toBeVisible({ timeout: 10000 });
 		await pill.click();
 
-		// Quedas devem aparecer após a busca executar
+		// Quedas devem aparecer (store sincronizado → buscasComLojas tem dados)
 		await expect(page.getByText('Tonico COSRX AHA BHA')).toBeVisible({ timeout: 15000 });
 	});
 });
@@ -357,49 +355,36 @@ test.describe('Descobrir — Empty states', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 test.describe('Descobrir — Erro', () => {
-	test.skip('#40: API retorna erro → UI mostra mensagem', async ({ garimparPage: page }) => {
-		// SKIP: O frontend engole erros HTTP em carregarCuradoria (catch → return [])
-		// O timeout de 25s é o único caminho para ERROR, mas não podemos esperar 25s no E2E.
-		// Coberto pelo unit test (busca-engine-cenarios.test.js: "timeout > 25s").
-		// Registra routes ANTES de mockApi (para ter prioridade)
-		await page.route('**/api/candidatos**', async (route) => {
-			await route.fulfill({ status: 500, body: 'Internal Server Error' });
-		});
-		// mockApi para as outras rotas
-		await page.route('**/api/buscas**', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({ buscas: [], total: 0 })
-			});
-		});
-		await page.route('**/api/favoritos**', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({ favoritos: [] })
-			});
-		});
-		await page.route('**/api/categorias**', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({ marketplaces: [] })
-			});
-		});
-		await page.route('**/api/alertas**', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({})
-			});
+	test('#40: API retorna erro 500 → UI mostra mensagem de erro', async ({ garimparPage: page }) => {
+		// Com o fix: carregarCuradoria propaga erros HTTP 4xx/5xx (não engole)
+		await page.route('**/api/**', async (route) => {
+			const path = new URL(route.request().url()).pathname;
+			if (path.includes('/api/candidatos')) {
+				await route.fulfill({
+					status: 500,
+					contentType: 'application/json',
+					body: JSON.stringify({ detail: 'Servidor indisponível' })
+				});
+			} else if (path.includes('/api/buscas')) {
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({ buscas: [], total: 0 })
+				});
+			} else {
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({})
+				});
+			}
 		});
 
 		await page.goto('/');
 		await page.getByPlaceholder(/Buscar produto/i).fill('serum');
 
-		// Aguarda mensagem de erro (a engine mostra ctx.error)
-		await expect(page.getByText(/falhou|erro/i)).toBeVisible({ timeout: 15000 });
+		// A engine captura o erro e mostra "😕 {mensagem}" na UI
+		await expect(page.getByText(/indisponível|falhou|Erro/i)).toBeVisible({ timeout: 15000 });
 	});
 });
 

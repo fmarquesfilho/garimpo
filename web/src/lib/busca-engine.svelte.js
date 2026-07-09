@@ -135,6 +135,9 @@ export class BuscaEngine {
 			this.ctx.buscasSalvas = (buscas ?? []).map(payloadToConfig);
 			this.ctx.categoriasDisponiveis = categorias ?? [];
 
+			// Sincroniza o store externo para que executarBusca veja as buscas com lojas
+			await this.#effects.sincronizarStoreExterno();
+
 			await this.#executarBusca();
 		} catch (e) {
 			this.ctx.error = e?.message ?? 'Falha ao inicializar';

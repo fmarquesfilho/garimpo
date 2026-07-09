@@ -216,18 +216,12 @@ test.describe('Regras externas (busca-rules.json) — E2E', () => {
 		await expect(page.getByText('⏱')).toBeVisible({ timeout: 10000 });
 	});
 
-	test.skip('toggle fonte "novos" após adicionar loja → dados de novidades aparecem', async ({
-		garimparPage: page
-	}) => {
-		// SKIP: Novidades dependem de buscasComLojas no store externo ($buscasSalvas).
-		// Adicionar loja cria ctx.shopIds mas o store externo (que effects.executarBusca usa
-		// via getBuscasSalvas()) só se atualiza após sincronizarStoreExterno + salvar.
-		// O fluxo real é: adicionar → salvar → sync → ENTÃO novidades carregam.
-		// Coberto pelo unit test (busca-engine-cenarios.test.js: "intent loja_completa").
+	test('toggle fonte "novos" após adicionar loja → dados de novidades aparecem', async ({ garimparPage: page }) => {
 		// Regra: intent loja_completa (keyword=false, shop=true) inclui "novos" nas sources
 		const lojaIntent = rules.intent.find((r) => !r.keyword && r.shop);
 		expect(lojaIntent.sources).toContain('novos');
 
+		// Fix: buildBuscasComLojas inclui lojas do ctx que não estão no store
 		await mockApi(page, {
 			'/api/lojas': {
 				id: 'loja-lb',
@@ -254,20 +248,16 @@ test.describe('Regras externas (busca-rules.json) — E2E', () => {
 
 		await page.goto('/');
 
-		// Adiciona loja (com keyword para ativar contexto → executarBusca rodará)
+		// Adiciona loja com keyword para ativar contexto
 		await page.getByPlaceholder(/Buscar produto/i).fill('creme');
 		await page.waitForTimeout(500);
 		const inputLoja = page.locator('input[placeholder*="loja"]').first();
 		await inputLoja.fill('Le Botanic');
 		await inputLoja.press('Enter');
-		await expect(page.getByText('🏪 Le Botanic')).toBeVisible({ timeout: 10000 });
+		await expect(page.getByText('🏪 Le Botanic').first()).toBeVisible({ timeout: 10000 });
 
-		// Após adicionar loja com keyword, o intent é keyword_na_loja
-		// e novos devem aparecer se disponíveis
-		// O toggle "novos" é ativo por default
+		// Novos ativo por default + loja no ctx = novidades carregam
 		expect(rules.defaults.fontes.novos).toBe(true);
-
-		// Novidades devem aparecer nos resultados (vem de /api/lojas/novidades)
 		await expect(page.getByText('Creme Hidratante Novo')).toBeVisible({ timeout: 15000 });
 	});
 });

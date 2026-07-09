@@ -37,8 +37,7 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 		/** Executa busca em todas as fontes ativas. */
 		async executarBusca(ctx) {
 			const buscasSalvas = getBuscasSalvas();
-			const buscasComLojas = (buscasSalvas ?? []).filter((b) => b.shop_ids?.length > 0);
-			const nomesLojas = Object.fromEntries(buscasComLojas.map((b) => [b.id, b.nome || b.id]));
+			const { buscasComLojas, nomesLojas } = buildBuscasComLojas(buscasSalvas, ctx);
 
 			const resultado = { curadoria: [], quedas: [], novos: [], lojas: [], favoritos: getFavoritos() ?? [] };
 			const promises = [];
@@ -99,4 +98,30 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 			return sincronizarBusca({ keywords: config.keywords }, { remover: true });
 		}
 	};
+}
+
+/**
+ * Combina buscas do store com lojas do contexto atual (que podem não ter sido salvas ainda).
+ * Garante que lojas recém-adicionadas via ADICIONAR_LOJA participem de quedas/novos/lojas.
+ */
+function buildBuscasComLojas(buscasSalvas, ctx) {
+	const buscasComLojas = (buscasSalvas ?? []).filter((b) => b.shop_ids?.length > 0);
+	const nomesLojas = Object.fromEntries(buscasComLojas.map((b) => [b.id, b.nome || b.id]));
+
+	// Lojas do ctx que ainda não estão no store (adicionou mas não salvou)
+	const lojasNoStore = new Set(buscasComLojas.flatMap((b) => b.shop_ids ?? []));
+	for (const id of ctx.shopIds ?? []) {
+		if (!lojasNoStore.has(id)) {
+			const syntheticId = `ctx-loja-${id}`;
+			buscasComLojas.push({
+				id: syntheticId,
+				shop_ids: [id],
+				nome: ctx.shopNomes?.[id] || String(id),
+				keywords: ctx.keyword ? [ctx.keyword] : []
+			});
+			nomesLojas[syntheticId] = ctx.shopNomes?.[id] || String(id);
+		}
+	}
+
+	return { buscasComLojas, nomesLojas };
 }
