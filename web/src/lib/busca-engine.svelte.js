@@ -332,6 +332,7 @@ export class BuscaEngine {
 				id: this.ctx.editandoId ?? undefined,
 				keywords: this.ctx.keyword ? [this.ctx.keyword] : [],
 				shopIds: this.ctx.shopIds,
+				shopNomes: this.ctx.shopNomes,
 				comissaoMin: this.ctx.comissaoMin,
 				vendasMin: this.ctx.vendasMin,
 				categorias: this.ctx.categorias,
