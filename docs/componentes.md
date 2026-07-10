@@ -453,34 +453,59 @@ npx shadcn-svelte@latest add <component>
 ## Página Garimpar — BuscaEngine (arquitetura)
 
 A página Garimpar (`routes/+page.svelte`) é controlada por uma máquina de estados
-*headless* (padrão MVVM/FSM), separada da view:
+*headless* (padrão MVVM/FSM), separada da view. Ver **ADR-0027** para a decisão completa.
 
 | Arquivo | Papel |
 |--------|-------|
-| `lib/busca-engine.svelte.js` | **BuscaEngine** — FSM Svelte 5 (classe com runes). `send(event)`, guards, `ctx` reativo. Testável com `new BuscaEngine(mockEffects())`, sem DOM. |
-| `lib/busca-engine-effects.js` | **Effects** (Ports & Adapters) — chamadas de API isoladas e injetáveis. Fronteira para trocar backend de busca (Shopee → Solr/Lucene) sem tocar a engine. |
-| `lib/busca-config.js` | **Config declarativa** — importa `rules/busca-rules.json` (fonte externa) e re-exporta no formato da engine. Funções puras: normalização, guards, `intentBusca`, `sourcesBusca`. |
-| `rules/busca-rules.json` | **Regras externas** (v2) — intent table, guards, normalização, defaults, transições, `marketplaces` (suportados + default) e `contextoCategorias`. Testável por E2E e validado em CI. |
+| `lib/busca-engine.svelte.js` | **BuscaEngine** — FSM Svelte 5 (classe com runes). `send(event)`, guards, `ctx` reativo, modos de interação. Testável com `new BuscaEngine(mockEffects())`, sem DOM. |
+| `lib/busca-engine-state.js` | Estado inicial (`criarContextoInicial`), guards, constantes `STATES`/`MODOS`. |
+| `lib/busca-engine-effects.js` | **Effects** (Ports & Adapters) — chamadas de API isoladas e injetáveis. `buildBuscasComLojas` combina store + ctx para oportunidades. |
+| `lib/busca-config.js` | **Config declarativa** — importa `rules/busca-rules.json` e re-exporta. Funções puras: normalização, guards, `intentBusca`, `sourcesBusca`, `proximoModo`, `fingerprint`, `buscarDuplicada`. |
+| `rules/busca-rules.json` | **Regras externas** (v3) — intent table, guards, normalização, defaults, transições, marketplaces, **modos de interação**, **detecção de duplicatas**. Testável por E2E e validado em CI. |
 | `lib/busca-unificada-logic.js` | Funções puras (payload↔config, labels, resumo). |
 | `components/BuscaUnificada.svelte` | **View burra** — 4 raias; só despacha events e renderiza `engine.ctx`/getters. |
+| `components/BuscasSalvasPanel.svelte` | Painel de buscas salvas (modos vinculada/editando, indicador visual). |
+| `components/MarketplaceFilter.svelte` | Filtro multi-marketplace (toggle de 🟠 Shopee / 🔵 ML / 🟡 Amazon). |
 | `components/{Lane,CategoriaCard,LojaCard,BuscaCard}.svelte` | Componentes de raia (casca, cards de categoria/loja/busca salva). |
 
 **Eventos da engine:** `INICIALIZAR`, `DIGITAR`, `ADICIONAR_LOJA` (por objeto monitorado ou
 por `value` a resolver), `REMOVER_LOJA`, `ADICIONAR_CATEGORIA`, `REMOVER_CATEGORIA`,
 `MUDAR_FILTRO`, `MUDAR_FONTES`, `MUDAR_MARKETPLACES`, `SALVAR` (cria ou atualiza via
-`editandoId`), `CARREGAR_SALVA`, `EDITAR_SALVA` (edit mode), `REMOVER_SALVA`, `RETRY`, `LIMPAR`.
+`editandoId`), `CARREGAR_SALVA`, `EDITAR_SALVA` (edit mode), `CANCELAR_EDICAO`,
+`REMOVER_SALVA`, `RETRY`, `LIMPAR`.
+
+**Modos de interação (v3):**
+
+| Modo | Descrição | Transita para |
+|------|-----------|---------------|
+| `explorando` | Busca livre, sem vínculo | `vinculada` (CARREGAR_SALVA), `editando` (EDITAR_SALVA) |
+| `vinculada` | Rodando busca salva; alterar desvincula | `explorando` (qualquer edição), `editando` (EDITAR_SALVA) |
+| `editando` | Editando busca in-place; salvar atualiza mesma | `explorando` (SALVAR, CANCELAR_EDICAO) |
+
+A função `proximoModo(modoAtual, tipoEvento)` lê as regras declarativas de `rules.modos`
+e resolve o próximo modo. A engine chama em cada `send()`.
+
+**Detecção de duplicatas (v3):**
+- `fingerprint(ctx)` gera hash determinístico dos campos de identidade
+- `buscarDuplicada(ctx, salvas, excluirId)` compara fingerprints
+- Guard `buscaDuplicada` bloqueia salvar se encontrar match
+- Campos: `keyword`, `shopIds`, `categorias`, `marketplacesFiltro` (normalização: sort)
 
 **Getters para a view:** `categoriaCards`, `lojaCards`, `contadorFiltros/Lojas/Buscas`,
-`fontesAtivas`, `intent`, `resumo`.
+`fontesAtivas`, `intent`, `resumo`, `modo`.
 
-**Regras notáveis (v2):**
-- Busca **só-categorias** é válida — `guards.temContextoBusca`/`podeSalvar` aceitam
-  `categorias`; `sourcesBusca` cai nos sources globais quando não há keyword nem loja.
-- **Multi-marketplace** — categorias e lojas carregam seus marketplaces; `configToPayload`
-  envia `marketplaces` (filtro) e o `BuscaCard` exibe a seção correspondente.
+**Testes (294 unit + 24 E2E local + 15 E2E prod):**
+- `busca-engine.test.js` — engine core + modos v3
+- `busca-engine-cenarios.test.js` — cenários expandidos (doc TESTES_DESCOBRIR)
+- `busca-duplicata.test.js` — fingerprint + detecção de duplicatas
+- `tests/local/` — E2E com API mockada (bypass auth)
+- `tests/prod/` — E2E contra produção (Firebase Auth real, token via REST)
 
 **Testes locais sem stack:** o harness (`tests/local/`, `playwright.local.config.js`)
 usa bypass de auth (`window.__E2E_AUTH_USER__` — ver `lib/firebase.js`) + `mockApi()`.
+
+**Testes produção:** `tests/prod/` usa token Firebase real (`__E2E_ID_TOKEN__`)
+obtido via REST API do Identity Toolkit. 15 cenários contra `garimpei.app.br`.
 
 > Estado, pendências e causas-raiz dos bugs em aberto: ver
 > `docs/legado/HANDOFF_2026-07-09_GARIMPAR_ENGINE.md`.
