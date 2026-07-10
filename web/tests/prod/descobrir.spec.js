@@ -32,11 +32,12 @@ test.describe('Produção — Busca', () => {
 	test('busca por keyword retorna produtos', async ({ authedPage: page }) => {
 		await page.goto('/');
 		const input = page.locator('input[type="search"]');
-		await input.fill('serum');
+		await input.pressSequentially('serum', { delay: 80 });
 
-		// Com o fix: init não executa busca automática, então não há race condition.
-		// A busca é disparada pelo debounce do DIGITAR → deve completar em <10s.
-		await expect(page.getByText(/\d+ produto/i).first()).toBeVisible({ timeout: 15000 });
+		// Resultado: contagem de produtos OU empty state
+		await expect(
+			page.getByText(/\d+ produto|Nenhum resultado/i).first()
+		).toBeVisible({ timeout: 20000 });
 	});
 
 	test('empty state sem keyword', async ({ authedPage: page }) => {

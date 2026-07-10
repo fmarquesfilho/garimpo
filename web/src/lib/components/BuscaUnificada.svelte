@@ -95,6 +95,7 @@
 					type="search"
 					value={engine.ctx.keyword}
 					oninput={(e) => engine.send({ type: 'DIGITAR', value: e.currentTarget.value })}
+					onchange={(e) => engine.send({ type: 'DIGITAR', value: e.currentTarget.value })}
 					placeholder="Buscar produto… (ex: sérum, perfume, batom)"
 					class="w-full rounded-sm border border-input bg-background py-2.5 pl-9 pr-4 text-base text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20"
 					onkeydown={(e) => {
