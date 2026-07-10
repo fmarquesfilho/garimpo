@@ -197,7 +197,13 @@ export class BuscaEngine {
 			// Lojas monitoradas para o autocomplete da raia Lojas (deriva das buscas salvas)
 			this.ctx.lojasDisponiveis = this.#effects.listarLojasMonitoradas?.() ?? [];
 
-			await this.#executarBusca();
+			// Só executa busca automática se há contexto explícito (keyword, loja no escopo, categoria).
+			// Sem contexto: fica em IDLE. O usuário inicia a busca ao digitar, clicar pill, ou adicionar loja.
+			if (this.ctx.keyword.trim() || this.ctx.shopIds.length > 0 || this.ctx.categorias.length > 0) {
+				await this.#executarBusca();
+			} else {
+				this.status = STATES.IDLE;
+			}
 		} catch (e) {
 			this.ctx.error = e?.message ?? 'Falha ao inicializar';
 			this.status = STATES.ERROR;

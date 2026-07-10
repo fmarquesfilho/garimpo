@@ -34,21 +34,9 @@ test.describe('Produção — Busca', () => {
 		const input = page.locator('input[type="search"]');
 		await input.fill('serum');
 
-		// Espera sair do loading
-		await expect(page.getByText('Buscando produtos')).not.toBeVisible({ timeout: 30000 });
-
-		// Captura o estado da página após a busca
-		const bodyText = await page.locator('main').textContent();
-
-		// A busca deve completar: resultados OU empty state OU erro visível
-		// Nunca deve ficar em branco (sem estado final)
-		expect(bodyText.length).toBeGreaterThan(50);
-
-		// Verifica que pelo menos um estado final apareceu
-		const hasResults = bodyText.includes('produto');
-		const hasEmpty = bodyText.includes('Nenhum resultado');
-		const hasError = bodyText.includes('😕') || bodyText.includes('demorou') || bodyText.includes('Erro');
-		expect(hasResults || hasEmpty || hasError).toBe(true);
+		// Com o fix: init não executa busca automática, então não há race condition.
+		// A busca é disparada pelo debounce do DIGITAR → deve completar em <10s.
+		await expect(page.getByText(/\d+ produto/i).first()).toBeVisible({ timeout: 15000 });
 	});
 
 	test('empty state sem keyword', async ({ authedPage: page }) => {
