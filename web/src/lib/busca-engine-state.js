@@ -3,10 +3,13 @@
  * principal (`busca-engine.svelte.js`) enxuto. São dados/funções puras, sem runes.
  */
 
-import { DEFAULTS, checarGuard } from './busca-config.js';
+import { DEFAULTS, checarGuard, buscarDuplicada } from './busca-config.js';
 
-// ── Estados possíveis ─────────────────────────────────────────────────────
+// ── Estados possíveis (ciclo de rede) ─────────────────────────────────────
 export const STATES = { IDLE: 'idle', SEARCHING: 'searching', RESULTS: 'results', SAVING: 'saving', ERROR: 'error' };
+
+// ── Modos de interação (relação com buscas salvas) ────────────────────────
+export const MODOS = { EXPLORANDO: 'explorando', VINCULADA: 'vinculada', EDITANDO: 'editando' };
 
 // ── Context inicial ───────────────────────────────────────────────────────
 export function criarContextoInicial() {
@@ -23,6 +26,9 @@ export function criarContextoInicial() {
 		shopMeta: {}, // id → { marketplace, origem, monitorada, cron } (para os cards de loja)
 		marketplacesFiltro: [], // marketplaces em que a busca é escopada (vazio = todos)
 		editandoId: null, // id da busca salva em edição (edit mode)
+		buscaSelecionadaId: null, // id da busca salva vinculada (modo vinculada/editando)
+		modo: DEFAULTS.modo, // 'explorando' | 'vinculada' | 'editando'
+		erroDuplicata: null, // mensagem de erro de busca duplicada ao salvar
 		fontes: { ...DEFAULTS.fontes },
 		cron: '',
 		resultados: [],
@@ -41,5 +47,13 @@ export function criarContextoInicial() {
 export const guards = {
 	temContextoBusca: (ctx) => checarGuard('temContextoBusca', ctx),
 	lojaInputValida: (_ctx, event) => (event.value ?? '').trim().length > 0,
-	podeSalvar: (ctx) => checarGuard('podeSalvar', ctx)
+	podeSalvar: (ctx) => checarGuard('podeSalvar', ctx),
+
+	/**
+	 * Verifica se já existe uma busca salva com os mesmos parâmetros de identidade.
+	 * Retorna a busca duplicada (ou null).
+	 * @param {object} ctx — contexto atual
+	 * @returns {object|null}
+	 */
+	buscaDuplicada: (ctx) => buscarDuplicada(ctx, ctx.buscasSalvas, ctx.editandoId)
 };

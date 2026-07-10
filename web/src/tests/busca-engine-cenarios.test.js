@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { BuscaEngine, STATES } from '$lib/busca-engine.svelte.js';
+import { BuscaEngine, STATES, MODOS } from '$lib/busca-engine.svelte.js';
 import { DEFAULTS } from '$lib/busca-config.js';
 import rules from '../../../rules/busca-rules.json';
 
@@ -497,5 +497,119 @@ describe('BuscaEngine — Filtros client-side (sem refetch)', () => {
 		// Debounce
 		await new Promise((r) => setTimeout(r, DEFAULTS.debounceMs + 50));
 		expect(effects.executarBusca.mock.calls.length).toBeGreaterThan(callsBefore);
+	});
+});
+
+// ── v3: Modos em cenários reais ──────────────────────────────────────────────
+
+describe('BuscaEngine — Cenários v3: modos de interação', () => {
+	it('carregar salva → alterar keyword → deseleciona automaticamente', async () => {
+		const effects = mockEffects();
+		const engine = new BuscaEngine(effects);
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [123], shopNomes: { 123: 'Loja X' }, fontes: ['curadoria'] };
+
+		await engine.send({ type: 'CARREGAR_SALVA', config });
+		expect(engine.modo).toBe(MODOS.VINCULADA);
+		expect(engine.ctx.keyword).toBe('serum');
+
+		// Alterar keyword desvincula
+		await engine.send({ type: 'DIGITAR', value: 'serum anti-aging' });
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+		expect(engine.ctx.buscaSelecionadaId).toBeNull();
+		expect(engine.ctx.keyword).toBe('serum anti-aging');
+	});
+
+	it('editar salva → alterar loja → modo permanece editando (não desvincula)', async () => {
+		const effects = mockEffects();
+		const engine = new BuscaEngine(effects);
+
+		await engine.send({ type: 'EDITAR_SALVA', config: { id: 'b1', keywords: ['serum'], shopIds: [] } });
+		expect(engine.modo).toBe(MODOS.EDITANDO);
+
+		// Em edit mode, alterar parâmetros NÃO desvincula (o usuário está editando)
+		// O modo `editando` não tem `desvinculaEm` no JSON de regras
+		await engine.send({ type: 'ADICIONAR_LOJA', value: 'lebotanic' });
+		expect(engine.modo).toBe(MODOS.EDITANDO);
+		expect(engine.ctx.editandoId).toBe('b1');
+	});
+
+	it('carregar busca A → carregar busca B → troca o vínculo', async () => {
+		const effects = mockEffects();
+		const engine = new BuscaEngine(effects);
+
+		await engine.send({ type: 'CARREGAR_SALVA', config: { id: 'b1', keywords: ['serum'], shopIds: [] } });
+		expect(engine.ctx.buscaSelecionadaId).toBe('b1');
+
+		await engine.send({ type: 'CARREGAR_SALVA', config: { id: 'b2', keywords: ['retinol'], shopIds: [] } });
+		expect(engine.modo).toBe(MODOS.VINCULADA);
+		expect(engine.ctx.buscaSelecionadaId).toBe('b2');
+		expect(engine.ctx.keyword).toBe('retinol');
+	});
+});
+
+// ── v3: Marketplace filter ──────────────────────────────────────────────────
+
+describe('BuscaEngine — Cenários v3: marketplace filter', () => {
+	it('MUDAR_MARKETPLACES atualiza a lista de marketplaces no contexto', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		await engine.send({ type: 'MUDAR_MARKETPLACES', marketplaces: ['shopee', 'amazon'] });
+		expect(engine.ctx.marketplacesFiltro).toEqual(['shopee', 'amazon']);
+	});
+
+	it('MUDAR_MARKETPLACES com array vazio reseta filtro (todos)', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		engine.ctx.marketplacesFiltro = ['shopee'];
+		await engine.send({ type: 'MUDAR_MARKETPLACES', marketplaces: [] });
+		expect(engine.ctx.marketplacesFiltro).toEqual([]);
+	});
+
+	it('marketplacesFiltro é incluído no payload ao salvar', async () => {
+		const effects = mockEffects({
+			carregarBuscasSalvas: vi.fn().mockResolvedValue([])
+		});
+		const engine = new BuscaEngine(effects);
+		engine.ctx.keyword = 'serum';
+		engine.ctx.marketplacesFiltro = ['shopee', 'amazon'];
+
+		await engine.send({ type: 'SALVAR' });
+
+		expect(effects.salvarBusca).toHaveBeenCalledWith(
+			expect.objectContaining({
+				marketplaces: ['shopee', 'amazon']
+			})
+		);
+	});
+
+	it('rules v3: marketplaces tem suportados, default e icones', () => {
+		expect(rules.marketplaces.suportados).toContain('shopee');
+		expect(rules.marketplaces.suportados).toContain('mercado_livre');
+		expect(rules.marketplaces.suportados).toContain('amazon');
+		expect(rules.marketplaces.default).toBe('shopee');
+		expect(rules.marketplaces.icones).toBeDefined();
+		expect(rules.marketplaces.icones.shopee).toBe('🟠');
+	});
+
+	it('rules v3: CANCELAR_EDICAO é uma transição válida', () => {
+		expect(rules.transicoes.CANCELAR_EDICAO).toBeDefined();
+		expect(rules.transicoes.CANCELAR_EDICAO.refetch).toBe(false);
+		expect(rules.transicoes.CANCELAR_EDICAO.imediato).toBe(true);
+	});
+
+	it('rules v3: modos declaram transições e desvinculação', () => {
+		expect(rules.modos.explorando).toBeDefined();
+		expect(rules.modos.vinculada).toBeDefined();
+		expect(rules.modos.editando).toBeDefined();
+		expect(rules.modos.vinculada.desvinculaEm).toContain('DIGITAR');
+		expect(rules.modos.vinculada.desvinculaEm).toContain('MUDAR_FILTRO');
+		expect(rules.modos.editando.transicoes.SALVAR).toBe('explorando');
+		expect(rules.modos.editando.transicoes.CANCELAR_EDICAO).toBe('explorando');
+	});
+
+	it('rules v3: buscaDuplicada declara campos de identidade', () => {
+		expect(rules.buscaDuplicada).toBeDefined();
+		expect(rules.buscaDuplicada.camposIdentidade).toContain('keyword');
+		expect(rules.buscaDuplicada.camposIdentidade).toContain('shopIds');
+		expect(rules.buscaDuplicada.erroAoSalvar).toBe(true);
+		expect(rules.buscaDuplicada.feedbackReativo).toBe(true);
 	});
 });

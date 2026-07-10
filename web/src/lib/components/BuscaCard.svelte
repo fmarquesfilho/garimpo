@@ -14,7 +14,7 @@
 	import { cronLabel, gerarLabelBusca } from '$lib/busca-engine.svelte.js';
 	import { cn } from '$lib/utils';
 
-	let { busca, editando = false, onrodar = null, oneditar = null, onremover = null } = $props();
+	let { busca, editando = false, selecionada = false, onrodar = null, oneditar = null, onremover = null } = $props();
 
 	let keywords = $derived(busca.keywords ?? []);
 	let categorias = $derived(busca.categorias ?? []);
@@ -28,7 +28,8 @@
 <div
 	class={cn(
 		'relative flex min-w-[250px] max-w-[340px] flex-1 flex-col rounded-sm border border-border bg-card px-3 py-2.5',
-		editando && '!border-primary ring-2 ring-ring/20'
+		editando && '!border-primary ring-2 ring-ring/20',
+		selecionada && !editando && '!border-primary/60 bg-[var(--ouro-fundo)]'
 	)}
 >
 	<div class="absolute right-1.5 top-1.5 flex items-center gap-0.5">

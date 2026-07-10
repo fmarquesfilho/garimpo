@@ -1,14 +1,20 @@
 /**
- * BuscaEngine — Máquina de estados da página Garimpar.
+ * BuscaEngine — Máquina de estados da página Garimpar (v3).
  *
  * Classe Svelte 5 com campos $state reativos. Toda transição de estado é
  * explícita via send(event). Guards impedem estados incoerentes.
  * Effects (API calls) são injetáveis para testabilidade.
  *
+ * v3 adiciona:
+ * - Modos de interação (explorando/vinculada/editando) — FSM declarativa
+ * - Detecção reativa de busca duplicada (fingerprint)
+ * - Guard de duplicata ao salvar
+ * - Evento CANCELAR_EDICAO
+ *
  * Uso:
  *   const engine = new BuscaEngine(effects);
  *   engine.send({ type: 'DIGITAR', value: 'serum' });
- *   // engine.status, engine.ctx são reativos
+ *   // engine.status, engine.ctx, engine.modo, engine.buscaDuplicada são reativos
  */
 
 import { montarResultados } from './descobrir-logic.js';
@@ -20,11 +26,19 @@ import {
 	gerarLabelBusca,
 	cronLabel
 } from './busca-unificada-logic.js';
-import { DEFAULTS, normalizarComissao, normalizarVendas, intentBusca } from './busca-config.js';
-import { STATES, criarContextoInicial, guards } from './busca-engine-state.js';
+import {
+	DEFAULTS,
+	normalizarComissao,
+	normalizarVendas,
+	intentBusca,
+	proximoModo,
+	buscarDuplicada,
+	BUSCA_DUPLICADA
+} from './busca-config.js';
+import { STATES, MODOS, criarContextoInicial, guards } from './busca-engine-state.js';
 
 // Re-export para consumidores que importavam da engine.
-export { STATES, guards };
+export { STATES, MODOS, guards };
 
 // ── Classe Engine ─────────────────────────────────────────────────────────
 export class BuscaEngine {
@@ -36,6 +50,7 @@ export class BuscaEngine {
 	filtrosAberto = $state(false);
 	salvarAberto = $state(false);
 	colapsado = $state(false);
+	buscasPainelAberto = $state(false);
 
 	// Derivados reativos
 	get loading() {
@@ -55,6 +70,22 @@ export class BuscaEngine {
 	/** Intent de busca derivado do contexto (keyword × loja) — ver busca-config.js. */
 	get intent() {
 		return intentBusca(this.ctx);
+	}
+
+	// ── Derivados v3: modos e duplicata ───────────────────────────────────
+
+	/** Modo de interação atual: 'explorando' | 'vinculada' | 'editando'. */
+	get modo() {
+		return this.ctx.modo;
+	}
+
+	/**
+	 * Busca salva com os mesmos parâmetros de identidade que o contexto atual.
+	 * Null se não há duplicata. Usado pela view para feedback reativo.
+	 */
+	get buscaDuplicada() {
+		if (!BUSCA_DUPLICADA.feedbackReativo) return null;
+		return buscarDuplicada(this.ctx, this.ctx.buscasSalvas, this.ctx.editandoId);
 	}
 
 	// ── Derivados para as raias (view) ────────────────────────────────────────
@@ -90,7 +121,7 @@ export class BuscaEngine {
 		return this.ctx.shopIds.length;
 	}
 
-	/** Contador da raia Buscas: buscas salvas. */
+	/** Contador de buscas salvas. */
 	get contadorBuscas() {
 		return this.ctx.buscasSalvas.length;
 	}
@@ -120,12 +151,31 @@ export class BuscaEngine {
 			CARREGAR_SALVA: (e) => this.#carregarSalva(e),
 			EDITAR_SALVA: (e) => this.#editarSalva(e),
 			REMOVER_SALVA: (e) => this.#removerSalva(e),
+			CANCELAR_EDICAO: () => this.#cancelarEdicao(),
 			RETRY: () => this.#executarBusca(),
 			LIMPAR: () => this.#limpar()
 		};
 	}
 
+	/**
+	 * Despacha um evento para a engine. Antes de executar o handler,
+	 * avalia a transição de modo via regras declarativas.
+	 */
 	async send(event) {
+		// Transição de modo (declarativa, via rules)
+		const novoModo = proximoModo(this.ctx.modo, event.type);
+		if (novoModo !== this.ctx.modo) {
+			this.ctx.modo = novoModo;
+			// Ao voltar para explorando via desvinculação, limpar vínculo
+			if (novoModo === MODOS.EXPLORANDO && event.type !== 'SALVAR') {
+				this.ctx.buscaSelecionadaId = null;
+				this.ctx.editandoId = null;
+			}
+		}
+
+		// Limpar erro de duplicata a cada interação
+		this.ctx.erroDuplicata = null;
+
 		return this.#handlers[event.type]?.(event);
 	}
 
@@ -259,6 +309,16 @@ export class BuscaEngine {
 
 	async #salvar() {
 		if (!guards.podeSalvar(this.ctx)) return;
+
+		// Guard v3: detecção de busca duplicada
+		if (BUSCA_DUPLICADA.erroAoSalvar) {
+			const dup = guards.buscaDuplicada(this.ctx);
+			if (dup) {
+				this.ctx.erroDuplicata = `Já existe uma busca salva com os mesmos parâmetros: "${gerarLabelBusca(dup)}"`;
+				return;
+			}
+		}
+
 		this.status = STATES.SAVING;
 		try {
 			const payload = configToPayload({
@@ -280,6 +340,8 @@ export class BuscaEngine {
 			const buscas = await this.#effects.carregarBuscasSalvas();
 			this.ctx.buscasSalvas = (buscas ?? []).map(payloadToConfig);
 			this.ctx.editandoId = null;
+			this.ctx.buscaSelecionadaId = null;
+			this.ctx.modo = MODOS.EXPLORANDO;
 			this.salvarAberto = false;
 			this.status = STATES.RESULTS;
 		} catch (e) {
@@ -290,17 +352,29 @@ export class BuscaEngine {
 
 	#carregarSalva(event) {
 		this.#restaurarConfig(event.config);
-		// Carregar (rodar) não entra em edit mode — salvar criaria uma nova
+		// Carregar (rodar): modo vinculada, sem edit mode
+		this.ctx.buscaSelecionadaId = event.config.id ?? null;
 		this.ctx.editandoId = null;
+		// Modo já foi transicionado no send() via proximoModo()
 		this.#executarBusca();
 	}
 
 	/** Edit mode: restaura a config E marca o id para update in-place ao salvar. */
 	#editarSalva(event) {
 		this.#restaurarConfig(event.config);
+		this.ctx.buscaSelecionadaId = event.config.id ?? null;
 		this.ctx.editandoId = event.config.id ?? null;
+		// Modo já foi transicionado no send() via proximoModo()
 		this.salvarAberto = true;
 		this.#executarBusca();
+	}
+
+	/** Cancela edit mode: reseta vínculo e fecha painel salvar. */
+	#cancelarEdicao() {
+		this.ctx.editandoId = null;
+		this.ctx.buscaSelecionadaId = null;
+		// Modo já foi transicionado no send() via proximoModo()
+		this.salvarAberto = false;
 	}
 
 	/** Restaura o contexto a partir de uma config salva (compartilhado por carregar/editar). */

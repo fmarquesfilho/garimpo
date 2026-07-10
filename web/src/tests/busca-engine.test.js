@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { BuscaEngine, guards, STATES } from '$lib/busca-engine.svelte.js';
+import { BuscaEngine, guards, STATES, MODOS } from '$lib/busca-engine.svelte.js';
 
 /**
  * Testes da BuscaEngine — cenários reais reportados pelo usuário.
@@ -46,6 +46,11 @@ describe('BuscaEngine — Inicialização', () => {
 	it('começa em IDLE', () => {
 		const engine = new BuscaEngine(mockEffects());
 		expect(engine.status).toBe(STATES.IDLE);
+	});
+
+	it('começa em modo explorando', () => {
+		const engine = new BuscaEngine(mockEffects());
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
 	});
 
 	it('INICIALIZAR carrega buscas salvas e categorias', async () => {
@@ -266,3 +271,198 @@ describe('BuscaEngine — Estado', () => {
 		expect(engine.status).toBe(STATES.IDLE);
 	});
 });
+
+// ── v3: Modos de interação ──────────────────────────────────────────────────
+
+describe('BuscaEngine — Modos de interação (v3)', () => {
+	it('começa em modo explorando', () => {
+		const engine = new BuscaEngine(mockEffects());
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+	});
+
+	it('CARREGAR_SALVA transiciona para modo vinculada', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [] };
+
+		await engine.send({ type: 'CARREGAR_SALVA', config });
+
+		expect(engine.modo).toBe(MODOS.VINCULADA);
+		expect(engine.ctx.buscaSelecionadaId).toBe('b1');
+		expect(engine.ctx.editandoId).toBeNull();
+	});
+
+	it('EDITAR_SALVA transiciona para modo editando', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [] };
+
+		await engine.send({ type: 'EDITAR_SALVA', config });
+
+		expect(engine.modo).toBe(MODOS.EDITANDO);
+		expect(engine.ctx.buscaSelecionadaId).toBe('b1');
+		expect(engine.ctx.editandoId).toBe('b1');
+	});
+
+	it('alterar keyword em modo vinculada volta para explorando', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [] };
+
+		await engine.send({ type: 'CARREGAR_SALVA', config });
+		expect(engine.modo).toBe(MODOS.VINCULADA);
+
+		await engine.send({ type: 'DIGITAR', value: 'retinol' });
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+		expect(engine.ctx.buscaSelecionadaId).toBeNull();
+	});
+
+	it('ADICIONAR_LOJA em modo vinculada volta para explorando', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [] };
+
+		await engine.send({ type: 'CARREGAR_SALVA', config });
+		expect(engine.modo).toBe(MODOS.VINCULADA);
+
+		await engine.send({ type: 'ADICIONAR_LOJA', value: 'lebotanic' });
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+	});
+
+	it('MUDAR_FILTRO em modo vinculada volta para explorando', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [] };
+
+		await engine.send({ type: 'CARREGAR_SALVA', config });
+		await engine.send({ type: 'MUDAR_FILTRO', comissaoMin: 0.15 });
+
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+		expect(engine.ctx.buscaSelecionadaId).toBeNull();
+	});
+
+	it('MUDAR_MARKETPLACES em modo vinculada volta para explorando', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [] };
+
+		await engine.send({ type: 'CARREGAR_SALVA', config });
+		await engine.send({ type: 'MUDAR_MARKETPLACES', marketplaces: ['shopee'] });
+
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+	});
+
+	it('CANCELAR_EDICAO volta para explorando e reseta ids', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		const config = { id: 'b1', keywords: ['serum'], shopIds: [] };
+
+		await engine.send({ type: 'EDITAR_SALVA', config });
+		expect(engine.modo).toBe(MODOS.EDITANDO);
+
+		await engine.send({ type: 'CANCELAR_EDICAO' });
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+		expect(engine.ctx.editandoId).toBeNull();
+		expect(engine.ctx.buscaSelecionadaId).toBeNull();
+		expect(engine.salvarAberto).toBe(false);
+	});
+
+	it('CARREGAR_SALVA em modo editando transiciona para vinculada', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		await engine.send({ type: 'EDITAR_SALVA', config: { id: 'b1', keywords: ['serum'], shopIds: [] } });
+		expect(engine.modo).toBe(MODOS.EDITANDO);
+
+		await engine.send({ type: 'CARREGAR_SALVA', config: { id: 'b2', keywords: ['retinol'], shopIds: [] } });
+		expect(engine.modo).toBe(MODOS.VINCULADA);
+		expect(engine.ctx.buscaSelecionadaId).toBe('b2');
+		expect(engine.ctx.editandoId).toBeNull();
+	});
+
+	it('SALVAR em modo editando volta para explorando', async () => {
+		const effects = mockEffects({
+			carregarBuscasSalvas: vi.fn().mockResolvedValue([])
+		});
+		const engine = new BuscaEngine(effects);
+
+		await engine.send({ type: 'EDITAR_SALVA', config: { id: 'b1', keywords: ['serum'], shopIds: [] } });
+		expect(engine.modo).toBe(MODOS.EDITANDO);
+
+		engine.ctx.keyword = 'serum';
+		await engine.send({ type: 'SALVAR' });
+
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+		expect(engine.ctx.editandoId).toBeNull();
+		expect(engine.ctx.buscaSelecionadaId).toBeNull();
+	});
+
+	it('LIMPAR reseta modo para explorando', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		await engine.send({ type: 'CARREGAR_SALVA', config: { id: 'b1', keywords: ['serum'], shopIds: [] } });
+		expect(engine.modo).toBe(MODOS.VINCULADA);
+
+		await engine.send({ type: 'LIMPAR' });
+		expect(engine.modo).toBe(MODOS.EXPLORANDO);
+	});
+});
+
+// ── v3: Detecção de busca duplicada ──────────────────────────────────────────
+
+describe('BuscaEngine — Detecção de busca duplicada (v3)', () => {
+	it('buscaDuplicada retorna null quando não há duplicata', () => {
+		const engine = new BuscaEngine(mockEffects());
+		engine.ctx.keyword = 'serum';
+		engine.ctx.buscasSalvas = [{ id: 'b1', keywords: ['retinol'], shopIds: [], categorias: [] }];
+
+		expect(engine.buscaDuplicada).toBeNull();
+	});
+
+	it('buscaDuplicada retorna a busca existente quando parâmetros coincidem', () => {
+		const engine = new BuscaEngine(mockEffects());
+		engine.ctx.keyword = 'serum';
+		engine.ctx.shopIds = [];
+		engine.ctx.categorias = [];
+		engine.ctx.marketplacesFiltro = [];
+		engine.ctx.buscasSalvas = [{ id: 'b1', keywords: ['serum'], shopIds: [], categorias: [], marketplaces: 'shopee' }];
+
+		expect(engine.buscaDuplicada).not.toBeNull();
+		expect(engine.buscaDuplicada.id).toBe('b1');
+	});
+
+	it('SALVAR com busca duplicada bloqueia e seta erroDuplicata', async () => {
+		const effects = mockEffects();
+		const engine = new BuscaEngine(effects);
+
+		engine.ctx.keyword = 'serum';
+		engine.ctx.buscasSalvas = [{ id: 'b1', keywords: ['serum'], shopIds: [], categorias: [], marketplaces: 'shopee' }];
+
+		await engine.send({ type: 'SALVAR' });
+
+		expect(effects.salvarBusca).not.toHaveBeenCalled();
+		expect(engine.ctx.erroDuplicata).toContain('serum');
+	});
+
+	it('SALVAR em edit mode exclui a própria busca da verificação de duplicata', async () => {
+		const effects = mockEffects({
+			carregarBuscasSalvas: vi.fn().mockResolvedValue([{ id: 'b1', keywords: ['serum'], shop_ids: [] }])
+		});
+		const engine = new BuscaEngine(effects);
+
+		engine.ctx.keyword = 'serum';
+		engine.ctx.editandoId = 'b1';
+		engine.ctx.buscasSalvas = [{ id: 'b1', keywords: ['serum'], shopIds: [], categorias: [], marketplaces: 'shopee' }];
+
+		await engine.send({ type: 'SALVAR' });
+
+		// Deve permitir salvar (está editando a própria busca)
+		expect(effects.salvarBusca).toHaveBeenCalled();
+		expect(engine.ctx.erroDuplicata).toBeNull();
+	});
+
+	it('erroDuplicata é limpo a cada nova interação', async () => {
+		const effects = mockEffects();
+		const engine = new BuscaEngine(effects);
+
+		engine.ctx.keyword = 'serum';
+		engine.ctx.buscasSalvas = [{ id: 'b1', keywords: ['serum'], shopIds: [], categorias: [], marketplaces: 'shopee' }];
+		await engine.send({ type: 'SALVAR' });
+		expect(engine.ctx.erroDuplicata).not.toBeNull();
+
+		// Qualquer interação limpa o erro
+		await engine.send({ type: 'DIGITAR', value: 'retinol' });
+		expect(engine.ctx.erroDuplicata).toBeNull();
+	});
+});
+

@@ -1,13 +1,15 @@
 <script>
 	/**
-	 * BuscaUnificada — View da página Descobrir em raias. Renderiza estado da
+	 * BuscaUnificada — View da página Descobrir em raias (v3). Renderiza estado da
 	 * BuscaEngine e despacha events. Zero lógica de negócio — tudo na engine.
 	 *
-	 * Layout em raias (piscina):
-	 *   0. Console superior: keyword + botões de grupo (contadores) + colapsar/limpar tudo
-	 *   1. Filtros  (fontes + quantitativos em cima, categorias embaixo)
+	 * Layout v3 (separação conceitual):
+	 *   0. Console superior: keyword + botões de grupo (Filtros/Lojas) + buscas salvas inline
+	 *   1. Filtros  (fontes + quantitativos + categorias + marketplaces)
 	 *   2. Lojas    (autocomplete de monitoradas + resolver nova via link/ID)
-	 *   3. Buscas   (salvas & agendadas, com edit mode)
+	 *
+	 * Buscas salvas NÃO são uma raia irmã — são atalhos para configurações,
+	 * exibidos num painel colapsável dentro do console (BuscasSalvasPanel).
 	 */
 	import { onMount } from 'svelte';
 	import { buscasSalvas } from '$lib/buscas.js';
@@ -19,7 +21,8 @@
 	import Lane from './Lane.svelte';
 	import CategoriaCard from './CategoriaCard.svelte';
 	import LojaCard from './LojaCard.svelte';
-	import BuscaCard from './BuscaCard.svelte';
+	import MarketplaceFilter from './MarketplaceFilter.svelte';
+	import BuscasSalvasPanel from './BuscasSalvasPanel.svelte';
 	import { Button, Input, Select, Combobox } from '$lib/components/ui';
 
 	let { onresultados = null, oncarregando = null, onerro = null } = $props();
@@ -39,14 +42,15 @@
 	$effect(() => onerro?.(engine.ctx.error ? new Error(engine.ctx.error) : null));
 
 	// Estado de UI das raias (aberto/fechado) — puramente visual, mora na view
-	let lanes = $state({ filtros: false, lojas: false, buscas: false });
+	let lanes = $state({ filtros: false, lojas: false });
 	function toggleLane(nome) {
 		lanes[nome] = !lanes[nome];
 	}
 	function colapsarTudo() {
-		const algumAberto = lanes.filtros || lanes.lojas || lanes.buscas;
+		const algumAberto = lanes.filtros || lanes.lojas || engine.buscasPainelAberto;
 		const v = !algumAberto;
-		lanes = { filtros: v, lojas: v, buscas: v };
+		lanes = { filtros: v, lojas: v };
+		engine.buscasPainelAberto = v;
 	}
 
 	// ── Fontes: os toggles Novos/Quedas/Favoritos controlam essas 3 fontes.
@@ -115,14 +119,34 @@
 						>{engine.contadorLojas}</span
 					>{/if}
 			</Button>
-			<Button variant={lanes.buscas ? 'primary' : 'secondary'} size="sm" onclick={() => toggleLane('buscas')}>
-				💾 Buscas{#if engine.contadorBuscas > 0}<span
-						class="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-[var(--mono)] text-[0.7rem] font-bold text-primary-foreground"
-						>{engine.contadorBuscas}</span
-					>{/if}
-			</Button>
+
+			<!-- Buscas salvas: botão separado (não é um filtro) -->
+			<span class="mx-0.5 hidden self-stretch border-l border-border sm:block"></span>
+			<button
+				type="button"
+				class="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors
+					{engine.buscasPainelAberto
+						? 'border border-primary bg-[var(--ouro-fundo)] font-semibold text-[var(--ouro-escuro)]'
+						: 'border border-border text-muted-foreground hover:border-primary hover:text-foreground'}"
+				onclick={() => (engine.buscasPainelAberto = !engine.buscasPainelAberto)}
+			>
+				💾 {engine.contadorBuscas} {engine.contadorBuscas === 1 ? 'salva' : 'salvas'}
+				<span class="text-xs leading-none">{engine.buscasPainelAberto ? '▴' : '▾'}</span>
+			</button>
 
 			<span class="flex-1"></span>
+
+			<!-- Indicador de modo (sutil) -->
+			{#if engine.modo === 'vinculada'}
+				<span class="rounded-full border border-primary/40 bg-[var(--ouro-fundo)] px-2 py-0.5 text-[0.68rem] font-semibold text-[var(--ouro-escuro)]">
+					↻ busca ativa
+				</span>
+			{:else if engine.modo === 'editando'}
+				<span class="rounded-full border border-primary bg-[var(--ouro-fundo)] px-2 py-0.5 text-[0.68rem] font-bold text-[var(--ouro-escuro)]">
+					✎ editando
+				</span>
+			{/if}
+
 			<button
 				type="button"
 				class="rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -134,12 +158,15 @@
 				onclick={() => engine.send({ type: 'LIMPAR' })}>✕ limpar tudo</button
 			>
 		</div>
+
+		<!-- Painel de buscas salvas (inline, colapsável) -->
+		<BuscasSalvasPanel {engine} bind:open={engine.buscasPainelAberto} />
 	</div>
 
 	<!-- ══ Raia 1 — Filtros ══ -->
 	<Lane
 		title="Filtros"
-		tag="fontes · qtd · categorias"
+		tag="fontes · qtd · categorias · marketplaces"
 		count={engine.contadorFiltros ? `${engine.contadorFiltros} aplicados` : 'vazio'}
 		bind:open={lanes.filtros}
 	>
@@ -185,6 +212,14 @@
 					class="w-20"
 				/>
 			</div>
+		</div>
+
+		<!-- sub-raia: marketplaces -->
+		<div class="mt-2.5 rounded-sm border border-border bg-background p-3">
+			<MarketplaceFilter
+				marketplaces={engine.ctx.marketplacesFiltro}
+				onchange={(mkts) => engine.send({ type: 'MUDAR_MARKETPLACES', marketplaces: mkts })}
+			/>
 		</div>
 
 		<!-- sub-raia: categorias -->
@@ -241,7 +276,7 @@
 			placeholder="Buscar loja monitorada, ou colar link/ID para adicionar uma nova…"
 			allowFree={true}
 			isFree={pareceLoja}
-			freeLabel={(t) => `↳ resolver e adicionar loja “${t}”`}
+			freeLabel={(t) => `↳ resolver e adicionar loja "${t}"`}
 			onselect={(l) => engine.send({ type: 'ADICIONAR_LOJA', loja: l })}
 			onfree={(t) => engine.send({ type: 'ADICIONAR_LOJA', value: t })}
 		>
@@ -272,50 +307,6 @@
 		{:else}
 			<p class="mt-2 text-sm italic text-muted-foreground">
 				Nenhuma loja no escopo — a busca roda em todas as lojas monitoradas.
-			</p>
-		{/if}
-	</Lane>
-
-	<!-- ══ Raia 3 — Buscas ══ -->
-	<Lane title="Buscas" tag="salvas & agendadas" count={`${engine.contadorBuscas} salvas`} bind:open={lanes.buscas}>
-		{#snippet actions()}
-			<button
-				type="button"
-				class="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-primary"
-				onclick={() => (engine.salvarAberto = !engine.salvarAberto)}>＋ salvar busca atual</button
-			>
-		{/snippet}
-
-		{#if engine.salvarAberto}
-			<div class="mb-3 rounded-sm border border-border bg-background p-3">
-				<p class="mb-2 text-sm font-semibold text-foreground">
-					💾 {engine.ctx.editandoId ? 'Editar busca' : 'Salvar configuração atual'}
-				</p>
-				<AgendadorBusca bind:value={engine.ctx.cron} />
-				<div class="mt-2 flex justify-end gap-2">
-					<Button variant="ghost" size="sm" onclick={() => (engine.salvarAberto = false)}>Cancelar</Button>
-					<Button size="sm" onclick={() => engine.send({ type: 'SALVAR' })}
-						>{engine.ctx.editandoId ? 'Salvar alterações' : 'Salvar'}{engine.ctx.cron ? ' + agendar' : ''}</Button
-					>
-				</div>
-			</div>
-		{/if}
-
-		{#if engine.ctx.buscasSalvas.length}
-			<div class="flex flex-wrap gap-2.5">
-				{#each engine.ctx.buscasSalvas as b (b.id)}
-					<BuscaCard
-						busca={b}
-						editando={engine.ctx.editandoId === b.id}
-						onrodar={(c) => engine.send({ type: 'CARREGAR_SALVA', config: c })}
-						oneditar={(c) => engine.send({ type: 'EDITAR_SALVA', config: c })}
-						onremover={(c) => engine.send({ type: 'REMOVER_SALVA', config: c })}
-					/>
-				{/each}
-			</div>
-		{:else}
-			<p class="text-sm italic text-muted-foreground">
-				Nenhuma busca salva ainda. Configure filtros/lojas e clique em “＋ salvar busca atual”.
 			</p>
 		{/if}
 	</Lane>

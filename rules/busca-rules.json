@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "intent": [
     { "keyword": true, "shop": true, "result": "keyword_na_loja", "sources": ["curadoria", "lojas"] },
     { "keyword": true, "shop": false, "result": "keyword_global", "sources": ["curadoria", "quedas", "novos"] },
@@ -11,7 +11,55 @@
   },
   "marketplaces": {
     "suportados": ["shopee", "mercado_livre", "amazon"],
-    "default": "shopee"
+    "default": "shopee",
+    "icones": {
+      "shopee": "🟠",
+      "mercado_livre": "🔵",
+      "amazon": "🟡"
+    },
+    "filtro": {
+      "tipo": "toggle_multi",
+      "min": 0
+    }
+  },
+  "modos": {
+    "explorando": {
+      "descricao": "Busca livre, sem vínculo com busca salva",
+      "transicoes": {
+        "CARREGAR_SALVA": "vinculada",
+        "EDITAR_SALVA": "editando"
+      }
+    },
+    "vinculada": {
+      "descricao": "Rodando uma busca salva; alterar qualquer parâmetro desvincula",
+      "desvinculaEm": [
+        "DIGITAR", "ADICIONAR_LOJA", "REMOVER_LOJA",
+        "ADICIONAR_CATEGORIA", "REMOVER_CATEGORIA",
+        "MUDAR_FILTRO", "MUDAR_FONTES", "MUDAR_MARKETPLACES"
+      ],
+      "transicoes": {
+        "EDITAR_SALVA": "editando",
+        "CARREGAR_SALVA": "vinculada"
+      }
+    },
+    "editando": {
+      "descricao": "Editando busca salva in-place; salvar atualiza a mesma busca",
+      "transicoes": {
+        "SALVAR": "explorando",
+        "CANCELAR_EDICAO": "explorando",
+        "CARREGAR_SALVA": "vinculada"
+      }
+    }
+  },
+  "buscaDuplicada": {
+    "camposIdentidade": ["keyword", "shopIds", "categorias", "marketplacesFiltro"],
+    "normalizacao": {
+      "shopIds": "sort",
+      "categorias": "sort_lowercase",
+      "marketplacesFiltro": "sort"
+    },
+    "erroAoSalvar": true,
+    "feedbackReativo": true
   },
   "guards": {
     "temContextoBusca": { "requiresAny": ["keyword", "shopIds", "categorias"] },
@@ -26,7 +74,8 @@
     "vendasMin": 0,
     "fontes": { "curadoria": true, "quedas": true, "novos": true, "lojas": false, "favoritos": false },
     "debounceMs": 400,
-    "timeoutMs": 25000
+    "timeoutMs": 25000,
+    "modo": "explorando"
   },
   "transicoes": {
     "DIGITAR": { "refetch": true, "imediato": false },
@@ -37,6 +86,7 @@
     "MUDAR_FILTRO": { "refetch": false, "imediato": false },
     "MUDAR_FONTES": { "refetch": true, "imediato": false },
     "MUDAR_MARKETPLACES": { "refetch": true, "imediato": false },
-    "CARREGAR_SALVA": { "refetch": true, "imediato": true }
+    "CARREGAR_SALVA": { "refetch": true, "imediato": true },
+    "CANCELAR_EDICAO": { "refetch": false, "imediato": true }
   }
 }
