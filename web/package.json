@@ -60,6 +60,10 @@
 		"vitest-axe": "^0.1.0"
 	},
 	"dependencies": {
+		"@opentelemetry/core": "^2.9.0",
+		"@opentelemetry/instrumentation": "^0.220.0",
+		"@opentelemetry/instrumentation-fetch": "^0.220.0",
+		"@opentelemetry/sdk-trace-web": "^2.9.0",
 		"@tiptap/core": "^3.27.1",
 		"@tiptap/extension-link": "^3.27.1",
 		"@tiptap/extension-placeholder": "^3.27.1",

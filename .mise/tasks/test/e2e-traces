@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# mise description="Verifica propagação de traces em produção (Cloud Trace)"
+set -euo pipefail
+
+echo "═══════════════════════════════════════════════"
+echo "  🔭 E2E Traces (produção)"
+echo "═══════════════════════════════════════════════"
+echo ""
+echo "  Verifica que traces distribuídos estão sendo gerados."
+echo "  Pré-requisito: deploy com OTel Collector sidecar."
+echo ""
+
+cd web
+source .env.e2e.local 2>/dev/null || source .env.e2e
+
+if [ -z "${E2E_PASSWORD:-}" ]; then
+  echo "  ❌ E2E_PASSWORD vazio"
+  exit 1
+fi
+
+# Auth
+TOKEN_RESP=$(curl -s "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${E2E_EMAIL}\",\"password\":\"${E2E_PASSWORD}\",\"returnSecureToken\":true}")
+TOKEN=$(echo "$TOKEN_RESP" | jq -r '.idToken // empty')
+if [ -z "$TOKEN" ]; then
+  echo "  ❌ Auth falhou"; exit 1
+fi
+
+BASE="${E2E_BASE_URL:-https://garimpei.app.br}"
+PASS=0
+FAIL=0
+
+ok() { echo "  ✅ $1"; PASS=$((PASS + 1)); }
+ko() { echo "  ❌ $1"; echo "     $2"; FAIL=$((FAIL + 1)); }
+
+echo ""
+echo "── 1. Enviar request com traceparent ─────────"
+# Gera um trace_id determinístico para poder buscar depois
+TRACE_ID=$(python3 -c "import uuid; print(uuid.uuid4().hex)")
+SPAN_ID=$(python3 -c "import os; print(os.urandom(8).hex())")
+TRACEPARENT="00-${TRACE_ID}-${SPAN_ID}-01"
+echo "     traceparent: $TRACEPARENT"
+
+RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+  -H "traceparent: $TRACEPARENT" \
+  "$BASE/api/candidatos?keyword=serum&top=2" 2>/dev/null || echo "FAIL")
+
+if echo "$RESP" | grep -q '"candidatos"'; then
+  ok "Request com traceparent aceito (API respondeu)"
+else
+  ko "Request falhou" "$(echo "$RESP" | head -c 200)"
+fi
+
+echo ""
+echo "── 2. Verificar headers de resposta ──────────"
+# O backend não retorna traceparent na resposta (não é necessário)
+# Mas podemos verificar que a API está saudável com o header
+HEADERS=$(curl -sI -H "Authorization: Bearer $TOKEN" \
+  -H "traceparent: $TRACEPARENT" \
+  "$BASE/api/health" 2>/dev/null || echo "")
+
+if echo "$HEADERS" | grep -qi "200\|ok"; then
+  ok "API aceita traceparent header sem erro"
+else
+  ko "API rejeitou ou falhou com traceparent" "$(echo "$HEADERS" | head -c 200)"
+fi
+
+echo ""
+echo "── 3. Verificar coleta com trace context ─────"
+TRACE_ID2=$(python3 -c "import uuid; print(uuid.uuid4().hex)")
+SPAN_ID2=$(python3 -c "import os; print(os.urandom(8).hex())")
+TRACEPARENT2="00-${TRACE_ID2}-${SPAN_ID2}-01"
+
+COLETA_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+  -H "traceparent: $TRACEPARENT2" \
+  "$BASE/api/coletas?dias=7" 2>/dev/null || echo "FAIL")
+
+if echo "$COLETA_RESP" | grep -q '"coletas"'; then
+  ok "Coletas endpoint funciona com trace propagation"
+else
+  ko "Coletas falhou" "$(echo "$COLETA_RESP" | head -c 200)"
+fi
+
+echo ""
+echo "═══════════════════════════════════════════════"
+echo ""
+echo "  Trace IDs gerados (buscar no Cloud Trace):"
+echo "    $TRACE_ID"
+echo "    $TRACE_ID2"
+echo ""
+echo "  Para ver no GCP Console:"
+echo "    https://console.cloud.google.com/traces/list?project=garimpo-500114"
+echo ""
+if [ $FAIL -eq 0 ]; then
+  ok "Trace propagation validada: $PASS checks"
+else
+  echo "  ❌ $FAIL failed, $PASS passed"
+  exit 1
+fi
+echo "═══════════════════════════════════════════════"

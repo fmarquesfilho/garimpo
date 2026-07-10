@@ -19,6 +19,7 @@ import (
 	publisherpb "github.com/fmarquesfilho/garimpo/gen/go/publisher/v1"
 	schedulerpb "github.com/fmarquesfilho/garimpo/gen/go/scheduler/v1"
 	"github.com/fmarquesfilho/garimpo/internal/taskqueue"
+	garimpotel "github.com/fmarquesfilho/garimpo/internal/otel"
 )
 
 // SchedulerServer implementa scheduler.v1.SchedulerService.
@@ -48,14 +49,18 @@ type registeredJob struct {
 }
 
 func NewSchedulerServer(collectorAddr, publisherAddr string, logger *slog.Logger) (*SchedulerServer, error) {
-	// Connect to unified collector (handles both products and coupons on same port)
-	collConn, err := grpc.NewClient(collectorAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Connect to unified collector with OTel client interceptors
+	collConn, err := grpc.NewClient(collectorAddr,
+		append([]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
+			garimpotel.GRPCDialOptions()...)...)
 	if err != nil {
 		return nil, fmt.Errorf("conectar ao collector %s: %w", collectorAddr, err)
 	}
 
-	// Connect to publisher for alert delivery
-	pubConn, err := grpc.NewClient(publisherAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Connect to publisher with OTel client interceptors
+	pubConn, err := grpc.NewClient(publisherAddr,
+		append([]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
+			garimpotel.GRPCDialOptions()...)...)
 	if err != nil {
 		return nil, fmt.Errorf("conectar ao publisher %s: %w", publisherAddr, err)
 	}

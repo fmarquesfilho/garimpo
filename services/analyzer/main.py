@@ -1,5 +1,10 @@
 """Garimpei Analyzer — FastAPI service for analytics queries on BigQuery."""
 
+from otel_setup import init_otel
+
+# Initialize OTel BEFORE creating the app (instruments FastAPI globally)
+init_otel("analyzer")
+
 from fastapi import FastAPI
 
 from config import settings

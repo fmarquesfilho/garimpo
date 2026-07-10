@@ -21,6 +21,7 @@ import (
 
 	collectorpb "github.com/fmarquesfilho/garimpo/gen/go/collector/v1"
 	couponpb "github.com/fmarquesfilho/garimpo/gen/go/coupon/v1"
+	garimpotel "github.com/fmarquesfilho/garimpo/internal/otel"
 )
 
 func main() {
@@ -28,6 +29,15 @@ func main() {
 		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)
+
+	// Initialize OpenTelemetry (graceful: no-op if no collector configured)
+	ctx := context.Background()
+	otelShutdown, otelErr := garimpotel.Init(ctx, "collector")
+	if otelErr == nil {
+		logger = slog.New(garimpotel.SlogHandler(""))
+		slog.SetDefault(logger)
+		defer otelShutdown(ctx) //nolint:errcheck
+	}
 
 	// Carrega configuração
 	cfg, err := LoadConfig()
@@ -67,7 +77,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(garimpotel.GRPCServerInterceptors()...)
 
 	// Registra CollectorService (produtos) — genérico, delega por marketplace
 	collectorpb.RegisterCollectorServiceServer(srv, NewUnifiedCollectorServer(pipeline, logger))

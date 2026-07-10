@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net"
 	"os"
@@ -14,11 +15,21 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	schedulerpb "github.com/fmarquesfilho/garimpo/gen/go/scheduler/v1"
+	garimpotel "github.com/fmarquesfilho/garimpo/internal/otel"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
+
+	// Initialize OpenTelemetry
+	ctx := context.Background()
+	otelShutdown, otelErr := garimpotel.Init(ctx, "scheduler")
+	if otelErr == nil {
+		logger = slog.New(garimpotel.SlogHandler(""))
+		slog.SetDefault(logger)
+		defer otelShutdown(ctx) //nolint:errcheck
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -46,7 +57,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(garimpotel.GRPCServerInterceptors()...)
 
 	schedulerpb.RegisterSchedulerServiceServer(srv, server)
 

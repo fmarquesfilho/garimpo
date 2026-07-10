@@ -11,7 +11,7 @@ spec:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "2"
         run.googleapis.com/execution-environment: gen2
-        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","scheduler","analyzer"]}'
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","scheduler","analyzer","otel-collector"]}'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -39,6 +39,10 @@ spec:
               value: "http://localhost:50052"
             - name: AdminEmails
               value: "mandacaruestudio@gmail.com"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://localhost:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "garimpei-api"
           resources:
             limits:
               cpu: "1"
@@ -66,6 +70,12 @@ spec:
                 secretKeyRef:
                   name: SHOPEE_SECRET
                   key: latest
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://localhost:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "collector"
+            - name: GCP_PROJECT_ID
+              value: "garimpo-500114"
           resources:
             limits:
               cpu: "0.5"
@@ -86,6 +96,12 @@ spec:
                 secretKeyRef:
                   name: TELEGRAM_BOT_TOKEN
                   key: latest
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://localhost:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "publisher"
+            - name: GCP_PROJECT_ID
+              value: "garimpo-500114"
           resources:
             limits:
               cpu: "0.25"
@@ -121,6 +137,10 @@ spec:
               value: "-1003827989143"
             - name: HTTP_PORT
               value: "8054"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://localhost:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "scheduler"
           resources:
             limits:
               cpu: "0.25"
@@ -140,6 +160,10 @@ spec:
               value: garimpo
             - name: PORT
               value: "8060"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://localhost:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "analyzer"
           resources:
             limits:
               cpu: "0.5"
@@ -150,4 +174,39 @@ spec:
               port: 8060
             periodSeconds: 3
             failureThreshold: 10
+
+        - name: otel-collector
+          image: us-docker.pkg.dev/cloud-ops-agents-artifacts/cloud-run-gmp-sidecar/cloud-run-otel-collector:0.3.0
+          env:
+            - name: OTEL_COLLECTOR_CONFIG
+              value: |
+                receivers:
+                  otlp:
+                    protocols:
+                      grpc:
+                        endpoint: 0.0.0.0:4317
+                processors:
+                  batch:
+                    timeout: 5s
+                    send_batch_size: 256
+                  resourcedetection:
+                    detectors: [gcp]
+                exporters:
+                  googlecloud:
+                    project: garimpo-500114
+                service:
+                  pipelines:
+                    traces:
+                      receivers: [otlp]
+                      processors: [batch, resourcedetection]
+                      exporters: [googlecloud]
+          resources:
+            limits:
+              cpu: "0.25"
+              memory: 128Mi
+          startupProbe:
+            tcpSocket:
+              port: 4317
+            periodSeconds: 2
+            failureThreshold: 5
 # trigger deploy

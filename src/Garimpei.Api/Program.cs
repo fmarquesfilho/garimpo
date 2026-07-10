@@ -57,10 +57,11 @@ builder.Services.AddHttpClient();
 
 // OpenTelemetry distributed tracing and metrics
 builder.Services.AddOpenTelemetry()
-    .ConfigureResource(r => r.AddService("garimpei-api-v2"))
+    .ConfigureResource(r => r.AddService("garimpei-api"))
     .WithTracing(tracing => tracing
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
+        .AddGrpcClientInstrumentation()
         .AddOtlpExporter())
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
