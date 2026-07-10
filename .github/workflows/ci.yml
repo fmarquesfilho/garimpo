@@ -332,4 +332,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: "641900c067ae51982debe5c2a98ff39b"
-          command: pages deploy web/build --project-name garimpei-web
+          command: pages deploy .svelte-kit/cloudflare --project-name garimpei-web
+          workingDirectory: web
