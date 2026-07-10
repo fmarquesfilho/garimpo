@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# mise description="Busca logs de produção (Cloud Logging) com filtros — uso por agente ou humano"
+# mise usage="mise run debug:logs [--severity ERROR] [--service scheduler] [--keyword falhou] [--trace-id abc123] [--minutes 60] [--limit 20]"
+set -euo pipefail
+
+# Defaults
+SEVERITY=""
+SERVICE=""
+KEYWORD=""
+TRACE_ID=""
+MINUTES="60"
+LIMIT="20"
+
+# Parse named args
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --severity) SEVERITY="$2"; shift 2 ;;
+    --service) SERVICE="$2"; shift 2 ;;
+    --keyword) KEYWORD="$2"; shift 2 ;;
+    --trace-id) TRACE_ID="$2"; shift 2 ;;
+    --minutes) MINUTES="$2"; shift 2 ;;
+    --limit) LIMIT="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+# Auth
+cd web
+source .env.e2e.local 2>/dev/null || source .env.e2e 2>/dev/null || true
+cd - > /dev/null
+
+if [ -z "${E2E_PASSWORD:-}" ]; then
+  echo "❌ E2E_PASSWORD não configurado"
+  exit 1
+fi
+
+TOKEN=$(curl -s "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${E2E_EMAIL}\",\"password\":\"${E2E_PASSWORD}\",\"returnSecureToken\":true}" | jq -r '.idToken // empty')
+
+if [ -z "$TOKEN" ]; then
+  echo "❌ Auth falhou"
+  exit 1
+fi
+
+BASE="${E2E_BASE_URL:-https://garimpei.app.br}"
+
+# Build query params
+PARAMS="minutes=${MINUTES}&limit=${LIMIT}"
+[ -n "$SEVERITY" ] && PARAMS="${PARAMS}&severity=${SEVERITY}"
+[ -n "$SERVICE" ] && PARAMS="${PARAMS}&service=${SERVICE}"
+[ -n "$KEYWORD" ] && PARAMS="${PARAMS}&keyword=${KEYWORD}"
+[ -n "$TRACE_ID" ] && PARAMS="${PARAMS}&traceId=${TRACE_ID}"
+
+# Fetch logs
+RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE/api/admin/logs?${PARAMS}" 2>/dev/null || echo '{"error":"request failed"}')
+
+# Output structured for agent consumption
+TOTAL=$(echo "$RESP" | jq '.totalEntries // 0')
+SOURCE=$(echo "$RESP" | jq -r '.source // "unknown"')
+ERROR=$(echo "$RESP" | jq -r '.error // empty')
+
+echo "═══ Logs de Produção ═══"
+echo "Fonte: $SOURCE | Total: $TOTAL | Filtros: severity=$SEVERITY service=$SERVICE keyword=$KEYWORD"
+[ -n "$ERROR" ] && echo "⚠️  $ERROR"
+echo ""
+
+# Print entries in a parseable format
+echo "$RESP" | jq -r '.entries[]? | "\(.timestamp) [\(.severity)] [\(.service)] \(.message // "(sem msg)")"' 2>/dev/null
+
+# If there are JSON payloads with errors, show them
+echo ""
+echo "═══ Detalhes (payloads com erro) ═══"
+echo "$RESP" | jq '.entries[]? | select(.severity == "ERROR" or .severity == "CRITICAL") | {timestamp, service, message, trace, jsonPayload}' 2>/dev/null || true

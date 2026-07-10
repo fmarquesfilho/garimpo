@@ -4,7 +4,7 @@
 
 ## 🔵 Now (em andamento)
 
-- **T-0034** Descobrir: corrigir filtros + badge drift + remover nota mínima · E-001 · M
+_Nenhuma tarefa em andamento._
 
 ## 🟡 Next (próximo sprint)
 
@@ -16,7 +16,6 @@
 - **T-0041** UI polish: format:check no CI + dark mode audit + Lighthouse · qualidade · P
 - **T-0045** Encriptar credenciais do tenant (Shopee, Telegram, WhatsApp) · seguranca · M
 - **T-0046** Validar todos os 11 fluxos end-to-end em produção · qualidade · M
-- **T-0047** Observabilidade: structured logging + métricas de negócio · operacao · M
 - **T-0048** Limpeza final: código morto, warnings, deps desatualizadas · qualidade · S
 - **T-0049** Reconciliação: sincronizar buscas existentes no PG com Scheduler · backend · S
 - **T-0050** Testar envio real: Telegram + WhatsApp (Publisher end-to-end) · qualidade · S
@@ -29,7 +28,6 @@
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
-- **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
 
 ## ✅ Concluídas
 
@@ -59,6 +57,7 @@
 - **T-0028** Configurar coleta no scheduler (popular snapshots do zero) · produto · M
 - **T-0029** Deploy da nova API C# em produção (com endpoints portados) · migracao-arch · P
 - **T-0032** Migrar docs-site de Astro Starlight para Rspress · docs-migration · P
+- **T-0034** Descobrir: corrigir filtros + badge drift + remover nota mínima · E-001 · M
 - **T-0035** Pós-migração: resolver bugs de deploy e garantir funcionalidade completa · E-001 · M
 - **T-0036** Avaliar migração de scripts bash para Taskfile ou mise · E-001 · M
 - **T-0037** Biblioteca de componentes UI com Bits UI + Design Tokens · E-001 · L
@@ -68,5 +67,7 @@
 - **T-0042** Sistema de layout consistente + auditoria dark mode · E-001 · M
 - **T-0043** Fix: deploy Cloud Run não criava nova revision + binding JSON quebrado · migracao-arch · M
 - **T-0044** Testar fluxo de variação de preços end-to-end · migracao-arch · M
+- **T-0047** Observabilidade: structured logging + métricas de negócio · operacao · M
+- **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
 - **T-0056** Corrigir bugs visuais e funcionais da página Descobrir v3 · E-001 · M
 - **T-0057** Fixtures compartilhados + contract tests cross-stack · E-001 · G

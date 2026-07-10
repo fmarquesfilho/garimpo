@@ -12,16 +12,26 @@
 export function configToPayload(config) {
 	const payload = {};
 	if (config.id) payload.id = config.id;
+
 	const kws = (config.keywords ?? []).filter((k) => k.trim());
 	if (kws.length > 0) payload.keywords = kws;
-	if (config.shopIds?.length > 0) payload.shop_ids = config.shopIds;
-	if (config.shopNomes && Object.keys(config.shopNomes).length > 0) payload.shop_names = config.shopNomes;
-	if (config.cron) payload.cron = config.cron;
-	if (config.comissaoMin > 0) payload.comissao_min = config.comissaoMin;
-	if (config.vendasMin > 0) payload.vendas_min = config.vendasMin;
-	if (config.categorias?.length > 0) payload.categorias = config.categorias;
-	if (config.fontes?.length > 0) payload.fontes = config.fontes;
-	if (config.marketplaces) payload.marketplaces = config.marketplaces;
+
+	// Campos opcionais: incluídos apenas quando têm valor significativo
+	const optionalFields = [
+		['shop_ids', config.shopIds, (v) => v?.length > 0],
+		['shop_names', config.shopNomes, (v) => v && Object.keys(v).length > 0],
+		['cron', config.cron, Boolean],
+		['comissao_min', config.comissaoMin, (v) => v > 0],
+		['vendas_min', config.vendasMin, (v) => v > 0],
+		['categorias', config.categorias, (v) => v?.length > 0],
+		['fontes', config.fontes, (v) => v?.length > 0],
+		['marketplaces', config.marketplaces, Boolean]
+	];
+
+	for (const [key, value, predicate] of optionalFields) {
+		if (predicate(value)) payload[key] = value;
+	}
+
 	return payload;
 }
 

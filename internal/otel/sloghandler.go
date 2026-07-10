@@ -74,7 +74,7 @@ func (h *traceHandler) Handle(ctx context.Context, record slog.Record) error {
 			slog.String("logging.googleapis.com/spanId", spanID),
 		)
 	}
-	return h.base.Handle(ctx, record)
+	return h.base.Handle(ctx, record) //nolint:wrapcheck // slog.Handler interface contract
 }
 
 func (h *traceHandler) WithAttrs(attrs []slog.Attr) slog.Handler {

@@ -49,7 +49,7 @@ describe('busca-unificada-logic — payloadToConfig', () => {
 			id: 'uuid-1',
 			keywords: ['sérum'],
 			shop_ids: [123],
-			shop_names: { '123': 'SKIN1004' },
+			shop_names: { 123: 'SKIN1004' },
 			cron: '0 */8 * * *',
 			comissao_min: 0.1,
 			vendas_min: 50,
@@ -60,7 +60,7 @@ describe('busca-unificada-logic — payloadToConfig', () => {
 		expect(c.id).toBe('uuid-1');
 		expect(c.keywords).toEqual(['sérum']);
 		expect(c.shopIds).toEqual([123]);
-		expect(c.shopNomes).toEqual({ '123': 'SKIN1004' });
+		expect(c.shopNomes).toEqual({ 123: 'SKIN1004' });
 		expect(c.cron).toBe('0 */8 * * *');
 		expect(c.comissaoMin).toBe(0.1);
 	});

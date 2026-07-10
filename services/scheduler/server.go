@@ -18,8 +18,8 @@ import (
 	couponpb "github.com/fmarquesfilho/garimpo/gen/go/coupon/v1"
 	publisherpb "github.com/fmarquesfilho/garimpo/gen/go/publisher/v1"
 	schedulerpb "github.com/fmarquesfilho/garimpo/gen/go/scheduler/v1"
-	"github.com/fmarquesfilho/garimpo/internal/taskqueue"
 	garimpotel "github.com/fmarquesfilho/garimpo/internal/otel"
+	"github.com/fmarquesfilho/garimpo/internal/taskqueue"
 )
 
 // SchedulerServer implementa scheduler.v1.SchedulerService.

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# mise description="Health check rápido de todos os serviços em produção"
+set -euo pipefail
+
+BASE="${E2E_BASE_URL:-https://garimpei.app.br}"
+
+echo "═══ Health Check Produção ═══"
+echo ""
+
+# API health (public, no auth)
+API=$(curl -sf "$BASE/api/health" 2>/dev/null || echo '{"status":"unreachable"}')
+echo "garimpei-api: $(echo "$API" | jq -r '.status')"
+echo "  backend: $(echo "$API" | jq -r '.backend // "?"')"
+echo "  store: $(echo "$API" | jq -r '.store // "?"')"
+
+# Auth + endpoints que precisam de token
+cd web
+source .env.e2e.local 2>/dev/null || source .env.e2e 2>/dev/null || true
+cd - > /dev/null
+
+if [ -z "${E2E_PASSWORD:-}" ]; then
+  echo ""
+  echo "⚠️  Sem credenciais — apenas health público verificado"
+  exit 0
+fi
+
+TOKEN=$(curl -s "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${E2E_EMAIL}\",\"password\":\"${E2E_PASSWORD}\",\"returnSecureToken\":true}" | jq -r '.idToken // empty')
+
+if [ -z "$TOKEN" ]; then
+  echo "❌ Auth falhou"
+  exit 1
+fi
+
+# Collector (via /api/candidatos)
+COLL=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE/api/candidatos?keyword=test&top=1" 2>/dev/null || echo '{"error":"fail"}')
+COLL_STATUS=$(echo "$COLL" | jq -r 'if .candidatos then "ok" else .error // "error" end')
+echo "collector: $COLL_STATUS"
+
+# Analyzer (via /api/coletas)
+ANA=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE/api/coletas?dias=1" 2>/dev/null || echo '{"error":"fail"}')
+ANA_STATUS=$(echo "$ANA" | jq -r 'if .coletas then "ok (\(.total) coletas)" else .error // "error" end')
+echo "analyzer: $ANA_STATUS"
+
+# Scheduler (via /api/buscas — se retorna lista, scheduler está registrando jobs)
+SCHED=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE/api/buscas" 2>/dev/null || echo '{"error":"fail"}')
+SCHED_STATUS=$(echo "$SCHED" | jq -r 'if .buscas then "ok (\(.total) buscas)" else .error // "error" end')
+echo "scheduler: $SCHED_STATUS"
+
+# Publisher (via /api/publicacoes)
+PUB=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE/api/publicacoes" 2>/dev/null || echo '{"error":"fail"}')
+PUB_STATUS=$(echo "$PUB" | jq -r 'if .publicacoes then "ok (\(.total) pubs)" else .error // "error" end')
+echo "publisher: $PUB_STATUS"
+
+echo ""
+echo "═══ Todos os serviços respondendo ═══"

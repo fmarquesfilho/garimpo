@@ -11,12 +11,49 @@
  *   7. Fluxo completo
  */
 import { test, expect } from './fixtures.js';
-import { abrirPainelBuscas, abrirRaiaFiltros, abrirRaiaLojas, adicionarLoja, waitForEngineReady, SEL } from './helpers.js';
+import {
+	abrirPainelBuscas,
+	abrirRaiaFiltros,
+	abrirRaiaLojas,
+	adicionarLoja,
+	waitForEngineReady,
+	SEL
+} from './helpers.js';
 
 const PRODUTOS_CURADORIA = [
-	{ id: 'p1', produto_id: 'p1', nome: 'Serum Vitamina C SKIN1004', preco: 89.9, comissao: 0.15, vendas: 200, loja: 'SKIN1004 Official', link: 'https://shopee.com.br/p1', _fonte: 'curadoria' },
-	{ id: 'p2', produto_id: 'p2', nome: 'Perfume Kenzo 50ml', preco: 299.9, comissao: 0.08, vendas: 80, loja: 'Perfumaria JP', link: 'https://shopee.com.br/p2', _fonte: 'curadoria' },
-	{ id: 'p3', produto_id: 'p3', nome: 'Batom Matte Ruby Rose', preco: 15, comissao: 0.03, vendas: 5, loja: 'Maquiagem Store', link: 'https://shopee.com.br/p3', _fonte: 'curadoria' }
+	{
+		id: 'p1',
+		produto_id: 'p1',
+		nome: 'Serum Vitamina C SKIN1004',
+		preco: 89.9,
+		comissao: 0.15,
+		vendas: 200,
+		loja: 'SKIN1004 Official',
+		link: 'https://shopee.com.br/p1',
+		_fonte: 'curadoria'
+	},
+	{
+		id: 'p2',
+		produto_id: 'p2',
+		nome: 'Perfume Kenzo 50ml',
+		preco: 299.9,
+		comissao: 0.08,
+		vendas: 80,
+		loja: 'Perfumaria JP',
+		link: 'https://shopee.com.br/p2',
+		_fonte: 'curadoria'
+	},
+	{
+		id: 'p3',
+		produto_id: 'p3',
+		nome: 'Batom Matte Ruby Rose',
+		preco: 15,
+		comissao: 0.03,
+		vendas: 5,
+		loja: 'Maquiagem Store',
+		link: 'https://shopee.com.br/p3',
+		_fonte: 'curadoria'
+	}
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -39,17 +76,35 @@ test.describe('Descobrir — Fontes', () => {
 	test('quedas aparecem quando há busca salva com loja', async ({ authedPage: page }) => {
 		page.apiOverrides({
 			'/api/buscas': {
-				buscas: [{
-					id: 'loja-789', keywords: ['cosrx'], shop_ids: [789],
-					shop_names: { '789': 'COSRX Store' },
-					cron: '0 */8 * * *', comissao_min: 0, vendas_min: 0,
-					categorias: null, fontes: ['curadoria', 'quedas'], marketplaces: 'shopee'
-				}],
+				buscas: [
+					{
+						id: 'loja-789',
+						keywords: ['cosrx'],
+						shop_ids: [789],
+						shop_names: { 789: 'COSRX Store' },
+						cron: '0 */8 * * *',
+						comissao_min: 0,
+						vendas_min: 0,
+						categorias: null,
+						fontes: ['curadoria', 'quedas'],
+						marketplaces: 'shopee'
+					}
+				],
 				total: 1
 			},
 			'/api/lojas/novidades': {
-				variacoes: [{ produto_id: 'q1', nome: 'Tonico COSRX AHA BHA', preco_atual: 45.9, preco_anterior: 59.9, variacao_pct: -0.23, loja: 'COSRX Store' }],
-				produtos_novos: [], dias_janela: 7
+				variacoes: [
+					{
+						produto_id: 'q1',
+						nome: 'Tonico COSRX AHA BHA',
+						preco_atual: 45.9,
+						preco_anterior: 59.9,
+						variacao_pct: -0.23,
+						loja: 'COSRX Store'
+					}
+				],
+				produtos_novos: [],
+				dias_janela: 7
 			}
 		});
 		await page.goto('/');
@@ -73,10 +128,16 @@ test.describe('Descobrir — Filtros', () => {
 		page.apiOverrides({
 			'/api/candidatos': { candidatos: PRODUTOS_CURADORIA, total_bruto: 3, estrategia: 'nicho' },
 			'/api/categorias': {
-				marketplaces: [{
-					marketplace: 'shopee',
-					categorias: [{ id: 100630, nome: 'Beleza' }, { id: 100640, nome: 'Perfumaria' }, { id: 100663, nome: 'Maquiagem' }]
-				}]
+				marketplaces: [
+					{
+						marketplace: 'shopee',
+						categorias: [
+							{ id: 100630, nome: 'Beleza' },
+							{ id: 100640, nome: 'Perfumaria' },
+							{ id: 100663, nome: 'Maquiagem' }
+						]
+					}
+				]
 			}
 		});
 		await page.goto('/');
@@ -97,7 +158,20 @@ test.describe('Descobrir — Buscas salvas', () => {
 	test('rodar restaura keyword no input', async ({ authedPage: page }) => {
 		page.apiOverrides({
 			'/api/buscas': {
-				buscas: [{ id: 'b1', keywords: ['retinol'], shop_ids: [], shop_names: null, comissao_min: 0.1, vendas_min: 0, categorias: null, fontes: ['curadoria'], cron: null, marketplaces: 'shopee' }],
+				buscas: [
+					{
+						id: 'b1',
+						keywords: ['retinol'],
+						shop_ids: [],
+						shop_names: null,
+						comissao_min: 0.1,
+						vendas_min: 0,
+						categorias: null,
+						fontes: ['curadoria'],
+						cron: null,
+						marketplaces: 'shopee'
+					}
+				],
 				total: 1
 			}
 		});
@@ -111,7 +185,20 @@ test.describe('Descobrir — Buscas salvas', () => {
 	test('busca agendada mostra badge ⏱', async ({ authedPage: page }) => {
 		page.apiOverrides({
 			'/api/buscas': {
-				buscas: [{ id: 'b-cron', keywords: ['perfume'], shop_ids: [], shop_names: null, comissao_min: 0.07, vendas_min: 0, categorias: null, fontes: ['curadoria'], cron: '0 */8 * * *', marketplaces: 'shopee' }],
+				buscas: [
+					{
+						id: 'b-cron',
+						keywords: ['perfume'],
+						shop_ids: [],
+						shop_names: null,
+						comissao_min: 0.07,
+						vendas_min: 0,
+						categorias: null,
+						fontes: ['curadoria'],
+						cron: '0 */8 * * *',
+						marketplaces: 'shopee'
+					}
+				],
 				total: 1
 			}
 		});
@@ -168,7 +255,9 @@ test.describe('Descobrir — Erro', () => {
 	test('API 500 → mostra mensagem de erro', async ({ authedPage: page }) => {
 		// Override /api/candidatos com resposta de erro
 		page.apiOverrides({
-			'/api/candidatos': async () => { throw new Error('500'); }
+			'/api/candidatos': async () => {
+				throw new Error('500');
+			}
 		});
 
 		// Re-register route that returns 500 for candidatos
@@ -176,7 +265,11 @@ test.describe('Descobrir — Erro', () => {
 		await page.route('**/api/**', async (route) => {
 			const path = new URL(route.request().url()).pathname;
 			if (path.startsWith('/api/candidatos')) {
-				await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ detail: 'Servidor indisponível' }) });
+				await route.fulfill({
+					status: 500,
+					contentType: 'application/json',
+					body: JSON.stringify({ detail: 'Servidor indisponível' })
+				});
 			} else {
 				await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
 			}
@@ -205,7 +298,20 @@ test.describe('Descobrir — Fluxo completo', () => {
 				}
 				if (postCount > 0) {
 					return {
-						buscas: [{ id: 'busca-new', keywords: ['serum'], shop_ids: [920292999], shop_names: { '920292999': 'Le Botanic' }, comissao_min: 0.07, vendas_min: 0, categorias: null, fontes: ['curadoria'], cron: null, marketplaces: 'shopee' }],
+						buscas: [
+							{
+								id: 'busca-new',
+								keywords: ['serum'],
+								shop_ids: [920292999],
+								shop_names: { 920292999: 'Le Botanic' },
+								comissao_min: 0.07,
+								vendas_min: 0,
+								categorias: null,
+								fontes: ['curadoria'],
+								cron: null,
+								marketplaces: 'shopee'
+							}
+						],
 						total: 1
 					};
 				}

@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# mise description="Investiga um trace_id específico — mostra todos os logs e spans"
+# mise usage="mise run debug:trace <trace_id>"
+set -euo pipefail
+
+TRACE_ID="${1:-}"
+if [ -z "$TRACE_ID" ]; then
+  echo "Uso: mise run debug:trace <trace_id_hex_32_chars>"
+  echo ""
+  echo "Onde obter o trace_id:"
+  echo "  - Na página /admin/logs (coluna Trace)"
+  echo "  - No Cloud Trace Console"
+  echo "  - No output de mise run test:e2e-traces"
+  exit 1
+fi
+
+echo "═══ Investigando trace: $TRACE_ID ═══"
+echo ""
+
+# Fetch all logs for this trace
+cd web
+source .env.e2e.local 2>/dev/null || source .env.e2e 2>/dev/null || true
+cd - > /dev/null
+
+TOKEN=$(curl -s "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${E2E_EMAIL}\",\"password\":\"${E2E_PASSWORD}\",\"returnSecureToken\":true}" | jq -r '.idToken // empty')
+
+if [ -z "$TOKEN" ]; then
+  echo "❌ Auth falhou"
+  exit 1
+fi
+
+BASE="${E2E_BASE_URL:-https://garimpei.app.br}"
+
+RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+  "$BASE/api/admin/logs?traceId=${TRACE_ID}&minutes=1440&limit=100" 2>/dev/null || echo '{"entries":[]}')
+
+TOTAL=$(echo "$RESP" | jq '.totalEntries // 0')
+echo "Logs encontrados: $TOTAL"
+echo ""
+
+if [ "$TOTAL" -eq 0 ]; then
+  echo "Nenhum log encontrado para este trace."
+  echo "Possíveis causas:"
+  echo "  - Trace ID incorreto"
+  echo "  - Logs já expiraram (>30 dias)"
+  echo "  - OTel Collector não estava ativo quando o trace foi gerado"
+  echo ""
+  echo "Tente ver diretamente no Cloud Trace:"
+  echo "  https://console.cloud.google.com/traces/list?project=garimpo-500114&tid=$TRACE_ID"
+  exit 0
+fi
+
+echo "── Timeline ──────────────────────────"
+echo "$RESP" | jq -r '.entries[] | "\(.timestamp) [\(.severity)] [\(.service)] \(.message // "(payload)")"' 2>/dev/null
+
+echo ""
+echo "── Serviços envolvidos ────────────────"
+echo "$RESP" | jq -r '[.entries[].service] | unique | .[]' 2>/dev/null
+
+echo ""
+echo "── Erros no trace ─────────────────────"
+ERRORS=$(echo "$RESP" | jq '[.entries[] | select(.severity == "ERROR" or .severity == "CRITICAL")] | length')
+if [ "$ERRORS" -gt 0 ]; then
+  echo "⚠️  $ERRORS erros encontrados:"
+  echo "$RESP" | jq -r '.entries[] | select(.severity == "ERROR" or .severity == "CRITICAL") | "  [\(.service)] \(.message)"' 2>/dev/null
+else
+  echo "✅ Nenhum erro neste trace"
+fi
+
+echo ""
+echo "── Cloud Trace Console ────────────────"
+echo "  https://console.cloud.google.com/traces/list?project=garimpo-500114&tid=$TRACE_ID"

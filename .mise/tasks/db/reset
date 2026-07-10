@@ -1,48 +1,50 @@
 #!/usr/bin/env bash
-# mise description="Trunca tabelas do PostgreSQL local (com confirmação)"
+# mise description="Trunca tabelas do PostgreSQL (local ou produção) com confirmação"
+# mise usage="mise run db:reset [--prod] [--bq]"
 set -euo pipefail
 
-# Lê connection string do appsettings ou usa default
-DB_HOST="${PGHOST:-localhost}"
-DB_PORT="${PGPORT:-5432}"
-DB_NAME="${PGDATABASE:-garimpei}"
-DB_USER="${PGUSER:-garimpei}"
+PROD=false
+BQ=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --prod) PROD=true ;;
+    --bq) BQ=true ;;
+  esac
+done
 
 echo "══════════════════════════════════════════════"
-echo "  ⚠️  DATABASE RESET — PostgreSQL"
+echo "  ⚠️  DATABASE RESET"
 echo "══════════════════════════════════════════════"
 echo ""
-echo "  Host:     $DB_HOST:$DB_PORT"
-echo "  Database: $DB_NAME"
-echo "  User:     $DB_USER"
-echo ""
-echo "  Isso vai TRUNCAR todas as tabelas de dados:"
-echo "    - Buscas"
-echo "    - Products"
-echo "    - Favoritos"
-echo "    - Destinos"
-echo "    - Templates"
-echo "    - Publicacoes"
-echo "    - CouponAlertRules"
-echo "    - CouponAlertHistories"
-echo ""
-echo "  ⚠️  Dados de Tenants e TenantConfigs serão preservados."
-echo ""
 
-read -r -p "  Tem certeza? Digite 'reset' para confirmar: " confirm
-
-if [[ "$confirm" != "reset" ]]; then
+if [ "$PROD" = true ]; then
+  echo "  🌐 MODO: PRODUÇÃO (Neon PostgreSQL)"
   echo ""
-  echo "  ❌ Cancelado."
-  exit 1
-fi
+  echo "  ⚠️  ISSO VAI APAGAR DADOS REAIS DE PRODUÇÃO!"
+  echo "  O schema (tabelas, migrations) será preservado."
+  echo "  Tenants e TenantConfigs serão preservados."
+  echo ""
+  read -r -p "  Digite 'RESET PROD' para confirmar: " confirm
+  if [[ "$confirm" != "RESET PROD" ]]; then
+    echo "  ❌ Cancelado."
+    exit 1
+  fi
 
-echo ""
-echo "  🗑️  Truncando tabelas..."
+  # Usa a connection string de produção via gcloud secrets
+  echo "  🔑 Obtendo connection string de produção..."
+  CONNECTION_STRING=$(gcloud secrets versions access latest \
+    --secret=GARIMPEI_PG_CONNECTION_STRING \
+    --project=garimpo-500114 2>/dev/null || echo "")
 
-psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" <<SQL
+  if [ -z "$CONNECTION_STRING" ]; then
+    echo "  ❌ Não conseguiu obter secret. Verifique gcloud auth."
+    exit 1
+  fi
+
+  echo "  🗑️  Truncando tabelas em produção..."
+  psql "$CONNECTION_STRING" <<SQL
 BEGIN;
-
 TRUNCATE TABLE "Buscas" CASCADE;
 TRUNCATE TABLE "Products" CASCADE;
 TRUNCATE TABLE "Favoritos" CASCADE;
@@ -51,11 +53,70 @@ TRUNCATE TABLE "Templates" CASCADE;
 TRUNCATE TABLE "Publicacoes" CASCADE;
 TRUNCATE TABLE "CouponAlertRules" CASCADE;
 TRUNCATE TABLE "CouponAlertHistories" CASCADE;
-
 COMMIT;
 SQL
 
+else
+  echo "  🐳 MODO: LOCAL (Docker PostgreSQL)"
+  echo ""
+  DB_HOST="${PGHOST:-localhost}"
+  DB_PORT="${PGPORT:-5432}"
+  DB_NAME="${PGDATABASE:-garimpei}"
+  DB_USER="${PGUSER:-garimpei}"
+  echo "  Host: $DB_HOST:$DB_PORT | DB: $DB_NAME | User: $DB_USER"
+  echo ""
+  read -r -p "  Digite 'reset' para confirmar: " confirm
+  if [[ "$confirm" != "reset" ]]; then
+    echo "  ❌ Cancelado."
+    exit 1
+  fi
+
+  echo "  🗑️  Truncando tabelas locais..."
+  psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" <<SQL
+BEGIN;
+TRUNCATE TABLE "Buscas" CASCADE;
+TRUNCATE TABLE "Products" CASCADE;
+TRUNCATE TABLE "Favoritos" CASCADE;
+TRUNCATE TABLE "Destinos" CASCADE;
+TRUNCATE TABLE "Templates" CASCADE;
+TRUNCATE TABLE "Publicacoes" CASCADE;
+TRUNCATE TABLE "CouponAlertRules" CASCADE;
+TRUNCATE TABLE "CouponAlertHistories" CASCADE;
+COMMIT;
+SQL
+fi
+
 echo ""
-echo "  ✅ Database reset completo!"
+echo "  ✅ PostgreSQL reset completo!"
 echo "  Tenants e TenantConfigs preservados."
+
+# BigQuery reset (opcional, separado)
+if [ "$BQ" = true ]; then
+  echo ""
+  echo "══════════════════════════════════════════════"
+  echo "  ⚠️  BigQuery RESET"
+  echo "══════════════════════════════════════════════"
+  echo ""
+  echo "  Projeto: garimpo-500114"
+  echo "  Dataset: garimpo"
+  echo "  Tabelas que serão truncadas:"
+  echo "    - snapshots (dados de coletas)"
+  echo "    - conversoes (dados de conversão Shopee)"
+  echo ""
+  read -r -p "  Digite 'RESET BQ' para confirmar: " bq_confirm
+  if [[ "$bq_confirm" != "RESET BQ" ]]; then
+    echo "  ❌ BigQuery reset cancelado."
+    exit 0
+  fi
+
+  echo "  🗑️  Truncando tabelas BigQuery..."
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.snapshots" 2>/dev/null || echo "  ⚠️  snapshots: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.conversoes" 2>/dev/null || echo "  ⚠️  conversoes: falhou ou não existe"
+
+  echo ""
+  echo "  ✅ BigQuery reset completo!"
+fi
+
 echo "══════════════════════════════════════════════"

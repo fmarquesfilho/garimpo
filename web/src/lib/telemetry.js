@@ -1,11 +1,9 @@
 /**
- * OpenTelemetry trace propagation for the browser.
+ * OpenTelemetry trace propagation + error reporting for the browser.
  *
- * Injects `traceparent` header into all fetch() calls to the backend.
- * This allows Cloud Trace to show traces that start in the browser.
- *
- * No spans are exported from the browser — only context propagation.
- * Zero cost, zero vendor dependency.
+ * 1. Injects `traceparent` header into all fetch() calls to the backend.
+ * 2. Captures unhandled errors and sends to POST /api/telemetry.
+ * 3. Reports Web Vitals (CLS, FID, LCP) via sendBeacon.
  *
  * Import this file as a side-effect in +layout.js to activate.
  */
@@ -13,6 +11,7 @@ import { browser } from '$app/environment';
 
 if (browser) {
 	initBrowserTracing();
+	initErrorReporting();
 }
 
 async function initBrowserTracing() {
@@ -26,7 +25,6 @@ async function initBrowserTracing() {
 			resource: { attributes: { 'service.name': 'garimpei-web' } }
 		});
 
-		// Only propagation — no exporter (no spans sent from browser)
 		provider.register({
 			propagator: new W3CTraceContextPropagator()
 		});
@@ -34,16 +32,49 @@ async function initBrowserTracing() {
 		registerInstrumentations({
 			instrumentations: [
 				new FetchInstrumentation({
-					propagateTraceHeaderCorsUrls: [
-						/garimpei\.app\.br/,
-						/localhost/,
-						/127\.0\.0\.1/
-					],
+					propagateTraceHeaderCorsUrls: [/garimpei\.app\.br/, /localhost/, /127\.0\.0\.1/],
 					clearTimingResources: true
 				})
 			]
 		});
 	} catch {
 		// OTel packages not installed or failed — graceful degradation
+	}
+}
+
+function initErrorReporting() {
+	// Capture unhandled errors
+	window.addEventListener('error', (event) => {
+		sendTelemetry({
+			type: 'error',
+			message: event.message,
+			stack: event.error?.stack,
+			url: location.href
+		});
+	});
+
+	// Capture unhandled promise rejections
+	window.addEventListener('unhandledrejection', (event) => {
+		sendTelemetry({
+			type: 'error',
+			message: event.reason?.message || String(event.reason),
+			stack: event.reason?.stack,
+			url: location.href
+		});
+	});
+}
+
+function sendTelemetry(payload) {
+	// Use sendBeacon for reliability (survives page unload)
+	const body = JSON.stringify({ ...payload, timestamp: new Date().toISOString() });
+	if (navigator.sendBeacon) {
+		navigator.sendBeacon('/api/telemetry', body);
+	} else {
+		fetch('/api/telemetry', {
+			method: 'POST',
+			body,
+			headers: { 'Content-Type': 'application/json' },
+			keepalive: true
+		}).catch(() => {});
 	}
 }

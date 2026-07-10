@@ -85,6 +85,9 @@
 			<h2>Links úteis</h2>
 			<ul class="list-none p-0">
 				<li class="my-2">
+					<a class="text-ouro no-underline hover:underline" href="/admin/logs">📋 Logs (Cloud Logging)</a>
+				</li>
+				<li class="my-2">
 					<a class="text-ouro no-underline hover:underline" href="/docs/" target="_blank">📚 Documentação (Starlight)</a
 					>
 				</li>

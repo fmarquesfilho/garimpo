@@ -60,7 +60,7 @@ describe('fixtures-contract: payloadToConfig vs golden', () => {
 		const lojaOnly = apiBuscas.buscas.find((b) => b.id === 'busca-loja-glory');
 		const config = payloadToConfig(lojaOnly);
 		expect(config.shopIds).toEqual([920292999]);
-		expect(config.shopNomes).toEqual({ '920292999': 'Glory of Seoul' });
+		expect(config.shopNomes).toEqual({ 920292999: 'Glory of Seoul' });
 		expect(config.keywords).toEqual([]);
 	});
 });

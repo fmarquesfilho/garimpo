@@ -140,6 +140,7 @@ app.MapAlertasEndpoints();
 app.MapOnboardingEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapResolverLinkEndpoints();
+app.MapLogsEndpoints();
 
 // V2 API routes (native C# format)
 app.MapGroup("/api/v2")

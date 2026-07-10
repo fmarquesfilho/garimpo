@@ -85,7 +85,9 @@ test.describe('Contract — Busca shop-only', () => {
 			'/api/buscas': { buscas: [BUSCA_GLORY], total: 1 },
 			'/api/candidatos': {
 				candidatos: FIXTURE_COLLECTOR_FETCHSHOP.products.map((p) => ({
-					...p, id: p.produto_id, _fonte: 'curadoria'
+					...p,
+					id: p.produto_id,
+					_fonte: 'curadoria'
 				})),
 				total_bruto: FIXTURE_COLLECTOR_FETCHSHOP.total_found,
 				estrategia: 'nicho'

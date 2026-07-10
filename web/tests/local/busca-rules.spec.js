@@ -4,7 +4,14 @@
  * Prova que o comportamento visível da UI obedece às regras declarativas.
  */
 import { test, expect } from './fixtures.js';
-import { abrirRaiaFiltros, abrirRaiaLojas, abrirPainelBuscas, adicionarLoja, waitForEngineReady, SEL } from './helpers.js';
+import {
+	abrirRaiaFiltros,
+	abrirRaiaLojas,
+	abrirPainelBuscas,
+	adicionarLoja,
+	waitForEngineReady,
+	SEL
+} from './helpers.js';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -19,8 +26,20 @@ test.describe('Regras externas (busca-rules.json)', () => {
 
 		page.apiOverrides({
 			'/api/candidatos': {
-				candidatos: [{ id: 'p1', produto_id: 'p1', nome: 'Serum Le Botanic', preco: 49.9, comissao: 0.12, vendas: 80, loja: 'Le Botanic', link: 'https://x' }],
-				total_bruto: 1, estrategia: 'nicho'
+				candidatos: [
+					{
+						id: 'p1',
+						produto_id: 'p1',
+						nome: 'Serum Le Botanic',
+						preco: 49.9,
+						comissao: 0.12,
+						vendas: 80,
+						loja: 'Le Botanic',
+						link: 'https://x'
+					}
+				],
+				total_bruto: 1,
+				estrategia: 'nicho'
 			},
 			'/api/lojas': { id: 'loja-lb', keyword: 'Le Botanic', shop_ids: [920292999], status: 'adicionada' }
 		});
@@ -49,7 +68,20 @@ test.describe('Regras externas (busca-rules.json)', () => {
 	test('busca agendada inclui cron e badge ⏱', async ({ authedPage: page }) => {
 		page.apiOverrides({
 			'/api/buscas': {
-				buscas: [{ id: 'b-cron', keywords: ['vitamina c'], shop_ids: [], shop_names: null, comissao_min: 0.07, vendas_min: 0, categorias: null, fontes: ['curadoria'], cron: '0 */8 * * *', marketplaces: 'shopee' }],
+				buscas: [
+					{
+						id: 'b-cron',
+						keywords: ['vitamina c'],
+						shop_ids: [],
+						shop_names: null,
+						comissao_min: 0.07,
+						vendas_min: 0,
+						categorias: null,
+						fontes: ['curadoria'],
+						cron: '0 */8 * * *',
+						marketplaces: 'shopee'
+					}
+				],
 				total: 1
 			}
 		});
@@ -64,9 +96,28 @@ test.describe('Regras externas (busca-rules.json)', () => {
 		page.apiOverrides({
 			'/api/lojas': { id: 'loja-lb', keyword: 'Le Botanic', shop_ids: [920292999], status: 'adicionada' },
 			'/api/buscas': (req) => {
-				if (req.method() === 'POST') { postCount++; return { id: 'b1', status: 'salva' }; }
+				if (req.method() === 'POST') {
+					postCount++;
+					return { id: 'b1', status: 'salva' };
+				}
 				if (postCount > 0) {
-					return { buscas: [{ id: 'b1', keywords: ['serum'], shop_ids: [920292999], shop_names: { '920292999': 'Le Botanic' }, comissao_min: 0.07, vendas_min: 0, categorias: null, fontes: ['curadoria', 'lojas'], cron: null, marketplaces: 'shopee' }], total: 1 };
+					return {
+						buscas: [
+							{
+								id: 'b1',
+								keywords: ['serum'],
+								shop_ids: [920292999],
+								shop_names: { 920292999: 'Le Botanic' },
+								comissao_min: 0.07,
+								vendas_min: 0,
+								categorias: null,
+								fontes: ['curadoria', 'lojas'],
+								cron: null,
+								marketplaces: 'shopee'
+							}
+						],
+						total: 1
+					};
 				}
 				return { buscas: [], total: 0 };
 			}
