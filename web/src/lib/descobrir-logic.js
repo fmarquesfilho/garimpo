@@ -111,17 +111,21 @@ export function listarLojasMonitoradas(buscasSalvas) {
 		const nomes = b.shop_names ?? b.shopNomes ?? {};
 		for (const id of ids) {
 			if (vistos.has(id)) continue;
-			vistos.set(id, {
-				id: String(id),
-				nome: nomes[String(id)] || nomes[id] || b.nome || String(id),
-				marketplace: b.marketplaces || b.marketplace || 'shopee',
-				origem: b.origem_padrao ?? b.origemPadrao ?? null,
-				monitorada: Boolean(b.cron),
-				cron: b.cron ?? ''
-			});
+			vistos.set(id, buildLojaEntry(id, nomes, b));
 		}
 	}
 	return [...vistos.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+function buildLojaEntry(id, nomes, busca) {
+	return {
+		id: String(id),
+		nome: nomes[String(id)] || nomes[id] || busca.nome || String(id),
+		marketplace: busca.marketplaces || busca.marketplace || 'shopee',
+		origem: busca.origem_padrao ?? busca.origemPadrao ?? null,
+		monitorada: Boolean(busca.cron),
+		cron: busca.cron ?? ''
+	};
 }
 
 /**
