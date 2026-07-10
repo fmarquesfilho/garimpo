@@ -20,10 +20,10 @@ async function initBrowserTracing() {
 		const { W3CTraceContextPropagator } = await import('@opentelemetry/core');
 		const { registerInstrumentations } = await import('@opentelemetry/instrumentation');
 		const { FetchInstrumentation } = await import('@opentelemetry/instrumentation-fetch');
+		const { resourceFromAttributes } = await import('@opentelemetry/resources');
 
-		const provider = new WebTracerProvider({
-			resource: { attributes: { 'service.name': 'garimpei-web' } }
-		});
+		const resource = resourceFromAttributes({ 'service.name': 'garimpei-web' });
+		const provider = new WebTracerProvider({ resource });
 
 		provider.register({
 			propagator: new W3CTraceContextPropagator()
