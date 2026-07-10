@@ -1,73 +1,130 @@
 id: T-0055
-titulo: "Autocomplete no input de busca: sugestões de comando e escopo"
+titulo: "Autocomplete no input de busca: parser de tokens com prefixos (@, #, !)"
 epic: E-001
-status: backlog
-prioridade: media
+status: next
+prioridade: alta
 estimativa: M
 sprint: ""
 criado_em: "2026-07-09"
+atualizada_em: "2026-07-09"
 valor: |
-  O input de busca hoje é texto livre. Quando o usuário digita uma keyword
-  (ex: "serum"), não há indicação de onde a busca será executada (global vs
-  lojas monitoradas). Um autocomplete com sugestões de escopo melhora a
-  descobribilidade e reduz erros de expectativa.
+  O input de busca hoje é texto livre sem indicação de escopo. Com o parser de
+  tokens, o usuário compõe buscas complexas de forma natural (como CLI/Slack):
+  `serum @lebotanic #beleza !shopee`. Melhora descobribilidade e reduz cliques.
 descricao: |
-  Adicionar autocomplete ao input principal de busca na página Descobrir.
-  O autocomplete sugere comandos/escopos baseados no que o usuário digita.
+  Implementar parser de tokens no input principal da página Descobrir.
+  O input funciona como uma mini-CLI onde prefixos ativam completions contextuais.
 
-  ## Comportamento esperado
+  ## Gramática
 
-  1. Usuário digita "serum" → dropdown aparece com sugestões:
-     - 🔍 "serum" (pesquisar em toda Shopee)
-     - 🏪 "serum" nas lojas monitoradas (Le Botanic, COSRX Store, …)
-     - 📋 "serum" na categoria Cuidados com a Pele
-     - 💾 Busca salva: "serum + 2 lojas" (match com busca existente)
+  ```
+  <input> ::= <token>*
+  <token> ::= <keyword> | <loja> | <categoria> | <marketplace>
 
-  2. Se o usuário já tem buscas salvas com keywords similares, sugerir
-     "Carregar busca: serum + 1 loja" (atalho para CARREGAR_SALVA).
+  <keyword>     ::= texto sem prefixo (busca global ou escopada)
+  <loja>        ::= "@" <nome_loja>     (escopa para loja monitorada)
+  <categoria>   ::= "#" <nome_cat>      (filtra por categoria)
+  <marketplace> ::= "!" <nome_mp>       (filtra marketplace)
+  ```
 
-  3. Enter sem selecionar sugestão → comportamento atual (busca global).
+  ## Exemplos
 
-  4. Selecionar sugestão → preenche escopo automaticamente:
-     - Selecionar "nas lojas monitoradas" → adiciona shopIds ao contexto
-     - Selecionar busca salva → equivale a CARREGAR_SALVA
-     - Selecionar categoria → adiciona categoria ao filtro
+  | Input | Interpretação |
+  |-------|---------------|
+  | `serum` | keyword global |
+  | `serum @lebotanic` | keyword escopada na loja Le Botanic |
+  | `serum @lebotanic #beleza` | keyword + loja + categoria |
+  | `@lebotanic` | todos os produtos da loja (intent: loja_completa) |
+  | `#perfumaria` | só categoria (intent: só-categorias) |
+  | `serum !shopee !amazon` | keyword + filtro 2 marketplaces |
+  | `@glory #cuidados !shopee` | loja + categoria + marketplace (sem keyword) |
 
-  ## Modelo de dados (declarativo em rules)
+  ## Comportamento do autocomplete
 
-  Adicionar a `rules/busca-rules.json`:
+  1. Após 2+ chars de um token, dropdown aparece com sugestões filtradas:
+     - `@le` → mostra "Le Botanic", "Le Salon" (lojas monitoradas)
+     - `#per` → mostra "Perfumaria", "Perfumes" (categorias)
+     - `!sh` → mostra "shopee" (marketplaces)
+     - `ser` → mostra "serum em toda Shopee", "serum nas lojas", busca salva match
+
+  2. Tab ou click seleciona sugestão → completa o token
+  3. Enter → executa busca com todos os tokens parseados
+  4. Espaço após token completo → pronto para próximo token
+
+  ## Decisão de UX: texto literal
+
+  O input mostra o texto como digitado ("serum @lebotanic #beleza"), sem
+  transformar tokens em chips visuais. Motivo: simplicidade de implementação,
+  composabilidade, e familiaridade com CLIs.
+
+  Os chips/cards visuais correspondentes (LojaCard, CategoriaCard) aparecem
+  nas raias abaixo — que já existem. O input é o "compositor", as raias são
+  a "visualização" do estado resultante.
+
+  ## Regras em rules/busca-rules.json
+
   ```json
   "autocomplete": {
+    "prefixos": {
+      "@": { "tipo": "loja", "fonte": "lojasDisponiveis", "campo": "nome" },
+      "#": { "tipo": "categoria", "fonte": "categoriasDisponiveis", "campo": "nome" },
+      "!": { "tipo": "marketplace", "fonte": "marketplaces.suportados" }
+    },
     "minChars": 2,
-    "maxSugestoes": 5,
-    "fontes": ["keywords_salvas", "lojas_monitoradas", "categorias", "buscas_salvas"],
-    "prioridade": ["buscas_salvas", "lojas_monitoradas", "categorias", "keywords_salvas"]
+    "maxSugestoes": 7,
+    "matchBuscaSalva": true
   }
   ```
 
-  ## Implementação sugerida
+  ## Implementação
 
-  - Componente `AutocompleteInput.svelte` (Bits UI Combobox ou custom)
-  - Função pura `gerarSugestoes(input, ctx)` em `busca-config.js`
-  - Integração com BuscaEngine: novo event `SELECIONAR_SUGESTAO`
-  - Testes: unit para `gerarSugestoes` + E2E para interação com dropdown
+  ### Funções puras (busca-config.js)
+
+  1. `parsearInput(raw)` — tokeniza string em array de {tipo, valor, completo}
+  2. `gerarSugestoes(tokens, ctx, rules)` — gera lista de completions para o
+     último token incompleto
+  3. `tokensParaContexto(tokens)` — converte tokens parseados em contexto
+     da engine (keyword, shopIds, categorias, marketplacesFiltro)
+
+  ### Componente (AutocompleteInput.svelte)
+
+  - Bits UI Combobox com `open` controlado
+  - Items customizados (ícone prefixo + nome + dica)
+  - Keyboard: Tab completa, Enter executa, Esc fecha
+  - Integra com BuscaEngine via event `APLICAR_TOKENS`
+
+  ### Engine
+
+  - Novo event: `APLICAR_TOKENS` (recebe tokens parseados, atualiza ctx completo)
+  - Alternativa: manter `DIGITAR` + detectar prefixos no handler
+
+  ## Testes
+
+  - Unit: `parsearInput` (todas as combinações de gramática)
+  - Unit: `gerarSugestoes` (filtra por contexto, respeita minChars)
+  - Unit: `tokensParaContexto` (mapeia tokens → estado da engine)
+  - E2E: digitar `serum @` → dropdown com lojas; selecionar → escopa busca
 
   ## Referências
 
   - ADR-0027 seção 5: padrão de features declarativas no JSON
-  - BuscaEngine v3: modos de interação já suportam transições complexas
-  - Bits UI Combobox: já usado para lojas e categorias (padrão disponível)
+  - Bits UI Combobox: componente base (já usado para lojas/categorias)
+  - Inspiração: Slack (menções @), Linear (filtros), Notion (comandos /)
 
 criterios_aceite:
-  - Autocomplete aparece após 2+ caracteres no input
-  - Sugestões incluem: busca global, lojas monitoradas, buscas salvas (se match)
-  - Selecionar sugestão altera o estado da engine corretamente
-  - Regras em rules/busca-rules.json (testável, versionável)
-  - Testes unitários para gerarSugestoes
-  - Funciona com 0 lojas monitoradas (só mostra opção global)
+  - Parser tokeniza corretamente @loja, #categoria, !marketplace e keyword
+  - Autocomplete aparece após 2+ chars de um token com prefixo
+  - Sugestões filtram por match parcial case-insensitive
+  - Selecionar sugestão completa o token e atualiza estado da engine
+  - Enter executa busca com todos os tokens interpretados
+  - Match com busca salva aparece como primeira sugestão (se existir)
+  - Regras declaradas em rules/busca-rules.json
+  - Testes unitários para parser, sugestões, e mapeamento de tokens
+  - Funciona com 0 lojas/categorias (só mostra keyword global)
 
 dependencias: []
 tags:
   - frontend
   - ux
   - busca-engine
+  - parser

@@ -14,7 +14,7 @@ T-0051
 | T-0007 Recomendação personalizada baseada em histórico (G) | T-0002 Persistir conversões da Shopee no BigQuery (M) | T-0034 Descobrir: corrigir filtros + badge drift + remover nota mínima (M) | | T-0001 Docs: site Starlight + geradores + consolidação (G) |
 | T-0031 Compartilhamento de credenciais Shopee entre tenants (P) | T-0024 Testar publicação WhatsApp via Meta Cloud API (P) | | | T-0003 Backlog como código (schema + gen-board) (M) |
 | T-0054 E2E locais: reescrever para a página Descobrir em raias (M) | T-0027 Publisher multi-tenant: tokens do tenant em vez de env vars globais (M) | | | T-0004 ScopedStore por owner_uid (multi-tenant) (G) |
-| T-0055 Autocomplete no input de busca: sugestões de comando e escopo (M) | T-0030 Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo (M) | | | T-0005 Alertas configuráveis por usuário (M) |
+| | T-0030 Onboarding: adicionar WhatsApp Meta Cloud API + finalizar fluxo (M) | | | T-0005 Alertas configuráveis por usuário (M) |
 | | T-0033 Validar multi-marketplace + coupon monitoring com banco limpo (M) | | | T-0006 Integrar docs-check e docs-board na CI (P) |
 | | T-0041 UI polish: format:check no CI + dark mode audit + Lighthouse (P) | | | T-0008 Refactor: tratamento de erros idiomático + telemetria (G) |
 | | T-0045 Encriptar credenciais do tenant (Shopee, Telegram, WhatsApp) (M) | | | T-0009 Setup mono-repo (Go + C# + protos) + Docker Compose (M) |
@@ -26,7 +26,7 @@ T-0051
 | | T-0051 Documentação final: consolidar estado pós-migração (S) | | | T-0015 Multi-tenant em C# (EF Core + PostgreSQL) (G) |
 | | T-0052 OpenAPI spec integrada: Swagger com todas as APIs (C# + Go gRPC) (M) | | | T-0016 Curadoria controller + scoring port em C# (G) |
 | | T-0053 Avaliar alternativas ao GitHub Actions (CI/CD + hosting de git) (S) | | | T-0017 Routing split (Cloudflare Worker v1→v2) (P) |
-| | | | | T-0018 Migrar handlers de publicação para C# (G) |
+| | T-0055 Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) (M) | | | T-0018 Migrar handlers de publicação para C# (G) |
 | | | | | T-0019 Migrar handlers de lojas/buscas para C# (G) |
 | | | | | T-0020 PostgreSQL como fonte primária + BigQuery analytics-only (G) |
 | | | | | T-0021 Cloud Run multi-container deploy (C# + sidecars Go) (M) |
@@ -50,8 +50,8 @@ T-0051
 ---
 
 **Métricas:**
-- 📋 backlog: 4
-- ⏭️ next: 15
+- 📋 backlog: 3
+- ⏭️ next: 16
 - 🔨 doing: 1
 - 👀 review: 0
 - ✅ done: 35

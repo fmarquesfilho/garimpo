@@ -23,13 +23,13 @@
 - **T-0051** Documentação final: consolidar estado pós-migração · documentacao · S
 - **T-0052** OpenAPI spec integrada: Swagger com todas as APIs (C# + Go gRPC) · documentacao · M
 - **T-0053** Avaliar alternativas ao GitHub Actions (CI/CD + hosting de git) · operacao · S
+- **T-0055** Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) · E-001 · M
 
 ## ⚪ Later (radar)
 
 - **T-0007** Recomendação personalizada baseada em histórico · dados-ia · G
 - **T-0031** Compartilhamento de credenciais Shopee entre tenants · multi-tenant · P
 - **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
-- **T-0055** Autocomplete no input de busca: sugestões de comando e escopo · E-001 · M
 
 ## ✅ Concluídas
 
