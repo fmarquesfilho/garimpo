@@ -49,6 +49,12 @@
 	</div>
 
 	<div class="flex flex-col gap-1 pr-11 text-sm">
+		{#if busca.cron}
+			<span
+				class="inline-flex w-fit items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
+				>⏱ {cronLabel(busca.cron)}</span
+			>
+		{/if}
 		{#if keywords.length}
 			<div class="flex items-center gap-1.5">
 				<span class="flex flex-wrap gap-1">
@@ -57,23 +63,9 @@
 							>{k}</span
 						>{/each}
 				</span>
-				{#if busca.cron}
-					<span
-						class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
-						>⏱ {cronLabel(busca.cron)}</span
-					>
-				{/if}
 			</div>
 		{:else if !categorias.length && !lojas.length}
-			<div class="flex items-center gap-1.5">
-				<span class="text-xs text-muted-foreground">(sem keywords)</span>
-				{#if busca.cron}
-					<span
-						class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
-						>⏱ {cronLabel(busca.cron)}</span
-					>
-				{/if}
-			</div>
+			<span class="text-xs text-muted-foreground">(sem keywords)</span>
 		{/if}
 		{#if categorias.length}
 			<div class="flex items-center gap-1.5">
@@ -82,12 +74,6 @@
 							>{c}</span
 						>{/each}
 				</span>
-				{#if !keywords.length && busca.cron}
-					<span
-						class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
-						>⏱ {cronLabel(busca.cron)}</span
-					>
-				{/if}
 			</div>
 		{/if}
 		{#if lojas.length}
