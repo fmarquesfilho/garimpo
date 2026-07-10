@@ -1,0 +1,102 @@
+id: T-0056
+titulo: "Corrigir bugs visuais e funcionais da página Descobrir v3"
+epic: E-001
+status: next
+prioridade: alta
+estimativa: M
+sprint: ""
+criado_em: "2026-07-09"
+atualizada_em: "2026-07-09"
+valor: |
+  A v3 da state machine funciona logicamente (294 testes passam), mas a UI
+  apresenta vários problemas visuais e de dados que degradam a experiência.
+  São bugs de binding e de contrato API↔frontend.
+descricao: |
+  ## Bugs identificados
+
+  ### 1. Nomes de loja mostrando IDs numéricos ou keywords
+
+  **Causa raiz:** `payloadToConfig` em `busca-unificada-logic.js` faz:
+  ```js
+  shopNomes: busca.nome ? { [busca.shop_ids?.[0]]: busca.nome } : {}
+  ```
+  - Só mapeia o primeiro shopId
+  - `busca.nome` vem de `b.Keyword` na API (que pode ser "serum", não o nome da loja)
+  - Múltiplas lojas ficam sem nome → BuscaCard mostra o ID numérico (457864097)
+
+  **Fix:** A API (`BuscasEndpoints.cs`) precisa retornar `shop_names` (dict id→nome).
+  O backend deve guardar os nomes resolvidos no momento do POST /api/lojas
+  (já existe `keyword` retornado pelo Collector.ResolveShop). Alternativa:
+  `payloadToConfig` pode buscar nomes de `ctx.lojasDisponiveis` como fallback.
+
+  ### 2. Título dos BuscaCard estranho
+
+  **Causa:** `gerarLabelBusca(busca)` mostra "keyword + N lojas" mas quando a
+  keyword é vazia mostra "(sem keywords) + N lojas" ou similar. Com a combinação
+  nome=keyword da loja, fica confuso.
+
+  **Fix:** Remover o título bold do card. Mostrar apenas as seções (keywords,
+  categorias, lojas, marketplaces) + cron badge. O título é redundante.
+
+  ### 3. Cards ocupam muito espaço vertical
+
+  **Causa:** Cada seção (palavras, categorias, lojas, marketplaces) ocupa uma
+  linha separada com label de 74px. Para cards com poucos dados, o espaço é
+  desperdiçado.
+
+  **Fix:** Compactar: inline-flow com wrapping, reduzir padding, ou agrupar
+  seções em uma única linha quando há poucos itens.
+
+  ### 4. Buscas sem keyword não retornam resultados
+
+  **Causa:** `carregarCuradoria` no effects só executa se:
+  `ctx.keyword.trim() || ctx.categorias.length > 0 || ctx.shopIds.length > 0`
+  Mas quando executa sem keyword, manda `keyword: undefined` para a API que
+  pode não retornar nada útil. A API Shopee precisa de ao menos um parâmetro.
+
+  **Fix:** Investigar o que o Collector/Shopee API aceita:
+  - Busca por categoria → `keyword = nome_categoria` (ex: "Perfumaria")
+  - Busca só-loja → `FetchShop(shop_id)` (já existe no Collector)
+  - Busca sem nada → mostrar produtos trending/populares (novo endpoint?)
+
+  ### 5. Falta task mise para limpar bancos
+
+  **Fix:** Criar `.mise/tasks/db/reset` que:
+  - Limpa tabelas do PostgreSQL (truncate com CASCADE)
+  - Opcionalmente limpa BigQuery (tables delete ou row truncate)
+  - Confirma antes de executar (interativo)
+
+  ## Arquivos a modificar
+
+  - `web/src/lib/busca-unificada-logic.js` — `payloadToConfig` (fix shopNomes)
+  - `web/src/lib/components/BuscaCard.svelte` — remover título, compactar
+  - `src/Garimpei.Api/Endpoints/BuscasEndpoints.cs` — retornar shop_names
+  - `web/src/lib/busca-engine-effects.js` — lógica de busca sem keyword
+  - `src/Garimpei.Domain/Entities/Busca.cs` — campo ShopNames (opcional)
+  - `.mise/tasks/db/reset` — novo script de limpeza
+
+  ## Investigação pendente
+
+  - Shopee API: quais buscas são possíveis sem keyword? (trending? recomendados?)
+  - Collector proto: `Fetch` aceita keyword vazio? O que retorna?
+  - BQ: snapshot mais recente pode servir como "resultados iniciais"?
+
+criterios_aceite:
+  - BuscaCard nunca mostra IDs numéricos como nome de loja
+  - BuscaCard sem título bold redundante — só seções + cron
+  - Cards mais compactos (menos espaço vertical)
+  - Busca só-categoria retorna resultados (keyword derivada ou FetchShop)
+  - mise run db:reset funciona (com confirmação interativa)
+  - Testes existentes continuam passando (294 unit + 24 E2E local)
+  - Unit test: payloadToConfig com múltiplas lojas produz shopNomes correto
+  - Unit test: payloadToConfig com nome=keyword não usa keyword como nome de loja
+  - Unit test: busca só-categoria dispara executarBusca e retorna dados
+  - E2E local: BuscaCard renderiza nome da loja (não ID numérico)
+  - E2E prod: busca por categoria sem keyword mostra resultados
+
+dependencias: []
+tags:
+  - frontend
+  - backend
+  - ux
+  - bugfix
