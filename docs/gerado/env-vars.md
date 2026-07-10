@@ -18,9 +18,9 @@ Não edite manualmente. Rode `mise run docs:env` para regenerar.
 | `GCP_PROJECT_ID` | `internal/otel/sloghandler.go` | 23 |
 | `GOOGLE_CLOUD_PROJECT` | `internal/store/novo_gcp.go` | 14 |
 | `HTTP_PORT` | `services/scheduler/main.go` | 74 |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `internal/otel/otel.go` | 53 |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `internal/otel/otel.go` | 96 |
 | `OTEL_SERVICE_NAME` | `internal/otel/otel.go` | 39 |
-| `OTEL_TRACES_SAMPLER_ARG` | `internal/otel/otel.go` | 108 |
+| `OTEL_TRACES_SAMPLER_ARG` | `internal/otel/otel.go` | 122 |
 | `PORT` | `services/publisher/main.go` | 34 |
 | `PUBLISHER_ADDR` | `services/scheduler/main.go` | 43 |
 | `TELEGRAM_BOT_TOKEN` | `internal/publish/novo.go` | 20 |
