@@ -90,7 +90,7 @@ for f in BOARD.md ROADMAP.md ENTIDADES.md env-vars.md; do
 done
 
 # Frontend docs devem existir
-for f in componentes.md linting.md impacto-migracao-ui.md; do
+for f in componentes.md impacto-migracao-ui.md; do
   if [ ! -f "docs-site/docs/frontend/$f" ]; then
     echo -e "${RED}   ✗ Faltando: frontend/$f${NC}"
     MISSING=$((MISSING + 1))

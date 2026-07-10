@@ -33,11 +33,13 @@ for adr in docs/decisoes/*.md; do
   [ -f "$adr" ] && cp "$adr" "$DEST/decisoes/"
 done
 
-# ── Docs de frontend (componentes, linting, impacto) ─────────────────────────
+# ── Docs de frontend (componentes, impacto) ──────────────────────────────────
 mkdir -p "$DEST/frontend"
 cp docs/componentes.md "$DEST/frontend/componentes.md"
-cp docs/linting.md "$DEST/frontend/linting.md"
 cp docs/impacto-migracao-ui.md "$DEST/frontend/impacto-migracao-ui.md"
+
+# ── Docs de observabilidade ───────────────────────────────────────────────────
+cp docs/observability.md "$DEST/observability.md"
 
 # ── Docs gerados (board, roadmap, entidades, env) ────────────────────────────
 mkdir -p "$DEST/gerado"
@@ -119,8 +121,11 @@ hero:
 ### Frontend
 
 - [Componentes UI](/frontend/componentes) — shadcn-svelte + Tailwind + Bits UI
-- [Linting & Qualidade](/frontend/linting) — Pipeline de qualidade
 - [Impacto da Migração](/frontend/impacto-migracao-ui) — Métricas e dívida técnica
+
+### Observabilidade
+
+- [OpenTelemetry & Logs](/observability) — Traces distribuídos, Cloud Trace, Cloud Logging
 
 ### Projeto
 
