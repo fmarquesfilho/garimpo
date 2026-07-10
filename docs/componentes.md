@@ -337,8 +337,8 @@ Ver **ADR-0004** para o layout e **ADR-0027** para a máquina de estados.
     por link/ID) + `LojaCard`s no escopo.
   - **Raia Buscas** — `BuscaCard`s salvas/agendadas + salvar/editar (edit mode).
   - **`busca-unificada-logic.js`** — funções puras: `configToPayload` (carrega `id` p/
-    update in-place), `payloadToConfig`, `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`,
-    `gerarLabelBusca`.
+    update in-place, inclui `shop_names`), `payloadToConfig` (usa `shop_names` dict),
+    `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`, `gerarLabelBusca`.
 - **Lane**: casca de uma raia — cabeçalho (título, tag, contador, ações) + corpo
   colapsável (`open` bindable, para permitir o "colapsar tudo").
 - **CategoriaCard**: categoria adicionada ao filtro — nome + badges dos marketplaces a
@@ -349,10 +349,12 @@ Ver **ADR-0004** para o layout e **ADR-0027** para a máquina de estados.
 ### Cards e Componentes de Domínio
 - **ProductCard**: Exibição central de ofertas.
 - **CandidateCard**: Visualização de leads de produto.
-- **BuscaCard**: cartão de uma busca salva (raia Buscas). Dividido em seções exibidas só
-  quando presentes — **palavras-chave, categorias, lojas, marketplaces** — mais a
-  informação de agendamento (⏱ cron). Ações: **rodar**, **editar** (edit mode → altera e
-  re-salva a mesma busca via `id`, podendo reagendar) e **remover**.
+- **BuscaCard**: cartão de uma busca salva (raia Buscas). Layout compacto de seções
+  inline — **palavras-chave, categorias, lojas, marketplaces** — sem título bold.
+  Cron badge (⏱) inline na primeira seção presente. Nomes de loja vêm de
+  `shopNomes` (dict id→nome, fornecido por `shop_names` na API). Ações: **rodar**,
+  **editar** (edit mode → altera e re-salva a mesma busca via `id`, podendo reagendar)
+  e **remover**.
 - **AgendadorBusca**: Seletor de agendamento — modo e frequência em `ToggleGroup`, cron avançado em `Input` (preset "A cada 8h", prop `permitirNunca`).
 - **ResolverLink**: Ferramenta de processamento de links curtos.
 
@@ -494,7 +496,7 @@ e resolve o próximo modo. A engine chama em cada `send()`.
 **Getters para a view:** `categoriaCards`, `lojaCards`, `contadorFiltros/Lojas/Buscas`,
 `fontesAtivas`, `intent`, `resumo`, `modo`.
 
-**Testes (294 unit + 24 E2E local + 15 E2E prod):**
+**Testes (298 unit + 24 E2E local + 15 E2E prod):**
 - `busca-engine.test.js` — engine core + modos v3
 - `busca-engine-cenarios.test.js` — cenários expandidos (doc TESTES_DESCOBRIR)
 - `busca-duplicata.test.js` — fingerprint + detecção de duplicatas

@@ -1,12 +1,12 @@
 id: T-0057
 titulo: "Fixtures compartilhados + contract tests cross-stack"
 epic: E-001
-status: next
+status: done
 prioridade: alta
 estimativa: G
 sprint: ""
 criado_em: "2026-07-09"
-atualizada_em: "2026-07-09"
+atualizada_em: "2026-07-10"
 valor: |
   Hoje cada camada inventa seus próprios dados de teste. Isso mascara bugs de
   mapeamento (campo com nome errado, tipo diferente, array vs string). Os bugs

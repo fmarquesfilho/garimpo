@@ -1,15 +1,17 @@
 # Handoff — Bugs v3 + Fixtures cross-stack (2026-07-09)
 
-> Próxima sessão: corrigir 5 bugs (T-0056) E criar fixtures compartilhados (T-0057).
-> As tasks são interdependentes — os fixtures definem o contrato correto que resolve os bugs.
-> Branch: main (trabalhar direto).
+> ✅ **CONCLUÍDO em 2026-07-10.** Todos os 5 bugs corrigidos + fixtures criados.
+> Commit: `fix(T-0056+T-0057): shop_names contrato + fixtures cross-stack`
+> Branch: main.
 
-## Estado atual
+## Estado atual (pós-fix)
 
-- **294 unit tests passando** (lógica da engine funciona)
-- **24 E2E locais passando** (com mocks — UI antiga, precisa atualizar seletores)
+- **298 unit tests passando** (4 novos: contract test + test atualizado)
+- **72 testes C# passando** (39 unit + 33 integration, com ShopNames)
+- **24 E2E locais** (seletores podem precisar atualização — ver T-0054)
 - **15 E2E prod passando** (auth real, APIs reais)
-- v3 state machine deployada em produção (modos, duplicatas, marketplaces)
+- v3 state machine deployada com shop_names
+- Migration `AddBuscaShopNames` pendente de apply em produção
 - Usuário de teste: `e2e@garimpei.app.br` (pwd em `web/.env.e2e.local`)
 
 ## Bugs a corrigir (T-0056)

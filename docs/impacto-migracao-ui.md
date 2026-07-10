@@ -237,7 +237,11 @@ ESLint atualizado: arquivos `.svelte.js` recebem `max-lines-per-function: 150` (
 | `Busca` (entity) | `VendasMin` | `int?` |
 | `Busca` (entity) | `Categorias` | `string[]?` |
 | `Busca` (entity) | `Fontes` | `string[]?` |
+| `Busca` (entity) | `ShopNames` | `Dictionary<string,string>?` (jsonb) |
 | `POST /api/buscas` | `shop_ids[]` | array de IDs |
+| `POST /api/buscas` | `shop_names` | dict id→nome |
+| `GET /api/buscas` | `shop_names` | dict id→nome (substituiu `nome`) |
+| `GET /api/candidatos` | `fonte`, `shop_ids` | routing para FetchShop |
 | `POST /api/buscas` | `comissao_min` | decimal |
 | `POST /api/buscas` | `vendas_min` | int |
 | `POST /api/buscas` | `categorias[]` | array de strings |

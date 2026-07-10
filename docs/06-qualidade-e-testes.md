@@ -152,12 +152,13 @@ Verifica sincronização de schemas entre os 3 datastores e os componentes:
 | Métrica | Alvo | Validação |
 |---------|------|-----------|
 | Testes Go | ~200 | `go test ./...` |
-| Testes C# | 61 (multi-tenant + arch + integration + JSON) | `dotnet test` |
-| Testes frontend | ~174 unitários + ~36 E2E | `vitest --run` + `playwright test` |
+| Testes C# | 72 (multi-tenant + arch + integration + JSON) | `dotnet test` |
+| Testes frontend | ~298 unitários + ~36 E2E | `vitest --run` + `playwright test` |
 | Drift API | 0 rotas faltantes | `mise run check:api-contract` |
 | Drift config | 0 inconsistências | `mise run check:config-consistency` |
 | Drift schema | 0 desincronizações | `mise run check:schema-sync` |
 | Drift rules | 0 problemas no JSON de regras | `mise run check:rules-schema` |
+| Drift fixtures | 0 incompatibilidades cross-stack | `mise run check:fixtures-contract` |
 | Pre-push | 9/9 checks | `mise run prepush` |
 | Arquivos > 400 linhas | 0 | CI bloqueia |
 | Warnings C# | 0 | TreatWarningsAsErrors |
@@ -180,6 +181,7 @@ cd web && npx vitest run
 ./.mise/tasks/check/api-contract
 ./.mise/tasks/check/config-consistency
 ./.mise/tasks/check/schema-sync
+./.mise/tasks/check/fixtures-contract
 
 # TUDO de uma vez (mesmo script usado pelo pre-push hook)
 ./scripts/pre-push-check.sh
