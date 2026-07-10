@@ -64,6 +64,7 @@ jobs:
               - 'go.mod'
               - 'go.sum'
               - 'deploy/**'
+              - '.github/workflows/**'
             web:
               - 'web/**'
 
