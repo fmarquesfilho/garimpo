@@ -111,7 +111,7 @@ test.describe('Regras externas (busca-rules.json) — E2E', () => {
 							id: 'busca-1',
 							keywords: ['serum'],
 							shop_ids: [920292999],
-							nome: 'Le Botanic',
+							shop_names: { '920292999': 'Le Botanic' },
 							comissao_min: 0.07,
 							vendas_min: 0,
 							categorias: [],

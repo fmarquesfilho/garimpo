@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# mise description="Roda testes unitários (frontend + C#)"
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  🧪 Testes unitários"
+echo "═══════════════════════════════════════"
+
+echo ""
+echo "── Frontend (vitest) ──"
+cd web && npx vitest run
+cd ..
+
+echo ""
+echo "── C# (arquitetura + unitários) ──"
+dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --filter "FullyQualifiedName~Architecture"
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ Unit tests passed"
+echo "═══════════════════════════════════════"

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# mise description="E2E produção: token Firebase real + APIs reais contra garimpei.app.br"
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  🌐 E2E Produção"
+echo "═══════════════════════════════════════"
+echo ""
+echo "  Auth: Firebase REST (token real)"
+echo "  API:  produção (garimpei.app.br)"
+echo "  Lojas: Glory of Seoul, Le Botanic, COSRX"
+echo ""
+
+cd web
+
+# Valida que .env.e2e.local existe com credenciais
+if [ ! -f ".env.e2e.local" ]; then
+  echo "  ❌ Falta .env.e2e.local com E2E_PASSWORD"
+  echo "  Copie .env.e2e para .env.e2e.local e preencha."
+  exit 1
+fi
+
+if ! grep -q "E2E_PASSWORD=." .env.e2e.local 2>/dev/null; then
+  echo "  ❌ E2E_PASSWORD vazio em .env.e2e.local"
+  exit 1
+fi
+
+echo "  🔑 Auth setup + testes..."
+npx playwright test --config=playwright.prod.config.js "$@"
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ E2E Produção passed"
+echo "═══════════════════════════════════════"

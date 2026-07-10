@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# mise description="E2E local: auth bypass + API mockada com fixtures (sem backend)"
+# mise depends=["test:unit"]
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  🎭 E2E Local (mock total)"
+echo "═══════════════════════════════════════"
+echo ""
+echo "  Auth: bypass (window.__E2E_AUTH_USER__)"
+echo "  API:  mockada com fixtures/"
+echo "  Backend: nenhum"
+echo ""
+
+cd web
+
+# Build se necessário (preview server precisa do build)
+if [ ! -d "build" ] || [ "$(find src -newer build -name '*.svelte' -o -name '*.js' | head -1)" ]; then
+  echo "  📦 Building..."
+  npm run build
+fi
+
+echo "  🎬 Running Playwright (local)..."
+npx playwright test --config=playwright.local.config.js "$@"
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ E2E Local passed"
+echo "═══════════════════════════════════════"

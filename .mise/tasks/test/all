@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# mise description="Roda todos os testes: unit + E2E local (não inclui prod)"
+# mise depends=["test:unit", "test:e2e-local"]
+set -euo pipefail
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ All tests passed (unit + E2E local)"
+echo "═══════════════════════════════════════"
+echo ""
+echo "  Para E2E produção: mise run test:e2e-prod"

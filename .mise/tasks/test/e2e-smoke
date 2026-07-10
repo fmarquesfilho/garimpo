@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# mise description="Smoke tests: landing page + rotas protegidas (sem auth, sem backend)"
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  💨 Smoke tests"
+echo "═══════════════════════════════════════"
+
+cd web
+
+if [ ! -d "build" ] || [ "$(find src -newer build -name '*.svelte' -o -name '*.js' | head -1)" ]; then
+  echo "  📦 Building..."
+  npm run build
+fi
+
+echo "  🎬 Running smoke tests..."
+npx playwright test --config=playwright.config.js --project=smoke "$@"
+
+echo ""
+echo "  ✅ Smoke passed"
