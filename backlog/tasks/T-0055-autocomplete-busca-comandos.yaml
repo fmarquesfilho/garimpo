@@ -1,0 +1,73 @@
+id: T-0055
+titulo: "Autocomplete no input de busca: sugestões de comando e escopo"
+epic: E-001
+status: backlog
+prioridade: media
+estimativa: M
+sprint: ""
+criado_em: "2026-07-09"
+valor: |
+  O input de busca hoje é texto livre. Quando o usuário digita uma keyword
+  (ex: "serum"), não há indicação de onde a busca será executada (global vs
+  lojas monitoradas). Um autocomplete com sugestões de escopo melhora a
+  descobribilidade e reduz erros de expectativa.
+descricao: |
+  Adicionar autocomplete ao input principal de busca na página Descobrir.
+  O autocomplete sugere comandos/escopos baseados no que o usuário digita.
+
+  ## Comportamento esperado
+
+  1. Usuário digita "serum" → dropdown aparece com sugestões:
+     - 🔍 "serum" (pesquisar em toda Shopee)
+     - 🏪 "serum" nas lojas monitoradas (Le Botanic, COSRX Store, …)
+     - 📋 "serum" na categoria Cuidados com a Pele
+     - 💾 Busca salva: "serum + 2 lojas" (match com busca existente)
+
+  2. Se o usuário já tem buscas salvas com keywords similares, sugerir
+     "Carregar busca: serum + 1 loja" (atalho para CARREGAR_SALVA).
+
+  3. Enter sem selecionar sugestão → comportamento atual (busca global).
+
+  4. Selecionar sugestão → preenche escopo automaticamente:
+     - Selecionar "nas lojas monitoradas" → adiciona shopIds ao contexto
+     - Selecionar busca salva → equivale a CARREGAR_SALVA
+     - Selecionar categoria → adiciona categoria ao filtro
+
+  ## Modelo de dados (declarativo em rules)
+
+  Adicionar a `rules/busca-rules.json`:
+  ```json
+  "autocomplete": {
+    "minChars": 2,
+    "maxSugestoes": 5,
+    "fontes": ["keywords_salvas", "lojas_monitoradas", "categorias", "buscas_salvas"],
+    "prioridade": ["buscas_salvas", "lojas_monitoradas", "categorias", "keywords_salvas"]
+  }
+  ```
+
+  ## Implementação sugerida
+
+  - Componente `AutocompleteInput.svelte` (Bits UI Combobox ou custom)
+  - Função pura `gerarSugestoes(input, ctx)` em `busca-config.js`
+  - Integração com BuscaEngine: novo event `SELECIONAR_SUGESTAO`
+  - Testes: unit para `gerarSugestoes` + E2E para interação com dropdown
+
+  ## Referências
+
+  - ADR-0027 seção 5: padrão de features declarativas no JSON
+  - BuscaEngine v3: modos de interação já suportam transições complexas
+  - Bits UI Combobox: já usado para lojas e categorias (padrão disponível)
+
+criterios_aceite:
+  - Autocomplete aparece após 2+ caracteres no input
+  - Sugestões incluem: busca global, lojas monitoradas, buscas salvas (se match)
+  - Selecionar sugestão altera o estado da engine corretamente
+  - Regras em rules/busca-rules.json (testável, versionável)
+  - Testes unitários para gerarSugestoes
+  - Funciona com 0 lojas monitoradas (só mostra opção global)
+
+dependencias: []
+tags:
+  - frontend
+  - ux
+  - busca-engine

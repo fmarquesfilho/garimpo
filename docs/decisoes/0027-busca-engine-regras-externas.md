@@ -297,6 +297,9 @@ Isso fecha o ciclo: regra declarada → código obedece → testes provam.
 
 - O spec original (`.kiro/specs/rules-service/`) permanece como referência
   futura caso a complexidade justifique
+- **Autocomplete no input de busca** (T-0055) — feature planejada que segue o
+  mesmo padrão: regras em `rules.autocomplete` + função pura `gerarSugestoes`
+  + novo event `SELECIONAR_SUGESTAO`. Validará a extensibilidade do pattern.
 
 ## Lojas de teste (validação real)
 
