@@ -22,9 +22,7 @@
 	};
 
 	function toggle(mkt) {
-		const ativos = marketplaces.includes(mkt)
-			? marketplaces.filter((m) => m !== mkt)
-			: [...marketplaces, mkt];
+		const ativos = marketplaces.includes(mkt) ? marketplaces.filter((m) => m !== mkt) : [...marketplaces, mkt];
 		onchange?.(ativos);
 	}
 </script>

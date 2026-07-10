@@ -125,11 +125,12 @@
 				type="button"
 				class="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors
 					{engine.buscasPainelAberto
-						? 'border border-primary bg-[var(--ouro-fundo)] font-semibold text-[var(--ouro-escuro)]'
-						: 'border border-border text-muted-foreground hover:border-primary hover:text-foreground'}"
+					? 'border border-primary bg-[var(--ouro-fundo)] font-semibold text-[var(--ouro-escuro)]'
+					: 'border border-border text-muted-foreground hover:border-primary hover:text-foreground'}"
 				onclick={() => (engine.buscasPainelAberto = !engine.buscasPainelAberto)}
 			>
-				💾 {engine.contadorBuscas} {engine.contadorBuscas === 1 ? 'salva' : 'salvas'}
+				💾 {engine.contadorBuscas}
+				{engine.contadorBuscas === 1 ? 'salva' : 'salvas'}
 				<span class="text-xs leading-none">{engine.buscasPainelAberto ? '▴' : '▾'}</span>
 			</button>
 
@@ -137,11 +138,15 @@
 
 			<!-- Indicador de modo (sutil) -->
 			{#if engine.modo === 'vinculada'}
-				<span class="rounded-full border border-primary/40 bg-[var(--ouro-fundo)] px-2 py-0.5 text-[0.68rem] font-semibold text-[var(--ouro-escuro)]">
+				<span
+					class="rounded-full border border-primary/40 bg-[var(--ouro-fundo)] px-2 py-0.5 text-[0.68rem] font-semibold text-[var(--ouro-escuro)]"
+				>
 					↻ busca ativa
 				</span>
 			{:else if engine.modo === 'editando'}
-				<span class="rounded-full border border-primary bg-[var(--ouro-fundo)] px-2 py-0.5 text-[0.68rem] font-bold text-[var(--ouro-escuro)]">
+				<span
+					class="rounded-full border border-primary bg-[var(--ouro-fundo)] px-2 py-0.5 text-[0.68rem] font-bold text-[var(--ouro-escuro)]"
+				>
 					✎ editando
 				</span>
 			{/if}

@@ -506,7 +506,13 @@ describe('BuscaEngine — Cenários v3: modos de interação', () => {
 	it('carregar salva → alterar keyword → deseleciona automaticamente', async () => {
 		const effects = mockEffects();
 		const engine = new BuscaEngine(effects);
-		const config = { id: 'b1', keywords: ['serum'], shopIds: [123], shopNomes: { 123: 'Loja X' }, fontes: ['curadoria'] };
+		const config = {
+			id: 'b1',
+			keywords: ['serum'],
+			shopIds: [123],
+			shopNomes: { 123: 'Loja X' },
+			fontes: ['curadoria']
+		};
 
 		await engine.send({ type: 'CARREGAR_SALVA', config });
 		expect(engine.modo).toBe(MODOS.VINCULADA);

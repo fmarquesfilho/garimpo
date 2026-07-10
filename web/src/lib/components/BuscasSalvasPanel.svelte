@@ -9,7 +9,7 @@
 	 * @prop engine — instância da BuscaEngine (lê ctx, despacha events)
 	 * @prop open — bindable, estado aberto/fechado do painel
 	 */
-	
+
 	import { gerarLabelBusca } from '$lib/busca-engine.svelte.js';
 	import AgendadorBusca from './AgendadorBusca.svelte';
 	import BuscaCard from './BuscaCard.svelte';
@@ -22,23 +22,22 @@
 	<div class="mt-2 rounded-md border border-border bg-card shadow-sm">
 		<!-- Cabeçalho do painel -->
 		<div class="flex items-center gap-2 border-b border-border bg-muted px-3.5 py-2">
-			<span class="font-[var(--display)] text-[0.95rem] font-bold text-foreground">
-				💾 Buscas salvas
-			</span>
+			<span class="font-[var(--display)] text-[0.95rem] font-bold text-foreground"> 💾 Buscas salvas </span>
 			<span class="font-[var(--mono)] text-xs text-muted-foreground">
-				{engine.contadorBuscas} {engine.contadorBuscas === 1 ? 'salva' : 'salvas'}
+				{engine.contadorBuscas}
+				{engine.contadorBuscas === 1 ? 'salva' : 'salvas'}
 			</span>
 			<span class="flex-1"></span>
 			<button
 				type="button"
 				class="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-primary"
-				onclick={() => (engine.salvarAberto = !engine.salvarAberto)}
-			>＋ salvar busca atual</button>
+				onclick={() => (engine.salvarAberto = !engine.salvarAberto)}>＋ salvar busca atual</button
+			>
 			<button
 				type="button"
 				class="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-				onclick={() => (open = false)}
-			>✕</button>
+				onclick={() => (open = false)}>✕</button
+			>
 		</div>
 
 		<div class="p-3.5">
@@ -51,14 +50,18 @@
 					<AgendadorBusca bind:value={engine.ctx.cron} />
 
 					{#if engine.ctx.erroDuplicata}
-						<div class="mt-2 rounded-sm border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-3 py-2 text-sm text-[var(--aviso-texto)]">
+						<div
+							class="mt-2 rounded-sm border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-3 py-2 text-sm text-[var(--aviso-texto)]"
+						>
 							⚠️ {engine.ctx.erroDuplicata}
 						</div>
 					{/if}
 
 					<div class="mt-2 flex justify-end gap-2">
 						{#if engine.ctx.editandoId}
-							<Button variant="ghost" size="sm" onclick={() => engine.send({ type: 'CANCELAR_EDICAO' })}>Cancelar edição</Button>
+							<Button variant="ghost" size="sm" onclick={() => engine.send({ type: 'CANCELAR_EDICAO' })}
+								>Cancelar edição</Button
+							>
 						{:else}
 							<Button variant="ghost" size="sm" onclick={() => (engine.salvarAberto = false)}>Cancelar</Button>
 						{/if}
@@ -71,7 +74,9 @@
 
 			<!-- Feedback reativo de duplicata -->
 			{#if engine.buscaDuplicada && !engine.salvarAberto}
-				<div class="mb-3 rounded-sm border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-3 py-2 text-sm text-[var(--aviso-texto)]">
+				<div
+					class="mb-3 rounded-sm border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-3 py-2 text-sm text-[var(--aviso-texto)]"
+				>
 					💡 Esta configuração já existe como busca salva: <strong>"{gerarLabelBusca(engine.buscaDuplicada)}"</strong>
 				</div>
 			{/if}
@@ -79,13 +84,17 @@
 			<!-- Indicador de modo -->
 			{#if engine.modo === 'vinculada' && engine.ctx.buscaSelecionadaId}
 				<div class="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-					<span class="rounded-full border border-primary bg-[var(--ouro-fundo)] px-2 py-0.5 font-semibold text-[var(--ouro-escuro)]">
+					<span
+						class="rounded-full border border-primary bg-[var(--ouro-fundo)] px-2 py-0.5 font-semibold text-[var(--ouro-escuro)]"
+					>
 						↻ rodando busca salva
 					</span>
 				</div>
 			{:else if engine.modo === 'editando'}
 				<div class="mb-3 flex items-center gap-2 text-xs">
-					<span class="rounded-full border border-primary bg-[var(--ouro-fundo)] px-2 py-0.5 font-bold text-[var(--ouro-escuro)]">
+					<span
+						class="rounded-full border border-primary bg-[var(--ouro-fundo)] px-2 py-0.5 font-bold text-[var(--ouro-escuro)]"
+					>
 						✎ editando busca salva
 					</span>
 				</div>

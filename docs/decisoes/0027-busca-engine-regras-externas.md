@@ -19,7 +19,7 @@ O que esta decisão muda:
 2. **A engine é o runtime.** `BuscaEngine` é uma FSM testável que impede estados
    impossíveis via guards. A view é burra — não tem lógica.
 
-3. **Os testes são a prova.** 243 unit + 24 E2E locais + 15 E2E produção — todos
+3. **Os testes são a prova.** 294 unit + 24 E2E locais + 15 E2E produção — todos
    validando contra o mesmo JSON. Se alguém mudar uma regra sem atualizar o
    frontend, **os testes quebram no mesmo minuto.**
 
@@ -123,6 +123,55 @@ CI drift check             → valida schema + completude + consistência
 Se alguém alterar o JSON sem atualizar o frontend, os testes falham.
 Se alguém alterar o frontend sem respeitar o JSON, os testes falham.
 
+### 5. Evolução v3: modos de interação, duplicatas, e marketplaces (rules 3.0)
+
+A arquitetura de regras externas provou seu valor quando a v3 da state machine
+foi implementada. Três features complexas foram adicionadas **apenas editando o JSON
++ implementando as funções puras correspondentes** — sem tocar na view:
+
+**Modos de interação** (declarados em `rules.modos`):
+```json
+{
+  "explorando": { "transicoes": { "CARREGAR_SALVA": "vinculada" } },
+  "vinculada": { "desvinculaEm": ["DIGITAR", "MUDAR_FILTRO", ...], "transicoes": {...} },
+  "editando": { "transicoes": { "SALVAR": "explorando", "CANCELAR_EDICAO": "explorando" } }
+}
+```
+A função `proximoModo(modoAtual, tipoEvento)` lê essas regras. A engine chama
+`proximoModo` em cada `send()` — zero lógica de modo na view.
+
+**Detecção de busca duplicada** (declarada em `rules.buscaDuplicada`):
+```json
+{
+  "camposIdentidade": ["keyword", "shopIds", "categorias", "marketplacesFiltro"],
+  "normalizacao": { "shopIds": "sort", "categorias": "sort_lowercase" },
+  "erroAoSalvar": true,
+  "feedbackReativo": true
+}
+```
+A função `fingerprint(ctx)` gera hash determinístico. `buscarDuplicada(ctx, salvas)`
+compara. O guard `buscaDuplicada` bloqueia o salvar se encontrar match.
+
+**Filtro por marketplace** (declarado em `rules.marketplaces`):
+```json
+{
+  "suportados": ["shopee", "mercado_livre", "amazon"],
+  "filtro": { "tipo": "toggle_multi", "min": 0 },
+  "icones": { "shopee": "🟠", "mercado_livre": "🔵", "amazon": "🟡" }
+}
+```
+Componente `MarketplaceFilter.svelte` lê de `MARKETPLACES` (re-exportado do JSON).
+
+**O que isso prova:** a decisão de externalizar regras não foi prematura. Ao adicionar
+features complexas, as regras novas vão no JSON, as funções puras vão no config, e
+os testes validam tudo — sem refatorar a engine ou a view.
+
+| Feature | Linhas no JSON | Linhas no código | Testes adicionados |
+|---------|---------------|------------------|--------------------|
+| Modos | 30 | 25 (`proximoModo`) | 51 (cenários v3) |
+| Duplicatas | 10 | 50 (`fingerprint` + `buscarDuplicada`) | 147 (test dedicado) |
+| Marketplaces | 8 | 57 (componente) | — (coberto pelos E2E) |
+
 ## Alternativas avaliadas
 
 ### 1. Rules engine externo (gorules/zen-go)
@@ -170,12 +219,13 @@ Se alguém alterar o frontend sem respeitar o JSON, os testes falham.
 ### Positivas
 
 - **9 bugs corrigidos** (6 estado + 3 arquitetura: store desync, lojas ctx, erro engolido)
-- **243 unit tests** cobrindo engine, lógica de filtros, e regras
+- **294 unit tests** cobrindo engine, lógica de filtros, regras, modos, e duplicatas
 - **24 E2E locais** passando — todos sem skip, sem hacks de mock
+- **15 E2E produção** passando contra garimpei.app.br (auth Firebase real)
 - **Drift check** no CI impede regressões silenciosas
 - **Documentação executável** — o JSON é a spec E o código lê dele
-- **Evoluível**: se a complexidade crescer, o JSON pode ser consumido por um
-  engine externo sem mudar a estrutura
+- **Evoluível** — v3 (modos + duplicatas + marketplaces) provou o pattern: +1003 linhas
+  de features adicionadas com zero refatoração da engine ou da view
 
 ### Correções de arquitetura (sessão final)
 
@@ -285,15 +335,20 @@ Ver `componentes.md` para a lista de eventos/getters e os componentes de raia.
 
 | Arquivo | Papel |
 |---------|-------|
-| `rules/busca-rules.json` | Fonte de verdade — regras declarativas |
-| `rules/busca-rules.schema.json` | JSON Schema |
-| `web/src/lib/busca-engine.svelte.js` | FSM headless (classe Svelte 5) |
-| `web/src/lib/busca-engine-effects.js` | Effects injetáveis (API calls) |
-| `web/src/lib/busca-config.js` | Adapter: JSON → formato da engine |
+| `rules/busca-rules.json` | Fonte de verdade — regras declarativas (v3: modos, duplicatas, marketplaces) |
+| `rules/busca-rules.schema.json` | JSON Schema (atualizado para v3) |
+| `web/src/lib/busca-engine.svelte.js` | FSM headless (classe Svelte 5, v3: modos de interação) |
+| `web/src/lib/busca-engine-state.js` | Estado inicial, guards, constantes MODOS |
+| `web/src/lib/busca-engine-effects.js` | Effects injetáveis (API calls, buildBuscasComLojas) |
+| `web/src/lib/busca-config.js` | Adapter: JSON → formato da engine + funções puras (proximoModo, fingerprint, buscarDuplicada) |
 | `web/src/lib/descobrir-logic.js` | Filtragem client-side (funções puras) |
-| `web/src/lib/components/BuscaUnificada.svelte` | View burra |
+| `web/src/lib/components/BuscaUnificada.svelte` | View burra (v3: raias, MarketplaceFilter) |
+| `web/src/lib/components/BuscasSalvasPanel.svelte` | Painel de buscas salvas (v3: modos vinculada/editando) |
+| `web/src/lib/components/MarketplaceFilter.svelte` | Filtro multi-marketplace (v3) |
 | `.mise/tasks/check/rules-schema` | CI drift check |
-| `web/src/tests/busca-engine.test.js` | Unit: engine core |
-| `web/src/tests/busca-engine-cenarios.test.js` | Unit: cenários expandidos |
+| `web/src/tests/busca-engine.test.js` | Unit: engine core + modos v3 |
+| `web/src/tests/busca-duplicata.test.js` | Unit: fingerprint + detecção duplicatas |
+| `web/src/tests/busca-engine-cenarios.test.js` | Unit: cenários expandidos + v3 |
 | `web/src/tests/descobrir.test.js` | Unit: lógica de filtragem |
 | `web/tests/local/` | E2E locais (Playwright + mocks) |
+| `web/tests/prod/` | E2E produção (Firebase Auth real + APIs reais) |

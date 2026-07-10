@@ -465,4 +465,3 @@ describe('BuscaEngine — Detecção de busca duplicada (v3)', () => {
 		expect(engine.ctx.erroDuplicata).toBeNull();
 	});
 });
-
