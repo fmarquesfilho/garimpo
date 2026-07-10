@@ -1,5 +1,5 @@
 /**
- * busca-config.js — Configuração declarativa da BuscaEngine (página Garimpar).
+ * busca-config.js - Configuração declarativa da BuscaEngine (página Garimpar).
  *
  * Importa regras de `rules/busca-rules.json` (fonte única, external ao código).
  * O JSON é testável independentemente por qualquer linguagem/tool:
@@ -108,8 +108,8 @@ export function comissaoPercentLabel(comissaoMin) {
  * 2. Se o modo atual é `vinculada` e o evento está em `desvinculaEm` → volta a `explorando`.
  * 3. Caso contrário → modo permanece inalterado.
  *
- * @param {string} modoAtual — 'explorando' | 'vinculada' | 'editando'
- * @param {string} tipoEvento — ex: 'DIGITAR', 'CARREGAR_SALVA', 'SALVAR'
+ * @param {string} modoAtual - 'explorando' | 'vinculada' | 'editando'
+ * @param {string} tipoEvento - ex: 'DIGITAR', 'CARREGAR_SALVA', 'SALVAR'
  * @returns {string} próximo modo
  */
 export function proximoModo(modoAtual, tipoEvento) {
@@ -136,7 +136,7 @@ export function proximoModo(modoAtual, tipoEvento) {
  * Gera um fingerprint determinístico de uma configuração de busca, usando
  * apenas os campos de identidade definidos em `rules.buscaDuplicada`.
  *
- * @param {object} ctx — contexto da engine ou config de busca salva (normalizada)
+ * @param {object} ctx - contexto da engine ou config de busca salva (normalizada)
  * @returns {string} fingerprint para comparação
  */
 export function fingerprint(ctx) {
@@ -166,7 +166,7 @@ export function fingerprint(ctx) {
 /**
  * Converte uma busca salva (formato payloadToConfig) para o formato de ctx
  * para comparação via fingerprint.
- * @param {object} busca — config de busca salva
+ * @param {object} busca - config de busca salva
  * @returns {object} ctx parcial com os campos de identidade
  */
 export function buscaSalvaToCtx(busca) {
@@ -182,9 +182,9 @@ export function buscaSalvaToCtx(busca) {
  * Procura uma busca salva com os mesmos parâmetros de identidade que o contexto
  * atual. Retorna a busca duplicada (ou null).
  *
- * @param {object} ctx — contexto atual da engine
- * @param {object[]} buscasSalvas — lista de buscas salvas (formato payloadToConfig)
- * @param {string|null} [excluirId] — id a excluir da comparação (edit mode)
+ * @param {object} ctx - contexto atual da engine
+ * @param {object[]} buscasSalvas - lista de buscas salvas (formato payloadToConfig)
+ * @param {string|null} [excluirId] - id a excluir da comparação (edit mode)
  * @returns {object|null} busca duplicada ou null
  */
 export function buscarDuplicada(ctx, buscasSalvas, excluirId = null) {

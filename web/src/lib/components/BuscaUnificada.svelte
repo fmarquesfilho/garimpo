@@ -17,7 +17,6 @@
 	import { BuscaEngine } from '$lib/busca-engine.svelte.js';
 	import { criarEffects } from '$lib/busca-engine-effects.js';
 	import { DEFAULTS } from '$lib/busca-config.js';
-	import AgendadorBusca from './AgendadorBusca.svelte';
 	import Lane from './Lane.svelte';
 	import CategoriaCard from './CategoriaCard.svelte';
 	import LojaCard from './LojaCard.svelte';

@@ -30,7 +30,7 @@ const favoritos = [{ produto_id: 'F1', nome: 'Meu Favorito Perfume', preco: 150,
 
 // ── Cenários de fonte ─────────────────────────────────────────────────────
 
-// eslint-disable-next-line max-lines-per-function
+ 
 describe('Descobrir — Fontes de dados', () => {
 	it('cenário 1: Busca com keyword retorna curadoria', () => {
 		const r = montarResultados({
@@ -620,7 +620,7 @@ describe('Descobrir — Detecção de loja por nome', () => {
 
 // ── Fonte Lojas (cenário unificação) ──────────────────────────────────────
 
-// eslint-disable-next-line max-lines-per-function
+ 
 describe('Descobrir — Fonte Lojas (toggle e filtragem)', () => {
 	const dadosLojas = [
 		{
@@ -724,7 +724,7 @@ describe('Descobrir — Fonte Lojas (toggle e filtragem)', () => {
 	});
 });
 
-// eslint-disable-next-line max-lines-per-function
+ 
 describe('Descobrir — Fonte Lojas (combinações e edge cases)', () => {
 	const dadosLojas = [
 		{

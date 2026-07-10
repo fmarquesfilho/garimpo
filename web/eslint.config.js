@@ -39,6 +39,13 @@ export default [
 		}
 	},
 	{
+		files: ['**/*.test.js', '**/*.test.ts', '**/*.spec.js'],
+		rules: {
+			// Test describe blocks and data-driven tests are naturally longer.
+			'max-lines-per-function': 'off'
+		}
+	},
+	{
 		ignores: ['build/', '.svelte-kit/', 'node_modules/']
 	}
 ];

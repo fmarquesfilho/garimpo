@@ -9,8 +9,8 @@
 	 * @prop engine — instância da BuscaEngine (lê ctx, despacha events)
 	 * @prop open — bindable, estado aberto/fechado do painel
 	 */
-	import { MODOS } from '$lib/busca-engine-state.js';
-	import { gerarLabelBusca, cronLabel } from '$lib/busca-engine.svelte.js';
+	
+	import { gerarLabelBusca } from '$lib/busca-engine.svelte.js';
 	import AgendadorBusca from './AgendadorBusca.svelte';
 	import BuscaCard from './BuscaCard.svelte';
 	import { Button } from '$lib/components/ui';
