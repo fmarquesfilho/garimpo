@@ -219,14 +219,17 @@ jobs:
     name: Deploy backend
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [changes, go, csharp, python, proto, frontend, contracts]
-    # Deploy sempre, EXCETO quando APENAS web/ mudou (seguro pular).
-    # Na dúvida (múltiplas mudanças, mudanças em .github/, etc.), deploya.
+    needs: [changes, go, csharp, python, proto]
+    # Deploy quando backend mudou E seus jobs de validação passaram.
+    # Independente do frontend — stacks deployados separadamente.
     if: |
       always() &&
       github.ref == 'refs/heads/main' && github.event_name == 'push' &&
-      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.web != 'true') &&
-      !contains(needs.*.result, 'failure')
+      needs.changes.outputs.backend == 'true' &&
+      (needs.go.result == 'success' || needs.go.result == 'skipped') &&
+      (needs.csharp.result == 'success' || needs.csharp.result == 'skipped') &&
+      (needs.python.result == 'success' || needs.python.result == 'skipped') &&
+      (needs.proto.result == 'success' || needs.proto.result == 'skipped')
     permissions:
       contents: read
       id-token: write
@@ -314,12 +317,14 @@ jobs:
     name: Deploy frontend
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    needs: [changes, frontend, contracts]
+    needs: [changes, frontend]
+    # Deploy quando frontend mudou E seu job de validação passou.
+    # Independente do backend — stacks deployados separadamente.
     if: |
       always() &&
       github.ref == 'refs/heads/main' && github.event_name == 'push' &&
       needs.changes.outputs.web == 'true' &&
-      !contains(needs.*.result, 'failure')
+      (needs.frontend.result == 'success')
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4

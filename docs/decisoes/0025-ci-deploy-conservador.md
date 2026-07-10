@@ -93,3 +93,41 @@ Isso previne erros de syntax como `jobs:` duplicado.
 - [dorny/paths-filter](https://github.com/dorny/paths-filter) — detecção de paths no nível de job
 - [GitHub Actions path filtering docs](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushpull_requestpull_request_targetpathspaths-ignore)
 - Steering rule: `.kiro/steering/ci.md`
+
+---
+
+## Revisão (2026-07-10): Deploys Independentes
+
+### Novo problema detectado
+
+A lógica conservadora usava `!contains(needs.*.result, 'failure')` com `needs`
+que incluía **frontend e contracts**. Resultado: se o frontend falhasse (ex: path
+do wrangler errado), o deploy do backend era bloqueado — mesmo com código backend
+perfeito e todos os testes Go/C#/Python passando.
+
+### Correção aplicada
+
+Deploys são agora **independentes** — cada um depende apenas dos seus próprios
+jobs de validação:
+
+```yaml
+deploy-backend:
+  needs: [changes, go, csharp, python, proto]
+  if: |
+    needs.changes.outputs.backend == 'true' &&
+    (needs.go.result == 'success' || needs.go.result == 'skipped') &&
+    (needs.csharp.result == 'success' || needs.csharp.result == 'skipped') &&
+    ...
+
+deploy-web:
+  needs: [changes, frontend]
+  if: |
+    needs.changes.outputs.web == 'true' &&
+    needs.frontend.result == 'success'
+```
+
+### Princípio atualizado
+
+- **Deploys não cruzam dependências entre stacks** — backend nunca espera frontend, e vice-versa.
+- **Cada deploy só depende da validação do seu próprio código** — se Go/C#/Python passam, backend deploya independente do estado do frontend.
+- A lógica "na dúvida, deploya" continua válida **dentro de cada stack**.
