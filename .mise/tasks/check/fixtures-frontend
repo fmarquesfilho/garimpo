@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# mise description="Roda contract tests do frontend contra fixtures/"
+set -euo pipefail
+
+cd web
+npx vitest run src/tests/fixtures-contract.test.js --reporter=verbose

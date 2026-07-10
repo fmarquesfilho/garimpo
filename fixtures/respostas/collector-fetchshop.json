@@ -1,0 +1,63 @@
+{
+  "_doc": "Golden: Collector.FetchShop(shop_id=920292999, marketplace=SHOPEE, limit=50)",
+  "products": [
+    {
+      "produto_id": "shopee-920292999-100001",
+      "nome": "Sérum Facial Vitamina C 30ml",
+      "preco": 49.90,
+      "preco_original": 79.90,
+      "comissao": 0.12,
+      "vendas": 1500,
+      "imagem": "https://cf.shopee.com.br/file/placeholder1.jpg",
+      "link": "https://shopee.com.br/product/920292999/100001",
+      "shop_id": 920292999,
+      "loja": "Glory of Seoul",
+      "marketplace": "shopee",
+      "categoria": "Skincare"
+    },
+    {
+      "produto_id": "shopee-920292999-100002",
+      "nome": "Protetor Solar FPS 50 60ml",
+      "preco": 39.90,
+      "preco_original": 39.90,
+      "comissao": 0.10,
+      "vendas": 3200,
+      "imagem": "https://cf.shopee.com.br/file/placeholder2.jpg",
+      "link": "https://shopee.com.br/product/920292999/100002",
+      "shop_id": 920292999,
+      "loja": "Glory of Seoul",
+      "marketplace": "shopee",
+      "categoria": "Skincare"
+    },
+    {
+      "produto_id": "shopee-920292999-100003",
+      "nome": "Máscara Facial Coreana Colágeno",
+      "preco": 12.90,
+      "preco_original": 19.90,
+      "comissao": 0.15,
+      "vendas": 8900,
+      "imagem": "https://cf.shopee.com.br/file/placeholder7.jpg",
+      "link": "https://shopee.com.br/product/920292999/100003",
+      "shop_id": 920292999,
+      "loja": "Glory of Seoul",
+      "marketplace": "shopee",
+      "categoria": "Skincare"
+    },
+    {
+      "produto_id": "shopee-920292999-100004",
+      "nome": "Kit Skincare Coreano 5 Passos",
+      "preco": 149.90,
+      "preco_original": 199.90,
+      "comissao": 0.12,
+      "vendas": 670,
+      "imagem": "https://cf.shopee.com.br/file/placeholder10.jpg",
+      "link": "https://shopee.com.br/product/920292999/100004",
+      "shop_id": 920292999,
+      "loja": "Glory of Seoul",
+      "marketplace": "shopee",
+      "categoria": "Skincare"
+    }
+  ],
+  "total_found": 4,
+  "fetched_at": "2026-07-09T10:00:00Z"
+}

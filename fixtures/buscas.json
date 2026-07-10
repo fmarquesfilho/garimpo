@@ -1,0 +1,72 @@
+[
+  {
+    "id": "busca-keyword-serum",
+    "tipo": "keyword",
+    "keyword": "serum",
+    "keywords": ["serum"],
+    "shop_ids": null,
+    "shop_names": null,
+    "categorias": null,
+    "cron": "0 */8 * * *",
+    "marketplaces": "shopee",
+    "comissao_min": 0.07,
+    "vendas_min": 10,
+    "fontes": ["curadoria"]
+  },
+  {
+    "id": "busca-loja-glory",
+    "tipo": "loja",
+    "keyword": "Glory of Seoul",
+    "keywords": [],
+    "shop_ids": [920292999],
+    "shop_names": { "920292999": "Glory of Seoul" },
+    "categorias": null,
+    "cron": "0 */8 * * *",
+    "marketplaces": "shopee",
+    "comissao_min": null,
+    "vendas_min": null,
+    "fontes": ["curadoria", "lojas", "quedas", "novos"]
+  },
+  {
+    "id": "busca-loja-multi",
+    "tipo": "loja-multi",
+    "keyword": "Le Botanic",
+    "keywords": ["hidratante"],
+    "shop_ids": [282170857, 592884015],
+    "shop_names": { "282170857": "Le Botanic", "592884015": "COSRX Official" },
+    "categorias": null,
+    "cron": null,
+    "marketplaces": "shopee",
+    "comissao_min": null,
+    "vendas_min": null,
+    "fontes": ["curadoria", "lojas"]
+  },
+  {
+    "id": "busca-categoria",
+    "tipo": "categoria",
+    "keyword": "",
+    "keywords": [],
+    "shop_ids": null,
+    "shop_names": null,
+    "categorias": ["Skincare", "Beleza"],
+    "cron": null,
+    "marketplaces": "shopee",
+    "comissao_min": 0.07,
+    "vendas_min": null,
+    "fontes": ["curadoria"]
+  },
+  {
+    "id": "busca-mista",
+    "tipo": "mista",
+    "keyword": "serum vitamina c",
+    "keywords": ["serum vitamina c"],
+    "shop_ids": [920292999],
+    "shop_names": { "920292999": "Glory of Seoul" },
+    "categorias": ["Skincare"],
+    "cron": "0 9 * * *",
+    "marketplaces": "shopee",
+    "comissao_min": 0.07,
+    "vendas_min": 5,
+    "fontes": ["curadoria", "lojas", "quedas", "novos"]
+  }
+]

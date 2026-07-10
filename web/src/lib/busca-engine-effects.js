@@ -113,7 +113,15 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
  */
 function buildBuscasComLojas(buscasSalvas, ctx) {
 	const buscasComLojas = (buscasSalvas ?? []).filter((b) => b.shop_ids?.length > 0);
-	const nomesLojas = Object.fromEntries(buscasComLojas.map((b) => [b.id, b.nome || b.id]));
+	const nomesLojas = Object.fromEntries(
+		buscasComLojas.map((b) => {
+			// Usa shop_names (novo) ou fallback para nome (legado)
+			const label = b.shop_names
+				? Object.values(b.shop_names)[0]
+				: b.nome || b.id;
+			return [b.id, label];
+		})
+	);
 
 	// Lojas do ctx que ainda não estão no store (adicionou mas não salvou)
 	const lojasNoStore = new Set(buscasComLojas.flatMap((b) => b.shop_ids ?? []));

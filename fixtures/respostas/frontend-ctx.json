@@ -1,0 +1,65 @@
+{
+  "_doc": "Estado esperado de config após payloadToConfig processar cada busca de api-buscas.json",
+  "configs": [
+    {
+      "id": "busca-keyword-serum",
+      "keywords": ["serum"],
+      "shopIds": [],
+      "shopNomes": {},
+      "comissaoMin": 0.07,
+      "vendasMin": 10,
+      "categorias": [],
+      "fontes": ["curadoria"],
+      "cron": "0 */8 * * *",
+      "marketplaces": "shopee"
+    },
+    {
+      "id": "busca-loja-glory",
+      "keywords": [],
+      "shopIds": [920292999],
+      "shopNomes": { "920292999": "Glory of Seoul" },
+      "comissaoMin": 0,
+      "vendasMin": 0,
+      "categorias": [],
+      "fontes": ["curadoria", "lojas", "quedas", "novos"],
+      "cron": "0 */8 * * *",
+      "marketplaces": "shopee"
+    },
+    {
+      "id": "busca-loja-multi",
+      "keywords": ["hidratante"],
+      "shopIds": [282170857, 592884015],
+      "shopNomes": { "282170857": "Le Botanic", "592884015": "COSRX Official" },
+      "comissaoMin": 0,
+      "vendasMin": 0,
+      "categorias": [],
+      "fontes": ["curadoria", "lojas"],
+      "cron": null,
+      "marketplaces": "shopee"
+    },
+    {
+      "id": "busca-categoria",
+      "keywords": [],
+      "shopIds": [],
+      "shopNomes": {},
+      "comissaoMin": 0.07,
+      "vendasMin": 0,
+      "categorias": ["Skincare", "Beleza"],
+      "fontes": ["curadoria"],
+      "cron": null,
+      "marketplaces": "shopee"
+    },
+    {
+      "id": "busca-mista",
+      "keywords": ["serum vitamina c"],
+      "shopIds": [920292999],
+      "shopNomes": { "920292999": "Glory of Seoul" },
+      "comissaoMin": 0.07,
+      "vendasMin": 5,
+      "categorias": ["Skincare"],
+      "fontes": ["curadoria", "lojas", "quedas", "novos"],
+      "cron": "0 9 * * *",
+      "marketplaces": "shopee"
+    }
+  ]
+}

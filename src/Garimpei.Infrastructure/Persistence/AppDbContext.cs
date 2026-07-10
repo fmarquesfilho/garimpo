@@ -47,6 +47,11 @@ public class AppDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.OwnerUid);
             entity.HasQueryFilter(e => e.OwnerUid == _tenantContext.OwnerUid);
+            entity.Property(e => e.ShopNames)
+                .HasConversion(
+                    v => v == null ? null : System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => v == null ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(v, (System.Text.Json.JsonSerializerOptions?)null))
+                .HasColumnType("jsonb");
         });
 
         modelBuilder.Entity<Tenant>(entity =>

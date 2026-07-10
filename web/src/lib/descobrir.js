@@ -201,7 +201,7 @@ export async function carregarProdutosLojas(buscasComLojas) {
 					...c,
 					_fonte: 'loja',
 					_loja_id: b.id,
-					loja: c.loja || b.nome || b.id
+					loja: c.loja || (b.shop_names ? Object.values(b.shop_names)[0] : null) || b.nome || b.id
 				}))
 			)
 			.catch(() => [])

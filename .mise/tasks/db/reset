@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# mise description="Trunca tabelas do PostgreSQL local (com confirmação)"
+set -euo pipefail
+
+# Lê connection string do appsettings ou usa default
+DB_HOST="${PGHOST:-localhost}"
+DB_PORT="${PGPORT:-5432}"
+DB_NAME="${PGDATABASE:-garimpei}"
+DB_USER="${PGUSER:-garimpei}"
+
+echo "══════════════════════════════════════════════"
+echo "  ⚠️  DATABASE RESET — PostgreSQL"
+echo "══════════════════════════════════════════════"
+echo ""
+echo "  Host:     $DB_HOST:$DB_PORT"
+echo "  Database: $DB_NAME"
+echo "  User:     $DB_USER"
+echo ""
+echo "  Isso vai TRUNCAR todas as tabelas de dados:"
+echo "    - Buscas"
+echo "    - Products"
+echo "    - Favoritos"
+echo "    - Destinos"
+echo "    - Templates"
+echo "    - Publicacoes"
+echo "    - CouponAlertRules"
+echo "    - CouponAlertHistories"
+echo ""
+echo "  ⚠️  Dados de Tenants e TenantConfigs serão preservados."
+echo ""
+
+read -r -p "  Tem certeza? Digite 'reset' para confirmar: " confirm
+
+if [[ "$confirm" != "reset" ]]; then
+  echo ""
+  echo "  ❌ Cancelado."
+  exit 1
+fi
+
+echo ""
+echo "  🗑️  Truncando tabelas..."
+
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" <<SQL
+BEGIN;
+
+TRUNCATE TABLE "Buscas" CASCADE;
+TRUNCATE TABLE "Products" CASCADE;
+TRUNCATE TABLE "Favoritos" CASCADE;
+TRUNCATE TABLE "Destinos" CASCADE;
+TRUNCATE TABLE "Templates" CASCADE;
+TRUNCATE TABLE "Publicacoes" CASCADE;
+TRUNCATE TABLE "CouponAlertRules" CASCADE;
+TRUNCATE TABLE "CouponAlertHistories" CASCADE;
+
+COMMIT;
+SQL
+
+echo ""
+echo "  ✅ Database reset completo!"
+echo "  Tenants e TenantConfigs preservados."
+echo "══════════════════════════════════════════════"

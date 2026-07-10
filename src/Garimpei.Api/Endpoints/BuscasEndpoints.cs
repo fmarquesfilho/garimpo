@@ -28,12 +28,23 @@ public static partial class EndpointExtensions
                     var keywords = hasShop
                         ? (b.Keywords ?? Array.Empty<string>())
                         : b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                    // shop_names: usa o dict persistido (ShopNames). Fallback legacy: monta
+                    // a partir de Keyword (nome ambíguo) para buscas antigas sem ShopNames.
+                    Dictionary<string, string>? shopNames = null;
+                    if (hasShop)
+                    {
+                        shopNames = b.ShopNames ?? (b.Keyword is not null
+                            ? b.ShopIds!.ToDictionary(id => id.ToString(), _ => b.Keyword)
+                            : null);
+                    }
+
                     return new
                     {
                         id = b.Id,
                         keywords,
                         shop_ids = b.ShopIds,
-                        nome = hasShop ? b.Keyword : null,
+                        shop_names = shopNames,
                         cron = b.CronExpression,
                         comissao_min = b.ComissaoMin,
                         vendas_min = b.VendasMin,
@@ -108,6 +119,7 @@ public static partial class EndpointExtensions
                     Limit = req.Limit ?? 50,
                     CronExpression = cron,
                     ShopIds = req.ShopIds,
+                    ShopNames = req.ShopNames,
                     ComissaoMin = req.ComissaoMin,
                     VendasMin = req.VendasMin,
                     Categorias = req.Categorias,
@@ -124,6 +136,7 @@ public static partial class EndpointExtensions
                 if (busca.Keyword != kw) busca.Keyword = kw;
                 busca.Keywords = keywordsArray;
                 if (req.ShopIds is { Length: > 0 }) busca.ShopIds = req.ShopIds;
+                if (req.ShopNames is not null) busca.ShopNames = req.ShopNames;
                 if (req.ComissaoMin is not null) busca.ComissaoMin = req.ComissaoMin;
                 if (req.VendasMin is not null) busca.VendasMin = req.VendasMin;
                 if (req.Categorias is not null) busca.Categorias = req.Categorias;
@@ -154,6 +167,7 @@ public sealed record SyncBuscaRequest
     public string? Keyword { get; init; }
     public string[]? Keywords { get; init; }
     public long[]? ShopIds { get; init; }
+    public Dictionary<string, string>? ShopNames { get; init; }
     public string? Cron { get; init; }
     public string? SortBy { get; init; }
     public int? Limit { get; init; }

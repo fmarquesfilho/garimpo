@@ -1,0 +1,29 @@
+{
+  "_doc": "Golden: GET /api/novidades?buscaId=busca-loja-glory&dias=7",
+  "variacoes": [
+    {
+      "produto_id": "shopee-920292999-100001",
+      "nome": "Sérum Facial Vitamina C 30ml",
+      "preco_atual": 49.90,
+      "preco_anterior": 59.90,
+      "variacao_pct": -16.7,
+      "detectado_em": "2026-07-08T14:00:00Z",
+      "imagem": "https://cf.shopee.com.br/file/placeholder1.jpg",
+      "link": "https://shopee.com.br/product/920292999/100001",
+      "comissao": 0.12,
+      "vendas": 1500
+    }
+  ],
+  "produtos_novos": [
+    {
+      "produto_id": "shopee-920292999-100004",
+      "nome": "Kit Skincare Coreano 5 Passos",
+      "preco": 149.90,
+      "comissao": 0.12,
+      "vendas": 670,
+      "detectado_em": "2026-07-07T08:00:00Z",
+      "imagem": "https://cf.shopee.com.br/file/placeholder10.jpg",
+      "link": "https://shopee.com.br/product/920292999/100004"
+    }
+  ]
+}

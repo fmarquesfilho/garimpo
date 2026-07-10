@@ -1,0 +1,35 @@
+{
+  "_doc": "Golden: Collector.Fetch(keyword='serum', marketplace=SHOPEE, limit=50)",
+  "products": [
+    {
+      "produto_id": "shopee-920292999-100001",
+      "nome": "Sérum Facial Vitamina C 30ml",
+      "preco": 49.90,
+      "preco_original": 79.90,
+      "comissao": 0.12,
+      "vendas": 1500,
+      "imagem": "https://cf.shopee.com.br/file/placeholder1.jpg",
+      "link": "https://shopee.com.br/product/920292999/100001",
+      "shop_id": 920292999,
+      "loja": "Glory of Seoul",
+      "marketplace": "shopee",
+      "categoria": "Skincare"
+    },
+    {
+      "produto_id": "shopee-592884015-300001",
+      "nome": "COSRX Advanced Snail 96 Mucin Power Essence 100ml",
+      "preco": 89.90,
+      "preco_original": 119.90,
+      "comissao": 0.11,
+      "vendas": 5600,
+      "imagem": "https://cf.shopee.com.br/file/placeholder5.jpg",
+      "link": "https://shopee.com.br/product/592884015/300001",
+      "shop_id": 592884015,
+      "loja": "COSRX Official",
+      "marketplace": "shopee",
+      "categoria": "Skincare"
+    }
+  ],
+  "total_found": 2,
+  "fetched_at": "2026-07-09T10:00:00Z"
+}

@@ -15,6 +15,7 @@ export function configToPayload(config) {
 	const kws = (config.keywords ?? []).filter((k) => k.trim());
 	if (kws.length > 0) payload.keywords = kws;
 	if (config.shopIds?.length > 0) payload.shop_ids = config.shopIds;
+	if (config.shopNomes && Object.keys(config.shopNomes).length > 0) payload.shop_names = config.shopNomes;
 	if (config.cron) payload.cron = config.cron;
 	if (config.comissaoMin > 0) payload.comissao_min = config.comissaoMin;
 	if (config.vendasMin > 0) payload.vendas_min = config.vendasMin;
@@ -34,7 +35,7 @@ export function payloadToConfig(busca) {
 		id: busca.id,
 		keywords: busca.keywords ?? [],
 		shopIds: busca.shop_ids ?? [],
-		shopNomes: busca.nome ? { [busca.shop_ids?.[0]]: busca.nome } : {},
+		shopNomes: busca.shop_names ?? {},
 		comissaoMin: busca.comissao_min ?? 0,
 		vendasMin: busca.vendas_min ?? 0,
 		categorias: busca.categorias ?? [],

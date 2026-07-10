@@ -64,9 +64,72 @@ public static partial class EndpointExtensions
             double? comissao_min,
             int? vendas_min,
             double? nota_min,
+            string? fonte,
+            string? shop_ids,
             CancellationToken ct) =>
         {
             keyword ??= "";
+
+            // Quando fonte=shopee-shop com shop_ids, usar FetchShop (sem keyword obrigatório)
+            if (fonte == "shopee-shop" && !string.IsNullOrWhiteSpace(shop_ids))
+            {
+                var ids = shop_ids.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                var allCandidates = new List<ProductCandidate>();
+
+                foreach (var idStr in ids)
+                {
+                    if (!long.TryParse(idStr.Trim(), out var shopId)) continue;
+                    var shopResponse = await collector.FetchShopAsync(new FetchShopRequest
+                    {
+                        ShopId = shopId,
+                        Limit = Math.Min(top ?? 50, 100)
+                    }, cancellationToken: ct);
+                    allCandidates.AddRange(shopResponse.Products.Select(ProductMappings.ToCandidate));
+                }
+
+                var shopFilter = new EligibilityFilter
+                {
+                    MinCommission = comissao_min ?? 0,
+                    MinSales = vendas_min ?? 0,
+                    MinRating = nota_min ?? 0
+                };
+
+                var shopRanked = ScoringService.Rank(allCandidates, shopFilter, top ?? 50);
+
+                return Results.Ok(new
+                {
+                    estrategia = "nicho",
+                    candidatos = shopRanked.Select(s => new
+                    {
+                        id = s.Id,
+                        nome = s.Name,
+                        categoria = s.Category ?? "",
+                        loja = s.ShopName ?? "",
+                        loja_id = s.ShopId ?? "",
+                        preco = s.Price,
+                        preco_max = s.OriginalPrice,
+                        desconto = s.DiscountPercent,
+                        comissao = s.Commission,
+                        vendas = s.Sales,
+                        avaliacao = s.Rating,
+                        link = s.Link ?? "",
+                        link_produto = s.ProductLink ?? "",
+                        imagem = s.ImageUrl ?? "",
+                        score = s.Score,
+                        componentes = new
+                        {
+                            comissao = s.Components.Commission,
+                            valor_esperado = s.Components.ExpectedValue,
+                            avaliacao = s.Components.Rating
+                        },
+                        suspeito = s.Suspicious,
+                        oferta_expira = s.OfferExpiresAt ?? "",
+                        marketplace = s.Marketplace
+                    }),
+                    total_bruto = allCandidates.Count
+                });
+            }
+
             if (string.IsNullOrWhiteSpace(keyword))
                 return Results.Ok(new { estrategia = "nicho", candidatos = Array.Empty<object>(), total_bruto = 0 });
 

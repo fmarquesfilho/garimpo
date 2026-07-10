@@ -11,7 +11,7 @@
 	 * @prop editando — true quando este card está em edit mode
 	 * @prop onrodar, oneditar, onremover — (busca) => void
 	 */
-	import { cronLabel, gerarLabelBusca } from '$lib/busca-engine.svelte.js';
+	import { cronLabel } from '$lib/busca-engine.svelte.js';
 	import { cn } from '$lib/utils';
 
 	let { busca, editando = false, selecionada = false, onrodar = null, oneditar = null, onremover = null } = $props();
@@ -22,12 +22,11 @@
 	let marketplaces = $derived(
 		Array.isArray(busca.marketplaces) ? busca.marketplaces : busca.marketplaces ? [busca.marketplaces] : []
 	);
-	let titulo = $derived(gerarLabelBusca(busca));
 </script>
 
 <div
 	class={cn(
-		'relative flex min-w-[250px] max-w-[340px] flex-1 flex-col rounded-sm border border-border bg-card px-3 py-2.5',
+		'relative flex min-w-[250px] max-w-[340px] flex-1 flex-col rounded-sm border border-border bg-card px-3 py-2',
 		editando && '!border-primary ring-2 ring-ring/20',
 		selecionada && !editando && '!border-primary/60 bg-[var(--ouro-fundo)]'
 	)}
@@ -49,47 +48,50 @@
 		>
 	</div>
 
-	<div class="flex items-center gap-1.5 pr-11 font-[var(--display)] text-base font-bold text-foreground">
-		{titulo}
-		{#if busca.cron}
-			<span
-				class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
-				>⏱ {cronLabel(busca.cron)}</span
-			>
-		{/if}
-	</div>
-
-	<div class="mt-2.5 flex flex-col gap-1.5 text-sm">
+	<div class="flex flex-col gap-1 pr-11 text-sm">
 		{#if keywords.length}
-			<div class="flex items-start gap-2">
-				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
-					>palavras</span
-				>
+			<div class="flex items-center gap-1.5">
 				<span class="flex flex-wrap gap-1">
 					{#each keywords as k (k)}<span
 							class="rounded-full border border-[var(--ouro-claro)] bg-[var(--ouro-fundo)] px-2 py-0.5 text-xs font-semibold text-[var(--ouro-escuro)]"
 							>{k}</span
 						>{/each}
 				</span>
+				{#if busca.cron}
+					<span
+						class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
+						>⏱ {cronLabel(busca.cron)}</span
+					>
+				{/if}
+			</div>
+		{:else if !categorias.length && !lojas.length}
+			<div class="flex items-center gap-1.5">
+				<span class="text-xs text-muted-foreground">(sem keywords)</span>
+				{#if busca.cron}
+					<span
+						class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
+						>⏱ {cronLabel(busca.cron)}</span
+					>
+				{/if}
 			</div>
 		{/if}
 		{#if categorias.length}
-			<div class="flex items-start gap-2">
-				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
-					>categorias</span
-				>
+			<div class="flex items-center gap-1.5">
 				<span class="flex flex-wrap gap-1">
 					{#each categorias as c (c)}<span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
 							>{c}</span
 						>{/each}
 				</span>
+				{#if !keywords.length && busca.cron}
+					<span
+						class="inline-flex items-center gap-1 rounded-full border border-[var(--aviso-borda)] bg-[var(--aviso-fundo)] px-2 py-px font-[var(--mono)] text-[0.68rem] text-[var(--aviso-texto)]"
+						>⏱ {cronLabel(busca.cron)}</span
+					>
+				{/if}
 			</div>
 		{/if}
 		{#if lojas.length}
-			<div class="flex items-start gap-2">
-				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
-					>lojas</span
-				>
+			<div class="flex items-center gap-1.5">
 				<span class="flex flex-wrap gap-1">
 					{#each lojas as l (l)}<span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
 							>🏪 {l}</span
@@ -98,10 +100,7 @@
 			</div>
 		{/if}
 		{#if marketplaces.length}
-			<div class="flex items-start gap-2">
-				<span class="min-w-[74px] pt-0.5 font-[var(--mono)] text-[0.6rem] uppercase tracking-wide text-muted-foreground"
-					>marketplaces</span
-				>
+			<div class="flex items-center gap-1.5">
 				<span class="flex flex-wrap gap-1">
 					{#each marketplaces as m (m)}<span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
 							>{m}</span
@@ -111,7 +110,7 @@
 		{/if}
 	</div>
 
-	<div class="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
+	<div class="mt-1.5 flex items-center justify-between border-t border-border pt-1.5 text-xs text-muted-foreground">
 		{#if editando}
 			<span class="font-semibold text-[var(--ouro-escuro)]">✎ editando — altere e salve</span>
 		{:else}
