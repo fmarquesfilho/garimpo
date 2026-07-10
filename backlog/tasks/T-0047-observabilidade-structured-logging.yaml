@@ -1,7 +1,7 @@
 id: T-0047
 titulo: "Observabilidade: structured logging + métricas de negócio"
 epic: operacao
-status: next
+status: done
 prioridade: media
 estimativa: M
 sprint: "2026-S28"

@@ -229,6 +229,8 @@ Adotado para separar lógica reativa do template:
 
 ESLint atualizado: arquivos `.svelte.js` recebem `max-lines-per-function: 150` (vs 50 padrão) dado que encapsulam state factories.
 
+Para a arquitetura completa da BuscaEngine e componentes, ver [componentes.md](componentes.md).
+
 ### Backend — campos adicionados
 
 | Entidade/Endpoint | Campo novo | Tipo |

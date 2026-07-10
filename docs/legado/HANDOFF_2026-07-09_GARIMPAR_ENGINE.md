@@ -1,5 +1,7 @@
 # Handoff — Página Garimpar / BuscaEngine (2026-07-09)
 
+> ✅ **CONCLUÍDO em 2026-07-10.** Bugs corrigidos no commit `fix(T-0056+T-0057)`. Engine v3 estável.
+
 > Documento de passagem para a próxima sessão (outra IA). Descreve o estado, o
 > que já foi resolvido, o que falta, as causas-raiz e como verificar. Leia junto
 > com `docs/componentes.md` e `src/lib/busca-config.js`.

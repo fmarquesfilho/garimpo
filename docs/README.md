@@ -12,10 +12,20 @@ docs/
   06-qualidade-e-testes.md   ← CI, linters, E2E, fitness functions
   07-dados-e-ia.md           ← Análises + IA
   08-fluxos-sequencia.md     ← 11 diagramas de sequência (mermaid)
+  09-api-reference.md        ← Referência da API REST
+  observability.md           ← Observabilidade e monitoramento
+  componentes.md             ← Componentes UI (Svelte 5 + Bits UI + Tailwind)
+  impacto-migracao-ui.md     ← Impacto da migração UI e dívida técnica
+  guias/                     ← Guias práticos
+    configurar-whatsapp-meta.md
+    desenvolvimento-local.md
+    fluxo-variacao-precos.md
   gerado/                    ← Não editar manualmente (mise run docs)
+    BOARD.md                 ← Board de tarefas gerado do backlog
+    ROADMAP.md               ← Roadmap gerado do backlog
     ENTIDADES.md             ← Mermaid ER do schema BigQuery
     env-vars.md              ← Variáveis de ambiente extraídas do código
-  decisoes/                  ← ADRs (24 Architecture Decision Records)
+  decisoes/                  ← ADRs (Architecture Decision Records)
   legado/                    ← Arquivos históricos (não usar como referência)
   meta/                      ← Plano de migração e auditoria
 contracts/
@@ -50,4 +60,3 @@ cd docs-site
 npm install
 npm run dev
 ```
-<- firebase.json: config do emulator trigger -->

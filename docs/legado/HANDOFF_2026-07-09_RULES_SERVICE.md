@@ -1,5 +1,7 @@
 # Handoff — Rules Service + BuscaEngine fixes (2026-07-09)
 
+> ✅ **CONCLUÍDO / DESCARTADO.** A abordagem rules-service não será implementada. Regras ficam em JSON no frontend (ADR-0027).
+
 > Documento de passagem para a próxima sessão. Descreve o estado completo, o que
 > foi feito, o que falta, decisões de arquitetura a respeitar, e como verificar.
 

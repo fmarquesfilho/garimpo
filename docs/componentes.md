@@ -438,17 +438,7 @@ npx shadcn-svelte@latest add <component>
 
 ---
 
-## CI Guards
-
-| Guard | Protege | Quando roda |
-|-------|---------|-------------|
-| `npm run check` (svelte-check) | Props incorretas, tipos | CI + pre-push |
-| `npm run lint:css` (stylelint) | hex colors, at-rules válidas | CI + pre-push |
-| `npm run lint:js` (ESLint) | Unused vars, a11y | CI + pre-push |
-| `npm run lint:dead` (knip) | Dead code | CI + pre-push |
-| `npm run test:unit` (vitest) | Lógica de negócio | CI + pre-push |
-| `npm run test` (Playwright) | E2E com auth (emulador Firebase) | CI |
-| `npm run test:e2e:local` (Playwright) | E2E local sem Firebase/backend (auth bypass + API mockada) | local, pré-push |
+Para CI guards e linting, ver [06-qualidade-e-testes.md](06-qualidade-e-testes.md).
 
 ---
 
