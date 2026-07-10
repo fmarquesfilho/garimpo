@@ -1,16 +1,13 @@
 // Package otel provides shared OpenTelemetry initialization for all Go services.
 //
-// Usage:
+// Uses OTLP gRPC exporter pointing directly to Google Cloud Telemetry API.
+// No sidecar collector needed — traces go straight to Cloud Trace.
 //
-//	shutdown, err := otel.Init(ctx, "collector")
-//	if err != nil { log.Fatal(err) }
-//	defer shutdown(ctx)
-//
-// The package reads configuration from environment variables:
-//   - OTEL_EXPORTER_OTLP_ENDPOINT (default: http://localhost:4317)
-//   - OTEL_SERVICE_NAME (fallback: serviceName parameter)
-//   - OTEL_TRACES_SAMPLER_ARG (default: 1.0 — 100% sampling)
-//   - GCP_PROJECT_ID (for log correlation format)
+// Environment variables:
+//   - OTEL_EXPORTER_OTLP_ENDPOINT: override endpoint (default: Cloud Trace via ADC)
+//   - OTEL_SERVICE_NAME: fallback for service name
+//   - OTEL_TRACES_SAMPLER_ARG: sampling rate (default: 1.0)
+//   - GCP_PROJECT_ID: for log correlation format
 package otel
 
 import (
@@ -29,13 +26,16 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Init initializes OpenTelemetry for the service.
 // Returns a shutdown function that flushes pending spans.
-// If OTEL_EXPORTER_OTLP_ENDPOINT is not set, uses a no-op exporter (graceful degradation).
+//
+// In Cloud Run: exports directly to Google Cloud Telemetry API (no sidecar needed).
+// Locally: if OTEL_EXPORTER_OTLP_ENDPOINT is set, uses that (e.g. Jaeger localhost:4317).
+// If neither is available: uses no-op exporter (graceful degradation).
 func Init(ctx context.Context, serviceName string) (func(context.Context) error, error) {
-	// Override service name from env if set
 	if envName := os.Getenv("OTEL_SERVICE_NAME"); envName != "" {
 		serviceName = envName
 	}
@@ -50,21 +50,9 @@ func Init(ctx context.Context, serviceName string) (func(context.Context) error,
 		return nil, fmt.Errorf("otel: create resource: %w", err)
 	}
 
-	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-
-	var spanExporter sdktrace.SpanExporter
-	if endpoint == "" {
-		// No collector configured — use no-op (spans are discarded)
-		spanExporter = noopExporter{}
-	} else {
-		exp, err := otlptracegrpc.New(ctx,
-			otlptracegrpc.WithEndpointURL(endpoint),
-			otlptracegrpc.WithInsecure(),
-		)
-		if err != nil {
-			return nil, fmt.Errorf("otel: create OTLP exporter: %w", err)
-		}
-		spanExporter = exp
+	spanExporter, err := buildExporter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("otel: create exporter: %w", err)
 	}
 
 	sampler := buildSampler()
@@ -103,6 +91,32 @@ func HTTPTransport() http.RoundTripper {
 	return otelhttp.NewTransport(http.DefaultTransport)
 }
 
+// buildExporter creates the appropriate span exporter based on environment.
+func buildExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
+	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+
+	if endpoint != "" {
+		// Explicit endpoint (local dev: Jaeger, or custom collector)
+		return otlptracegrpc.New(ctx,
+			otlptracegrpc.WithEndpointURL(endpoint),
+			otlptracegrpc.WithInsecure(),
+		)
+	}
+
+	// In Cloud Run: export directly to Google Cloud Telemetry API
+	// Uses Application Default Credentials (ADC) automatically.
+	gcpEndpoint := "telemetry.googleapis.com:443"
+	exporter, err := otlptracegrpc.New(ctx,
+		otlptracegrpc.WithEndpoint(gcpEndpoint),
+		otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, "")),
+	)
+	if err != nil {
+		// Can't reach GCP (local without ADC) — fallback to no-op
+		return noopExporter{}, nil
+	}
+	return exporter, nil
+}
+
 // buildSampler reads OTEL_TRACES_SAMPLER_ARG and builds the appropriate sampler.
 func buildSampler() sdktrace.Sampler {
 	rateStr := os.Getenv("OTEL_TRACES_SAMPLER_ARG")
@@ -118,7 +132,7 @@ func buildSampler() sdktrace.Sampler {
 	return sdktrace.ParentBased(sdktrace.TraceIDRatioBased(rate))
 }
 
-// noopExporter discards all spans (used when no collector is configured).
+// noopExporter discards all spans (used when no exporter is available).
 type noopExporter struct{}
 
 func (noopExporter) ExportSpans(context.Context, []sdktrace.ReadOnlySpan) error { return nil }
