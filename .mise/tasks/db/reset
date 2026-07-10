@@ -42,8 +42,22 @@ if [ "$PROD" = true ]; then
     exit 1
   fi
 
+  # Converte formato .NET (Host=x;Database=z;Username=u;Password=p;SSL Mode=Require;...)
+  # para formato URI do psql (postgresql://u:p@x/z?sslmode=require)
+  parse_dotnet_conn() {
+    local cs="$1"
+    local host db user pass
+    host=$(echo "$cs" | tr ';' '\n' | grep "^Host=" | cut -d= -f2)
+    db=$(echo "$cs" | tr ';' '\n' | grep "^Database=" | cut -d= -f2)
+    user=$(echo "$cs" | tr ';' '\n' | grep "^Username=" | cut -d= -f2)
+    pass=$(echo "$cs" | tr ';' '\n' | grep "^Password=" | cut -d= -f2)
+    echo "postgresql://${user}:${pass}@${host}/${db}?sslmode=require"
+  }
+
+  PG_URI=$(parse_dotnet_conn "$CONNECTION_STRING")
+
   echo "  🗑️  Truncando tabelas em produção..."
-  psql "$CONNECTION_STRING" <<SQL
+  psql "$PG_URI" <<SQL
 BEGIN;
 TRUNCATE TABLE "Buscas" CASCADE;
 TRUNCATE TABLE "Products" CASCADE;
