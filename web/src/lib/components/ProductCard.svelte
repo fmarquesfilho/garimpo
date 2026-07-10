@@ -140,6 +140,10 @@
 					{/if}
 					{#if produto.categoria}<span class="text-xs font-semibold text-secondary lowercase">{produto.categoria}</span
 						>{/if}
+					{#if produto.marketplace}<span
+							class="text-[0.65rem] px-1.5 py-px rounded-full border border-border text-muted-foreground"
+							>{produto.marketplace}</span
+						>{/if}
 					{#if produto.suspeito}<span
 							class="text-[0.65rem] font-bold px-1.5 py-px rounded-full bg-erro-fundo text-erro"
 							title="Comissão alta com poucas vendas — pode ser produto sem tração real. Avalie antes de publicar."

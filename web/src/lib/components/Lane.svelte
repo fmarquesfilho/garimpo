@@ -16,7 +16,7 @@
 	let { title = '', tag = '', count = '', open = $bindable(true), actions = null, children } = $props();
 </script>
 
-<section class="overflow-hidden rounded-md border border-border bg-card">
+<section class="rounded-md border border-border bg-card">
 	<div
 		class={cn(
 			'flex items-center gap-2.5 border-b border-border bg-muted px-3.5 py-2.5',

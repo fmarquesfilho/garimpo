@@ -375,23 +375,25 @@ describe('Descobrir — Filtros numéricos', () => {
 
 	it('comissaoMin=0.10 filtra produtos com comissão < 10%', () => {
 		const r = montarResultados({ ...base, comissaoMin: 0.1 });
-		// A (15%), C (10%) passam; B (5%) não; D (0, sem comissão) passa
-		expect(r).toHaveLength(3);
+		// A (15%), C (10%) passam; B (5%) e D (0%) não
+		expect(r).toHaveLength(2);
 		expect(r.find((p) => p.id === 'B')).toBeUndefined();
+		expect(r.find((p) => p.id === 'D')).toBeUndefined();
 	});
 
 	it('comissaoMin=0.15 filtra tudo exceto 15%+', () => {
 		const r = montarResultados({ ...base, comissaoMin: 0.15 });
-		// A (15%) + D (sem comissão, passa)
-		expect(r).toHaveLength(2);
-		expect(r.find((p) => p.id === 'A')).toBeDefined();
+		// Apenas A (15%) passa
+		expect(r).toHaveLength(1);
+		expect(r[0].id).toBe('A');
 	});
 
 	it('vendasMin=100 filtra produtos com menos vendas', () => {
 		const r = montarResultados({ ...base, vendasMin: 100 });
-		// A (200), C (100) passam; B (50) não; D (0, sem vendas) passa
-		expect(r).toHaveLength(3);
+		// A (200), C (100) passam; B (50) e D (0) não
+		expect(r).toHaveLength(2);
 		expect(r.find((p) => p.id === 'B')).toBeUndefined();
+		expect(r.find((p) => p.id === 'D')).toBeUndefined();
 	});
 
 	it('filtros combinam com keyword (AND)', () => {
@@ -405,10 +407,14 @@ describe('Descobrir — Filtros numéricos', () => {
 		expect(r).toHaveLength(4);
 	});
 
-	it('produto sem dados numéricos não é filtrado (graceful)', () => {
-		const r = montarResultados({ ...base, comissaoMin: 0.1, vendasMin: 50 });
-		// D tem comissao=0, vendas=0 — não tem dados, não é filtrado
-		expect(r.find((p) => p.id === 'D')).toBeDefined();
+	it('produto sem dados numéricos (null) não é filtrado (graceful)', () => {
+		// Produto sem campo vendas/comissao (null/undefined) não é filtrado
+		const produtosSemDados = [
+			...base.dadosCuradoria,
+			{ id: 'E', nome: 'Sem dados', comissao: null, vendas: null, loja: 'X', _fonte: 'curadoria' }
+		];
+		const r = montarResultados({ ...base, dadosCuradoria: produtosSemDados, comissaoMin: 0.1, vendasMin: 50 });
+		expect(r.find((p) => p.id === 'E')).toBeDefined();
 	});
 });
 
@@ -524,8 +530,9 @@ describe('Descobrir — Filtros combinados (básico)', () => {
 
 	it('vendasMin=100 remove produtos com poucas vendas', () => {
 		const r = filtrar({ vendasMin: 100 });
-		expect(r).toHaveLength(3);
-		expect(r.map((p) => p.id).sort()).toEqual(['A', 'D', 'E']);
+		// A (200), D (150) passam; B (80), C (5), E (0), F (60) não
+		expect(r).toHaveLength(2);
+		expect(r.map((p) => p.id).sort()).toEqual(['A', 'D']);
 	});
 });
 
@@ -538,7 +545,8 @@ describe('Descobrir — Filtros combinados (avançado)', () => {
 
 	it('vendasMin=100 + categoria "Cuidados com a Pele"', () => {
 		const r = filtrar({ vendasMin: 100, categorias: ['Cuidados com a Pele'] });
-		expect(r).toHaveLength(3);
+		// A (200, Cuidados), D (150, Cuidados) passam; E (0, Cuidados) filtrado
+		expect(r).toHaveLength(2);
 	});
 
 	it('todos os filtros ao mesmo tempo (cenário máximo)', () => {
@@ -548,7 +556,8 @@ describe('Descobrir — Filtros combinados (avançado)', () => {
 			comissaoMin: 0.1,
 			vendasMin: 50
 		});
-		expect(r).toHaveLength(2);
+		// Apenas A (SKIN1004, Cuidados, 15%, 200 vendas) passa
+		expect(r).toHaveLength(1);
 	});
 
 	it('só fonte Quedas + comissaoMin', () => {

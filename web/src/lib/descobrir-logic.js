@@ -68,10 +68,10 @@ export function montarResultados({
 	}
 
 	if (comissaoMin > 0) {
-		todos = todos.filter((r) => !r.comissao || r.comissao >= comissaoMin);
+		todos = todos.filter((r) => r.comissao == null || r.comissao >= comissaoMin);
 	}
 	if (vendasMin > 0) {
-		todos = todos.filter((r) => !r.vendas || r.vendas >= vendasMin);
+		todos = todos.filter((r) => r.vendas == null || r.vendas >= vendasMin);
 	}
 
 	return todos;
@@ -108,11 +108,12 @@ export function listarLojasMonitoradas(buscasSalvas) {
 	const vistos = new Map();
 	for (const b of buscasSalvas ?? []) {
 		const ids = b.shop_ids ?? b.shopIds ?? [];
+		const nomes = b.shop_names ?? b.shopNomes ?? {};
 		for (const id of ids) {
 			if (vistos.has(id)) continue;
 			vistos.set(id, {
 				id: String(id),
-				nome: b.nome || String(id),
+				nome: nomes[String(id)] || nomes[id] || b.nome || String(id),
 				marketplace: b.marketplaces || b.marketplace || 'shopee',
 				origem: b.origem_padrao ?? b.origemPadrao ?? null,
 				monitorada: Boolean(b.cron),
