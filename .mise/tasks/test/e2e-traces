@@ -54,16 +54,12 @@ fi
 
 echo ""
 echo "── 2. Verificar headers de resposta ──────────"
-# O backend não retorna traceparent na resposta (não é necessário)
-# Mas podemos verificar que a API está saudável com o header
-HEADERS=$(curl -sI -H "Authorization: Bearer $TOKEN" \
-  -H "traceparent: $TRACEPARENT" \
-  "$BASE/api/health" 2>/dev/null || echo "")
-
-if echo "$HEADERS" | grep -qi "200\|ok"; then
+# Verifica que a API aceita e responde normalmente com traceparent
+HEALTH_RESP=$(curl -sf -H "traceparent: $TRACEPARENT" "$BASE/api/health" 2>/dev/null || echo "CURL_FAIL")
+if echo "$HEALTH_RESP" | grep -q '"status"'; then
   ok "API aceita traceparent header sem erro"
 else
-  ko "API rejeitou ou falhou com traceparent" "$(echo "$HEADERS" | head -c 200)"
+  ko "API rejeitou ou falhou com traceparent" "$(echo "$HEALTH_RESP" | head -c 200)"
 fi
 
 echo ""
