@@ -1,7 +1,7 @@
 id: T-0046
 titulo: "Validar todos os 11 fluxos end-to-end em produção"
 epic: qualidade
-status: next
+status: done
 prioridade: alta
 estimativa: M
 sprint: "2026-S28"
