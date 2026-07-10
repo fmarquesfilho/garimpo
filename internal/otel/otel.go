@@ -97,10 +97,14 @@ func buildExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
 
 	if endpoint != "" {
 		// Explicit endpoint (local dev: Jaeger, or custom collector)
-		return otlptracegrpc.New(ctx,
+		exp, err := otlptracegrpc.New(ctx,
 			otlptracegrpc.WithEndpointURL(endpoint),
 			otlptracegrpc.WithInsecure(),
 		)
+		if err != nil {
+			return nil, fmt.Errorf("otel: create local exporter: %w", err)
+		}
+		return exp, nil
 	}
 
 	// In Cloud Run: export directly to Google Cloud Telemetry API
@@ -112,7 +116,7 @@ func buildExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
 	)
 	if err != nil {
 		// Can't reach GCP (local without ADC) — fallback to no-op
-		return noopExporter{}, nil
+		return noopExporter{}, nil //nolint:nilerr // intentional fallback
 	}
 	return exporter, nil
 }
