@@ -13,7 +13,9 @@
 
 	let isObject = $derived(data !== null && typeof data === 'object' && !Array.isArray(data));
 	let isArray = $derived(Array.isArray(data));
-	let entries = $derived(isObject ? Object.entries(data) : isArray ? data.map((/** @type {any} */ v, /** @type {number} */ i) => [i, v]) : []);
+	let entries = $derived(
+		isObject ? Object.entries(data) : isArray ? data.map((/** @type {any} */ v, /** @type {number} */ i) => [i, v]) : []
+	);
 
 	function toggle() {
 		userToggled = userToggled === null ? !shouldStartOpen : !userToggled;
