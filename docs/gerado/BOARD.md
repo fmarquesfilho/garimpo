@@ -28,7 +28,7 @@ T-0051
 | | T-0053 Avaliar alternativas ao GitHub Actions (CI/CD + hosting de git) (S) | | | T-0017 Routing split (Cloudflare Worker v1→v2) (P) |
 | | T-0055 Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) (M) | | | T-0018 Migrar handlers de publicação para C# (G) |
 | | T-0056 Corrigir bugs visuais e funcionais da página Descobrir v3 (M) | | | T-0019 Migrar handlers de lojas/buscas para C# (G) |
-| | | | | T-0020 PostgreSQL como fonte primária + BigQuery analytics-only (G) |
+| | T-0057 Fixtures compartilhados + contract tests cross-stack (G) | | | T-0020 PostgreSQL como fonte primária + BigQuery analytics-only (G) |
 | | | | | T-0021 Cloud Run multi-container deploy (C# + sidecars Go) (M) |
 | | | | | T-0022 Descomissionar monólito Go (M) |
 | | | | | T-0023 Migrar WhatsApp sender de Maytapi para Meta Cloud API (M) |
@@ -51,7 +51,7 @@ T-0051
 
 **Métricas:**
 - 📋 backlog: 3
-- ⏭️ next: 17
+- ⏭️ next: 18
 - 🔨 doing: 1
 - 👀 review: 0
 - ✅ done: 35

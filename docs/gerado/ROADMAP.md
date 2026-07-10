@@ -25,6 +25,7 @@
 - **T-0053** Avaliar alternativas ao GitHub Actions (CI/CD + hosting de git) · operacao · S
 - **T-0055** Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) · E-001 · M
 - **T-0056** Corrigir bugs visuais e funcionais da página Descobrir v3 · E-001 · M
+- **T-0057** Fixtures compartilhados + contract tests cross-stack · E-001 · G
 
 ## ⚪ Later (radar)
 

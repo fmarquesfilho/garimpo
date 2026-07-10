@@ -1,0 +1,143 @@
+id: T-0057
+titulo: "Fixtures compartilhados + contract tests cross-stack"
+epic: E-001
+status: next
+prioridade: alta
+estimativa: G
+sprint: ""
+criado_em: "2026-07-09"
+atualizada_em: "2026-07-09"
+valor: |
+  Hoje cada camada inventa seus próprios dados de teste. Isso mascara bugs de
+  mapeamento (campo com nome errado, tipo diferente, array vs string). Os bugs
+  dos BuscaCards (IDs numéricos como nome de loja, keyword no lugar de shop_name)
+  são sintomas: o dado sai correto do Collector mas chega distorcido ao frontend.
+  Fixtures compartilhados provam que o dado correto percorre todas as fronteiras.
+descricao: |
+  ## Problema
+
+  A stack tem 4 fronteiras de dados:
+  ```
+  Shopee API → Collector (Go) → C# API → Frontend (Svelte)
+  ```
+  Cada fronteira transforma o dado. Sem fixtures compartilhados, não há como
+  provar que uma transformação não corrompeu o formato que a próxima espera.
+
+  Bugs atuais causados por isso (T-0056):
+  - `nome` na API é keyword, não nome da loja
+  - `shopNomes` só mapeia o primeiro shopId
+  - Busca sem keyword manda `undefined` e API retorna vazio
+  - Não existe `shop_names` no contrato
+
+  ## Solução: fixtures layer
+
+  ```
+  fixtures/
+    README.md                   ← como usar, como adicionar
+    lojas.json                  ← 3 lojas de teste (Le Botanic, Glory of Seoul, COSRX)
+    produtos.json               ← 10 produtos determinísticos (com todos os campos)
+    buscas.json                 ← 5 buscas (keyword, loja, categoria, mista, agendada)
+    respostas/
+      collector-fetch.json      ← golden: resposta do Collector.Fetch("serum")
+      collector-fetchshop.json  ← golden: resposta do Collector.FetchShop(920292999)
+      collector-resolve.json    ← golden: resposta do Collector.ResolveShop(url)
+      api-candidatos.json       ← golden: GET /api/candidatos?keyword=serum
+      api-buscas.json           ← golden: GET /api/buscas (lista completa)
+      api-novidades.json        ← golden: GET /api/lojas/novidades
+      frontend-ctx.json         ← golden: engine.ctx após CARREGAR_SALVA
+  ```
+
+  ## Como funciona
+
+  ### Go (Collector)
+  ```go
+  // services/collector/server_test.go
+  func TestFetchResponseMatchesFixture(t *testing.T) {
+      golden := loadFixture("../../fixtures/respostas/collector-fetch.json")
+      resp := server.Fetch(ctx, &pb.FetchRequest{Keyword: "serum"})
+      assertMatchesSchema(t, resp, golden)
+  }
+  ```
+
+  ### C# (API)
+  ```csharp
+  // src/Garimpei.Tests/Integration/BuscasContractTest.cs
+  [Fact]
+  public async Task GetBuscas_ReturnsFixtureFormat()
+  {
+      var expected = LoadFixture("fixtures/respostas/api-buscas.json");
+      var response = await client.GetAsync("/api/buscas");
+      var actual = await response.Content.ReadAsStringAsync();
+      AssertJsonContract(expected, actual); // valida schema, não valores
+  }
+  ```
+
+  ### Frontend (E2E + Unit)
+  ```javascript
+  // web/tests/local/fixtures.js
+  import apiCandidatos from '../../../fixtures/respostas/api-candidatos.json';
+  import apiBuscas from '../../../fixtures/respostas/api-buscas.json';
+
+  export async function mockApiFromFixtures(page) {
+      await page.route('**/api/candidatos**', route =>
+          route.fulfill({ body: JSON.stringify(apiCandidatos) }));
+      // ...
+  }
+  ```
+
+  ### Contract validation (drift check)
+  ```bash
+  # .mise/tasks/check/fixtures-contract
+  # Valida que fixtures/respostas/*.json são compatíveis com:
+  # - Proto (Go struct tags)
+  # - C# response DTOs
+  # - Frontend payloadToConfig expectations
+  ```
+
+  ## O que os fixtures provam
+
+  | Fixture | Prova |
+  |---------|-------|
+  | `collector-fetch.json` | Go retorna campos corretos (nome, preco, comissao, loja) |
+  | `api-candidatos.json` | C# transforma gRPC→JSON com nomes corretos (snake_case) |
+  | `api-buscas.json` | shop_names existe e mapeia id→nome para todas as lojas |
+  | `frontend-ctx.json` | payloadToConfig produz shopNomes correto a partir da API |
+
+  ## Relação com T-0056 (bugs v3)
+
+  Os fixes de T-0056 CRIAM os fixtures como parte da correção:
+  1. Fix shopNomes → define o formato correto em `api-buscas.json`
+  2. Fix busca sem keyword → define o que `collector-fetch.json` retorna sem keyword
+  3. Fix mise db:reset → usa `fixtures/buscas.json` para seed de teste
+
+  ## Implementação (ordem sugerida)
+
+  1. Criar `fixtures/` com dados determinísticos das 3 lojas reais de teste
+  2. Corrigir backend (shop_names no GET /api/buscas) — T-0056 bug 1
+  3. Atualizar `payloadToConfig` para usar shop_names
+  4. Gravar golden files das respostas reais (curl produção → salvar)
+  5. Escrever contract tests Go + C# + frontend
+  6. Criar drift check `mise run check:fixtures-contract`
+  7. Corrigir bugs restantes de T-0056 (título, compactação, busca sem keyword)
+  8. Criar `mise run db:reset`
+
+criterios_aceite:
+  - Diretório fixtures/ com ao menos lojas.json, produtos.json, buscas.json
+  - Golden files em fixtures/respostas/ para cada fronteira
+  - Go test usa fixture como golden (Collector.Fetch schema match)
+  - C# test valida formato do GET /api/buscas contra fixture
+  - Frontend mockApi carrega de fixtures/ (não inventa dados)
+  - Drift check valida compatibilidade cross-stack
+  - T-0056 resolvido como efeito colateral (fixtures definem o contrato correto)
+  - BuscaCard nunca mostra ID numérico como nome
+  - Busca só-categoria retorna resultados
+
+dependencias:
+  - T-0056
+tags:
+  - testing
+  - contracts
+  - cross-stack
+  - frontend
+  - backend
+  - go
