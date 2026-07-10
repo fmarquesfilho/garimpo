@@ -17,11 +17,11 @@ cd web
 # Build se necessário (preview server precisa do build)
 if [ ! -d "build" ] || [ "$(find src -newer build -name '*.svelte' -o -name '*.js' | head -1)" ]; then
   echo "  📦 Building..."
-  npm run build
+  bun run build
 fi
 
 echo "  🎬 Running Playwright (local)..."
-npx playwright test --config=playwright.local.config.js "$@"
+bunx playwright test --config=playwright.local.config.js "$@"
 
 echo ""
 echo "═══════════════════════════════════════"

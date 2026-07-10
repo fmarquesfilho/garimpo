@@ -1,7 +1,6 @@
-// App estático no estilo SPA: tudo roda no navegador (fetch da API, localStorage
-// do quadro). prerender gera o shell HTML; ssr off evita rodar no servidor o que
-// só faz sentido no cliente.
-export const prerender = true;
+// SPA mode: toda lógica roda no navegador. SSR desabilitado para manter
+// compatibilidade com o fluxo atual (auth Firebase client-side, api.js fetch).
+// Com adapter-cloudflare, o Worker serve o shell e as pages como static assets.
 export const ssr = false;
 
 // OpenTelemetry: propaga traceparent em todo fetch() para o backend.

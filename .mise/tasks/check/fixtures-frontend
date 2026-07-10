@@ -3,4 +3,4 @@
 set -euo pipefail
 
 cd web
-npx vitest run src/tests/fixtures-contract.test.js --reporter=verbose
+bunx vitest run src/tests/fixtures-contract.test.js --reporter=verbose

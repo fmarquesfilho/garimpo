@@ -9,7 +9,7 @@ export default defineConfig({
 		headless: true
 	},
 	webServer: {
-		command: 'npm run preview',
+		command: 'bun run preview',
 		port: 4173,
 		reuseExistingServer: true,
 		timeout: 120000

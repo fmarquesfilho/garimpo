@@ -19,7 +19,7 @@ export default defineConfig({
 		launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {}
 	},
 	webServer: {
-		command: 'npm run preview',
+		command: 'bun run preview',
 		port: 4173,
 		reuseExistingServer: true,
 		timeout: 120000

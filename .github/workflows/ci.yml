@@ -187,16 +187,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
-      - run: npm ci
-      - run: npm audit --audit-level=high
-      - run: npm run check
-      - run: npm run build
-      - run: npm run lint:css
-      - run: npm run lint:js
-      - run: npm run format:check
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run build
+      - run: bun run lint:css
+      - run: bun run lint:js
+      - run: bun run format:check
       - run: mise run check:ui-coverage -- --strict
       - run: mise run check:file-size -- 400
-      - run: npx vitest run
+      - run: bunx vitest run
 
   # ── Service Contracts + API drift ───────────────────────────────────────
   contracts:
@@ -323,8 +323,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
+      - uses: oven-sh/setup-bun@v2
       - name: Install & build
-        run: npm ci && npm run build
+        run: bun install --frozen-lockfile && bun run build
         working-directory: web
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
