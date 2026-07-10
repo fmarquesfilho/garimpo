@@ -35,9 +35,7 @@ test.describe('Produção — Busca', () => {
 		await input.pressSequentially('serum', { delay: 80 });
 
 		// Resultado: contagem de produtos OU empty state
-		await expect(
-			page.getByText(/\d+ produto|Nenhum resultado/i).first()
-		).toBeVisible({ timeout: 20000 });
+		await expect(page.getByText(/\d+ produto|Nenhum resultado/i).first()).toBeVisible({ timeout: 20000 });
 	});
 
 	test('empty state sem keyword', async ({ authedPage: page }) => {

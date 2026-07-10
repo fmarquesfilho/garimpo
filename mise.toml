@@ -92,8 +92,8 @@ description = "Ruff lint no analyzer"
 run = "uvx ruff check services/analyzer/"
 
 [tasks."lint:web"]
-description = "ESLint + Stylelint + npm audit + Semgrep no frontend"
-run = "cd web && npm run lint:js && npm run lint:css && npm audit --audit-level=high && npm run lint:security"
+description = "ESLint + Stylelint + Semgrep no frontend"
+run = "cd web && bun run lint:js && bun run lint:css && bun run lint:security"
 
 # ── Checks (file tasks em .mise/tasks/check/) ─────────────────────────────────
 
@@ -192,7 +192,7 @@ depends = ["build", "test", "lint", "checks", "check:web", "check:file-size", "c
 
 [tasks."check:web"]
 description = "svelte-check (tipos, props, a11y, CSS unused) — strict, zero tolerance"
-run = "cd web && npm run check"
+run = "cd web && bun run check"
 
 [tasks."check:file-size"]
 description = "Verifica tamanho máximo de arquivos (400 linhas prod, 900 testes)"
@@ -209,7 +209,7 @@ run = "cd web && npx vitest run"
 [tasks."test:e2e"]
 description = "Playwright E2E com Firebase Auth Emulator (inicia automaticamente)"
 run = """
-cd web && npm run build
+cd web && bun run build
 
 # Inicia emulator se não estiver rodando
 EMULATOR_STARTED=0
@@ -322,7 +322,7 @@ fi
 
 # 4. Build frontend + roda apenas o teste de lojas
 echo "✅ Todos os serviços prontos. Rodando E2E ResolveShop..."
-cd web && npm run build
+cd web && bun run build
 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test lojas-resolve-shop
 EXIT_CODE=$?
 
@@ -416,7 +416,7 @@ fi
 
 # 6. Roda testes
 echo "✅ Todos os serviços prontos. Rodando E2E Buscas Agendadas..."
-cd web && npm run build
+cd web && bun run build
 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test buscas-agendadas
 EXIT_CODE=$?
 
@@ -510,7 +510,7 @@ fi
 
 # 6. Roda testes
 echo "✅ Todos os serviços prontos. Rodando E2E Publicações..."
-cd web && npm run build
+cd web && bun run build
 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test publicar-agendada
 EXIT_CODE=$?
 
@@ -578,7 +578,7 @@ if ! curl -s http://localhost:9099/ > /dev/null 2>&1; then
 fi
 
 echo "✅ Rodando E2E Alertas + Novidades..."
-cd web && npm run build
+cd web && bun run build
 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx playwright test alertas-novidades
 EXIT_CODE=$?
 

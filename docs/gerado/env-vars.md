@@ -20,7 +20,7 @@ Não edite manualmente. Rode `mise run docs:env` para regenerar.
 | `HTTP_PORT` | `services/scheduler/main.go` | 74 |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `internal/otel/otel.go` | 96 |
 | `OTEL_SERVICE_NAME` | `internal/otel/otel.go` | 39 |
-| `OTEL_TRACES_SAMPLER_ARG` | `internal/otel/otel.go` | 122 |
+| `OTEL_TRACES_SAMPLER_ARG` | `internal/otel/otel.go` | 126 |
 | `PORT` | `services/publisher/main.go` | 34 |
 | `PUBLISHER_ADDR` | `services/scheduler/main.go` | 43 |
 | `TELEGRAM_BOT_TOKEN` | `internal/publish/novo.go` | 20 |
