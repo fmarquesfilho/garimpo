@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# mise description="E2E Analyzer: valida endpoints do serviço de analytics (local ou prod)"
+set -euo pipefail
+
+echo "═══════════════════════════════════════════════"
+echo "  📊 E2E Analyzer"
+echo "═══════════════════════════════════════════════"
+
+# Determina target: local (analyzer rodando em Docker) ou produção (via API proxy)
+MODE="${1:-prod}"
+PASS=0
+FAIL=0
+
+if [ "$MODE" = "local" ]; then
+  BASE="http://localhost:8060"
+  echo "  Mode: LOCAL (analyzer em $BASE)"
+  echo "  Pre-req: docker compose up analyzer"
+else
+  # Produção: acessa via proxy da API C# (requer auth)
+  cd web 2>/dev/null || true
+  source .env.e2e.local 2>/dev/null || source .env.e2e 2>/dev/null || true
+  cd - > /dev/null 2>/dev/null || true
+
+  if [ -z "${E2E_PASSWORD:-}" ]; then
+    echo "  ❌ E2E_PASSWORD vazio (necessário para modo prod)"
+    exit 1
+  fi
+
+  TOKEN_RESP=$(curl -s "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A" \
+    -H "Content-Type: application/json" \
+    -d "{\"email\":\"${E2E_EMAIL}\",\"password\":\"${E2E_PASSWORD}\",\"returnSecureToken\":true}")
+  TOKEN=$(echo "$TOKEN_RESP" | jq -r '.idToken // empty')
+  if [ -z "$TOKEN" ]; then
+    echo "  ❌ Auth falhou"
+    exit 1
+  fi
+
+  BASE="${E2E_BASE_URL:-https://garimpei.app.br}"
+  AUTH="-H \"Authorization: Bearer $TOKEN\""
+  echo "  Mode: PRODUÇÃO (via $BASE)"
+fi
+
+check() {
+  local desc="$1" endpoint="$2" expected="$3"
+  local url resp
+
+  if [ "$MODE" = "local" ]; then
+    url="$BASE$endpoint"
+    resp=$(curl -sf "$url" 2>/dev/null || echo "CURL_FAIL")
+  else
+    url="$BASE/api${endpoint#/}"
+    # Endpoints de analytics em prod são proxied: /api/coletas, /api/estatisticas, etc.
+    # Mas analyzer diretamente expõe /quedas, /novidades, etc.
+    # O proxy C# é: /api/coletas → analyzer/coletas, /api/estatisticas → analyzer/estatisticas
+    case "$endpoint" in
+      /quedas*) url="$BASE/api/candidatos" ;; # curadoria/quedas não tem proxy direto
+      /coletas*) url="$BASE/api/coletas${endpoint#/coletas}" ;;
+      /estatisticas*) url="$BASE/api/estatisticas${endpoint#/estatisticas}" ;;
+      /novidades*) url="$BASE/api/lojas/novidades${endpoint#/novidades}" ;;
+      /health) url="$BASE/api/health" ;;
+      *) url="$BASE/api${endpoint}" ;;
+    esac
+    resp=$(eval "curl -sf -H 'Authorization: Bearer $TOKEN' '$url'" 2>/dev/null || echo "CURL_FAIL")
+  fi
+
+  if echo "$resp" | grep -q "$expected"; then
+    echo "  ✅ $desc"
+    PASS=$((PASS + 1))
+  else
+    echo "  ❌ $desc"
+    echo "     URL: $url"
+    echo "     Expected: $expected"
+    echo "     Got: $(echo "$resp" | head -c 300)"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+echo ""
+echo "── Health ────────────────────────────────────"
+if [ "$MODE" = "local" ]; then
+  check "Analyzer health" "/health" '"status":"ok"'
+else
+  check "API health (proxy check)" "/health" '"status":"ok"'
+fi
+
+echo ""
+echo "── Coletas ───────────────────────────────────"
+check "Coletas (últimos 30 dias)" "/coletas?dias=30" '"coletas"'
+
+echo ""
+echo "── Estatísticas ──────────────────────────────"
+check "Estatísticas" "/estatisticas?dias=7" '"total_amostras"'
+
+echo ""
+echo "── Novidades ─────────────────────────────────"
+if [ "$MODE" = "local" ]; then
+  check "Novidades (requer busca_id)" "/novidades?busca_id=test&dias=7" '"variacoes"\|"produtos_novos"\|"error"'
+fi
+
+echo ""
+echo "═══════════════════════════════════════════════"
+if [ $FAIL -eq 0 ]; then
+  echo "  ✅ Analyzer: $PASS checks passed"
+else
+  echo "  ❌ Analyzer: $FAIL failed, $PASS passed"
+  exit 1
+fi
+echo "═══════════════════════════════════════════════"

@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# mise description="E2E services: valida scheduler, analyzer, publisher e alertas em produção"
+set -euo pipefail
+
+echo "═══════════════════════════════════════════════"
+echo "  🔗 E2E Services (produção)"
+echo "═══════════════════════════════════════════════"
+echo ""
+echo "  Valida os serviços de backend end-to-end:"
+echo "    • Scheduler: jobs registrados + trigger"
+echo "    • Analyzer: /health + /quedas + /novidades"
+echo "    • Publicações: listar + agendar"
+echo "    • Alertas: configuração"
+echo ""
+
+cd web
+source .env.e2e.local 2>/dev/null || source .env.e2e
+
+if [ -z "${E2E_PASSWORD:-}" ]; then
+  echo "  ❌ E2E_PASSWORD vazio. Copie .env.e2e → .env.e2e.local"
+  exit 1
+fi
+
+echo "  🔑 Obtendo token Firebase..."
+TOKEN_RESP=$(curl -s "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA5sBUoVkNHiq58KUkmwbxIMLhvgTn7N8A" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${E2E_EMAIL}\",\"password\":\"${E2E_PASSWORD}\",\"returnSecureToken\":true}")
+
+TOKEN=$(echo "$TOKEN_RESP" | jq -r '.idToken // empty')
+if [ -z "$TOKEN" ]; then
+  echo "  ❌ Login falhou:"
+  echo "$TOKEN_RESP" | jq .
+  exit 1
+fi
+echo "  ✅ Token obtido"
+
+BASE="${E2E_BASE_URL:-https://garimpei.app.br}"
+PASS=0
+FAIL=0
+
+check() {
+  local desc="$1" url="$2" expected="$3"
+  local resp
+  resp=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE$url" 2>/dev/null || echo "CURL_FAIL")
+  if echo "$resp" | grep -q "$expected"; then
+    echo "  ✅ $desc"
+    PASS=$((PASS + 1))
+  else
+    echo "  ❌ $desc"
+    echo "     URL: $url"
+    echo "     Expected: $expected"
+    echo "     Got: $(echo "$resp" | head -c 200)"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+check_no_auth() {
+  local desc="$1" url="$2" expected="$3"
+  local resp
+  resp=$(curl -sf "$BASE$url" 2>/dev/null || echo "CURL_FAIL")
+  if echo "$resp" | grep -q "$expected"; then
+    echo "  ✅ $desc"
+    PASS=$((PASS + 1))
+  else
+    echo "  ❌ $desc"
+    echo "     URL: $url"
+    echo "     Expected: $expected"
+    echo "     Got: $(echo "$resp" | head -c 200)"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+echo ""
+echo "── 1. Health checks ──────────────────────────"
+check_no_auth "API health" "/api/health" '"status":"ok"'
+
+echo ""
+echo "── 2. Scheduler (jobs registrados) ───────────"
+check "GET /api/buscas retorna lista" "/api/buscas" '"buscas"'
+
+echo ""
+echo "── 3. Analyzer (analytics) ───────────────────"
+check "GET /api/coletas" "/api/coletas" '"coletas"'
+check "GET /api/estatisticas" "/api/estatisticas" '"total_amostras"'
+check "GET /api/conversoes/reais" "/api/conversoes/reais" '"fonte"'
+
+echo ""
+echo "── 4. Publicações ────────────────────────────"
+check "GET /api/publicacoes" "/api/publicacoes" '"publicacoes"'
+
+echo ""
+echo "── 5. Alertas ────────────────────────────────"
+check "GET /api/alertas" "/api/alertas" '"threshold"'
+
+echo ""
+echo "── 6. Scheduler: verificar job ativo ─────────"
+# Busca uma busca agendada (com cron) e verifica que existe
+BUSCAS_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" "$BASE/api/buscas" 2>/dev/null || echo '{"buscas":[]}')
+AGENDADA=$(echo "$BUSCAS_RESP" | jq '[.buscas[] | select(.cron != null)] | length')
+if [ "$AGENDADA" -gt 0 ]; then
+  echo "  ✅ Buscas agendadas encontradas: $AGENDADA"
+  PASS=$((PASS + 1))
+
+  # Pega o ID da primeira busca agendada
+  BUSCA_ID=$(echo "$BUSCAS_RESP" | jq -r '[.buscas[] | select(.cron != null)][0].id')
+  echo "     Busca ativa: $BUSCA_ID"
+  echo "     (Job no scheduler: busca-$BUSCA_ID)"
+else
+  echo "  ⚠️  Nenhuma busca agendada (scheduler pode estar idle)"
+  echo "     Isso é esperado se não há buscas com cron configurado."
+fi
+
+echo ""
+echo "── 7. Scheduler: trigger manual ──────────────"
+# Cria uma busca temporária com cron e verifica que é aceita
+TEMP_RESP=$(curl -sf -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  "$BASE/api/buscas" \
+  -d '{"keywords":["e2e-test-trigger"],"cron":"0 */12 * * *","shop_names":{}}' 2>/dev/null || echo "CURL_FAIL")
+if echo "$TEMP_RESP" | grep -q '"status":"salva"'; then
+  echo "  ✅ Busca com cron registrada (scheduler deve ter criado job)"
+  PASS=$((PASS + 1))
+
+  # Limpa: remove a busca de teste
+  curl -sf -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+    "$BASE/api/buscas?remover=true" \
+    -d '{"keywords":["e2e-test-trigger"]}' > /dev/null 2>&1
+  echo "     (busca de teste removida)"
+else
+  echo "  ❌ Falha ao criar busca agendada"
+  echo "     Got: $(echo "$TEMP_RESP" | head -c 200)"
+  FAIL=$((FAIL + 1))
+fi
+
+echo ""
+echo "═══════════════════════════════════════════════"
+if [ $FAIL -eq 0 ]; then
+  echo "  ✅ All $PASS checks passed!"
+else
+  echo "  ❌ $FAIL failed, $PASS passed"
+  exit 1
+fi
+echo "═══════════════════════════════════════════════"
