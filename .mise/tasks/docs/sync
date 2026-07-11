@@ -83,13 +83,48 @@ if [ -f "backlog/sprint.txt" ]; then
       if ls $TASK_FILE 1>/dev/null 2>&1; then
         TITULO=$(grep "^titulo:" $TASK_FILE | head -1 | sed 's/titulo: *"//' | sed 's/"$//')
         STATUS=$(grep "^status:" $TASK_FILE | head -1 | sed 's/status: *//')
-        echo "- **${task_id}** — ${TITULO} (\`${STATUS}\`)"
+        echo "- [**${task_id}**](/tarefas/${task_id}) — ${TITULO} (\`${STATUS}\`)"
       else
         echo "- **${task_id}**"
       fi
     done
   } > "$DEST/projeto/sprint.md"
 fi
+
+# ── Tarefas do backlog → páginas individuais ──────────────────────────────────
+mkdir -p "$DEST/tarefas"
+for f in backlog/tasks/*.yaml; do
+  [ -f "$f" ] || continue
+  TASK_ID=$(grep "^id:" "$f" | head -1 | sed 's/id: *//' || true)
+  TITULO=$(grep "^titulo:" "$f" | head -1 | sed 's/titulo: *"//' | sed 's/"$//' || true)
+  STATUS=$(grep "^status:" "$f" | head -1 | sed 's/status: *//' || true)
+  PRIORIDADE=$(grep "^prioridade:" "$f" | head -1 | sed 's/prioridade: *//' || true)
+  ESTIMATIVA=$(grep "^estimativa:" "$f" | head -1 | sed 's/estimativa: *//' || true)
+  SPRINT=$(grep "^sprint:" "$f" | head -1 | sed 's/sprint: *"//' | sed 's/"$//' || true)
+  TAGS=$(grep "^tags:" "$f" | head -1 | sed 's/tags: *//' || true)
+
+  {
+    echo "# ${TASK_ID}: ${TITULO}"
+    echo ""
+    echo "| Campo | Valor |"
+    echo "|-------|-------|"
+    echo "| Status | \`${STATUS}\` |"
+    echo "| Prioridade | ${PRIORIDADE} |"
+    echo "| Estimativa | ${ESTIMATIVA} |"
+    echo "| Sprint | ${SPRINT:-—} |"
+    echo "| Tags | ${TAGS} |"
+    echo ""
+    echo "## Descrição"
+    echo ""
+    # Extract multi-line fields (valor, descricao, criterios)
+    sed -n '/^valor:/,/^[a-z]/{ /^valor:/d; /^[a-z]/d; p; }' "$f" | sed 's/^  //'
+    echo ""
+    echo "## Critérios de aceite"
+    echo ""
+    sed -n '/^criterios:/,/^[a-z]/{ /^criterios:/d; /^[a-z]/d; p; }' "$f" | sed 's/^  - /- ✅ /'
+  } > "$DEST/tarefas/${TASK_ID}.md"
+done
+echo "✓ $(ls "$DEST/tarefas/" | wc -l | tr -d ' ') tarefas geradas"
 
 # ── Index page ────────────────────────────────────────────────────────────────
 cat > "$DEST/index.md" << 'EOF'
@@ -270,6 +305,14 @@ ENDJSON
   if [ -d "$dest/sessoes" ]; then
     printf '  {"text":"Sessões","items":[' >> "$json"
     dir_items "$dest/sessoes" "sessoes" >> "$json"
+    printf ']},\n' >> "$json"
+  fi
+
+  # Tarefas (dinâmico — gerado do backlog)
+  if [ -d "$dest/tarefas" ] && [ "$(ls "$dest/tarefas/"*.md 2>/dev/null)" ]; then
+    printf '  {"text":"Tarefas","items":[' >> "$json"
+    printf '{"text":"📋 Todas as Tarefas","link":"/gerado/TAREFAS"},' >> "$json"
+    dir_items "$dest/tarefas" "tarefas" >> "$json"
     printf ']},\n' >> "$json"
   fi
 

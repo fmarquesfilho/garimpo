@@ -438,7 +438,7 @@ npx shadcn-svelte@latest add <component>
 
 ---
 
-Para CI guards e linting, ver [06-qualidade-e-testes.md](06-qualidade-e-testes.md).
+Para CI guards e linting, ver [06-qualidade-e-testes.md](/qualidade-e-testes).
 
 ---
 
