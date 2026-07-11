@@ -116,6 +116,7 @@ echo "── 5. Verificar snapshots no BigQuery ────────"
 e2e_new_trace "verificar-snapshots-bq"
 
 # Verifica que Analyzer consegue ler coletas (proxy para BigQuery)
+# Com o Collect RPC, os snapshots agora são persistidos pelo Collector
 COLETAS_RESP=$(e2e_get "/api/coletas?dias=7" "$E2E_LAST_TRACEPARENT")
 
 if echo "$COLETAS_RESP" | grep -q '"coletas"'; then

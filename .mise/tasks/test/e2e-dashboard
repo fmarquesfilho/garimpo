@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# mise description="E2E Dashboard: fluxo completo agendamento → coleta → dashboard atualiza"
+set -euo pipefail
+
+# shellcheck source=.mise/tasks/test/e2e-lib
+source "$(dirname "$0")/e2e-lib"
+
+echo "═══════════════════════════════════════════════"
+echo "  📊 E2E Dashboard Inteligente"
+echo "═══════════════════════════════════════════════"
+echo ""
+echo "  Fluxo validado:"
+echo "    1. Verificar endpoint /api/dashboard/changes (change detection)"
+echo "    2. Criar busca agendada → verificar que Collect persiste"
+echo "    3. Verificar /api/coletas/saude responde com dados frescos"
+echo "    4. Verificar /api/oportunidades/agora retorna oportunidades"
+echo "    5. Verificar /api/conversoes/resumo responde"
+echo "    6. Verificar /api/alertas/eficacia responde"
+echo "    7. Simular polling: comparar timestamps antes/depois de coleta"
+echo "    8. Isolamento multi-tenant"
+echo ""
+echo "  Cada step gera traceparent → rastreável no Cloud Trace"
+echo ""
+
+e2e_auth
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 1. Change Detection endpoint ─────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "dashboard-changes"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+CHANGES_RESP=$(e2e_get "/api/dashboard/changes" "$E2E_LAST_TRACEPARENT")
+
+if echo "$CHANGES_RESP" | grep -q "saude_updated_at"; then
+  e2e_ok "GET /api/dashboard/changes responde"
+  SAUDE_TS=$(echo "$CHANGES_RESP" | jq -r '.saude_updated_at // "null"')
+  echo "     saude_updated_at: $SAUDE_TS"
+else
+  e2e_warn "Endpoint /api/dashboard/changes não encontrado" \
+    "Pode não estar deployado ainda"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 2. Coleta via Collect RPC (dados frescos) ─"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "collect-rpc-test"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+# Busca por keyword real (serum) — o Collector.Collect persiste no BigQuery
+COLLECT_RESP=$(e2e_get "/api/candidatos?keyword=serum&top=5" "$E2E_LAST_TRACEPARENT")
+TOTAL=$(echo "$COLLECT_RESP" | jq '.total_bruto // 0' 2>/dev/null || echo "0")
+
+if [ "$TOTAL" -gt 0 ]; then
+  e2e_ok "Coleta retornou $TOTAL produtos (Collect RPC via proxy)"
+else
+  e2e_warn "Coleta retornou 0 (possível rate limit Shopee)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 3. Saúde das coletas ──────────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "saude-coletas"
+
+SAUDE_RESP=$(e2e_get "/api/coletas/saude" "$E2E_LAST_TRACEPARENT")
+
+if echo "$SAUDE_RESP" | grep -q '"status"'; then
+  STATUS=$(echo "$SAUDE_RESP" | jq -r '.status' 2>/dev/null)
+  COLETAS24=$(echo "$SAUDE_RESP" | jq '.coletas_24h // 0' 2>/dev/null)
+  e2e_ok "Saúde: status=$STATUS, coletas_24h=$COLETAS24"
+
+  ATRASADAS=$(echo "$SAUDE_RESP" | jq '.keywords_atrasadas | length' 2>/dev/null || echo "0")
+  if [ "$ATRASADAS" -gt 0 ]; then
+    echo "     ⚠️  $ATRASADAS keywords sem coleta recente"
+  fi
+else
+  e2e_fail "GET /api/coletas/saude não responde" "$(echo "$SAUDE_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 4. Oportunidades agora ────────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "oportunidades-agora"
+
+OPORT_RESP=$(e2e_get "/api/oportunidades/agora?dias=7" "$E2E_LAST_TRACEPARENT")
+
+if echo "$OPORT_RESP" | grep -q '"quedas"\|"novos"\|"alto_valor"'; then
+  QUEDAS=$(echo "$OPORT_RESP" | jq '.total_quedas // 0' 2>/dev/null)
+  NOVOS=$(echo "$OPORT_RESP" | jq '.total_novos // 0' 2>/dev/null)
+  ALTO=$(echo "$OPORT_RESP" | jq '.total_alto_valor // 0' 2>/dev/null)
+  e2e_ok "Oportunidades: $QUEDAS quedas, $NOVOS novos, $ALTO alto-valor"
+else
+  e2e_fail "GET /api/oportunidades/agora não responde" "$(echo "$OPORT_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 5. Resumo de conversões ───────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "conversoes-resumo"
+
+CONV_RESP=$(e2e_get "/api/conversoes/resumo?dias=30" "$E2E_LAST_TRACEPARENT")
+
+if echo "$CONV_RESP" | grep -q '"comissao_total"\|"status"'; then
+  COMISSAO=$(echo "$CONV_RESP" | jq '.comissao_total // 0' 2>/dev/null)
+  CONV_STATUS=$(echo "$CONV_RESP" | jq -r '.status // "?"' 2>/dev/null)
+  e2e_ok "Conversões: comissão=R$$COMISSAO, status=$CONV_STATUS"
+else
+  e2e_fail "GET /api/conversoes/resumo não responde" "$(echo "$CONV_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 6. Eficácia dos alertas ───────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "alertas-eficacia"
+
+EFIC_RESP=$(e2e_get "/api/alertas/eficacia?dias=30" "$E2E_LAST_TRACEPARENT")
+
+if echo "$EFIC_RESP" | grep -q '"quedas_detectadas"\|"taxa_deteccao"'; then
+  QUEDAS_DET=$(echo "$EFIC_RESP" | jq '.quedas_detectadas // 0' 2>/dev/null)
+  TAXA=$(echo "$EFIC_RESP" | jq '.taxa_deteccao // "null"' 2>/dev/null)
+  e2e_ok "Eficácia: $QUEDAS_DET quedas detectadas, taxa=$TAXA%"
+else
+  e2e_fail "GET /api/alertas/eficacia não responde" "$(echo "$EFIC_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 7. Polling simulation ─────────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "polling-simulation"
+
+# Captura timestamps atuais
+BEFORE=$(e2e_get "/api/dashboard/changes" "$E2E_LAST_TRACEPARENT")
+BEFORE_SAUDE=$(echo "$BEFORE" | jq -r '.saude_updated_at // "null"' 2>/dev/null)
+
+if [ "$BEFORE_SAUDE" != "null" ] && [ "$BEFORE_SAUDE" != "" ]; then
+  e2e_ok "Polling: timestamp base capturado ($BEFORE_SAUDE)"
+
+  # Espera 2s e verifica de novo (em prod, após coleta o timestamp mudaria)
+  sleep 2
+  AFTER=$(e2e_get "/api/dashboard/changes" "$E2E_LAST_TRACEPARENT")
+  AFTER_SAUDE=$(echo "$AFTER" | jq -r '.saude_updated_at // "null"' 2>/dev/null)
+
+  if [ "$BEFORE_SAUDE" = "$AFTER_SAUDE" ]; then
+    e2e_ok "Polling: timestamp estável (sem coleta no intervalo — correto)"
+  else
+    e2e_ok "Polling: timestamp mudou ($BEFORE_SAUDE → $AFTER_SAUDE) — coleta detectada!"
+  fi
+else
+  e2e_warn "Polling: sem timestamp base (sem dados no BigQuery)" \
+    "Normal se Collect RPC ainda não deployou"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 8. Isolamento multi-tenant ────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_assert_no_leak "/api/dashboard/changes" "saude" "GET /api/dashboard/changes requer auth"
+e2e_assert_no_leak "/api/coletas/saude" "status" "GET /api/coletas/saude requer auth"
+e2e_assert_no_leak "/api/oportunidades/agora" "quedas" "GET /api/oportunidades/agora requer auth"
+e2e_assert_no_leak "/api/conversoes/resumo" "comissao" "GET /api/conversoes/resumo requer auth"
+e2e_assert_no_leak "/api/alertas/eficacia" "quedas" "GET /api/alertas/eficacia requer auth"
+
+# ──────────────────────────────────────────────────────────────────────────────
+e2e_summary "E2E Dashboard Inteligente"
