@@ -142,6 +142,7 @@ app.MapAnalyticsEndpoints();
 app.MapResolverLinkEndpoints();
 app.MapLogsEndpoints();
 app.MapJobStatusEndpoints();
+app.MapAnalyzerProxyEndpoints();
 
 // V2 API routes (native C# format)
 app.MapGroup("/api/v2")

@@ -214,6 +214,26 @@ export function buscarAlertasConfig() {
 	return pegar('/api/alertas');
 }
 
+/** Saúde das coletas (última execução, atrasos, keywords paradas). */
+export function buscarSaudeColetas() {
+	return pegar('/api/coletas/saude');
+}
+
+/** Oportunidades agora: top quedas + novos + alto-valor não publicados. */
+export function buscarOportunidadesAgora({ dias = 7 } = {}) {
+	return pegar(`/api/oportunidades/agora?dias=${dias}`);
+}
+
+/** Resumo de conversões/receita por canal. */
+export function buscarResumoConversoes({ dias = 30 } = {}) {
+	return pegar(`/api/conversoes/resumo?dias=${dias}`);
+}
+
+/** Eficácia dos alertas: quedas → alertas → conversões. */
+export function buscarEficaciaAlertas({ dias = 30 } = {}) {
+	return pegar(`/api/alertas/eficacia?dias=${dias}`);
+}
+
 /**
  * Envia um alerta de teste (verifica bot + chat_id).
  * @param {Object} [opts]
