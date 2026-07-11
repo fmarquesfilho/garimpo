@@ -13,40 +13,7 @@ trap "rm -rf $TMPDIR" EXIT
 
 # ── 1. Go ─────────────────────────────────────────────────────────────────────
 echo "🔍 Running Go..."
-go run -v ./internal/busca/cmd/derive-keys "$FIXTURES" > "$TMPDIR/go.txt" 2>/dev/null || {
-  # Fallback: run tests which validate fixtures
-  go test ./internal/busca/... -run TestDeriveCollectionKeys_Fixtures -count=1 > /dev/null 2>&1
-  # Generate output via simple Go script
-  cat > "$TMPDIR/derive_go.go" << 'GOEOF'
-package main
-
-import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"github.com/fmarquesfilho/garimpo/internal/busca"
-)
-
-type fixture struct {
-	ID         string   `json:"id"`
-	Keywords   []string `json:"keywords"`
-	ShopIDs    []int64  `json:"shop_ids"`
-	Categorias []string `json:"categorias"`
-}
-
-func main() {
-	data, _ := os.ReadFile(os.Args[1])
-	var fixtures []fixture
-	json.Unmarshal(data, &fixtures)
-	for _, fx := range fixtures {
-		keys := busca.DeriveCollectionKeys(fx.ShopIDs, fx.Keywords, fx.Categorias...)
-		out, _ := json.Marshal(keys)
-		fmt.Printf("%s:%s\n", fx.ID, string(out))
-	}
-}
-GOEOF
-  go run "$TMPDIR/derive_go.go" "$FIXTURES" > "$TMPDIR/go.txt"
-}
+go run ./cmd/derive-keys "$FIXTURES" > "$TMPDIR/go.txt"
 echo "  ✅ Go done"
 
 # ── 2. Python ─────────────────────────────────────────────────────────────────
@@ -65,7 +32,7 @@ for fx in fixtures:
         fx.get('keywords') or [],
         fx.get('categorias') or []
     )
-    print(f\"{fx['id']}:{json.dumps(keys)}\")
+    print(f\"{fx['id']}:{json.dumps(keys, separators=(',', ':'), ensure_ascii=False)}\")
 " > "$TMPDIR/python.txt"
 echo "  ✅ Python done"
 
@@ -73,11 +40,7 @@ echo "  ✅ Python done"
 echo "🔍 Running JavaScript..."
 node -e "
 const fs = require('fs');
-const path = require('path');
 
-// Load the module (ESM → need dynamic import workaround)
-const src = fs.readFileSync('web/src/lib/collection-keys.js', 'utf-8');
-// Extract the function body and eval
 const fn = new Function('shopIds', 'keywords', 'categorias', \`
   const seen = new Set();
   const keys = [];
