@@ -49,10 +49,12 @@ mise run up
 | Comando | Descrição |
 |---------|-----------|
 | `mise run test` | Testes unitários (Go + C# + Web) |
+| `mise run test:all` | Todos os testes (unitários + E2E locais) |
 | `mise run test:go` | Testes Go |
 | `mise run test:csharp` | Testes C# (sobe PostgreSQL via Docker) |
 | `mise run test:web` | Vitest (unit + contrast + theme) |
 | `mise run test:unit` | Apenas testes unitários rápidos |
+| `mise run test:integration:cache` | Cache sidecar + collector divergence + full suite |
 
 ### Testes E2E (produção — NÃO rodar no CI)
 
@@ -68,6 +70,7 @@ mise run up
 | `mise run test:e2e-traces` | Propagação OTel (traceparent) |
 | `mise run test:e2e-analyzer` | BigQuery queries via Analyzer |
 | `mise run test:e2e-smoke` | Smoke test rápido (health + auth) |
+| `mise run test:e2e-novos` | Pipeline Novos: Collect → BigQuery → Analyzer → Dashboard |
 | `mise run test:e2e-local` | 24 testes Playwright com mock |
 | `mise run test:e2e-prod` | 8 testes Playwright com APIs reais |
 
@@ -104,9 +107,12 @@ mise run up
 | `mise run check:file-size` | Limite 400 linhas (testes: 900) |
 | `mise run check:fixtures-contract` | Golden files válidos |
 | `mise run check:fixtures-frontend` | payloadToConfig vs golden |
+| `mise run check:fixtures-crosslang` | DeriveCollectionKeys igual em Go/Python/JS |
+| `mise run check:api-spec-sync` | OpenAPI spec sincronizada com endpoints |
 | `mise run check:format` | Prettier (sem alterar) |
 | `mise run check:rules-schema` | busca-rules.json vs schema |
 | `mise run check:ui-coverage` | Cobertura da biblioteca de componentes |
+| `mise run check:comment-quality` | Anti-patterns em comentários |
 | `mise run check:comment-quality` | Anti-patterns em comentários |
 
 ### Debug (produção)
@@ -151,6 +157,14 @@ mise run debug:logs -- --trace-id abc123def456
 | `mise run db:reset` | Reset banco local |
 | `mise run db:reset -- --prod` | Reset banco de produção (Neon) |
 | `mise run db:reset -- --prod --bq` | Reset BigQuery de produção |
+
+### Backlog e Geração
+
+| Comando | Descrição |
+|---------|-----------|
+| `mise run backlog:create` | Cria nova tarefa no backlog |
+| `mise run gen:api` | Gera OpenAPI spec |
+| `mise run gen:api-reference` | Gera referência de API |
 
 ### Outros
 
@@ -302,28 +316,36 @@ mise run debug:trace <trace_id>
 ## Arquitetura de Serviços
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                  Cloud Run (multi-container)                     │
-│                                                                 │
-│  ┌─────────────┐  ┌───────────┐  ┌──────────┐  ┌───────────┐ │
-│  │ C# API      │  │ Scheduler │  │Collector │  │ Publisher │ │
-│  │ (ingress)   │  │ (gRPC+HTTP│  │ (gRPC)   │  │ (gRPC)    │ │
-│  │ port 8080   │  │ 50051+8061│  │ 50052)   │  │ 50053)    │ │
-│  └──────┬──────┘  └─────┬─────┘  └────┬─────┘  └─────┬─────┘ │
-│         │                │              │               │       │
-│         │ gRPC           │ gRPC         │ Shopee API    │ TG/WA │
-│         ▼                ▼              ▼               ▼       │
-│  ┌─────────────┐  ┌───────────┐  ┌──────────┐  ┌───────────┐ │
-│  │ PostgreSQL  │  │Cloud Tasks│  │ BigQuery │  │ Telegram  │ │
-│  │ (Neon)      │  │           │  │          │  │ WhatsApp  │ │
-│  └─────────────┘  └───────────┘  └────┬─────┘  └───────────┘ │
-└────────────────────────────────────────┼───────────────────────┘
-                                         │
-                              ┌──────────┴──────────┐
-                              │   Analyzer (Python)  │
-                              │   FastAPI port 8060  │
-                              │   (Cloud Run sep.)   │
-                              └─────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                  Cloud Run (multi-container)                             │
+│                                                                         │
+│  ┌─────────────┐  ┌───────────┐  ┌──────────┐  ┌──────────┐          │
+│  │ C# API      │  │ Scheduler │  │Collector │  │ Publisher│          │
+│  │ (ingress)   │  │ (gRPC+HTTP│  │ (gRPC)   │  │ (gRPC)   │          │
+│  │ port 8080   │  │ 50054+8054│  │ 50051    │  │ 50052    │          │
+│  └──────┬──────┘  └─────┬─────┘  └────┬─────┘  └────┬─────┘          │
+│         │                │              │              │                │
+│         │ gRPC           │ gRPC         │ Shopee API   │ TG/WA          │
+│         ▼                ▼              ▼              ▼                │
+│  ┌─────────────┐  ┌───────────┐  ┌──────────┐  ┌───────────┐         │
+│  │ Cache       │  │Cloud Tasks│  │ BigQuery │  │ Telegram  │         │
+│  │ Sidecar     │  │           │  │          │  │ WhatsApp  │         │
+│  │ port 50055  │  │           │  │          │  │           │         │
+│  │ (L2 LRU)   │  │           │  │          │  │           │         │
+│  └──────┬──────┘  └───────────┘  └────┬─────┘  └───────────┘         │
+│         │                              │                               │
+│  ┌──────┴──────┐            ┌──────────┴──────────┐                   │
+│  │ PostgreSQL  │            │   Analyzer (Python)  │                   │
+│  │ (Neon)      │            │   FastAPI port 8060  │                   │
+│  └─────────────┘            └─────────────────────┘                   │
+└────────────────────────────────────────────────────────────────────────┘
+
+         Cloudflare Edge (L1 Cache)
+┌──────────────────────────────────┐
+│  garimpei-proxy Worker           │
+│  Workers Cache (TTL 5min)        │
+│  Cache-Tag purge via API         │
+└──────────────────────────────────┘
 ```
 
 ### Fronteiras de dados
@@ -333,6 +355,8 @@ mise run debug:trace <trace_id>
 | PostgreSQL | C# API | C# API | C# API |
 | BigQuery | Collector | Analyzer | Collector |
 | Cloud Tasks | Scheduler | Scheduler | Scheduler |
+| Cache L2 (in-memory) | Cache Sidecar | C# API (Get) | Cache Sidecar (via Collector) |
+| Cache L1 (edge) | Cloudflare Worker | Frontend (HIT) | Worker (PUT on MISS) |
 
 Regras enforçadas por `mise run check:data-ownership`:
 - Go services não acessam PostgreSQL

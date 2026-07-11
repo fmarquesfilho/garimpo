@@ -9,6 +9,7 @@ T-0051
 T-0054 ✅
 T-0056 ✅
 T-0057 ✅
+T-0058 ✅
 
 > Gerado automaticamente. Não edite — rode `mise run docs:board`.
 
@@ -55,6 +56,7 @@ T-0057 ✅
 | | | | | T-0054 E2E locais: reescrever para a página Descobrir em raias (M) |
 | | | | | T-0056 Corrigir bugs visuais e funcionais da página Descobrir v3 (M) |
 | | | | | T-0057 Fixtures compartilhados + contract tests cross-stack (G) |
+| | | | | T-0058 Cache layer L1 + L2: Cloudflare edge + Go sidecar (G) |
 
 ---
 
@@ -63,4 +65,4 @@ T-0057 ✅
 - ⏭️ next: 14
 - 🔨 doing: 0
 - 👀 review: 0
-- ✅ done: 41
+- ✅ done: 42

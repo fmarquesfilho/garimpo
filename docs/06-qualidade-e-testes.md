@@ -2,7 +2,7 @@
 
 ## Pipeline de CI
 
-O workflow `ci.yml` roda em push para `main` e PRs:
+O workflow `ci.yml` roda em push para `main`, PRs, e manualmente via `workflow_dispatch`:
 
 ```
 push main → GitHub Actions (ci.yml)
@@ -11,22 +11,14 @@ push main → GitHub Actions (ci.yml)
   ├─ csharp: restore + build + test (com PostgreSQL service)
   ├─ python: ruff lint + syntax check
   ├─ proto: buf lint + sync check (Go + C# stubs atualizados?)
-  ├─ frontend: npm ci + build + lint:css + lint:js + vitest + playwright (Firebase Emulator)
+  ├─ frontend: bun install + build + lint:css + lint:js + vitest + format:check
   ├─ contracts: service-contracts + api-contract + config-consistency + schema-sync + data-ownership
   ├─ security: Semgrep SAST (JavaScript + TypeScript)
-  ├─ deploy-backend: build Docker (5 imgs) + migrations + Cloud Run [se backend mudou]
-  └─ deploy-web: build + Cloudflare Pages [se frontend mudou]
+  ├─ deploy-backend: build Docker (6 imgs) + migrations + Cloud Run [se validação passa]
+  └─ deploy-web: build + Cloudflare Pages [se validação passa]
 ```
 
-**Otimizações de path filtering:**
-
-Pushes que tocam apenas estes caminhos **não disparam CI**:
-- `docs/`, `docs-site/`, `backlog/`, `.kiro/`, `.vscode/`
-- `*.md`, `LICENSE`, `.gitignore`, `.codacy.yml`, `.semgrepignore`, `renovate.json`
-
-**Deploy condicional (monorepo-aware):**
-- `deploy-backend` detecta via `git diff HEAD~1` se houve mudança em `src/`, `services/`, `protos/`, `deploy/`, `go.*`, `internal/`, ou `contracts/registry`. Se não, **pula o deploy** (~4min economizados).
-- `deploy-web` roda apenas quando o frontend ou contratos mudam.
+**Todos os jobs rodam sempre** — sem path filtering condicional. Deploy é gated nos jobs de validação passarem (Go + C# + Python + Proto = success).
 
 ---
 
@@ -152,8 +144,8 @@ Verifica sincronização de schemas entre os 3 datastores e os componentes:
 | Métrica | Alvo | Validação |
 |---------|------|-----------|
 | Testes Go | ~200 | `go test ./...` |
-| Testes C# | 72 (multi-tenant + arch + integration + JSON) | `dotnet test` |
-| Testes frontend | ~298 unitários + ~36 E2E | `vitest --run` + `playwright test` |
+| Testes C# | 87 (multi-tenant + arch + integration + JSON) | `dotnet test` |
+| Testes frontend | ~314 unitários + ~36 E2E | `vitest --run` + `playwright test` |
 | Drift API | 0 rotas faltantes | `mise run check:api-contract` |
 | Drift config | 0 inconsistências | `mise run check:config-consistency` |
 | Drift schema | 0 desincronizações | `mise run check:schema-sync` |

@@ -123,10 +123,11 @@ Acceptance criteria do fix imediato:
 
 ## Evolução Futura
 
-- **EF Core migration:** remover `Busca.Keyword` e migrar `Busca.Marketplaces` para `string[]` (jsonb)
+- ~~**EF Core migration:** remover `Busca.Keyword` e migrar `Busca.Marketplaces` para `string[]` (jsonb)~~ ✅ Implementado (Busca.Keyword removido, Marketplaces migrado para string[] jsonb)
 - **Protovalidate + CEL:** validação cross-field no proto quando mais serviços consumirem
 - **Contract test no CI (C#):** adicionar `dotnet test` com fixtures quando jsonschema NuGet estiver disponível
-- **Inference engine no Frontend:** aplicar `rules/busca-rules.json` inference em tempo real (shop → marketplace automático)
+- ~~**Inference engine no Frontend:** aplicar `rules/busca-rules.json` inference em tempo real (shop → marketplace automático)~~ ✅ Implementado (BuscaEngine FSM aplica inference via rules)
+- **Cache Layer (ADR-0031):** CacheService.Get usa collection_keys derivadas para cache lookup, validando BuscaContract antes de armazenar
 
 ## Arquivos-Chave
 

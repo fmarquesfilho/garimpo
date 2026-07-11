@@ -13,50 +13,68 @@ componentes, quais dados são armazenados onde, e como o data ownership é respe
 
 ## 1. Descobrir Produtos (Curadoria)
 
-O usuário busca por palavras-chave. O sistema consulta a API de afiliados em tempo real,
-aplica scoring e retorna candidatos rankeados.
+O usuário busca por palavras-chave. O sistema consulta o Cache Sidecar (L2), que serve
+do LRU ou busca no Collector em caso de miss. O Cloudflare Worker (L1) absorve requests
+repetitivos na edge antes de atingir Cloud Run.
 
 ```mermaid
 sequenceDiagram
     participant U as 👤 Usuário
     participant F as 🌐 Frontend (SvelteKit)
+    participant W as ☁️ Cloudflare Worker (L1)
     participant A as 🔷 API C# (:8080)
+    participant L2 as 🗄️ Cache Sidecar (:50055)
     participant C as ⚙️ Collector Go (:50051)
     participant S as ☁️ Shopee API
 
     U->>F: digita "sérum vitamina c"
     F->>F: BuscaEngine resolve intent via rules/busca-rules.json (keyword_global)
-    F->>A: GET /api/candidatos?keyword=sérum+vitamina+c&top=20
-    A->>C: gRPC Fetch(keyword, limit=50, marketplace=SHOPEE)
-    C->>S: POST GraphQL productOfferV2 (HMAC-SHA256 auth)
-    S-->>C: JSON {products: [{commissionRate, priceMin, sales, ratingStar, offerLink}]}
-    C-->>A: FetchResponse {products[], totalFound, fetchedAt}
-    A->>A: ScoringService.Rank(filter: comissão≥7%, vendas≥0)
-    A-->>F: {estrategia: "nicho", candidatos: [{id, nome, preco, comissao, score}], total_bruto}
+    F->>W: GET /api/candidatos?keyword=sérum+vitamina+c&top=20
+    alt L1 Cache HIT
+        W-->>F: 200 OK + X-Cache-Status: HIT (< 5ms)
+    else L1 Cache MISS
+        W->>A: proxy request
+        A->>L2: gRPC CacheService.Get(collection_keys=["sérum vitamina c"], busca_id, owner_uid)
+        alt L2 Cache HIT
+            L2-->>A: GetResponse {products, cache_hit=true}
+        else L2 Cache MISS
+            L2->>C: gRPC Fetch(keyword, limit=50, marketplace=SHOPEE)
+            C->>S: POST GraphQL productOfferV2 (HMAC-SHA256 auth)
+            S-->>C: JSON {products[]}
+            C-->>L2: FetchResponse {products[], totalFound}
+            L2->>L2: store in LRU (TTL 30min)
+            L2-->>A: GetResponse {products, cache_hit=false}
+        end
+        A->>A: ScoringService.Rank(filter: comissão≥7%, vendas≥0)
+        A-->>W: 200 + X-Cache-Source: l2-hit|l2-miss + Cache-Tag: busca:{id}
+        W->>W: cache.put(response) — TTL 5min
+        W-->>F: 200 + X-Cache-Status: MISS
+    end
     F-->>U: grade de cards com produtos rankeados
 ```
 
 <details>
 <summary>📋 Detalhes técnicos</summary>
 
-**Data ownership:** Nenhum dado é armazenado neste fluxo. É uma consulta real-time
-pura (stateless). O C# API não grava no PostgreSQL nem no BigQuery.
+**Cache Layer (ADR-0031):**
+- **L1 (Cloudflare Workers Cache):** TTL 5min, invalidação por Cache-Tag. Absorve ~90% dos polls (30s poll / 300s TTL).
+- **L2 (Go Cache Sidecar):** LRU 256MB, TTL 30min, singleflight contra thundering herd. OTel instrumentado.
+- **Circuit Breaker (C# API):** 3 falhas → OPEN → fallback direto ao Collector. 10s → HALF_OPEN → probe.
+- **Invalidação:** Collector detecta divergência (hash SHA-256 pós-Collect) → Invalidate L2 (gRPC) → Purge L1 (Cloudflare API).
+- **Headers:** `X-Cache-Source: l2-hit|l2-miss|l2-bypass`, `X-Cache-Status: HIT|MISS|BYPASS`, `Cache-Tag: busca:{id}`
+
+**Data ownership:** Nenhum dado é armazenado permanentemente neste fluxo. O cache é
+efêmero (in-memory L2, edge L1) e serve como otimização de leitura.
 
 **Contexto de busca (rules v2):** o intent é resolvido por keyword × loja, mas uma busca
 **só por categorias** (sem keyword nem loja) também é válida e dispara os sources globais
-(`contextoCategorias` em `rules/busca-rules.json`) — ver ADR-0027. As categorias e lojas
-escolhidas carregam seu marketplace, e o filtro `marketplaces` acompanha o payload.
+(`contextoCategorias` em `rules/busca-rules.json`) — ver ADR-0027.
 
 **Scoring:** `Score = 0.45×norm(comissão) + 0.35×norm(EV) + 0.20×norm(rating)`
 onde EV = preço × comissão × vendas.
 
-**Autenticação Shopee:** `Signature = SHA256(AppId + timestamp + jsonBody + Secret)`.
-Header: `Authorization: SHA256 Credential={AppId}, Timestamp={ts}, Signature={sig}`
-
-**Rate limit:** 200ms throttle entre páginas, 60s entre lojas diferentes.
-
-**Escalabilidade:** O Collector é stateless — pode escalar horizontalmente. Cada
-request é independente. Não há cache (dados sempre frescos da API).
+**Escalabilidade:** Com cache, ~95% dos requests nunca atingem o Collector.
+O sidecar é stateless (memória volátil) — reinicia limpo em cada deploy.
 
 </details>
 
@@ -265,6 +283,9 @@ sequenceDiagram
     S-->>C: JSON {products[]}
     C->>BQ: INSERT INTO snapshots (coletado_em, keyword, produto_id, nome, preco, ...)
     C-->>CR: FetchResponse {totalFound: 149}
+    Note over C: Divergence detection: hash(new) vs hash(cached)
+    C->>C: CacheService.Invalidate(busca_id) [se divergência]
+    C->>C: Cloudflare Purge API tag (1 retry) [se divergência]
     CR->>CT: CreateTask(queue=price-alerts, payload={keyword, threshold, chat_id})
     Note over CT: Rate: 1 msg/s, retry 5x, dedup keyword+dia
     CT->>SH: POST /process-alert {keyword, threshold, chat_id}
@@ -769,10 +790,10 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 
 | Caso de Uso | PostgreSQL (C#) | BigQuery (Go→Python) | APIs Externas |
 |---|---|---|---|
-| 1. Descobrir | — | — | Shopee/Amazon (real-time) |
+| 1. Descobrir | — | — | Shopee/Amazon (via Cache L2 → Collector) |
 | 2. Publicar | ✍ Destinos, Publicacoes | — | Telegram/WhatsApp + Shopee (GenerateAffiliateLink) |
 | 2.1. Publicar Agendada | ✍ Publicacoes | — | Scheduler (timer) + Telegram/WhatsApp + Shopee |
-| 3. Coleta+Alerta | — | ✍ snapshots | Shopee → BQ → Telegram |
+| 3. Coleta+Alerta | — | ✍ snapshots | Shopee → BQ → Telegram + Cache Invalidate (L2+L1) |
 | 4. Monitorar Lojas | 📖 Buscas | 📖 snapshots (via Analyzer) | — |
 | 5. Adicionar Loja | ✍ Buscas | — | Shopee v4 (via Collector gRPC) + Scheduler SetSchedule |
 | 6. Cupons | ✍ AlertRules, AlertHistory | ✍ coupon_snapshots, 📖 diff | Shopee/Amazon/ML |
@@ -802,9 +823,12 @@ já resolvido. Ele não sabe que existem "destinos" no PostgreSQL.
 |---|---|
 | **Stateless services** | Todos os serviços são stateless — estado fica no PG/BQ |
 | **Horizontal scaling** | Cloud Run auto-scale 0→N para cada container |
+| **Cache Layer (ADR-0031)** | L1 edge (5min TTL) + L2 sidecar (30min LRU) — ~95% requests nunca atingem Collector |
 | **Rate limiting externo** | Cloud Tasks controla throughput entre serviços |
 | **Event-driven alerts** | Coleta → task → processamento assíncrono |
+| **Event-driven invalidation** | Collect → hash divergence → Invalidate L2 + Purge L1 |
 | **Query isolation** | Cada query BQ é independente (sem locks, sem transações) |
-| **Graceful degradation** | Analyzer offline → fallback vazio; Publisher fail → retry |
+| **Graceful degradation** | Cache down → circuit breaker → Collector direto; Analyzer offline → fallback vazio |
 | **Deduplication** | Cloud Tasks (keyword+dia), CouponAlertHistory (72h window) |
 | **Data locality** | PostgreSQL para CRUD, BigQuery para analytics (each at what it does best) |
+| **Thundering herd protection** | Singleflight no L2 — N requests concorrentes = 1 Collector call |

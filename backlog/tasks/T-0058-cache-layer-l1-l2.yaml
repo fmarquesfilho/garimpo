@@ -1,0 +1,27 @@
+id: T-0058
+titulo: "Cache layer L1 + L2: Cloudflare edge + Go sidecar"
+epic: qualidade
+tamanho: G
+status: done
+prioridade: alta
+estimativa: G
+sprint: "2026-S28"
+criado_em: "2026-07-11"
+atualizada_em: "2026-07-12"
+adr: "0031"
+descricao: |
+  Implementação de cache em duas camadas para reduzir carga no Collector e
+  latência para o usuário. L1 (Cloudflare Workers Cache, TTL 5min) absorve
+  ~90% dos reads na edge. L2 (Go Cache Sidecar, LRU 256MB, TTL 30min)
+  protege contra thundering herd via singleflight.
+  
+  Inclui: proto cache.v1, Go sidecar com OTel, divergence detection no
+  Collector, circuit breaker no C# API, Cloudflare Worker caching,
+  Dockerfile + deploy YAML + CI.
+criterios_aceite:
+  - Cache L2 hit confirmado em produção (X-Cache-Source: l2-hit)
+  - Cache L1 caching ativo (X-Cache-Status header presente)
+  - Circuit breaker fallback ao Collector se sidecar falha
+  - Divergence detection invalida L2 + purge L1 após Collect
+  - 87 C# tests + 15 Go cache tests + 314 frontend tests passando
+  - ADR-0031 documentada

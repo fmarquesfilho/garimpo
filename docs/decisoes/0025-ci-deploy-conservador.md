@@ -96,38 +96,31 @@ Isso previne erros de syntax como `jobs:` duplicado.
 
 ---
 
-## Revisão (2026-07-10): Deploys Independentes
+## Revisão (2026-07-12): Remoção total de path filtering
 
-### Novo problema detectado
+### Contexto
 
-A lógica conservadora usava `!contains(needs.*.result, 'failure')` com `needs`
-que incluía **frontend e contracts**. Resultado: se o frontend falhasse (ex: path
-do wrangler errado), o deploy do backend era bloqueado — mesmo com código backend
-perfeito e todos os testes Go/C#/Python passando.
+A complexidade do path filtering (dorny/paths-filter + `needs.changes.outputs.*`)
+continuou causando problemas de confiança: jobs skipped silenciosamente, deploys
+parciais, e dificuldade de triggar um run completo manualmente.
 
 ### Correção aplicada
 
-Deploys são agora **independentes** — cada um depende apenas dos seus próprios
-jobs de validação:
+Removido o job `changes` e todos os condicionais `if: needs.changes.outputs.*` dos
+jobs de validação. O CI agora é simples:
 
-```yaml
-deploy-backend:
-  needs: [changes, go, csharp, python, proto]
-  if: |
-    needs.changes.outputs.backend == 'true' &&
-    (needs.go.result == 'success' || needs.go.result == 'skipped') &&
-    (needs.csharp.result == 'success' || needs.csharp.result == 'skipped') &&
-    ...
+- **Todos os jobs de validação rodam sempre** (Go, C#, Python, Proto, Frontend, Contracts, Security)
+- **Deploy backend** roda se Go + C# + Python + Proto passam (em `main` ou `workflow_dispatch`)
+- **Deploy frontend** roda se Frontend passa (em `main` ou `workflow_dispatch`)
+- **`workflow_dispatch` habilitado** para triggar manualmente quando necessário
 
-deploy-web:
-  needs: [changes, frontend]
-  if: |
-    needs.changes.outputs.web == 'true' &&
-    needs.frontend.result == 'success'
-```
+### Tradeoff
 
-### Princípio atualizado
+- ~3min extras por push que só toca docs/config (antes era skipped)
+- Compensado pela confiança total: todo push em main = run completo verificado
+- `workflow_dispatch` permite re-run manual sem commits vazios
 
-- **Deploys não cruzam dependências entre stacks** — backend nunca espera frontend, e vice-versa.
-- **Cada deploy só depende da validação do seu próprio código** — se Go/C#/Python passam, backend deploya independente do estado do frontend.
-- A lógica "na dúvida, deploya" continua válida **dentro de cada stack**.
+### Princípio final
+
+> **Simplicidade > Otimização de CI minutes.** Com 2 usuários e pushes ~5x/dia,
+> os minutos extras são irrelevantes comparados ao risco de deploy incompleto.

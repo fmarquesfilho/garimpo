@@ -72,3 +72,4 @@ _Nenhuma tarefa em andamento._
 - **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
 - **T-0056** Corrigir bugs visuais e funcionais da página Descobrir v3 · E-001 · M
 - **T-0057** Fixtures compartilhados + contract tests cross-stack · E-001 · G
+- **T-0058** Cache layer L1 + L2: Cloudflare edge + Go sidecar · qualidade · G
