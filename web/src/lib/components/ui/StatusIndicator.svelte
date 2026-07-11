@@ -20,7 +20,13 @@
 	let displayLabel = $derived(label || cfg.label);
 </script>
 
-<span class={cn('inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-sm font-medium', cfg.texto, className)}>
+<span
+	class={cn(
+		'inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-sm font-medium',
+		cfg.texto,
+		className
+	)}
+>
 	<span class="relative flex h-2.5 w-2.5">
 		{#if cfg.pulso}
 			<span class={cn('absolute inline-flex h-full w-full animate-ping rounded-full opacity-75', cfg.cor)}></span>

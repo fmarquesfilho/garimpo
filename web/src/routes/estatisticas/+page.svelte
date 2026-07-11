@@ -5,13 +5,12 @@
 		buscarOportunidadesAgora,
 		buscarResumoConversoes,
 		buscarEficaciaAlertas,
-		buscarEvolucaoLojas,
 		buscarDashboardChanges
-	} from '$lib/api.js';
+	} from '$lib/api-dashboard.js';
+	import { buscarEvolucaoLojas } from '$lib/api.js';
 	import { createPollingTimer } from '$lib/polling.svelte.js';
-	import { brl, num, pctSinal } from '$lib/formatters.js';
+	import { brl, pctSinal } from '$lib/formatters.js';
 	import {
-		MetricCard,
 		Select,
 		Badge,
 		Collapsible,
@@ -46,24 +45,44 @@
 		lastFetched = { saude: null, oportunidades: null, performance: null };
 
 		buscarSaudeColetas()
-			.then((d) => { saude = { loading: false, error: null, data: d }; })
-			.catch((e) => { saude = { loading: false, error: e.message, data: null }; });
+			.then((d) => {
+				saude = { loading: false, error: null, data: d };
+			})
+			.catch((e) => {
+				saude = { loading: false, error: e.message, data: null };
+			});
 
 		buscarOportunidadesAgora({ dias })
-			.then((d) => { oportunidades = { loading: false, error: null, data: d }; })
-			.catch((e) => { oportunidades = { loading: false, error: e.message, data: null }; });
+			.then((d) => {
+				oportunidades = { loading: false, error: null, data: d };
+			})
+			.catch((e) => {
+				oportunidades = { loading: false, error: e.message, data: null };
+			});
 
 		buscarResumoConversoes({ dias })
-			.then((d) => { performance = { loading: false, error: null, data: d }; })
-			.catch((e) => { performance = { loading: false, error: e.message, data: null }; });
+			.then((d) => {
+				performance = { loading: false, error: null, data: d };
+			})
+			.catch((e) => {
+				performance = { loading: false, error: e.message, data: null };
+			});
 
 		buscarEficaciaAlertas({ dias })
-			.then((d) => { eficacia = { loading: false, error: null, data: d }; })
-			.catch((e) => { eficacia = { loading: false, error: e.message, data: null }; });
+			.then((d) => {
+				eficacia = { loading: false, error: null, data: d };
+			})
+			.catch((e) => {
+				eficacia = { loading: false, error: e.message, data: null };
+			});
 
 		buscarEvolucaoLojas({ dias })
-			.then((d) => { evolucao = { loading: false, error: null, data: d }; })
-			.catch((e) => { evolucao = { loading: false, error: e.message, data: null }; });
+			.then((d) => {
+				evolucao = { loading: false, error: null, data: d };
+			})
+			.catch((e) => {
+				evolucao = { loading: false, error: e.message, data: null };
+			});
 	}
 
 	// ── Smart polling ─────────────────────────────────────────────────────────
@@ -109,7 +128,9 @@
 
 	function flashSection(name) {
 		highlightSection = name;
-		setTimeout(() => { highlightSection = null; }, 1200);
+		setTimeout(() => {
+			highlightSection = null;
+		}, 1200);
 	}
 
 	const poll = createPollingTimer({
@@ -155,7 +176,10 @@
 		<FreshnessBar lastUpdate={poll.lastTickAt} countdown={poll.countdown} status={poll.status} />
 		<Select
 			value={String(dias)}
-			onchange={(v) => { dias = Number(v); carregar(); }}
+			onchange={(v) => {
+				dias = Number(v);
+				carregar();
+			}}
 			options={diasOpcoes}
 			size="sm"
 			class="w-28"
@@ -174,16 +198,19 @@
 		class={highlightSection === 'saude' ? 'ring-2 ring-primary/30 transition-all duration-700' : ''}
 	>
 		<div class="flex flex-wrap items-center gap-4">
-			<span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-sm font-medium"
+			<span
+				class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-sm font-medium"
 				class:text-emerald-600={saude.data?.status === 'ok'}
 				class:text-amber-600={saude.data?.status === 'atrasado'}
 			>
 				<span class="relative flex h-2.5 w-2.5">
-					<span class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+					<span
+						class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
 						class:bg-emerald-500={saude.data?.status === 'ok'}
 						class:bg-amber-500={saude.data?.status === 'atrasado'}
 					></span>
-					<span class="relative inline-flex h-2.5 w-2.5 rounded-full"
+					<span
+						class="relative inline-flex h-2.5 w-2.5 rounded-full"
 						class:bg-emerald-500={saude.data?.status === 'ok'}
 						class:bg-amber-500={saude.data?.status === 'atrasado'}
 						class:bg-muted-foreground={!saude.data?.status || saude.data?.status === 'sem_dados'}
@@ -195,7 +222,8 @@
 				Última coleta: <strong>{tempoRelativo()}</strong>
 			</span>
 			<span class="text-sm text-muted-foreground">
-				Coletas 24h: <AnimatedMetric value={saude.data?.coletas_24h ?? 0} class="font-bold" /> / {saude.data?.coletas_esperadas_24h ?? '?'}
+				Coletas 24h: <AnimatedMetric value={saude.data?.coletas_24h ?? 0} class="font-bold" /> / {saude.data
+					?.coletas_esperadas_24h ?? '?'}
 			</span>
 		</div>
 		{#if saude.data?.keywords_atrasadas?.length > 0}
@@ -218,13 +246,17 @@
 		subtitle="Produtos para publicar — quedas, novos, alto valor"
 		loading={oportunidades.loading}
 		error={oportunidades.error}
-		empty={!oportunidades.data?.total_quedas && !oportunidades.data?.total_novos && !oportunidades.data?.total_alto_valor}
+		empty={!oportunidades.data?.total_quedas &&
+			!oportunidades.data?.total_novos &&
+			!oportunidades.data?.total_alto_valor}
 		emptyMessage="Nenhuma oportunidade detectada no período. Os dados aparecerão após as próximas coletas."
 		class={highlightSection === 'oportunidades' ? 'ring-2 ring-primary/30 transition-all duration-700' : ''}
 	>
 		<div class="mb-4 grid grid-cols-3 gap-3">
 			<div class="rounded-lg border border-border bg-muted/30 p-3 text-center">
-				<p class="m-0 text-2xl font-bold text-emerald-600"><AnimatedMetric value={oportunidades.data?.total_quedas ?? 0} /></p>
+				<p class="m-0 text-2xl font-bold text-emerald-600">
+					<AnimatedMetric value={oportunidades.data?.total_quedas ?? 0} />
+				</p>
 				<p class="m-0 text-xs text-muted-foreground">📉 Quedas</p>
 			</div>
 			<div class="rounded-lg border border-border bg-muted/30 p-3 text-center">
@@ -232,7 +264,9 @@
 				<p class="m-0 text-xs text-muted-foreground">🆕 Novos</p>
 			</div>
 			<div class="rounded-lg border border-border bg-muted/30 p-3 text-center">
-				<p class="m-0 text-2xl font-bold text-primary"><AnimatedMetric value={oportunidades.data?.total_alto_valor ?? 0} /></p>
+				<p class="m-0 text-2xl font-bold text-primary">
+					<AnimatedMetric value={oportunidades.data?.total_alto_valor ?? 0} />
+				</p>
 				<p class="m-0 text-xs text-muted-foreground">💎 Alto valor</p>
 			</div>
 		</div>
@@ -331,7 +365,6 @@
 						</div>
 						<AreaChart
 							data={item.pontos?.map((p) => ({ date: p.data, value: p.preco_medio })) ?? []}
-							formatValue={brl}
 							altura={100}
 							color={item.variacao_media_pct < 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--destructive))'}
 						/>

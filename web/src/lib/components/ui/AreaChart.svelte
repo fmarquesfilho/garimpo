@@ -12,14 +12,7 @@
 	import { Chart, Area, Axis, Svg, LinearGradient, Highlight, Spline } from 'layerchart';
 	import { scaleTime, scaleLinear } from 'd3-scale';
 
-	let {
-		data = [],
-		altura = 120,
-		formatValue = (v) => String(v),
-		color = 'hsl(var(--primary))',
-		showAxis = true,
-		class: className = ''
-	} = $props();
+	let { data = [], altura = 120, color = 'hsl(var(--primary))', showAxis = true, class: className = '' } = $props();
 
 	let chartData = $derived(
 		data.map((d) => ({
@@ -49,7 +42,11 @@
 				<Area fill="url(#{gradientId})" />
 				<Spline stroke={color} width={2} />
 				{#if showAxis}
-					<Axis placement="bottom" ticks={3} format={(d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} />
+					<Axis
+						placement="bottom"
+						ticks={3}
+						format={(d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+					/>
 				{/if}
 				<Highlight area lines />
 			</Svg>

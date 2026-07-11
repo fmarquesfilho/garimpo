@@ -101,8 +101,13 @@ export function createPollingTimer({ interval, onTick, onFullRefresh }) {
 			} else {
 				// Immediate tick on return
 				onTick()
-					.then(() => { consecutiveErrors = 0; status = 'live'; })
-					.catch(() => { status = 'offline'; });
+					.then(() => {
+						consecutiveErrors = 0;
+						status = 'live';
+					})
+					.catch(() => {
+						status = 'offline';
+					});
 			}
 
 			countdown = Math.ceil(currentInterval / 1000);
@@ -124,10 +129,18 @@ export function createPollingTimer({ interval, onTick, onFullRefresh }) {
 	}
 
 	return {
-		get countdown() { return countdown; },
-		get paused() { return paused; },
-		get status() { return status; },
-		get lastTickAt() { return lastTickAt; },
+		get countdown() {
+			return countdown;
+		},
+		get paused() {
+			return paused;
+		},
+		get status() {
+			return status;
+		},
+		get lastTickAt() {
+			return lastTickAt;
+		},
 		start,
 		stop,
 		destroy
@@ -143,9 +156,7 @@ function resolveInterval(explicit) {
 	}
 
 	// Env var
-	const fromEnv = typeof import.meta !== 'undefined'
-		? import.meta.env?.VITE_POLL_INTERVAL_MS
-		: undefined;
+	const fromEnv = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_POLL_INTERVAL_MS : undefined;
 	if (fromEnv) return clamp(Number(fromEnv));
 
 	// Explicit or default

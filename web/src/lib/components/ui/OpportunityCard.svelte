@@ -10,11 +10,7 @@
 
 	let variacao = $derived(produto.variacao ? Math.abs(produto.variacao * 100).toFixed(0) : null);
 	let precoFormatado = $derived(
-		produto.preco_atual
-			? `R$ ${produto.preco_atual.toFixed(2)}`
-			: produto.preco
-				? `R$ ${produto.preco.toFixed(2)}`
-				: ''
+		produto.preco_atual ? `R$ ${produto.preco_atual.toFixed(2)}` : produto.preco ? `R$ ${produto.preco.toFixed(2)}` : ''
 	);
 </script>
 
@@ -28,12 +24,7 @@
 	)}
 >
 	{#if produto.imagem}
-		<img
-			src={produto.imagem}
-			alt=""
-			class="h-12 w-12 rounded-md object-cover"
-			loading="lazy"
-		/>
+		<img src={produto.imagem} alt="" class="h-12 w-12 rounded-md object-cover" loading="lazy" />
 	{:else}
 		<div class="flex h-12 w-12 items-center justify-center rounded-md bg-muted text-lg">
 			{tipo === 'queda' ? '📉' : '🆕'}

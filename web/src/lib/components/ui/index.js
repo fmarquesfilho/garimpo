@@ -28,7 +28,6 @@ export { default as RankList } from './RankList.svelte';
 export { default as StatCard } from './StatCard.svelte';
 export { default as TabBar } from './TabBar.svelte';
 
-
 // Dashboard v2 (enriched components)
 export { default as OpportunityCard } from './OpportunityCard.svelte';
 export { default as StatSection } from './StatSection.svelte';
