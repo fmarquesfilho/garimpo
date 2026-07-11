@@ -33,9 +33,19 @@ namespace Garimpei.Infrastructure.Persistence.Migrations
                 name: "Keyword",
                 table: "Buscas");
 
-            // 4. Change Marketplaces column type to jsonb
+            // 4. Drop column default before changing type (PG can't cast default text→jsonb)
+            migrationBuilder.Sql("""
+                ALTER TABLE "Buscas" ALTER COLUMN "Marketplaces" DROP DEFAULT;
+                """);
+
+            // 5. Change Marketplaces column type to jsonb
             migrationBuilder.Sql("""
                 ALTER TABLE "Buscas" ALTER COLUMN "Marketplaces" TYPE jsonb USING "Marketplaces"::jsonb;
+                """);
+
+            // 6. Set new default as jsonb
+            migrationBuilder.Sql("""
+                ALTER TABLE "Buscas" ALTER COLUMN "Marketplaces" SET DEFAULT '["shopee"]'::jsonb;
                 """);
         }
 
