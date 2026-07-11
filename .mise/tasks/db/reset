@@ -115,6 +115,8 @@ if [ "$BQ" = true ]; then
   echo "  Dataset: garimpo"
   echo "  Tabelas que serão truncadas:"
   echo "    - snapshots (dados de coletas)"
+  echo "    - coupon_snapshots (dados de cupons)"
+  echo "    - publicacoes (histórico de publicações)"
   echo "    - conversoes (dados de conversão Shopee)"
   echo ""
   read -r -p "  Digite 'RESET BQ' para confirmar: " bq_confirm
@@ -126,6 +128,10 @@ if [ "$BQ" = true ]; then
   echo "  🗑️  Truncando tabelas BigQuery..."
   bq query --use_legacy_sql=false --project_id=garimpo-500114 \
     "TRUNCATE TABLE garimpo.snapshots" 2>/dev/null || echo "  ⚠️  snapshots: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.coupon_snapshots" 2>/dev/null || echo "  ⚠️  coupon_snapshots: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.publicacoes" 2>/dev/null || echo "  ⚠️  publicacoes: falhou ou não existe"
   bq query --use_legacy_sql=false --project_id=garimpo-500114 \
     "TRUNCATE TABLE garimpo.conversoes" 2>/dev/null || echo "  ⚠️  conversoes: falhou ou não existe"
 
