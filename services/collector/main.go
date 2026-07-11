@@ -80,7 +80,12 @@ func main() {
 	srv := grpc.NewServer(garimpotel.GRPCServerInterceptors()...)
 
 	// Registra CollectorService (produtos) — genérico, delega por marketplace
-	collectorpb.RegisterCollectorServiceServer(srv, NewUnifiedCollectorServer(pipeline, logger))
+	collectorServer := NewUnifiedCollectorServer(pipeline, initSnapshots(ctx, cfg.Exporters.BigQuery, logger), logger)
+	collectorpb.RegisterCollectorServiceServer(srv, collectorServer)
+
+	// Start background snapshot exporter
+	exportCtx, exportCancel := context.WithCancel(ctx)
+	go collectorServer.RunExporter(exportCtx)
 
 	// Registra CouponCollectorService (cupons) — genérico, delega por marketplace
 	couponpb.RegisterCouponCollectorServiceServer(srv, NewUnifiedCouponServer(pipeline, logger))
@@ -100,6 +105,9 @@ func main() {
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 		<-sigCh
 		logger.Info("shutdown signal recebido")
+
+		// Stop exporter goroutine (drains remaining snapshots)
+		exportCancel()
 
 		// Para pipeline (aguarda jobs ativos)
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

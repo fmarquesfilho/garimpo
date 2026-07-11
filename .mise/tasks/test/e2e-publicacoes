@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+# mise description="E2E Publicações: agendamento → Publisher gRPC → Telegram/WhatsApp"
+set -euo pipefail
+
+# shellcheck source=.mise/tasks/test/e2e-lib
+source "$(dirname "$0")/e2e-lib"
+
+echo "═══════════════════════════════════════════════"
+echo "  📤 E2E Publicações Cross-Service"
+echo "═══════════════════════════════════════════════"
+echo ""
+echo "  Fluxo validado:"
+echo "    1. Listar publicações existentes"
+echo "    2. Publicar produto (API → Publisher gRPC → Telegram)"
+echo "    3. Verificar publicações agendadas"
+echo "    4. Verificar destinos do Publisher"
+echo "    5. Conversões reais (Publisher → afiliados)"
+echo "    6. Link afiliado (Collector → Publisher)"
+echo "    7. Verificar isolamento multi-tenant"
+echo ""
+echo "  Cada step gera traceparent → rastreável no Cloud Trace"
+echo ""
+
+e2e_auth
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 1. Listar publicações existentes ──────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "listar-publicacoes"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+PUB_RESP=$(e2e_get "/api/publicacoes" "$E2E_LAST_TRACEPARENT")
+
+if echo "$PUB_RESP" | grep -q '"publicacoes"'; then
+  PUB_COUNT=$(echo "$PUB_RESP" | jq '.publicacoes | length' 2>/dev/null || echo "0")
+  e2e_ok "Publicações listadas: $PUB_COUNT"
+
+  if [ "$PUB_COUNT" -gt 0 ]; then
+    PUB_ITEM=$(echo "$PUB_RESP" | jq '.publicacoes[0]' 2>/dev/null)
+    if echo "$PUB_ITEM" | jq -e '.id' > /dev/null 2>&1; then
+      e2e_ok "Publicação tem campo id"
+    fi
+  fi
+else
+  e2e_fail "GET /api/publicacoes falhou" "$(echo "$PUB_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 2. Publicar produto (fluxo direto) ────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "publicar-produto"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+# Usa um produto dos fixtures para testar publicação
+TIMESTAMP=$(date +%s)
+PUB_BODY="{
+  \"produto_id\": \"e2e-test-pub-${TIMESTAMP}\",
+  \"nome\": \"[E2E] Sérum Teste - NÃO COMPRAR\",
+  \"preco\": 1.00,
+  \"link\": \"https://example.com/e2e-test\",
+  \"imagem\": \"https://cf.shopee.com.br/file/placeholder1.jpg\",
+  \"destino\": \"e2e-test\"
+}"
+
+PUBLISH_RESP=$(e2e_post "/api/publicar" "$PUB_BODY" "$E2E_LAST_TRACEPARENT")
+
+if echo "$PUBLISH_RESP" | grep -q '"success":true\|"published"\|"message_id"'; then
+  MSG_ID=$(echo "$PUBLISH_RESP" | jq -r '.message_id // "(sem id)"' 2>/dev/null)
+  e2e_ok "Produto publicado com sucesso (message_id: $MSG_ID)"
+elif echo "$PUBLISH_RESP" | grep -q '"success":false'; then
+  REASON=$(echo "$PUBLISH_RESP" | jq -r '.error // .reason // "(desconhecido)"' 2>/dev/null)
+  e2e_warn "Publicação falhou: $REASON" \
+    "Possível: destino 'e2e-test' não configurado no Publisher"
+elif echo "$PUBLISH_RESP" | grep -q "404\|not.found\|CURL_FAIL"; then
+  e2e_warn "Endpoint /api/publicar não encontrado" \
+    "Verificar rota no C# API (ScheduledPublishEndpoints)"
+else
+  e2e_warn "Resposta inesperada na publicação" "$(echo "$PUBLISH_RESP" | head -c 300)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 3. Publicações agendadas ──────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "publicacoes-agendadas"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+SCHED_PUB_RESP=$(e2e_get "/api/publicacoes/agendadas" "$E2E_LAST_TRACEPARENT")
+
+if echo "$SCHED_PUB_RESP" | grep -q '"agendadas"\|"scheduled"\|"publicacoes"'; then
+  SCHED_COUNT=$(echo "$SCHED_PUB_RESP" | jq 'if type == "array" then length elif .agendadas then (.agendadas | length) else 0 end' 2>/dev/null || echo "0")
+  e2e_ok "Publicações agendadas: $SCHED_COUNT"
+elif echo "$SCHED_PUB_RESP" | grep -q "404\|CURL_FAIL"; then
+  e2e_warn "Endpoint /api/publicacoes/agendadas não existe" \
+    "Funcionalidade pode estar integrada em /api/publicacoes"
+else
+  e2e_warn "Resposta inesperada" "$(echo "$SCHED_PUB_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 4. Destinos do Publisher ──────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "publisher-destinos"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+DEST_RESP=$(e2e_get "/api/destinos" "$E2E_LAST_TRACEPARENT")
+
+if echo "$DEST_RESP" | grep -q '"destinos"\|"groups"'; then
+  DEST_COUNT=$(echo "$DEST_RESP" | jq 'if .destinos then (.destinos | length) elif .groups then (.groups | length) else 0 end' 2>/dev/null || echo "0")
+  e2e_ok "Destinos configurados: $DEST_COUNT"
+
+  if [ "$DEST_COUNT" -gt 0 ]; then
+    TIPOS=$(echo "$DEST_RESP" | jq -r '[(.destinos // .groups)[] | .tipo // .channel] | unique | join(", ")' 2>/dev/null || echo "?")
+    echo "     Canais: $TIPOS"
+  fi
+elif echo "$DEST_RESP" | grep -q "404\|CURL_FAIL"; then
+  e2e_warn "Endpoint /api/destinos não encontrado" \
+    "Destinos gerenciados via Publisher gRPC (ListGroups)"
+else
+  e2e_warn "Resposta inesperada" "$(echo "$DEST_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 5. Conversões reais (Publisher → afiliados)"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "conversoes-reais"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+CONV_RESP=$(e2e_get "/api/conversoes/reais" "$E2E_LAST_TRACEPARENT")
+
+if echo "$CONV_RESP" | grep -q '"fonte"\|"conversoes"'; then
+  e2e_ok "Endpoint de conversões reais responde"
+  CONV_COUNT=$(echo "$CONV_RESP" | jq '.conversoes | length // 0' 2>/dev/null || echo "?")
+  if [ "$CONV_COUNT" != "?" ] && [ "$CONV_COUNT" != "0" ]; then
+    echo "     $CONV_COUNT conversões registradas"
+  fi
+else
+  e2e_warn "Conversões reais indisponíveis" "$(echo "$CONV_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 6. Link afiliado (Collector → Publisher) ──"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "gerar-link-afiliado"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+LINK_BODY='{"url":"https://shopee.com.br/product/920292999/100001","marketplace":"shopee"}'
+LINK_RESP=$(e2e_post "/api/link-afiliado" "$LINK_BODY" "$E2E_LAST_TRACEPARENT")
+
+if echo "$LINK_RESP" | grep -q '"link"\|"affiliate_url"\|"short_link"'; then
+  ALINK=$(echo "$LINK_RESP" | jq -r '.link // .affiliate_url // .short_link' 2>/dev/null)
+  e2e_ok "Link afiliado gerado: ${ALINK:0:60}..."
+elif echo "$LINK_RESP" | grep -q "404\|CURL_FAIL"; then
+  e2e_warn "Endpoint /api/link-afiliado não encontrado" \
+    "Geração de link pode ser inline no fluxo de publicação"
+else
+  e2e_warn "Link afiliado: resposta inesperada" "$(echo "$LINK_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 7. Isolamento multi-tenant (publicações) ──"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_assert_no_leak "/api/publicacoes" "publicacoes" "GET /api/publicacoes requer auth"
+e2e_assert_no_leak "/api/conversoes/reais" "conversoes" "GET /api/conversoes/reais requer auth"
+
+echo ""
+echo "  🔒 Isolamento garantido por:"
+echo "     • EF Core query filter: publicações filtradas por owner_uid"
+echo "     • Publisher: destino_id é scoped por owner"
+echo "     • Conversões: JOIN com publicações (já filtradas)"
+
+# ──────────────────────────────────────────────────────────────────────────────
+e2e_summary "E2E Publicações Cross-Service"

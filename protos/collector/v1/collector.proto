@@ -18,10 +18,12 @@ service CollectorService {
   rpc ResolveShop(ResolveShopRequest) returns (ResolveShopResponse);
   // Generate affiliate tracking link via marketplace API (e.g., Shopee generateShortLink).
   rpc GenerateAffiliateLink(GenerateAffiliateLinkRequest) returns (GenerateAffiliateLinkResponse);
-  // Fetch products by search keyword from a given marketplace.
+  // Fetch products by search keyword from a given marketplace (pure read, no side-effects).
   rpc Fetch(FetchRequest) returns (FetchResponse);
-  // Fetch all products from a specific shop.
+  // Fetch all products from a specific shop (pure read, no side-effects).
   rpc FetchShop(FetchShopRequest) returns (FetchShopResponse);
+  // Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+  rpc Collect(CollectRequest) returns (CollectResponse);
 }
 
 message FetchRequest {
@@ -100,4 +102,31 @@ message Product {
   string link = 14;
   // Marketplace from which this product was collected.
   Marketplace marketplace = 15;
+}
+
+// ─── Collect: search + persist snapshot ──────────────────────────────────────
+
+// CollectRequest searches products and persists the results as a BigQuery snapshot.
+// Uses oneof target to support both keyword search and shop fetch in a single RPC.
+message CollectRequest {
+  oneof target {
+    // Search by keyword — snapshot keyword field = this literal value.
+    string keyword = 1;
+    // Fetch by shop — snapshot keyword field = shop_id as string.
+    int64 shop_id = 6;
+  }
+  int32 limit = 2;        // 1-500, default 50
+  string sort_by = 3;     // relevance, sales, price
+  string owner_uid = 4;   // tenant UID (required for scoping)
+  Marketplace marketplace = 5;
+}
+
+// CollectResponse returns the collected products and indicates persistence status.
+message CollectResponse {
+  repeated Product products = 1;
+  int32 total_found = 2;
+  string fetched_at = 3;  // RFC3339
+  // True if the snapshot was accepted for export to BigQuery.
+  // False if exporter is disabled or buffer was full.
+  bool persisted = 4;
 }

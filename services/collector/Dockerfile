@@ -9,7 +9,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/garimpei-collector ./services/collector
+RUN CGO_ENABLED=0 GOOS=linux go build -tags gcp -ldflags="-s -w" -o /out/garimpei-collector ./services/collector
 
 FROM gcr.io/distroless/static-debian12
 COPY --from=build /out/garimpei-collector /garimpei-collector

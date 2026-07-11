@@ -112,11 +112,15 @@ export async function carregarOportunidades(buscasComLojas, nomesLojas) {
 	}
 
 	try {
-		const promises = buscasComLojas.map((b) =>
-			buscarNovidades({ buscaId: b.id, dias: 7 })
+		const promises = buscasComLojas.map((b) => {
+			// O Analyzer filtra por keyword LIKE '%busca_id%' na tabela snapshots.
+			// O snapshot armazena a keyword literal (ou shop_id) usada na coleta,
+			// não o UUID da busca. Enviar o shop_id ou a primeira keyword.
+			const buscaId = b.shop_ids?.[0]?.toString() || b.keywords?.[0] || b.id;
+			return buscarNovidades({ buscaId, dias: 7 })
 				.then((r) => ({ ...r, loja: b.id }))
-				.catch(() => null)
-		);
+				.catch(() => null);
+		});
 		const resultados = (await Promise.all(promises)).filter(Boolean);
 
 		const quedas = resultados.flatMap((r) => extrairQuedas(r, nomesLojas));

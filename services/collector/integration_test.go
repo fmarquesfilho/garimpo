@@ -18,6 +18,7 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/couponsource"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/source"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 // ─── Mock adapters ───────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ func startTestGRPCServer(t *testing.T) (*grpc.ClientConn, func()) {
 	}
 
 	srv := grpc.NewServer()
-	collectorpb.RegisterCollectorServiceServer(srv, NewUnifiedCollectorServer(p, logger))
+	collectorpb.RegisterCollectorServiceServer(srv, NewUnifiedCollectorServer(p, store.NopSnapshots(), logger))
 	couponpb.RegisterCouponCollectorServiceServer(srv, NewUnifiedCouponServer(p, logger))
 
 	go func() {

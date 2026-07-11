@@ -61,6 +61,10 @@ namespace Collector.V1 {
     static readonly grpc::Marshaller<global::Collector.V1.FetchShopRequest> __Marshaller_collector_v1_FetchShopRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.FetchShopRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Collector.V1.FetchShopResponse> __Marshaller_collector_v1_FetchShopResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.FetchShopResponse.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Collector.V1.CollectRequest> __Marshaller_collector_v1_CollectRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.CollectRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Collector.V1.CollectResponse> __Marshaller_collector_v1_CollectResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Collector.V1.CollectResponse.Parser));
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::Collector.V1.ResolveShopRequest, global::Collector.V1.ResolveShopResponse> __Method_ResolveShop = new grpc::Method<global::Collector.V1.ResolveShopRequest, global::Collector.V1.ResolveShopResponse>(
@@ -93,6 +97,14 @@ namespace Collector.V1 {
         "FetchShop",
         __Marshaller_collector_v1_FetchShopRequest,
         __Marshaller_collector_v1_FetchShopResponse);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Collector.V1.CollectRequest, global::Collector.V1.CollectResponse> __Method_Collect = new grpc::Method<global::Collector.V1.CollectRequest, global::Collector.V1.CollectResponse>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "Collect",
+        __Marshaller_collector_v1_CollectRequest,
+        __Marshaller_collector_v1_CollectResponse);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -129,7 +141,7 @@ namespace Collector.V1 {
       }
 
       /// <summary>
-      /// Fetch products by search keyword from a given marketplace.
+      /// Fetch products by search keyword from a given marketplace (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
@@ -141,13 +153,25 @@ namespace Collector.V1 {
       }
 
       /// <summary>
-      /// Fetch all products from a specific shop.
+      /// Fetch all products from a specific shop (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       public virtual global::System.Threading.Tasks.Task<global::Collector.V1.FetchShopResponse> FetchShop(global::Collector.V1.FetchShopRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Collector.V1.CollectResponse> Collect(global::Collector.V1.CollectRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -278,7 +302,7 @@ namespace Collector.V1 {
         return CallInvoker.AsyncUnaryCall(__Method_GenerateAffiliateLink, null, options, request);
       }
       /// <summary>
-      /// Fetch products by search keyword from a given marketplace.
+      /// Fetch products by search keyword from a given marketplace (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -291,7 +315,7 @@ namespace Collector.V1 {
         return Fetch(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch products by search keyword from a given marketplace.
+      /// Fetch products by search keyword from a given marketplace (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -302,7 +326,7 @@ namespace Collector.V1 {
         return CallInvoker.BlockingUnaryCall(__Method_Fetch, null, options, request);
       }
       /// <summary>
-      /// Fetch products by search keyword from a given marketplace.
+      /// Fetch products by search keyword from a given marketplace (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -315,7 +339,7 @@ namespace Collector.V1 {
         return FetchAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch products by search keyword from a given marketplace.
+      /// Fetch products by search keyword from a given marketplace (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -326,7 +350,7 @@ namespace Collector.V1 {
         return CallInvoker.AsyncUnaryCall(__Method_Fetch, null, options, request);
       }
       /// <summary>
-      /// Fetch all products from a specific shop.
+      /// Fetch all products from a specific shop (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -339,7 +363,7 @@ namespace Collector.V1 {
         return FetchShop(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch all products from a specific shop.
+      /// Fetch all products from a specific shop (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -350,7 +374,7 @@ namespace Collector.V1 {
         return CallInvoker.BlockingUnaryCall(__Method_FetchShop, null, options, request);
       }
       /// <summary>
-      /// Fetch all products from a specific shop.
+      /// Fetch all products from a specific shop (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -363,7 +387,7 @@ namespace Collector.V1 {
         return FetchShopAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
       /// <summary>
-      /// Fetch all products from a specific shop.
+      /// Fetch all products from a specific shop (pure read, no side-effects).
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -372,6 +396,54 @@ namespace Collector.V1 {
       public virtual grpc::AsyncUnaryCall<global::Collector.V1.FetchShopResponse> FetchShopAsync(global::Collector.V1.FetchShopRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_FetchShop, null, options, request);
+      }
+      /// <summary>
+      /// Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Collector.V1.CollectResponse Collect(global::Collector.V1.CollectRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return Collect(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Collector.V1.CollectResponse Collect(global::Collector.V1.CollectRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_Collect, null, options, request);
+      }
+      /// <summary>
+      /// Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Collector.V1.CollectResponse> CollectAsync(global::Collector.V1.CollectRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return CollectAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Collector.V1.CollectResponse> CollectAsync(global::Collector.V1.CollectRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_Collect, null, options, request);
       }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
@@ -390,7 +462,8 @@ namespace Collector.V1 {
           .AddMethod(__Method_ResolveShop, serviceImpl.ResolveShop)
           .AddMethod(__Method_GenerateAffiliateLink, serviceImpl.GenerateAffiliateLink)
           .AddMethod(__Method_Fetch, serviceImpl.Fetch)
-          .AddMethod(__Method_FetchShop, serviceImpl.FetchShop).Build();
+          .AddMethod(__Method_FetchShop, serviceImpl.FetchShop)
+          .AddMethod(__Method_Collect, serviceImpl.Collect).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the service binding logic.
@@ -404,6 +477,7 @@ namespace Collector.V1 {
       serviceBinder.AddMethod(__Method_GenerateAffiliateLink, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Collector.V1.GenerateAffiliateLinkRequest, global::Collector.V1.GenerateAffiliateLinkResponse>(serviceImpl.GenerateAffiliateLink));
       serviceBinder.AddMethod(__Method_Fetch, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Collector.V1.FetchRequest, global::Collector.V1.FetchResponse>(serviceImpl.Fetch));
       serviceBinder.AddMethod(__Method_FetchShop, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Collector.V1.FetchShopRequest, global::Collector.V1.FetchShopResponse>(serviceImpl.FetchShop));
+      serviceBinder.AddMethod(__Method_Collect, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Collector.V1.CollectRequest, global::Collector.V1.CollectResponse>(serviceImpl.Collect));
     }
 
   }

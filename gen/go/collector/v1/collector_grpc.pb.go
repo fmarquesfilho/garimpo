@@ -23,6 +23,7 @@ const (
 	CollectorService_GenerateAffiliateLink_FullMethodName = "/collector.v1.CollectorService/GenerateAffiliateLink"
 	CollectorService_Fetch_FullMethodName                 = "/collector.v1.CollectorService/Fetch"
 	CollectorService_FetchShop_FullMethodName             = "/collector.v1.CollectorService/FetchShop"
+	CollectorService_Collect_FullMethodName               = "/collector.v1.CollectorService/Collect"
 )
 
 // CollectorServiceClient is the client API for CollectorService service.
@@ -33,10 +34,12 @@ type CollectorServiceClient interface {
 	ResolveShop(ctx context.Context, in *ResolveShopRequest, opts ...grpc.CallOption) (*ResolveShopResponse, error)
 	// Generate affiliate tracking link via marketplace API (e.g., Shopee generateShortLink).
 	GenerateAffiliateLink(ctx context.Context, in *GenerateAffiliateLinkRequest, opts ...grpc.CallOption) (*GenerateAffiliateLinkResponse, error)
-	// Fetch products by search keyword from a given marketplace.
+	// Fetch products by search keyword from a given marketplace (pure read, no side-effects).
 	Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error)
-	// Fetch all products from a specific shop.
+	// Fetch all products from a specific shop (pure read, no side-effects).
 	FetchShop(ctx context.Context, in *FetchShopRequest, opts ...grpc.CallOption) (*FetchShopResponse, error)
+	// Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+	Collect(ctx context.Context, in *CollectRequest, opts ...grpc.CallOption) (*CollectResponse, error)
 }
 
 type collectorServiceClient struct {
@@ -87,6 +90,16 @@ func (c *collectorServiceClient) FetchShop(ctx context.Context, in *FetchShopReq
 	return out, nil
 }
 
+func (c *collectorServiceClient) Collect(ctx context.Context, in *CollectRequest, opts ...grpc.CallOption) (*CollectResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CollectResponse)
+	err := c.cc.Invoke(ctx, CollectorService_Collect_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CollectorServiceServer is the server API for CollectorService service.
 // All implementations must embed UnimplementedCollectorServiceServer
 // for forward compatibility.
@@ -95,10 +108,12 @@ type CollectorServiceServer interface {
 	ResolveShop(context.Context, *ResolveShopRequest) (*ResolveShopResponse, error)
 	// Generate affiliate tracking link via marketplace API (e.g., Shopee generateShortLink).
 	GenerateAffiliateLink(context.Context, *GenerateAffiliateLinkRequest) (*GenerateAffiliateLinkResponse, error)
-	// Fetch products by search keyword from a given marketplace.
+	// Fetch products by search keyword from a given marketplace (pure read, no side-effects).
 	Fetch(context.Context, *FetchRequest) (*FetchResponse, error)
-	// Fetch all products from a specific shop.
+	// Fetch all products from a specific shop (pure read, no side-effects).
 	FetchShop(context.Context, *FetchShopRequest) (*FetchShopResponse, error)
+	// Collect: search products AND persist snapshot to BigQuery (keyword or shop).
+	Collect(context.Context, *CollectRequest) (*CollectResponse, error)
 	mustEmbedUnimplementedCollectorServiceServer()
 }
 
@@ -120,6 +135,9 @@ func (UnimplementedCollectorServiceServer) Fetch(context.Context, *FetchRequest)
 }
 func (UnimplementedCollectorServiceServer) FetchShop(context.Context, *FetchShopRequest) (*FetchShopResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method FetchShop not implemented")
+}
+func (UnimplementedCollectorServiceServer) Collect(context.Context, *CollectRequest) (*CollectResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Collect not implemented")
 }
 func (UnimplementedCollectorServiceServer) mustEmbedUnimplementedCollectorServiceServer() {}
 func (UnimplementedCollectorServiceServer) testEmbeddedByValue()                          {}
@@ -214,6 +232,24 @@ func _CollectorService_FetchShop_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CollectorService_Collect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CollectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServiceServer).Collect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CollectorService_Collect_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServiceServer).Collect(ctx, req.(*CollectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CollectorService_ServiceDesc is the grpc.ServiceDesc for CollectorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -236,6 +272,10 @@ var CollectorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FetchShop",
 			Handler:    _CollectorService_FetchShop_Handler,
+		},
+		{
+			MethodName: "Collect",
+			Handler:    _CollectorService_Collect_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

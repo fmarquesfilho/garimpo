@@ -12,6 +12,7 @@ import (
 	collectorpb "github.com/fmarquesfilho/garimpo/gen/go/collector/v1"
 	couponpb "github.com/fmarquesfilho/garimpo/gen/go/coupon/v1"
 	"github.com/fmarquesfilho/garimpo/internal/source"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 func testLogger() *slog.Logger {
@@ -62,7 +63,7 @@ func newTestPipeline(t *testing.T) *Pipeline {
 
 func newTestCollectorServer(t *testing.T) *UnifiedCollectorServer {
 	t.Helper()
-	return NewUnifiedCollectorServer(newTestPipeline(t), testLogger())
+	return NewUnifiedCollectorServer(newTestPipeline(t), store.NopSnapshots(), testLogger())
 }
 
 func newTestCouponServer(t *testing.T) *UnifiedCouponServer {

@@ -1,0 +1,111 @@
+id: T-0059
+titulo: "Ambiente de staging + releases com métricas de fluxo de valor"
+epic: plataforma
+status: backlog
+prioridade: high
+estimativa: 8h
+sprint: null
+criado_em: "2026-07-11"
+
+descricao: |
+  Criar um ambiente intermediário de staging para que mudanças possam ser testadas
+  em lote antes de ir para produção. Releases são pacotes de mudanças bem definidos,
+  acompanhados de KPIs de processo (métricas DORA + VSM).
+
+  ## Motivação
+
+  Hoje o deploy vai direto de `main` para produção. Isso funciona para features
+  pequenas, mas pacotes grandes (como o Collect RPC + Analyzer v2 + Dashboard)
+  precisam de validação intermediária antes de chegar aos usuários reais.
+
+  A equipe (Fernando + Mileny) precisa de um ambiente onde:
+  1. Testar o fluxo completo (E2E full pipeline) sem poluir dados de produção
+  2. Validar que todos os serviços interagem corretamente em conjunto
+  3. Aprovar a release com confiança antes de promover para produção
+  4. Medir lead time, cycle time, e deployment frequency por release
+
+  ## Requisitos
+
+  ### Ambiente de staging
+
+  - Cloud Run services duplicados com suffix `-staging` (ou revision tag `staging`)
+  - BigQuery dataset separado: `garimpo_staging` (não compartilha com prod)
+  - PostgreSQL schema separado (ou banco Neon branch)
+  - Firebase Auth: mesmo projeto (users são os mesmos), mas dados isolados
+  - URL: `staging.garimpei.app.br` (Cloudflare DNS + Worker route)
+  - Deploy automático: push para branch `staging` → deploy staging
+  - Promoção manual: `mise run deploy:promote` copia imagens staging → prod
+
+  ### Releases como pacotes
+
+  - Tag semântica: `v1.2.0` (major.minor.patch)
+  - Changelog gerado automaticamente a partir de conventional commits
+  - Release checklist: todos os E2E passam em staging antes de promover
+  - Rollback: `mise run deploy:rollback` reverte para a revision anterior
+
+  ### Métricas de fluxo de valor (VSM + DORA)
+
+  Integradas ao CI/CD para acompanhamento contínuo:
+
+  #### Métricas DORA
+
+  | Métrica | Como medir | Alvo |
+  |---------|-----------|------|
+  | Deployment Frequency | Releases promovidas staging→prod por semana | ≥2/semana |
+  | Lead Time for Changes | Tempo entre primeiro commit e deploy em prod | <24h |
+  | Change Failure Rate | % de deploys que causam rollback ou hotfix | <5% |
+  | Time to Restore | Tempo entre incidente e resolução (rollback/fix) | <1h |
+
+  #### Value Stream Mapping
+
+  | Etapa | Métrica |
+  |-------|---------|
+  | Coding | Cycle time (first commit → PR opened) |
+  | Review | Time in review (PR opened → approved) |
+  | Testing | Pipeline duration (CI start → all green) |
+  | Staging | Time in staging (deploy staging → promote) |
+  | Prod | Deploy duration (promote → healthy in prod) |
+
+  #### KPIs por release
+
+  - Número de features/fixes incluídos
+  - Testes passando (unit + E2E) em staging
+  - Cobertura de código delta
+  - Tempo total: coding → produção
+  - Incidentes pós-deploy (0 é o alvo)
+
+  ### Tooling
+
+  - `mise run release:create` — cria tag + changelog + deploy staging
+  - `mise run release:promote` — promove staging → prod (após E2E green)
+  - `mise run release:rollback` — reverte prod para revision anterior
+  - `mise run release:metrics` — exibe métricas DORA do último período
+  - GitHub Actions: job `deploy-staging` trigga em push para `staging` branch
+  - Dashboard de métricas: `/admin/releases` (página interna)
+
+  ## Referência acadêmica
+
+  Alinhado com o conteúdo de Processos de Software (UFRN/DIMAp 2026.1):
+  - Sprint 2: automação CI/CD + métricas DORA
+  - Sprint 3: Value Stream Mapping + identificação de gargalos
+  - Unidade 3: Team Topologies + melhoria contínua
+
+  O ambiente de staging materializa a prática de "Deploy Frequency"
+  medida nas métricas DORA, enquanto o VSM do pipeline permite
+  identificar gargalos no fluxo coding → produção.
+
+  ## Critérios de aceite
+
+  1. Ambiente staging funcional com todos os 5 serviços
+  2. `mise run test:e2e-full-pipeline` passa em staging com dados limpos
+  3. Promoção staging → prod funciona via single command
+  4. Métricas DORA coletadas automaticamente por release
+  5. VSM do pipeline documentado com tempos reais medidos
+
+tags:
+  - devops
+  - staging
+  - dora
+  - vsm
+  - releases
+  - ci-cd
