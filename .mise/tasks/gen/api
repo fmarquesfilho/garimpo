@@ -120,11 +120,14 @@ grep -n "method: 'DELETE'" web/src/lib/api.js 2>/dev/null | \
 echo "" >> "$OUT"
 echo "inter_service_calls:" >> "$OUT"
 
-# Scheduler → Collector (gRPC)
-echo "  - source: scheduler" >> "$OUT"
-echo "    target: collector" >> "$OUT"
-echo "    protocol: grpc" >> "$OUT"
-echo "    method: Fetch" >> "$OUT"
+# Scheduler → Collector (gRPC) — detect actual methods called
+grep -rhoE 's\.collector\.\w+' services/scheduler/*.go 2>/dev/null | \
+  sed 's/s\.collector\.//' | sort -u | while read -r method; do
+    echo "  - source: scheduler" >> "$OUT"
+    echo "    target: collector" >> "$OUT"
+    echo "    protocol: grpc" >> "$OUT"
+    echo "    method: $method" >> "$OUT"
+  done
 
 # Scheduler → Analyzer (HTTP)
 grep -n "analyzerURL" services/scheduler/*.go 2>/dev/null | \
@@ -157,11 +160,15 @@ grep -rn "analyzerUrl" src/Garimpei.Api/Endpoints/ 2>/dev/null | \
     echo "    path: \"$path\"" >> "$OUT"
   done
 
-# C# → Collector (gRPC)
-echo "  - source: csharp-api" >> "$OUT"
-echo "    target: collector" >> "$OUT"
-echo "    protocol: grpc" >> "$OUT"
-echo "    method: Fetch" >> "$OUT"
+# C# → Collector (gRPC) — detect actual methods called
+{ grep -rhoE 'collectorClient\.\w+Async' src/Garimpei.Api/ 2>/dev/null; \
+  grep -rhoE '_collector\.\w+Async' src/Garimpei.Infrastructure/ 2>/dev/null; } | \
+  sed 's/.*\.\([A-Z]\)/\1/;s/Async//' | sort -u | while read -r method; do
+    echo "  - source: csharp-api" >> "$OUT"
+    echo "    target: collector" >> "$OUT"
+    echo "    protocol: grpc" >> "$OUT"
+    echo "    method: $method" >> "$OUT"
+  done
 
 # C# → Publisher (gRPC)
 echo "  - source: csharp-api" >> "$OUT"

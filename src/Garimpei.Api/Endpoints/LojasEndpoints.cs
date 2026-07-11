@@ -57,7 +57,6 @@ public static partial class EndpointExtensions
 
             var busca = new Busca
             {
-                Keyword = keyword,
                 OwnerUid = "",
                 SortBy = "relevance",
                 Limit = 50,
@@ -79,7 +78,10 @@ public static partial class EndpointExtensions
                     busca.ShopIds = [resolveResp.ShopId];
                     if (!string.IsNullOrEmpty(resolveResp.ShopName))
                     {
-                        busca.Keyword = resolveResp.ShopName;
+                        busca.ShopNames = new Dictionary<string, string>
+                        {
+                            [resolveResp.ShopId.ToString()] = resolveResp.ShopName
+                        };
                     }
                 }
             }

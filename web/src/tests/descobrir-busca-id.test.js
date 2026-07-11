@@ -26,7 +26,7 @@ describe('carregarOportunidades - buscaId resolution', () => {
 				id: 'busca-loja-uuid-123',
 				shop_ids: [920292999],
 				keywords: ['serum'],
-				shop_names: { '920292999': 'Glory of Seoul' }
+				shop_names: { 920292999: 'Glory of Seoul' }
 			}
 		];
 
@@ -44,7 +44,7 @@ describe('carregarOportunidades - buscaId resolution', () => {
 				id: 'busca-specific-uuid',
 				shop_ids: [111222333],
 				keywords: [],
-				shop_names: { '111222333': 'Test Shop' }
+				shop_names: { 111222333: 'Test Shop' }
 			}
 		];
 

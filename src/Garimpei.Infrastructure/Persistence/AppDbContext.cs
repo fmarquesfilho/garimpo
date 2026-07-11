@@ -52,6 +52,11 @@ public class AppDbContext : DbContext
                     v => v == null ? null : System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => v == null ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(v, (System.Text.Json.JsonSerializerOptions?)null))
                 .HasColumnType("jsonb");
+            entity.Property(e => e.Marketplaces)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new[] { "shopee" })
+                .HasColumnType("jsonb");
         });
 
         modelBuilder.Entity<Tenant>(entity =>

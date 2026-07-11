@@ -151,7 +151,7 @@ public class PublishFlowTests : IDisposable
         // O campo Keyword armazena comma-separated, mas o contrato exige array no response
         var busca = new Busca
         {
-            Keyword = "kenzo,shiseido,dior",
+            Keywords = ["kenzo", "shiseido", "dior"],
             OwnerUid = "test-user-publish",
             SortBy = "relevance",
             Limit = 50
@@ -163,11 +163,11 @@ public class PublishFlowTests : IDisposable
         var saved = await _db.Buscas.FindAsync(busca.Id);
         Assert.NotNull(saved);
 
-        // Simula o que o endpoint faz
-        var keywords = saved.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        Assert.Equal(3, keywords.Length);
-        Assert.Equal("kenzo", keywords[0]);
-        Assert.Equal("shiseido", keywords[1]);
-        Assert.Equal("dior", keywords[2]);
+        // BuscaContract: keywords são array, não comma-separated string
+        Assert.NotNull(saved.Keywords);
+        Assert.Equal(3, saved.Keywords.Length);
+        Assert.Equal("kenzo", saved.Keywords[0]);
+        Assert.Equal("shiseido", saved.Keywords[1]);
+        Assert.Equal("dior", saved.Keywords[2]);
     }
 }

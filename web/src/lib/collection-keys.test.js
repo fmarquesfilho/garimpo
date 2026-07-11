@@ -10,11 +10,7 @@ describe('deriveCollectionKeys', () => {
 	describe('fixtures', () => {
 		for (const fx of fixtures) {
 			it(`matches expected for ${fx.id}`, () => {
-				const result = deriveCollectionKeys(
-					fx.shop_ids ?? [],
-					fx.keywords ?? [],
-					fx.categorias ?? []
-				);
+				const result = deriveCollectionKeys(fx.shop_ids ?? [], fx.keywords ?? [], fx.categorias ?? []);
 				expect(result).toEqual(fx.collection_keys);
 			});
 		}

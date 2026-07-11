@@ -2,7 +2,7 @@
 # API Manifest — GERADO AUTOMATICAMENTE (não editar)
 # Regenerar: mise run gen:api
 # ═══════════════════════════════════════════════════════════════════════════════
-generated_at: "2026-07-04T15:25:59Z"
+generated_at: "2026-07-11T15:56:16Z"
 
 grpc_services:
   - service: "alerter.v1.AlerterService"
@@ -13,8 +13,11 @@ grpc_services:
   - service: "collector.v1.CollectorService"
     proto: "protos/collector/v1/collector.proto"
     methods:
+      - "ResolveShop"
+      - "GenerateAffiliateLink"
       - "Fetch"
       - "FetchShop"
+      - "Collect"
   - service: "coupon.v1.CouponCollectorService"
     proto: "protos/coupon/v1/coupon.proto"
     methods:
@@ -42,9 +45,15 @@ http_endpoints:
     - method: "Get"
       path: "/"
     - method: "Get"
+      path: "/api/admin/logs"
+    - method: "Get"
       path: "/api/admin/me"
     - method: "Get"
+      path: "/api/alertas/eficacia"
+    - method: "Get"
       path: "/api/buscas"
+    - method: "Get"
+      path: "/api/buscas/{id}/job"
     - method: "Get"
       path: "/api/candidatos"
     - method: "Get"
@@ -52,9 +61,15 @@ http_endpoints:
     - method: "Get"
       path: "/api/coletas"
     - method: "Get"
+      path: "/api/coletas/saude"
+    - method: "Get"
       path: "/api/conversoes"
     - method: "Get"
       path: "/api/conversoes/reais"
+    - method: "Get"
+      path: "/api/conversoes/resumo"
+    - method: "Get"
+      path: "/api/dashboard/changes"
     - method: "Get"
       path: "/api/estatisticas"
     - method: "Get"
@@ -65,6 +80,8 @@ http_endpoints:
       path: "/api/lojas/evolucao"
     - method: "Get"
       path: "/api/lojas/novidades"
+    - method: "Get"
+      path: "/api/oportunidades/agora"
     - method: "Get"
       path: "/destinos"
     - method: "Get"
@@ -96,6 +113,8 @@ http_endpoints:
     - method: "Post"
       path: "/api/resolver-link"
     - method: "Post"
+      path: "/api/telemetry"
+    - method: "Post"
       path: "/api/templates/preview"
     - method: "Post"
       path: "/configurar"
@@ -103,6 +122,8 @@ http_endpoints:
       path: "/excluir-conta"
     - method: "Post"
       path: "/internal/coupon-alerts/evaluate"
+    - method: "Post"
+      path: "/internal/publish-scheduled"
     - method: "Post"
       path: "/process-alert"
     - method: "Post"
@@ -200,7 +221,7 @@ inter_service_calls:
   - source: scheduler
     target: collector
     protocol: grpc
-    method: Fetch
+    method: Collect
   - source: scheduler
     target: analyzer
     protocol: http
@@ -216,11 +237,23 @@ inter_service_calls:
   - source: csharp-api
     target: analyzer
     protocol: http
+    path: "/alertas/eficacia"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
     path: "/coletas"
   - source: csharp-api
     target: analyzer
     protocol: http
+    path: "/coletas/saude"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
     path: "/conversoes"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/conversoes/resumo"
   - source: csharp-api
     target: analyzer
     protocol: http
@@ -229,6 +262,10 @@ inter_service_calls:
     target: analyzer
     protocol: http
     path: "/cupons-historico"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
+    path: "/dashboard/changes"
   - source: csharp-api
     target: analyzer
     protocol: http
@@ -244,11 +281,23 @@ inter_service_calls:
   - source: csharp-api
     target: analyzer
     protocol: http
+    path: "/oportunidades/agora"
+  - source: csharp-api
+    target: analyzer
+    protocol: http
     path: "/quedas"
   - source: csharp-api
     target: collector
     protocol: grpc
     method: Fetch
+  - source: csharp-api
+    target: collector
+    protocol: grpc
+    method: FetchShop
+  - source: csharp-api
+    target: collector
+    protocol: grpc
+    method: ResolveShop
   - source: csharp-api
     target: publisher
     protocol: grpc

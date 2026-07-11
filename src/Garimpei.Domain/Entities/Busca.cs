@@ -5,7 +5,6 @@ namespace Garimpei.Domain.Entities;
 public sealed class Busca : IOwnedEntity
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    public required string Keyword { get; set; }
     public required string OwnerUid { get; set; }
     public string SortBy { get; init; } = "relevance";
     public int Limit { get; init; } = 50;
@@ -20,7 +19,6 @@ public sealed class Busca : IOwnedEntity
 
     /// <summary>
     /// Mapeamento de shop_id → nome da loja. Persistido ao criar/salvar.
-    /// Elimina a ambiguidade de usar Keyword como nome.
     /// Ex: { "920292999": "Glory of Seoul", "282170857": "Le Botanic" }
     /// </summary>
     public Dictionary<string, string>? ShopNames { get; set; }
@@ -32,7 +30,9 @@ public sealed class Busca : IOwnedEntity
     public string? SourceUrl { get; set; }
 
     /// <summary>
-    /// Keywords de filtragem para coletas agendadas. Se nulo/vazio, coleta todos os produtos da loja.
+    /// Keywords de busca/filtragem. Fonte canônica para identificação (BuscaContract).
+    /// Para buscas tipo keyword: são os termos de busca.
+    /// Para buscas tipo loja: são filtros opcionais dentro da loja.
     /// </summary>
     public string[]? Keywords { get; set; }
 
@@ -43,10 +43,10 @@ public sealed class Busca : IOwnedEntity
     public string? CronExpression { get; set; }
 
     /// <summary>
-    /// Marketplaces to query for this search. Defaults to Shopee only.
-    /// Stored as comma-separated string in the database (e.g. "shopee,amazon").
+    /// Marketplaces ativos para esta busca. Armazenado como jsonb array no PostgreSQL.
+    /// Conforme BuscaContract: mínimo 1 marketplace.
     /// </summary>
-    public string Marketplaces { get; set; } = Domain.Marketplaces.Shopee;
+    public string[] Marketplaces { get; set; } = [Domain.Marketplaces.Shopee];
 
     /// <summary>
     /// Comissão mínima para filtragem (ex: 0.07 = 7%). Null = sem filtro.
@@ -71,6 +71,5 @@ public sealed class Busca : IOwnedEntity
     /// <summary>
     /// Returns the list of marketplace identifiers for this search.
     /// </summary>
-    public string[] GetMarketplaceList() =>
-        Marketplaces.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    public string[] GetMarketplaceList() => Marketplaces;
 }

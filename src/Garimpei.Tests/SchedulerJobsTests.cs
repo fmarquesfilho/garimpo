@@ -11,10 +11,9 @@ public class SchedulerJobsTests
         var busca = new Busca
         {
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            Keyword = "serum",
             Keywords = ["serum"],
             OwnerUid = "user-123",
-            Marketplaces = "shopee"
+            Marketplaces = ["shopee"]
         };
 
         var req = SchedulerJobs.BuildRequest(busca, enabled: true);
@@ -32,11 +31,11 @@ public class SchedulerJobsTests
         var busca = new Busca
         {
             Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-            Keyword = "Glory of Seoul",
             Keywords = [],
             ShopIds = [920292999],
+            ShopNames = new() { ["920292999"] = "Glory of Seoul" },
             OwnerUid = "user-123",
-            Marketplaces = "shopee"
+            Marketplaces = ["shopee"]
         };
 
         var req = SchedulerJobs.BuildRequest(busca, enabled: true);
@@ -53,11 +52,10 @@ public class SchedulerJobsTests
         var busca = new Busca
         {
             Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-            Keyword = "serum vitamina c",
             Keywords = ["serum vitamina c"],
             ShopIds = [920292999],
             OwnerUid = "user-123",
-            Marketplaces = "shopee"
+            Marketplaces = ["shopee"]
         };
 
         var req = SchedulerJobs.BuildRequest(busca, enabled: true);
@@ -74,10 +72,9 @@ public class SchedulerJobsTests
         var busca = new Busca
         {
             Id = Guid.NewGuid(),
-            Keyword = "",
             Keywords = ["test"],
             OwnerUid = "owner",
-            Marketplaces = "shopee"
+            Marketplaces = ["shopee"]
         };
 
         var req = SchedulerJobs.BuildRequest(busca, enabled: true);

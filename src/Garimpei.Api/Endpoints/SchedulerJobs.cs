@@ -51,15 +51,13 @@ public static class SchedulerJobs
 
     /// <summary>
     /// Monta o <c>SetScheduleRequest</c> a partir da busca. Uma busca com <c>ShopIds</c>
-    /// vira um job <c>shop_collection</c>; sem loja, vira <c>keyword_search</c> (Fetch por
-    /// keyword). As keywords vêm de <c>Busca.Keywords</c> ou, na ausência, do campo
-    /// <c>Busca.Keyword</c> (formato legado separado por vírgula das buscas por termo).
+    /// vira um job <c>shop_collection</c>; sem loja, vira <c>keyword_search</c>. Se ambos
+    /// estão presentes, vira <c>mixed</c>. Keywords vêm de <c>Busca.Keywords</c>.
     /// </summary>
     public static Scheduler.V1.SetScheduleRequest BuildRequest(Busca busca, bool enabled)
     {
         var hasShop = busca.ShopIds is { Length: > 0 };
-        var hasKeywords = busca.Keywords is { Length: > 0 }
-            || (!hasShop && !string.IsNullOrWhiteSpace(busca.Keyword));
+        var hasKeywords = busca.Keywords is { Length: > 0 };
 
         var req = new Scheduler.V1.SetScheduleRequest
         {
@@ -84,17 +82,11 @@ public static class SchedulerJobs
         req.Params.Add("owner_uid", busca.OwnerUid);
         req.Params.Add("type", type);
 
-        var keywords = busca.Keywords is { Length: > 0 }
-            ? busca.Keywords
-            : (!hasShop && !string.IsNullOrWhiteSpace(busca.Keyword)
-                ? busca.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                : null);
-
-        if (keywords is { Length: > 0 })
-            req.Params.Add("keywords", string.Join(",", keywords));
+        if (hasKeywords)
+            req.Params.Add("keywords", string.Join(",", busca.Keywords!));
 
         // collection_keys: ALWAYS present (BuscaContract requirement)
-        var collectionKeys = CollectionKeys.Derive(busca.ShopIds, keywords, busca.Categorias);
+        var collectionKeys = CollectionKeys.Derive(busca.ShopIds, busca.Keywords, busca.Categorias);
         req.Params.Add("collection_keys", string.Join(",", collectionKeys));
 
         return req;

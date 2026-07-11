@@ -50,7 +50,7 @@ public class MultiTenantQueryFilterTests : IDisposable
     {
         IOwnedEntity entity = new Busca
         {
-            Keyword = "test",
+            Keywords = ["test"],
             OwnerUid = ""
         };
 
@@ -94,8 +94,8 @@ public class MultiTenantQueryFilterTests : IDisposable
     [Fact]
     public async Task Buscas_Are_Filtered_By_OwnerUid()
     {
-        _db.Buscas.Add(new Busca { Keyword = "shoes", OwnerUid = "tenant-a" });
-        _db.Buscas.Add(new Busca { Keyword = "bags", OwnerUid = "tenant-b" });
+        _db.Buscas.Add(new Busca { Keywords = ["shoes"], OwnerUid = "tenant-a" });
+        _db.Buscas.Add(new Busca { Keywords = ["bags"], OwnerUid = "tenant-b" });
         await _db.SaveChangesAsync();
 
         _tenantContext.Set("tenant-a");
@@ -103,7 +103,7 @@ public class MultiTenantQueryFilterTests : IDisposable
         var buscas = await _db.Buscas.ToListAsync();
 
         Assert.Single(buscas);
-        Assert.Equal("shoes", buscas[0].Keyword);
+        Assert.Contains("shoes", buscas[0].Keywords!);
     }
 
     [Fact]

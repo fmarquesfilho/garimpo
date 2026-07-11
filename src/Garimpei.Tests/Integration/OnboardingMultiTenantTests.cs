@@ -342,7 +342,7 @@ public class OnboardingMultiTenantTests : IDisposable
 
         // Create data for tenant
         _db.TenantConfigs.Add(new TenantConfig { OwnerUid = "tenant-delete", ShopeeAppId = "X" });
-        _db.Buscas.Add(new Busca { Keyword = "test", OwnerUid = "tenant-delete" });
+        _db.Buscas.Add(new Busca { Keywords = ["test"], OwnerUid = "tenant-delete" });
         _db.Favoritos.Add(new Favorito { ProdutoId = "1", Nome = "Fav", OwnerUid = "tenant-delete" });
         _db.Destinos.Add(new Destino { Nome = "Ch", Tipo = "telegram", OwnerUid = "tenant-delete" });
         _db.Templates.Add(new Template { Nome = "T", Corpo = "x", OwnerUid = "tenant-delete" });
@@ -384,7 +384,7 @@ public class OnboardingMultiTenantTests : IDisposable
     {
         _tenantContext.Set("auto-owner");
 
-        _db.Buscas.Add(new Busca { Keyword = "auto", OwnerUid = "" });
+        _db.Buscas.Add(new Busca { Keywords = ["auto"], OwnerUid = "" });
         _db.Favoritos.Add(new Favorito { ProdutoId = "auto", Nome = "Auto Fav" });
         _db.Destinos.Add(new Destino { Nome = "Auto Ch", Tipo = "telegram" });
         _db.Templates.Add(new Template { Nome = "Auto T", Corpo = "x" });

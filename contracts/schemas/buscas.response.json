@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "GET /api/buscas response",
   "type": "object",
   "properties": {
@@ -13,39 +14,39 @@
           },
           "keywords": {
             "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "minItems": 1,
-            "description": "SEMPRE array. Nunca string unica ou comma-separated."
+            "items": { "type": "string" },
+            "description": "SEMPRE array. Fonte canônica de termos de busca."
           },
-          "ativo": {
-            "type": "boolean"
+          "shop_ids": {
+            "type": "array",
+            "items": { "type": "integer" }
           },
-          "criado_em": {
-            "type": "string",
-            "format": "date-time"
+          "shop_names": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
           },
-          "sort_by": {
-            "type": "string"
+          "cron": { "type": ["string", "null"] },
+          "comissao_min": { "type": ["number", "null"] },
+          "vendas_min": { "type": ["integer", "null"] },
+          "categorias": { "type": "array", "items": { "type": "string" } },
+          "fontes": { "type": "array", "items": { "type": "string" } },
+          "marketplaces": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Array de marketplaces (não mais string comma-separated)."
           },
-          "limit": {
-            "type": "integer"
-          }
+          "ativo": { "type": "boolean" },
+          "criado_em": { "type": "string", "format": "date-time" },
+          "sort_by": { "type": "string" },
+          "limit": { "type": "integer" }
         },
-        "required": [
-          "id",
-          "keywords"
-        ]
+        "required": ["id", "keywords", "marketplaces"]
       }
     },
     "total": {
       "type": "integer"
     }
   },
-  "required": [
-    "buscas",
-    "total"
-  ],
+  "required": ["buscas", "total"],
   "x-naming": "snake_case"
 }

@@ -1,11 +1,13 @@
+using Garimpei.Domain;
 using Garimpei.Domain.Entities;
 using Garimpei.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Buscas compat endpoints — /api/buscas (formato frontend).
+/// Buscas endpoints — /api/buscas (formato frontend).
 /// Sincronização de perfis de busca para o scheduler.
+/// Identidade por UUID (BuscaContract). Zero dependência de campo Keyword legado.
 /// </summary>
 public static partial class EndpointExtensions
 {
@@ -20,36 +22,22 @@ public static partial class EndpointExtensions
 
             return Results.Ok(new
             {
-                buscas = buscas.Select(b =>
+                buscas = buscas.Select(b => new
                 {
-                    var hasShop = b.ShopIds is { Length: > 0 };
-                    // Keywords: usa Keywords[] se disponível; fallback para Keyword (legado).
-                    var keywords = b.Keywords is { Length: > 0 }
-                        ? b.Keywords
-                        : (hasShop
-                            ? Array.Empty<string>()
-                            : b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-
-                    // shop_names: usa o dict persistido (ShopNames). Sem fallback legacy.
-                    Dictionary<string, string>? shopNames = hasShop ? b.ShopNames : null;
-
-                    return new
-                    {
-                        id = b.Id,
-                        keywords,
-                        shop_ids = b.ShopIds,
-                        shop_names = shopNames,
-                        cron = b.CronExpression,
-                        comissao_min = b.ComissaoMin,
-                        vendas_min = b.VendasMin,
-                        categorias = b.Categorias,
-                        fontes = b.Fontes,
-                        marketplaces = b.Marketplaces,
-                        ativo = b.Active,
-                        criado_em = b.CreatedAt,
-                        sort_by = b.SortBy,
-                        limit = b.Limit
-                    };
+                    id = b.Id,
+                    keywords = b.Keywords ?? Array.Empty<string>(),
+                    shop_ids = b.ShopIds,
+                    shop_names = b.ShopNames,
+                    cron = b.CronExpression,
+                    comissao_min = b.ComissaoMin,
+                    vendas_min = b.VendasMin,
+                    categorias = b.Categorias,
+                    fontes = b.Fontes,
+                    marketplaces = b.Marketplaces,
+                    ativo = b.Active,
+                    criado_em = b.CreatedAt,
+                    sort_by = b.SortBy,
+                    limit = b.Limit
                 }),
                 total = buscas.Count
             });
@@ -63,25 +51,15 @@ public static partial class EndpointExtensions
             SyncBuscaRequest req,
             CancellationToken ct) =>
         {
-            // Se remover=true no query string, desativa
+            // Se remover=true no query string, desativa por UUID
             var remover = context.Request.Query.ContainsKey("remover");
 
             if (remover)
             {
-                // Desativar por ID (UUID) — contrato unificado
-                Busca? existente = null;
-                if (req.Id is not null && Guid.TryParse(req.Id, out var buscaGuid))
-                {
-                    existente = await db.Buscas.FindAsync([buscaGuid], ct);
-                }
-                else
-                {
-                    // Fallback legado: busca por keyword
-                    var keyword = req.Keywords?.FirstOrDefault() ?? req.Keyword ?? "";
-                    existente = await db.Buscas
-                        .FirstOrDefaultAsync(b => b.Keyword == keyword, ct);
-                }
+                if (req.Id is null || !Guid.TryParse(req.Id, out var buscaGuid))
+                    return Results.BadRequest(new { error = "id (UUID) é obrigatório para remoção" });
 
+                var existente = await db.Buscas.FindAsync([buscaGuid], ct);
                 if (existente is not null)
                 {
                     existente.Active = false;
@@ -93,35 +71,33 @@ public static partial class EndpointExtensions
                 return Results.Ok(new { status = "removida" });
             }
 
-            // Salvar (upsert por ID ou campos de identidade normalizados)
-            var keywords = req.Keywords ?? (req.Keyword is not null ? [req.Keyword] : []);
-            var keywordsArray = keywords.Where(k => !string.IsNullOrWhiteSpace(k)).ToArray();
-            var kw = string.Join(",", keywordsArray);
+            // Salvar (upsert por UUID)
+            var keywordsArray = (req.Keywords ?? Array.Empty<string>())
+                .Where(k => !string.IsNullOrWhiteSpace(k))
+                .ToArray();
 
-            // cron vazio = busca manual (sem agendamento). Só registra job se houver cron.
+            var marketplaces = req.Marketplaces is { Length: > 0 }
+                ? req.Marketplaces
+                : [Garimpei.Domain.Marketplaces.Shopee];
+
+            // cron vazio = busca manual (sem agendamento)
             var cron = string.IsNullOrWhiteSpace(req.Cron) ? null : req.Cron;
 
-            // Busca existente: primeiro por ID explícito, depois por campos de identidade
+            // Busca existente por ID
             Busca? busca = null;
             if (req.Id is not null && Guid.TryParse(req.Id, out var reqGuid))
             {
                 busca = await db.Buscas.FindAsync([reqGuid], ct);
             }
-            if (busca is null && !string.IsNullOrWhiteSpace(kw))
-            {
-                // Fallback: match por keyword (backward compat)
-                var primeiraKw = keywords.FirstOrDefault() ?? kw;
-                busca = await db.Buscas
-                    .FirstOrDefaultAsync(b => b.Keyword == kw || b.Keyword == primeiraKw, ct);
-            }
 
             if (busca is null)
             {
+                // Validação: precisa ter ao menos keywords, shop_ids, ou categorias
+                if (keywordsArray.Length == 0 && req.ShopIds is not { Length: > 0 } && req.Categorias is not { Length: > 0 })
+                    return Results.BadRequest(new { error = "keywords, shop_ids, ou categorias é obrigatório" });
+
                 busca = new Busca
                 {
-                    Keyword = kw,
-                    // Keywords[] é o filtro (usado pelo GET de shop-buscas e pelo Scheduler).
-                    // Sem isso, uma busca com loja voltava do GET como "(sem keywords)".
                     Keywords = keywordsArray,
                     OwnerUid = "",
                     SortBy = req.SortBy ?? "relevance",
@@ -133,7 +109,7 @@ public static partial class EndpointExtensions
                     VendasMin = req.VendasMin,
                     Categorias = req.Categorias,
                     Fontes = req.Fontes,
-                    Marketplaces = req.Marketplaces ?? "shopee"
+                    Marketplaces = marketplaces
                 };
                 db.Buscas.Add(busca);
             }
@@ -142,7 +118,6 @@ public static partial class EndpointExtensions
                 busca.Active = true;
                 busca.UpdatedAt = DateTime.UtcNow;
                 busca.CronExpression = cron;
-                if (busca.Keyword != kw) busca.Keyword = kw;
                 busca.Keywords = keywordsArray;
                 if (req.ShopIds is { Length: > 0 }) busca.ShopIds = req.ShopIds;
                 if (req.ShopNames is not null) busca.ShopNames = req.ShopNames;
@@ -150,20 +125,17 @@ public static partial class EndpointExtensions
                 if (req.VendasMin is not null) busca.VendasMin = req.VendasMin;
                 if (req.Categorias is not null) busca.Categorias = req.Categorias;
                 if (req.Fontes is not null) busca.Fontes = req.Fontes;
-                if (req.Marketplaces is not null) busca.Marketplaces = req.Marketplaces;
+                if (req.Marketplaces is { Length: > 0 }) busca.Marketplaces = req.Marketplaces;
             }
 
             await db.SaveChangesAsync(ct);
 
-            // Todo agendamento passa pelo Scheduler (ADR-0023). Busca por palavra-chave
-            // só vira job periódico quando o usuário define um cron; sem cron é manual.
-            // Se tem shop_ids, é shop_collection; se não, keyword_search.
             if (busca.CronExpression is not null)
                 await SchedulerJobs.RegisterAsync(schedulerClient, busca, logger, ct);
             else
                 await SchedulerJobs.PauseAsync(schedulerClient, busca, logger, ct);
 
-            return Results.Ok(new { id = busca.Id, keywords, cron = busca.CronExpression, status = "salva" });
+            return Results.Ok(new { id = busca.Id, keywords = busca.Keywords, cron = busca.CronExpression, status = "salva" });
         }).RequireAuthorization().WithTags("Buscas");
 
         return app;
@@ -173,7 +145,6 @@ public static partial class EndpointExtensions
 public sealed record SyncBuscaRequest
 {
     public string? Id { get; init; }
-    public string? Keyword { get; init; }
     public string[]? Keywords { get; init; }
     public long[]? ShopIds { get; init; }
     public Dictionary<string, string>? ShopNames { get; init; }
@@ -184,5 +155,5 @@ public sealed record SyncBuscaRequest
     public int? VendasMin { get; init; }
     public string[]? Categorias { get; init; }
     public string[]? Fontes { get; init; }
-    public string? Marketplaces { get; init; }
+    public string[]? Marketplaces { get; init; }
 }

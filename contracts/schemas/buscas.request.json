@@ -1,18 +1,44 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "POST /api/buscas request",
-  "description": "Sincroniza um perfil de busca. keywords DEVE ser array.",
+  "description": "Sincroniza um perfil de busca. Identidade por UUID (id). Remoção via ?remover=true requer id.",
   "type": "object",
   "properties": {
-    "id": { "type": "string" },
-    "keyword": { "type": "string", "description": "Legado: keyword única (preferir keywords[])" },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID da busca. Obrigatório para update/remoção."
+    },
     "keywords": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Array de palavras-chave. Formato canônico."
+      "description": "Array de palavras-chave."
+    },
+    "shop_ids": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "IDs de lojas monitoradas."
+    },
+    "shop_names": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Mapeamento shop_id → nome."
+    },
+    "cron": {
+      "type": ["string", "null"],
+      "description": "Expressão cron. Null = sem agendamento."
     },
     "sort_by": { "type": "string", "enum": ["relevance", "sales", "price_asc", "price_desc"] },
-    "limit": { "type": "integer", "minimum": 1, "maximum": 200 }
+    "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+    "comissao_min": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "vendas_min": { "type": ["integer", "null"], "minimum": 0 },
+    "categorias": { "type": "array", "items": { "type": "string" } },
+    "fontes": { "type": "array", "items": { "type": "string" } },
+    "marketplaces": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Marketplaces ativos (array, não mais string comma-separated)."
+    }
   },
   "x-naming": "snake_case"
 }

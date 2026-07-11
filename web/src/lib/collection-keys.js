@@ -18,33 +18,36 @@ export function deriveCollectionKeys(shopIds, keywords, categorias) {
 	const seen = new Set();
 	const keys = [];
 
-	for (const id of shopIds ?? []) {
+	addShopIds(shopIds, seen, keys);
+	addNormalized(keywords, seen, keys);
+
+	// Categorias only become keys when shop_ids and keywords are both empty
+	if (!shopIds?.length && !keywords?.length) {
+		addNormalized(categorias, seen, keys);
+	}
+
+	keys.sort();
+	return keys;
+}
+
+/** @param {number[]|null|undefined} ids */
+function addShopIds(ids, seen, keys) {
+	for (const id of ids ?? []) {
 		const s = String(id);
 		if (!seen.has(s)) {
 			seen.add(s);
 			keys.push(s);
 		}
 	}
+}
 
-	for (const kw of keywords ?? []) {
-		const normalized = kw.trim().toLowerCase();
+/** @param {string[]|null|undefined} items */
+function addNormalized(items, seen, keys) {
+	for (const item of items ?? []) {
+		const normalized = item.trim().toLowerCase();
 		if (normalized && !seen.has(normalized)) {
 			seen.add(normalized);
 			keys.push(normalized);
 		}
 	}
-
-	// Categorias are used as collection keys ONLY when shop_ids and keywords are both empty
-	if (!(shopIds?.length) && !(keywords?.length)) {
-		for (const cat of categorias ?? []) {
-			const normalized = cat.trim().toLowerCase();
-			if (normalized && !seen.has(normalized)) {
-				seen.add(normalized);
-				keys.push(normalized);
-			}
-		}
-	}
-
-	keys.sort();
-	return keys;
 }

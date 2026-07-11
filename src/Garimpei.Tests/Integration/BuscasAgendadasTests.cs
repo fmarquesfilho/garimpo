@@ -7,11 +7,9 @@ using Xunit;
 namespace Garimpei.Tests.Integration;
 
 /// <summary>
-/// Testes de integração para buscas agendadas — validação pós-migração.
-/// Verifica que Keywords e CronExpression são persistidos corretamente,
-/// e que a entidade Busca suporta os dois modos:
-/// 1. Loja sem keywords (monitorar todos os produtos)
-/// 2. Loja com keywords (monitorar produtos filtrados)
+/// Testes de integração para buscas agendadas — BuscaContract unificado.
+/// Verifica persistência, SchedulerJobs.BuildRequest, e soft-delete.
+/// Identidade: UUID (busca.Id). Zero dependência de campo Keyword legado.
 /// </summary>
 public class BuscasAgendadasTests : IDisposable
 {
@@ -41,9 +39,9 @@ public class BuscasAgendadasTests : IDisposable
     {
         var busca = new Busca
         {
-            Keyword = "Glory of Seoul",
             OwnerUid = "test-buscas-agendadas",
             ShopIds = [920292999],
+            ShopNames = new() { ["920292999"] = "Glory of Seoul" },
             Keywords = null,
             CronExpression = null
         };
@@ -53,7 +51,6 @@ public class BuscasAgendadasTests : IDisposable
 
         var loaded = await _db.Buscas.FindAsync(busca.Id);
         Assert.NotNull(loaded);
-        Assert.Equal("Glory of Seoul", loaded.Keyword);
         Assert.Contains(920292999, loaded.ShopIds!);
         Assert.Null(loaded.Keywords);
         Assert.Null(loaded.CronExpression);
@@ -64,7 +61,6 @@ public class BuscasAgendadasTests : IDisposable
     {
         var busca = new Busca
         {
-            Keyword = "Test Shop",
             OwnerUid = "test-buscas-agendadas",
             ShopIds = [123456789]
         };
@@ -86,7 +82,6 @@ public class BuscasAgendadasTests : IDisposable
     {
         var busca = new Busca
         {
-            Keyword = "Glory of Seoul",
             OwnerUid = "test-buscas-agendadas",
             ShopIds = [920292999],
             Keywords = ["serum", "protetor solar", "vitamina c"]
@@ -109,7 +104,6 @@ public class BuscasAgendadasTests : IDisposable
     {
         var busca = new Busca
         {
-            Keyword = "Test Shop",
             OwnerUid = "test-buscas-agendadas",
             ShopIds = [111222333],
             CronExpression = "0 */4 * * *"
@@ -123,55 +117,35 @@ public class BuscasAgendadasTests : IDisposable
         Assert.Equal("0 */4 * * *", loaded.CronExpression);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // Scheduler params mapping
-    // ═══════════════════════════════════════════════════════════════════════
-
     [Fact]
-    public void SchedulerParams_SemKeywords_NaoIncluiKeywords()
+    public async Task Busca_Marketplaces_PersisteComoArray()
     {
         var busca = new Busca
         {
-            Keyword = "Shop",
-            OwnerUid = "uid-123",
-            ShopIds = [999]
+            OwnerUid = "test-buscas-agendadas",
+            Keywords = ["perfume"],
+            Marketplaces = ["shopee", "amazon"]
         };
 
-        var @params = BuildSchedulerParams(busca);
+        _db.Buscas.Add(busca);
+        await _db.SaveChangesAsync();
 
-        Assert.Equal("999", @params["shop_id"]);
-        Assert.Equal("uid-123", @params["owner_uid"]);
-        Assert.Equal("shop_collection", @params["type"]);
-        Assert.False(@params.ContainsKey("keywords"));
-    }
-
-    [Fact]
-    public void SchedulerParams_ComKeywords_IncluiKeywordsJoinadas()
-    {
-        var busca = new Busca
-        {
-            Keyword = "Shop",
-            OwnerUid = "uid-123",
-            ShopIds = [999],
-            Keywords = ["serum", "protetor"]
-        };
-
-        var @params = BuildSchedulerParams(busca);
-
-        Assert.True(@params.ContainsKey("keywords"));
-        Assert.Equal("serum,protetor", @params["keywords"]);
+        var loaded = await _db.Buscas.FindAsync(busca.Id);
+        Assert.NotNull(loaded);
+        Assert.Equal(2, loaded.Marketplaces.Length);
+        Assert.Contains("shopee", loaded.Marketplaces);
+        Assert.Contains("amazon", loaded.Marketplaces);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // SchedulerJobs helper (compartilhado por /api/lojas e /api/buscas)
+    // SchedulerJobs.BuildRequest (BuscaContract unificado)
     // ═══════════════════════════════════════════════════════════════════════
 
     [Fact]
-    public void SchedulerJobs_LojaComKeywords_MontaShopCollection()
+    public void SchedulerJobs_LojaComKeywords_MontaMixed()
     {
         var busca = new Busca
         {
-            Keyword = "Glory of Seoul",
             OwnerUid = "uid-1",
             ShopIds = [920292999],
             Keywords = ["serum", "protetor"]
@@ -181,7 +155,6 @@ public class BuscasAgendadasTests : IDisposable
 
         Assert.Equal($"busca-{busca.Id}", req.JobId);
         Assert.True(req.Enabled);
-        // shop_ids + keywords = mixed (BuscaContract unificado)
         Assert.Equal("mixed", req.Params["type"]);
         Assert.Equal("920292999", req.Params["shop_id"]);
         Assert.Equal("serum,protetor", req.Params["keywords"]);
@@ -190,13 +163,12 @@ public class BuscasAgendadasTests : IDisposable
     }
 
     [Fact]
-    public void SchedulerJobs_BuscaPalavraChave_SemLoja_MontaKeywordSearch()
+    public void SchedulerJobs_BuscaPalavraChave_MontaKeywordSearch()
     {
-        // Busca por palavra-chave (formato /api/buscas): keywords no campo Keyword.
         var busca = new Busca
         {
-            Keyword = "serum,vitamina c",
             OwnerUid = "uid-2",
+            Keywords = ["serum", "vitamina c"],
             CronExpression = "0 9 * * *"
         };
 
@@ -206,6 +178,7 @@ public class BuscasAgendadasTests : IDisposable
         Assert.False(req.Params.ContainsKey("shop_id"));
         Assert.Equal("serum,vitamina c", req.Params["keywords"]);
         Assert.Equal("0 9 * * *", req.CronExpression);
+        Assert.Equal(busca.Id.ToString(), req.Params["busca_id"]);
     }
 
     [Fact]
@@ -213,7 +186,6 @@ public class BuscasAgendadasTests : IDisposable
     {
         var busca = new Busca
         {
-            Keyword = "Shop",
             OwnerUid = "uid-3",
             ShopIds = [123]
         };
@@ -228,7 +200,6 @@ public class BuscasAgendadasTests : IDisposable
     {
         var busca = new Busca
         {
-            Keyword = "Shop",
             OwnerUid = "uid-4",
             ShopIds = [999]
         };
@@ -240,7 +211,7 @@ public class BuscasAgendadasTests : IDisposable
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Preservation: soft-delete
+    // Soft-delete
     // ═══════════════════════════════════════════════════════════════════════
 
     [Fact]
@@ -248,7 +219,6 @@ public class BuscasAgendadasTests : IDisposable
     {
         var busca = new Busca
         {
-            Keyword = "To Remove",
             OwnerUid = "test-buscas-agendadas",
             ShopIds = [111]
         };
@@ -263,22 +233,5 @@ public class BuscasAgendadasTests : IDisposable
         var loaded = await _db.Buscas.IgnoreQueryFilters().FirstAsync(b => b.Id == busca.Id);
         Assert.False(loaded.Active);
         Assert.True(loaded.UpdatedAt > loaded.CreatedAt);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // Helper: simula a construção de params para SetScheduleRequest
-    // ═══════════════════════════════════════════════════════════════════════
-
-    private static Dictionary<string, string> BuildSchedulerParams(Busca busca)
-    {
-        var @params = new Dictionary<string, string>
-        {
-            ["shop_id"] = busca.ShopIds![0].ToString(),
-            ["owner_uid"] = busca.OwnerUid,
-            ["type"] = "shop_collection"
-        };
-        if (busca.Keywords is { Length: > 0 })
-            @params["keywords"] = string.Join(",", busca.Keywords);
-        return @params;
     }
 }
