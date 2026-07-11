@@ -1,0 +1,112 @@
+{
+  "_comment": "Snapshots para testes E2E cross-service. Simula dados que estariam no BigQuery.",
+  "owner_uid": "e2e-test-uid",
+  "snapshots": [
+    {
+      "produto_id": "shopee-920292999-100001",
+      "nome": "Sérum Facial Vitamina C 30ml",
+      "preco": 49.90,
+      "preco_anterior": 79.90,
+      "comissao": 0.12,
+      "vendas": 1500,
+      "keyword": "serum",
+      "loja": "Glory of Seoul",
+      "shop_id": 920292999,
+      "coletado_em": "2026-07-08T10:00:00Z",
+      "_uso": "queda: 79.90 → 49.90 = -37.5% (acima do threshold 15%)"
+    },
+    {
+      "produto_id": "shopee-920292999-100001",
+      "nome": "Sérum Facial Vitamina C 30ml",
+      "preco": 79.90,
+      "preco_anterior": null,
+      "comissao": 0.12,
+      "vendas": 1500,
+      "keyword": "serum",
+      "loja": "Glory of Seoul",
+      "shop_id": 920292999,
+      "coletado_em": "2026-07-05T10:00:00Z",
+      "_uso": "snapshot anterior (preço original)"
+    },
+    {
+      "produto_id": "shopee-282170857-200001",
+      "nome": "Hidratante Facial Ácido Hialurônico 50ml",
+      "preco": 59.90,
+      "preco_anterior": 89.90,
+      "comissao": 0.08,
+      "vendas": 890,
+      "keyword": "hidratante",
+      "loja": "Le Botanic",
+      "shop_id": 282170857,
+      "coletado_em": "2026-07-09T14:00:00Z",
+      "_uso": "queda: 89.90 → 59.90 = -33.4%"
+    },
+    {
+      "produto_id": "shopee-282170857-200001",
+      "nome": "Hidratante Facial Ácido Hialurônico 50ml",
+      "preco": 89.90,
+      "preco_anterior": null,
+      "comissao": 0.08,
+      "vendas": 890,
+      "keyword": "hidratante",
+      "loja": "Le Botanic",
+      "shop_id": 282170857,
+      "coletado_em": "2026-07-03T14:00:00Z",
+      "_uso": "snapshot anterior"
+    },
+    {
+      "produto_id": "shopee-592884015-300004",
+      "nome": "COSRX Niacinamide Serum 20ml",
+      "preco": 42.90,
+      "preco_anterior": null,
+      "comissao": 0.11,
+      "vendas": 120,
+      "keyword": "serum",
+      "loja": "COSRX Official",
+      "shop_id": 592884015,
+      "coletado_em": "2026-07-10T08:00:00Z",
+      "_uso": "produto novo (1 aparição apenas = novidade)"
+    },
+    {
+      "produto_id": "shopee-920292999-100002",
+      "nome": "Protetor Solar FPS 50 60ml",
+      "preco": 39.90,
+      "preco_anterior": 39.90,
+      "comissao": 0.10,
+      "vendas": 3200,
+      "keyword": "protetor solar",
+      "loja": "Glory of Seoul",
+      "shop_id": 920292999,
+      "coletado_em": "2026-07-09T10:00:00Z",
+      "_uso": "sem variação (estável)"
+    },
+    {
+      "produto_id": "shopee-920292999-100002",
+      "nome": "Protetor Solar FPS 50 60ml",
+      "preco": 39.90,
+      "preco_anterior": null,
+      "comissao": 0.10,
+      "vendas": 3200,
+      "keyword": "protetor solar",
+      "loja": "Glory of Seoul",
+      "shop_id": 920292999,
+      "coletado_em": "2026-07-05T10:00:00Z",
+      "_uso": "snapshot anterior (preço igual)"
+    }
+  ],
+  "expected_results": {
+    "quedas_threshold_15pct": {
+      "count": 2,
+      "produtos": ["shopee-920292999-100001", "shopee-282170857-200001"],
+      "maior_variacao": -0.375
+    },
+    "novidades_7dias": {
+      "count": 1,
+      "produtos": ["shopee-592884015-300004"]
+    },
+    "sem_variacao": {
+      "count": 1,
+      "produtos": ["shopee-920292999-100002"]
+    }
+  }
+}

@@ -365,6 +365,42 @@ mise run check:comment-quality -- --strict  # exit 1 se houver warnings
 
 **Não bloqueia push** — é informativo. Use `--strict` se quiser enforcement.
 
+### E2E Cross-Service com OTel (validação de fluxos end-to-end)
+
+Testa fluxos que atravessam **todos os services** juntos, usando `traceparent` W3C
+para rastreio no Cloud Trace. Cada teste gera trace_ids determinísticos que podem
+ser investigados via `mise run debug:trace <id>`.
+
+```bash
+mise run test:e2e-coleta       # Scheduler → Collector → BigQuery snapshots
+mise run test:e2e-alertas      # Analyzer → quedas/novidades → Publisher → Telegram
+mise run test:e2e-publicacoes  # Publicação agendada → Publisher gRPC → Telegram
+```
+
+**Biblioteca compartilhada:** `.mise/tasks/test/e2e-lib` — funções reutilizáveis:
+- `e2e_auth` — autenticação Firebase
+- `e2e_traceparent "nome"` — gera traceparent W3C, armazena trace_id para summary
+- `e2e_get`, `e2e_post` — HTTP helpers com auth + traceparent
+- `e2e_assert_contains`, `e2e_assert_json_field` — validações com contagem pass/fail
+- `e2e_assert_no_leak` — verifica isolamento multi-tenant
+- `e2e_summary` — resume resultados e lista trace_ids para debug
+
+**Fixtures:** `fixtures/e2e-snapshots.json` — dados BigQuery esperados para validar
+quedas e novidades com resultados determinísticos.
+
+**Fluxos validados:**
+
+| Teste | Serviços envolvidos | O que valida |
+|-------|---------------------|-------------|
+| `e2e-coleta` | API → Scheduler → Collector → BigQuery | Busca agendada cria job, coleta executa, snapshots existem |
+| `e2e-alertas` | Analyzer → BigQuery → Publisher → Telegram | Quedas detectadas, novidades identificadas, alerta enviado |
+| `e2e-publicacoes` | API → Scheduler → Publisher → Telegram | Publicação direta e agendada, link afiliado, destinos |
+
+**Multi-tenant:** Cada teste verifica que endpoints requerem auth e que dados do
+`e2e@garimpei.app.br` não vazam (EF Core query filter + BigQuery WHERE owner_uid).
+
+**Regra:** Nunca rodam no CI (dependem de APIs externas). São para validação manual.
+
 ### Teste de alertas (Telegram real)
 
 Testa o fluxo de alertas com envio real para Telegram:

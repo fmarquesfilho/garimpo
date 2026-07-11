@@ -50,6 +50,9 @@ func (nopEventoRepo) Registrar(context.Context, Evento) error { return nil }
 
 type nopSnapshotRepo struct{}
 
+// NopSnapshots returns a no-op SnapshotRepo (used when BigQuery is unavailable).
+func NopSnapshots() SnapshotRepo { return nopSnapshotRepo{} }
+
 func (nopSnapshotRepo) RegistrarSnapshot(context.Context, Snapshot) error { return nil }
 func (nopSnapshotRepo) Estatisticas(_ context.Context, dias int) (Estatisticas, error) {
 	return Estatisticas{Fonte: "nop", DiasJanela: dias, GeradoEm: time.Now().UTC()}, nil

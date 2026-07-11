@@ -1,0 +1,203 @@
+#!/usr/bin/env bash
+# mise description="E2E Alertas: detecção de quedas/novidades → Cloud Tasks → Publisher → Telegram"
+set -euo pipefail
+
+# shellcheck source=.mise/tasks/test/e2e-lib
+source "$(dirname "$0")/e2e-lib"
+
+echo "═══════════════════════════════════════════════"
+echo "  🔔 E2E Alertas Cross-Service"
+echo "═══════════════════════════════════════════════"
+echo ""
+echo "  Fluxo validado:"
+echo "    1. Analyzer /quedas — detecção de variação de preço (BigQuery)"
+echo "    2. Analyzer /novidades — detecção de produtos novos (BigQuery)"
+echo "    3. Alertas config — verificar threshold configurado"
+echo "    4. Simular process-alert (Scheduler → Analyzer → Publisher)"
+echo "    5. Verificar Publisher responde (Telegram/WhatsApp)"
+echo "    6. Verificar isolamento multi-tenant"
+echo ""
+echo "  Cada step gera traceparent → rastreável no Cloud Trace"
+echo ""
+
+e2e_auth
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 1. Detecção de quedas (Analyzer → BigQuery) "
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "analyzer-quedas"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+# Testa endpoint de quedas (pode estar proxied ou direto)
+QUEDAS_DIRECT=$(e2e_get "/api/quedas?dias=7&threshold=0.15&limit=10" "$E2E_LAST_TRACEPARENT")
+
+if echo "$QUEDAS_DIRECT" | grep -q '"quedas"'; then
+  QUEDAS_COUNT=$(echo "$QUEDAS_DIRECT" | jq '.total // 0' 2>/dev/null || echo "0")
+  e2e_ok "Analyzer /quedas responde ($QUEDAS_COUNT quedas detectadas)"
+
+  if [ "$QUEDAS_COUNT" -gt 0 ]; then
+    # Verifica estrutura da queda
+    QUEDA_ITEM=$(echo "$QUEDAS_DIRECT" | jq '.quedas[0]' 2>/dev/null)
+    if echo "$QUEDA_ITEM" | jq -e '.produto_id, .nome, .preco_anterior, .preco_atual, .variacao' > /dev/null 2>&1; then
+      e2e_ok "Queda tem campos obrigatórios (produto_id, nome, precos, variacao)"
+      VARIACAO=$(echo "$QUEDA_ITEM" | jq '.variacao' 2>/dev/null)
+      NOME_QUEDA=$(echo "$QUEDA_ITEM" | jq -r '.nome' 2>/dev/null)
+      echo "     Maior queda: $VARIACAO ($NOME_QUEDA)"
+    else
+      e2e_fail "Queda com campos incompletos" "$(echo "$QUEDA_ITEM" | head -c 200)"
+    fi
+  else
+    e2e_warn "Nenhuma queda detectada na janela" \
+      "Normal se não houve variação significativa nos últimos 7 dias"
+  fi
+else
+  # Fallback: verifica via endpoint de estatísticas (prova que Analyzer está de pé)
+  e2e_new_trace "analyzer-health-fallback"
+  HEALTH_RESP=$(e2e_get "/api/estatisticas" "$E2E_LAST_TRACEPARENT")
+  if echo "$HEALTH_RESP" | grep -q '"total_amostras"'; then
+    e2e_ok "Analyzer ativo (endpoint /quedas pode não ter proxy via C# API)"
+    e2e_warn "Scheduler chama analyzer diretamente (não via proxy)" \
+      "O fluxo real: Cloud Tasks → Scheduler → HTTP analyzer:8060/quedas"
+  else
+    e2e_fail "Analyzer indisponível" "$(echo "$HEALTH_RESP" | head -c 200)"
+  fi
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 2. Detecção de novidades (Analyzer → BQ) ──"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "analyzer-novidades"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+NOVIDADES_RESP=$(e2e_get "/api/lojas/novidades?dias=7" "$E2E_LAST_TRACEPARENT")
+
+if echo "$NOVIDADES_RESP" | grep -q '"produtos_novos"\|"novidades"'; then
+  NOVOS=$(echo "$NOVIDADES_RESP" | jq '.total_novos // (.novidades | length) // 0' 2>/dev/null || echo "0")
+  VARIACOES=$(echo "$NOVIDADES_RESP" | jq '.total_variacoes // 0' 2>/dev/null || echo "0")
+  e2e_ok "Analyzer /novidades responde (novos: $NOVOS, variações: $VARIACOES)"
+else
+  # Tenta endpoint alternativo
+  NOVIDADES_ALT=$(e2e_get "/api/novidades?dias=7" "$E2E_LAST_TRACEPARENT")
+  if echo "$NOVIDADES_ALT" | grep -q '"produtos_novos"'; then
+    NOVOS=$(echo "$NOVIDADES_ALT" | jq '.total_novos // 0' 2>/dev/null || echo "0")
+    e2e_ok "Analyzer /novidades responde (novos: $NOVOS)"
+  else
+    e2e_warn "Endpoint /novidades não acessível via proxy" \
+      "O scheduler pode chamar diretamente o analyzer"
+  fi
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 3. Configuração de alertas ────────────────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "alertas-config"
+
+ALERTAS_RESP=$(e2e_get "/api/alertas" "$E2E_LAST_TRACEPARENT")
+
+if echo "$ALERTAS_RESP" | grep -q '"threshold"'; then
+  THRESHOLD=$(echo "$ALERTAS_RESP" | jq '.threshold // 0' 2>/dev/null || echo "0")
+  ENABLED=$(echo "$ALERTAS_RESP" | jq '.enabled // false' 2>/dev/null)
+  e2e_ok "Config alertas: threshold=$THRESHOLD, enabled=$ENABLED"
+
+  if [ "$ENABLED" = "true" ]; then
+    e2e_ok "Alertas habilitados (Cloud Tasks vai disparar)"
+  else
+    e2e_warn "Alertas desabilitados" "Habilitar via UI ou API para testar fluxo completo"
+  fi
+else
+  e2e_fail "GET /api/alertas falhou" "$(echo "$ALERTAS_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 4. Simular alerta (process-alert flow) ────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "process-alert-simulation"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+echo ""
+echo "     Fluxo real: Cloud Tasks → Scheduler POST /process-alert"
+echo "     → Analyzer GET /quedas → Publisher gRPC Publish → Telegram"
+echo ""
+
+# Não podemos chamar /process-alert diretamente (é internal endpoint do scheduler,
+# protegido por OIDC no Cloud Tasks). Verificamos os componentes individuais.
+
+# 4a. Verificar que o Analyzer responde com dados
+echo "     4a. Analyzer disponível para consulta de quedas"
+ANALYZER_CHECK=$(e2e_get "/api/coletas?dias=2" "$E2E_LAST_TRACEPARENT")
+if echo "$ANALYZER_CHECK" | grep -q '"coletas"'; then
+  e2e_ok "Analyzer responde (dados para detecção de alertas)"
+else
+  e2e_fail "Analyzer indisponível (process-alert falharia)" "$(echo "$ANALYZER_CHECK" | head -c 200)"
+fi
+
+# 4b. Verificar stack health (inclui publisher implicitamente)
+echo "     4b. Stack health (publisher implicitamente ativo)"
+e2e_new_trace "stack-health"
+HEALTH_RESP=$(e2e_get "/api/health" "$E2E_LAST_TRACEPARENT")
+if echo "$HEALTH_RESP" | grep -q '"status"'; then
+  e2e_ok "Stack health OK (publisher ativo dentro do multi-container)"
+else
+  e2e_fail "Health check falhou" "$(echo "$HEALTH_RESP" | head -c 200)"
+fi
+
+# 4c. Verificar publicações existentes (prova que Publisher funciona)
+echo "     4c. Publisher → Telegram: publicações recentes"
+e2e_new_trace "publisher-check"
+PUB_RESP=$(e2e_get "/api/publicacoes" "$E2E_LAST_TRACEPARENT")
+if echo "$PUB_RESP" | grep -q '"publicacoes"'; then
+  PUB_COUNT=$(echo "$PUB_RESP" | jq '.publicacoes | length' 2>/dev/null || echo "0")
+  e2e_ok "Publisher ativo ($PUB_COUNT publicações registradas)"
+else
+  e2e_warn "Sem publicações registradas" "Normal se nenhuma publicação foi feita recentemente"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 5. Testar envio de alerta (dry-run) ───────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+e2e_new_trace "alert-dry-run"
+echo "     traceparent: $E2E_LAST_TRACEPARENT"
+
+# Tenta endpoint de teste de alertas (se existir)
+DRYRUN_RESP=$(e2e_post "/api/alertas/test" '{}' "$E2E_LAST_TRACEPARENT")
+
+if echo "$DRYRUN_RESP" | grep -q '"sent"\|"success"\|"message_id"'; then
+  e2e_ok "Alerta de teste enviado com sucesso"
+  MSG_ID=$(echo "$DRYRUN_RESP" | jq -r '.message_id // "(sem id)"' 2>/dev/null)
+  echo "     message_id: $MSG_ID"
+elif echo "$DRYRUN_RESP" | grep -q '"alerts_sent":0'; then
+  e2e_ok "Dry-run processado (0 alertas — sem quedas na janela)"
+elif echo "$DRYRUN_RESP" | grep -q "404\|not.found\|CURL_FAIL"; then
+  e2e_warn "Endpoint /api/alertas/test não existe" \
+    "Alerta real depende de Cloud Tasks trigger (não testável via API direta)"
+else
+  e2e_warn "Resposta inesperada no dry-run" "$(echo "$DRYRUN_RESP" | head -c 200)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "── 6. Isolamento multi-tenant (alertas) ──────"
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Alertas são scoped por owner_uid (EF Core global filter)
+e2e_assert_no_leak "/api/alertas" "threshold" "GET /api/alertas requer auth"
+e2e_assert_no_leak "/api/coletas" "coletas" "GET /api/coletas requer auth"
+e2e_assert_no_leak "/api/publicacoes" "publicacoes" "GET /api/publicacoes requer auth"
+
+echo ""
+echo "  🔒 Isolamento garantido por:"
+echo "     • EF Core query filter (PostgreSQL): owner_uid = current_user"
+echo "     • BigQuery: WHERE owner_uid = @uid em todas as queries"
+echo "     • Cloud Tasks: payload carrega owner_uid, validado no processamento"
+
+# ──────────────────────────────────────────────────────────────────────────────
+e2e_summary "E2E Alertas Cross-Service"

@@ -59,22 +59,32 @@ namespace Collector.V1 {
             "bnRQZXJjZW50Eh4KCmNvbW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoI",
             "Y2F0ZWdvcnkYDSABKAlSCGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsS",
             "OwoLbWFya2V0cGxhY2UYDyABKA4yGS5jb2xsZWN0b3IudjEuTWFya2V0cGxh",
-            "Y2VSC21hcmtldHBsYWNlKngKC01hcmtldHBsYWNlEhsKF01BUktFVFBMQUNF",
-            "X1VOU1BFQ0lGSUVEEAASFgoSTUFSS0VUUExBQ0VfU0hPUEVFEAESFgoSTUFS",
-            "S0VUUExBQ0VfQU1BWk9OEAISHAoYTUFSS0VUUExBQ0VfTUVSQ0FET0xJVlJF",
-            "EAMy6AIKEENvbGxlY3RvclNlcnZpY2USUgoLUmVzb2x2ZVNob3ASIC5jb2xs",
-            "ZWN0b3IudjEuUmVzb2x2ZVNob3BSZXF1ZXN0GiEuY29sbGVjdG9yLnYxLlJl",
-            "c29sdmVTaG9wUmVzcG9uc2UScAoVR2VuZXJhdGVBZmZpbGlhdGVMaW5rEiou",
-            "Y29sbGVjdG9yLnYxLkdlbmVyYXRlQWZmaWxpYXRlTGlua1JlcXVlc3QaKy5j",
-            "b2xsZWN0b3IudjEuR2VuZXJhdGVBZmZpbGlhdGVMaW5rUmVzcG9uc2USQAoF",
-            "RmV0Y2gSGi5jb2xsZWN0b3IudjEuRmV0Y2hSZXF1ZXN0GhsuY29sbGVjdG9y",
-            "LnYxLkZldGNoUmVzcG9uc2USTAoJRmV0Y2hTaG9wEh4uY29sbGVjdG9yLnYx",
-            "LkZldGNoU2hvcFJlcXVlc3QaHy5jb2xsZWN0b3IudjEuRmV0Y2hTaG9wUmVz",
-            "cG9uc2VCtQEKEGNvbS5jb2xsZWN0b3IudjFCDkNvbGxlY3RvclByb3RvUAFa",
-            "QGdpdGh1Yi5jb20vZm1hcnF1ZXNmaWxoby9nYXJpbXBvL2dlbi9nby9jb2xs",
-            "ZWN0b3IvdjE7Y29sbGVjdG9ydjGiAgNDWFiqAgxDb2xsZWN0b3IuVjHKAgxD",
-            "b2xsZWN0b3JcVjHiAhhDb2xsZWN0b3JcVjFcR1BCTWV0YWRhdGHqAg1Db2xs",
-            "ZWN0b3I6OlYxYgZwcm90bzM="));
+            "Y2VSC21hcmtldHBsYWNlItoBCg5Db2xsZWN0UmVxdWVzdBIaCgdrZXl3b3Jk",
+            "GAEgASgJSABSB2tleXdvcmQSGQoHc2hvcF9pZBgGIAEoA0gAUgZzaG9wSWQS",
+            "FAoFbGltaXQYAiABKAVSBWxpbWl0EhcKB3NvcnRfYnkYAyABKAlSBnNvcnRC",
+            "eRIbCglvd25lcl91aWQYBCABKAlSCG93bmVyVWlkEjsKC21hcmtldHBsYWNl",
+            "GAUgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBsYWNlUgttYXJrZXRwbGFj",
+            "ZUIICgZ0YXJnZXQiogEKD0NvbGxlY3RSZXNwb25zZRIxCghwcm9kdWN0cxgB",
+            "IAMoCzIVLmNvbGxlY3Rvci52MS5Qcm9kdWN0Ughwcm9kdWN0cxIfCgt0b3Rh",
+            "bF9mb3VuZBgCIAEoBVIKdG90YWxGb3VuZBIdCgpmZXRjaGVkX2F0GAMgASgJ",
+            "UglmZXRjaGVkQXQSHAoJcGVyc2lzdGVkGAQgASgIUglwZXJzaXN0ZWQqeAoL",
+            "TWFya2V0cGxhY2USGwoXTUFSS0VUUExBQ0VfVU5TUEVDSUZJRUQQABIWChJN",
+            "QVJLRVRQTEFDRV9TSE9QRUUQARIWChJNQVJLRVRQTEFDRV9BTUFaT04QAhIc",
+            "ChhNQVJLRVRQTEFDRV9NRVJDQURPTElWUkUQAzKwAwoQQ29sbGVjdG9yU2Vy",
+            "dmljZRJSCgtSZXNvbHZlU2hvcBIgLmNvbGxlY3Rvci52MS5SZXNvbHZlU2hv",
+            "cFJlcXVlc3QaIS5jb2xsZWN0b3IudjEuUmVzb2x2ZVNob3BSZXNwb25zZRJw",
+            "ChVHZW5lcmF0ZUFmZmlsaWF0ZUxpbmsSKi5jb2xsZWN0b3IudjEuR2VuZXJh",
+            "dGVBZmZpbGlhdGVMaW5rUmVxdWVzdBorLmNvbGxlY3Rvci52MS5HZW5lcmF0",
+            "ZUFmZmlsaWF0ZUxpbmtSZXNwb25zZRJACgVGZXRjaBIaLmNvbGxlY3Rvci52",
+            "MS5GZXRjaFJlcXVlc3QaGy5jb2xsZWN0b3IudjEuRmV0Y2hSZXNwb25zZRJM",
+            "CglGZXRjaFNob3ASHi5jb2xsZWN0b3IudjEuRmV0Y2hTaG9wUmVxdWVzdBof",
+            "LmNvbGxlY3Rvci52MS5GZXRjaFNob3BSZXNwb25zZRJGCgdDb2xsZWN0Ehwu",
+            "Y29sbGVjdG9yLnYxLkNvbGxlY3RSZXF1ZXN0Gh0uY29sbGVjdG9yLnYxLkNv",
+            "bGxlY3RSZXNwb25zZUK1AQoQY29tLmNvbGxlY3Rvci52MUIOQ29sbGVjdG9y",
+            "UHJvdG9QAVpAZ2l0aHViLmNvbS9mbWFycXVlc2ZpbGhvL2dhcmltcG8vZ2Vu",
+            "L2dvL2NvbGxlY3Rvci92MTtjb2xsZWN0b3J2MaICA0NYWKoCDENvbGxlY3Rv",
+            "ci5WMcoCDENvbGxlY3RvclxWMeICGENvbGxlY3RvclxWMVxHUEJNZXRhZGF0",
+            "YeoCDUNvbGxlY3Rvcjo6VjFiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Collector.V1.Marketplace), }, null, new pbr::GeneratedClrTypeInfo[] {
@@ -86,7 +96,9 @@ namespace Collector.V1 {
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.GenerateAffiliateLinkResponse), global::Collector.V1.GenerateAffiliateLinkResponse.Parser, new[]{ "ShortLink", "LongLink" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchResponse), global::Collector.V1.FetchResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopResponse), global::Collector.V1.FetchShopResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link", "Marketplace" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link", "Marketplace" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.CollectRequest), global::Collector.V1.CollectRequest.Parser, new[]{ "Keyword", "ShopId", "Limit", "SortBy", "OwnerUid", "Marketplace" }, new[]{ "Target" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.CollectResponse), global::Collector.V1.CollectResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt", "Persisted" }, null, null, null, null)
           }));
     }
     #endregion
@@ -3033,6 +3045,777 @@ namespace Collector.V1 {
           }
           case 120: {
             Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// CollectRequest searches products and persists the results as a BigQuery snapshot.
+  /// Uses oneof target to support both keyword search and shop fetch in a single RPC.
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class CollectRequest : pb::IMessage<CollectRequest>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<CollectRequest> _parser = new pb::MessageParser<CollectRequest>(() => new CollectRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<CollectRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[9]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CollectRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CollectRequest(CollectRequest other) : this() {
+      limit_ = other.limit_;
+      sortBy_ = other.sortBy_;
+      ownerUid_ = other.ownerUid_;
+      marketplace_ = other.marketplace_;
+      switch (other.TargetCase) {
+        case TargetOneofCase.Keyword:
+          Keyword = other.Keyword;
+          break;
+        case TargetOneofCase.ShopId:
+          ShopId = other.ShopId;
+          break;
+      }
+
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CollectRequest Clone() {
+      return new CollectRequest(this);
+    }
+
+    /// <summary>Field number for the "keyword" field.</summary>
+    public const int KeywordFieldNumber = 1;
+    /// <summary>
+    /// Search by keyword — snapshot keyword field = this literal value.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Keyword {
+      get { return HasKeyword ? (string) target_ : ""; }
+      set {
+        target_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        targetCase_ = TargetOneofCase.Keyword;
+      }
+    }
+    /// <summary>Gets whether the "keyword" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasKeyword {
+      get { return targetCase_ == TargetOneofCase.Keyword; }
+    }
+    /// <summary> Clears the value of the oneof if it's currently set to "keyword" </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearKeyword() {
+      if (HasKeyword) {
+        ClearTarget();
+      }
+    }
+
+    /// <summary>Field number for the "shop_id" field.</summary>
+    public const int ShopIdFieldNumber = 6;
+    /// <summary>
+    /// Fetch by shop — snapshot keyword field = shop_id as string.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public long ShopId {
+      get { return HasShopId ? (long) target_ : 0L; }
+      set {
+        target_ = value;
+        targetCase_ = TargetOneofCase.ShopId;
+      }
+    }
+    /// <summary>Gets whether the "shop_id" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasShopId {
+      get { return targetCase_ == TargetOneofCase.ShopId; }
+    }
+    /// <summary> Clears the value of the oneof if it's currently set to "shop_id" </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearShopId() {
+      if (HasShopId) {
+        ClearTarget();
+      }
+    }
+
+    /// <summary>Field number for the "limit" field.</summary>
+    public const int LimitFieldNumber = 2;
+    private int limit_;
+    /// <summary>
+    /// 1-500, default 50
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int Limit {
+      get { return limit_; }
+      set {
+        limit_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "sort_by" field.</summary>
+    public const int SortByFieldNumber = 3;
+    private string sortBy_ = "";
+    /// <summary>
+    /// relevance, sales, price
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string SortBy {
+      get { return sortBy_; }
+      set {
+        sortBy_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "owner_uid" field.</summary>
+    public const int OwnerUidFieldNumber = 4;
+    private string ownerUid_ = "";
+    /// <summary>
+    /// tenant UID (required for scoping)
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string OwnerUid {
+      get { return ownerUid_; }
+      set {
+        ownerUid_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "marketplace" field.</summary>
+    public const int MarketplaceFieldNumber = 5;
+    private global::Collector.V1.Marketplace marketplace_ = global::Collector.V1.Marketplace.Unspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Collector.V1.Marketplace Marketplace {
+      get { return marketplace_; }
+      set {
+        marketplace_ = value;
+      }
+    }
+
+    private object target_;
+    /// <summary>Enum of possible cases for the "target" oneof.</summary>
+    public enum TargetOneofCase {
+      None = 0,
+      Keyword = 1,
+      ShopId = 6,
+    }
+    private TargetOneofCase targetCase_ = TargetOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public TargetOneofCase TargetCase {
+      get { return targetCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearTarget() {
+      targetCase_ = TargetOneofCase.None;
+      target_ = null;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as CollectRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(CollectRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Keyword != other.Keyword) return false;
+      if (ShopId != other.ShopId) return false;
+      if (Limit != other.Limit) return false;
+      if (SortBy != other.SortBy) return false;
+      if (OwnerUid != other.OwnerUid) return false;
+      if (Marketplace != other.Marketplace) return false;
+      if (TargetCase != other.TargetCase) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (HasKeyword) hash ^= Keyword.GetHashCode();
+      if (HasShopId) hash ^= ShopId.GetHashCode();
+      if (Limit != 0) hash ^= Limit.GetHashCode();
+      if (SortBy.Length != 0) hash ^= SortBy.GetHashCode();
+      if (OwnerUid.Length != 0) hash ^= OwnerUid.GetHashCode();
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) hash ^= Marketplace.GetHashCode();
+      hash ^= (int) targetCase_;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (HasKeyword) {
+        output.WriteRawTag(10);
+        output.WriteString(Keyword);
+      }
+      if (Limit != 0) {
+        output.WriteRawTag(16);
+        output.WriteInt32(Limit);
+      }
+      if (SortBy.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(SortBy);
+      }
+      if (OwnerUid.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(OwnerUid);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(40);
+        output.WriteEnum((int) Marketplace);
+      }
+      if (HasShopId) {
+        output.WriteRawTag(48);
+        output.WriteInt64(ShopId);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (HasKeyword) {
+        output.WriteRawTag(10);
+        output.WriteString(Keyword);
+      }
+      if (Limit != 0) {
+        output.WriteRawTag(16);
+        output.WriteInt32(Limit);
+      }
+      if (SortBy.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(SortBy);
+      }
+      if (OwnerUid.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(OwnerUid);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        output.WriteRawTag(40);
+        output.WriteEnum((int) Marketplace);
+      }
+      if (HasShopId) {
+        output.WriteRawTag(48);
+        output.WriteInt64(ShopId);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (HasKeyword) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Keyword);
+      }
+      if (HasShopId) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(ShopId);
+      }
+      if (Limit != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Limit);
+      }
+      if (SortBy.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(SortBy);
+      }
+      if (OwnerUid.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(OwnerUid);
+      }
+      if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Marketplace);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(CollectRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Limit != 0) {
+        Limit = other.Limit;
+      }
+      if (other.SortBy.Length != 0) {
+        SortBy = other.SortBy;
+      }
+      if (other.OwnerUid.Length != 0) {
+        OwnerUid = other.OwnerUid;
+      }
+      if (other.Marketplace != global::Collector.V1.Marketplace.Unspecified) {
+        Marketplace = other.Marketplace;
+      }
+      switch (other.TargetCase) {
+        case TargetOneofCase.Keyword:
+          Keyword = other.Keyword;
+          break;
+        case TargetOneofCase.ShopId:
+          ShopId = other.ShopId;
+          break;
+      }
+
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            Keyword = input.ReadString();
+            break;
+          }
+          case 16: {
+            Limit = input.ReadInt32();
+            break;
+          }
+          case 26: {
+            SortBy = input.ReadString();
+            break;
+          }
+          case 34: {
+            OwnerUid = input.ReadString();
+            break;
+          }
+          case 40: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
+          case 48: {
+            ShopId = input.ReadInt64();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            Keyword = input.ReadString();
+            break;
+          }
+          case 16: {
+            Limit = input.ReadInt32();
+            break;
+          }
+          case 26: {
+            SortBy = input.ReadString();
+            break;
+          }
+          case 34: {
+            OwnerUid = input.ReadString();
+            break;
+          }
+          case 40: {
+            Marketplace = (global::Collector.V1.Marketplace) input.ReadEnum();
+            break;
+          }
+          case 48: {
+            ShopId = input.ReadInt64();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// CollectResponse returns the collected products and indicates persistence status.
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class CollectResponse : pb::IMessage<CollectResponse>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<CollectResponse> _parser = new pb::MessageParser<CollectResponse>(() => new CollectResponse());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<CollectResponse> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Collector.V1.CollectorReflection.Descriptor.MessageTypes[10]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CollectResponse() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CollectResponse(CollectResponse other) : this() {
+      products_ = other.products_.Clone();
+      totalFound_ = other.totalFound_;
+      fetchedAt_ = other.fetchedAt_;
+      persisted_ = other.persisted_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CollectResponse Clone() {
+      return new CollectResponse(this);
+    }
+
+    /// <summary>Field number for the "products" field.</summary>
+    public const int ProductsFieldNumber = 1;
+    private static readonly pb::FieldCodec<global::Collector.V1.Product> _repeated_products_codec
+        = pb::FieldCodec.ForMessage(10, global::Collector.V1.Product.Parser);
+    private readonly pbc::RepeatedField<global::Collector.V1.Product> products_ = new pbc::RepeatedField<global::Collector.V1.Product>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::Collector.V1.Product> Products {
+      get { return products_; }
+    }
+
+    /// <summary>Field number for the "total_found" field.</summary>
+    public const int TotalFoundFieldNumber = 2;
+    private int totalFound_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int TotalFound {
+      get { return totalFound_; }
+      set {
+        totalFound_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "fetched_at" field.</summary>
+    public const int FetchedAtFieldNumber = 3;
+    private string fetchedAt_ = "";
+    /// <summary>
+    /// RFC3339
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string FetchedAt {
+      get { return fetchedAt_; }
+      set {
+        fetchedAt_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "persisted" field.</summary>
+    public const int PersistedFieldNumber = 4;
+    private bool persisted_;
+    /// <summary>
+    /// True if the snapshot was accepted for export to BigQuery.
+    /// False if exporter is disabled or buffer was full.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Persisted {
+      get { return persisted_; }
+      set {
+        persisted_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as CollectResponse);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(CollectResponse other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if(!products_.Equals(other.products_)) return false;
+      if (TotalFound != other.TotalFound) return false;
+      if (FetchedAt != other.FetchedAt) return false;
+      if (Persisted != other.Persisted) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      hash ^= products_.GetHashCode();
+      if (TotalFound != 0) hash ^= TotalFound.GetHashCode();
+      if (FetchedAt.Length != 0) hash ^= FetchedAt.GetHashCode();
+      if (Persisted != false) hash ^= Persisted.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      products_.WriteTo(output, _repeated_products_codec);
+      if (TotalFound != 0) {
+        output.WriteRawTag(16);
+        output.WriteInt32(TotalFound);
+      }
+      if (FetchedAt.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(FetchedAt);
+      }
+      if (Persisted != false) {
+        output.WriteRawTag(32);
+        output.WriteBool(Persisted);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      products_.WriteTo(ref output, _repeated_products_codec);
+      if (TotalFound != 0) {
+        output.WriteRawTag(16);
+        output.WriteInt32(TotalFound);
+      }
+      if (FetchedAt.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(FetchedAt);
+      }
+      if (Persisted != false) {
+        output.WriteRawTag(32);
+        output.WriteBool(Persisted);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      size += products_.CalculateSize(_repeated_products_codec);
+      if (TotalFound != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(TotalFound);
+      }
+      if (FetchedAt.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(FetchedAt);
+      }
+      if (Persisted != false) {
+        size += 1 + 1;
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(CollectResponse other) {
+      if (other == null) {
+        return;
+      }
+      products_.Add(other.products_);
+      if (other.TotalFound != 0) {
+        TotalFound = other.TotalFound;
+      }
+      if (other.FetchedAt.Length != 0) {
+        FetchedAt = other.FetchedAt;
+      }
+      if (other.Persisted != false) {
+        Persisted = other.Persisted;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            products_.AddEntriesFrom(input, _repeated_products_codec);
+            break;
+          }
+          case 16: {
+            TotalFound = input.ReadInt32();
+            break;
+          }
+          case 26: {
+            FetchedAt = input.ReadString();
+            break;
+          }
+          case 32: {
+            Persisted = input.ReadBool();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            products_.AddEntriesFrom(ref input, _repeated_products_codec);
+            break;
+          }
+          case 16: {
+            TotalFound = input.ReadInt32();
+            break;
+          }
+          case 26: {
+            FetchedAt = input.ReadString();
+            break;
+          }
+          case 32: {
+            Persisted = input.ReadBool();
             break;
           }
         }

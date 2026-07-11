@@ -141,10 +141,32 @@ init_otel("analyzer")  # antes do FastAPI()
 ## Testes de validação
 
 ```bash
-mise run test:e2e-traces     # Verifica propagação em produção
-mise run test:e2e-services   # Verifica health de todos os serviços
-mise run test:e2e-scheduler  # Verifica fluxo agendamento → coleta
+mise run test:e2e-traces        # Verifica propagação em produção
+mise run test:e2e-services      # Verifica health de todos os serviços
+mise run test:e2e-scheduler     # Verifica fluxo agendamento → coleta
+
+# Cross-service E2E (com traceparent para debug)
+mise run test:e2e-coleta        # Scheduler → Collector → BigQuery snapshots
+mise run test:e2e-alertas       # Analyzer → quedas/novidades → Publisher → Telegram
+mise run test:e2e-publicacoes   # Publicação agendada → Publisher gRPC
 ```
+
+### Cross-service E2E com traceparent
+
+Cada teste cross-service gera `traceparent` W3C em cada step. O summary final
+lista todos os trace_ids gerados:
+
+```
+  🔭 Traces gerados (para debug via Cloud Trace):
+     criar-busca-agendada: 4f3a7b2c1d...
+     collector-fetch: 8e2f1a9c3b...
+     verificar-snapshots-bq: 1c4d5e6f7a...
+
+  Investigar: mise run debug:trace <trace_id>
+```
+
+Isso permite **debugar falhas** investigando o trace no Cloud Trace — cada span
+mostra latência, erros, e qual serviço participou da operação.
 
 ## Atributos de span padronizados
 
