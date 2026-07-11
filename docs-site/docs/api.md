@@ -81,6 +81,14 @@ Comunicação interna via localhost (Cloud Run multi-container).
 | `CheckAndNotify(CheckAndNotifyRequest)` | |
 | `SendCouponAlert(SendCouponAlertRequest)` | |
 
+### cache — `CacheService`
+
+| RPC | Descrição |
+|-----|-----------|
+| `Get(GetRequest)` | |
+| `Invalidate(InvalidateRequest)` | |
+| `Healthz(HealthzRequest)` | |
+
 ### collector — `CollectorService`
 
 | RPC | Descrição |

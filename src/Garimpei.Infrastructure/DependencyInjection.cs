@@ -6,6 +6,7 @@ using Garimpei.Infrastructure.Tenancy;
 using Collector.V1;
 using Publisher.V1;
 using Scheduler.V1;
+using Cache.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +48,16 @@ public static class DependencyInjection
         {
             o.Address = new Uri(schedulerAddr);
         });
+
+        // Cache sidecar (L2) — localhost:50055 within same Cloud Run pod
+        var cacheAddr = configuration["Grpc:CacheAddress"] ?? "http://localhost:50055";
+        services.AddGrpcClient<CacheService.CacheServiceClient>(o =>
+        {
+            o.Address = new Uri(cacheAddr);
+        });
+
+        // Circuit breaker for cache sidecar
+        services.AddSingleton<CacheCircuitBreaker>();
 
         // ─── Keyed IProductSource (Strategy Pattern via .NET Keyed Services) ─
         // Adicionar um novo marketplace = adicionar uma linha aqui. Zero mudanças nos endpoints.

@@ -1,3 +1,4 @@
+using Cache.V1;
 using Collector.V1;
 using Garimpei.Domain;
 using Garimpei.Domain.Services;
@@ -58,7 +59,10 @@ public static partial class EndpointExtensions
 
         // /api/candidatos — public (same as Go legacy)
         app.MapGet("/api/candidatos", async (
+            CacheService.CacheServiceClient cacheClient,
+            CacheCircuitBreaker circuitBreaker,
             CollectorService.CollectorServiceClient collector,
+            HttpContext httpContext,
             string? keyword,
             int? top,
             double? comissao_min,
@@ -69,6 +73,8 @@ public static partial class EndpointExtensions
             CancellationToken ct) =>
         {
             keyword ??= "";
+            var ownerUid = httpContext.User.FindFirst("user_id")?.Value ?? "";
+            var cacheSource = "l2-bypass";
 
             // Quando fonte=shopee-shop com shop_ids, usar FetchShop (sem keyword obrigatório)
             if (fonte == "shopee-shop" && !string.IsNullOrWhiteSpace(shop_ids))
@@ -76,15 +82,52 @@ public static partial class EndpointExtensions
                 var ids = shop_ids.Split(',', StringSplitOptions.RemoveEmptyEntries);
                 var allCandidates = new List<ProductCandidate>();
 
-                foreach (var idStr in ids)
+                if (!circuitBreaker.IsOpen && !string.IsNullOrEmpty(ownerUid))
                 {
-                    if (!long.TryParse(idStr.Trim(), out var shopId)) continue;
-                    var shopResponse = await collector.FetchShopAsync(new FetchShopRequest
+                    try
                     {
-                        ShopId = shopId,
-                        Limit = Math.Min(top ?? 50, 100)
-                    }, cancellationToken: ct);
-                    allCandidates.AddRange(shopResponse.Products.Select(ProductMappings.ToCandidate));
+                        var cacheReq = new Cache.V1.GetRequest
+                        {
+                            BuscaId = $"busca-shops-{shop_ids}",
+                            Marketplace = Collector.V1.Marketplace.Shopee,
+                            OwnerUid = ownerUid,
+                        };
+                        foreach (var idStr in ids)
+                            cacheReq.CollectionKeys.Add(idStr.Trim());
+
+                        var cacheResp = await cacheClient.GetAsync(cacheReq, cancellationToken: ct);
+                        circuitBreaker.RecordSuccess();
+                        cacheSource = cacheResp.CacheHit ? "l2-hit" : "l2-miss";
+                        allCandidates.AddRange(cacheResp.Products.Select(ProductMappings.ToCandidate));
+                    }
+                    catch (Grpc.Core.RpcException)
+                    {
+                        circuitBreaker.RecordFailure();
+                        cacheSource = "l2-bypass";
+                        foreach (var idStr in ids)
+                        {
+                            if (!long.TryParse(idStr.Trim(), out var shopId)) continue;
+                            var shopResponse = await collector.FetchShopAsync(new FetchShopRequest
+                            {
+                                ShopId = shopId,
+                                Limit = Math.Min(top ?? 50, 100)
+                            }, cancellationToken: ct);
+                            allCandidates.AddRange(shopResponse.Products.Select(ProductMappings.ToCandidate));
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var idStr in ids)
+                    {
+                        if (!long.TryParse(idStr.Trim(), out var shopId)) continue;
+                        var shopResponse = await collector.FetchShopAsync(new FetchShopRequest
+                        {
+                            ShopId = shopId,
+                            Limit = Math.Min(top ?? 50, 100)
+                        }, cancellationToken: ct);
+                        allCandidates.AddRange(shopResponse.Products.Select(ProductMappings.ToCandidate));
+                    }
                 }
 
                 var shopFilter = new EligibilityFilter
@@ -95,6 +138,8 @@ public static partial class EndpointExtensions
                 };
 
                 var shopRanked = ScoringService.Rank(allCandidates, shopFilter, top ?? 50);
+
+                httpContext.Response.Headers["X-Cache-Source"] = cacheSource;
 
                 return Results.Ok(new
                 {
@@ -133,13 +178,51 @@ public static partial class EndpointExtensions
             if (string.IsNullOrWhiteSpace(keyword))
                 return Results.Ok(new { estrategia = "nicho", candidatos = Array.Empty<object>(), total_bruto = 0 });
 
-            var response = await collector.FetchAsync(new FetchRequest
-            {
-                Keyword = keyword,
-                Limit = Math.Min(top ?? 50, 100)
-            }, cancellationToken: ct);
+            IReadOnlyList<Product> products;
+            int totalBruto;
 
-            var candidates = response.Products.Select(ProductMappings.ToCandidate).ToList();
+            if (!circuitBreaker.IsOpen && !string.IsNullOrEmpty(ownerUid))
+            {
+                try
+                {
+                    var cacheResp = await cacheClient.GetAsync(new Cache.V1.GetRequest
+                    {
+                        CollectionKeys = { keyword },
+                        BuscaId = $"busca-keyword-{keyword.ToLowerInvariant().Trim()}",
+                        Marketplace = Collector.V1.Marketplace.Shopee,
+                        OwnerUid = ownerUid,
+                    }, cancellationToken: ct);
+
+                    circuitBreaker.RecordSuccess();
+                    cacheSource = cacheResp.CacheHit ? "l2-hit" : "l2-miss";
+                    products = cacheResp.Products;
+                    totalBruto = cacheResp.Products.Count;
+                }
+                catch (Grpc.Core.RpcException)
+                {
+                    circuitBreaker.RecordFailure();
+                    cacheSource = "l2-bypass";
+                    var response = await collector.FetchAsync(new FetchRequest
+                    {
+                        Keyword = keyword,
+                        Limit = Math.Min(top ?? 50, 100)
+                    }, cancellationToken: ct);
+                    products = response.Products;
+                    totalBruto = response.TotalFound;
+                }
+            }
+            else
+            {
+                var response = await collector.FetchAsync(new FetchRequest
+                {
+                    Keyword = keyword,
+                    Limit = Math.Min(top ?? 50, 100)
+                }, cancellationToken: ct);
+                products = response.Products;
+                totalBruto = response.TotalFound;
+            }
+
+            var candidates = products.Select(ProductMappings.ToCandidate).ToList();
 
             var filter = new EligibilityFilter
             {
@@ -149,6 +232,8 @@ public static partial class EndpointExtensions
             };
 
             var ranked = ScoringService.Rank(candidates, filter, top ?? 20);
+
+            httpContext.Response.Headers["X-Cache-Source"] = cacheSource;
 
             return Results.Ok(new
             {
@@ -180,7 +265,7 @@ public static partial class EndpointExtensions
                     oferta_expira = s.OfferExpiresAt ?? "",
                     marketplace = s.Marketplace
                 }),
-                total_bruto = response.TotalFound
+                total_bruto = totalBruto
             });
         });
 

@@ -24,18 +24,20 @@ import (
 // Despacha para o ProductSource correto via Pipeline, baseado no marketplace do request.
 type UnifiedCollectorServer struct {
 	collectorpb.UnimplementedCollectorServiceServer
-	pipeline  *Pipeline
-	snapshots store.SnapshotRepo
-	exportCh  chan store.Snapshot
-	logger    *slog.Logger
+	pipeline   *Pipeline
+	snapshots  store.SnapshotRepo
+	exportCh   chan store.Snapshot
+	divergence *DivergenceDetector
+	logger     *slog.Logger
 }
 
 func NewUnifiedCollectorServer(pipeline *Pipeline, snapshots store.SnapshotRepo, logger *slog.Logger) *UnifiedCollectorServer {
 	return &UnifiedCollectorServer{
-		pipeline:  pipeline,
-		snapshots: snapshots,
-		exportCh:  make(chan store.Snapshot, 64),
-		logger:    logger,
+		pipeline:   pipeline,
+		snapshots:  snapshots,
+		exportCh:   make(chan store.Snapshot, 64),
+		divergence: NewDivergenceDetector(logger),
+		logger:     logger,
 	}
 }
 
@@ -167,6 +169,12 @@ func (s *UnifiedCollectorServer) Collect(ctx context.Context, req *collectorpb.C
 		}
 		persisted = s.enqueueExport(snap)
 	}
+
+	// Divergence detection: compare collected data with cache L2
+	// Non-blocking — errors are logged but never propagate to Scheduler
+	protoProducts := source.ToProtoProducts(produtos)
+	collectionKeys := []string{keyword}
+	go s.divergence.DetectAndInvalidate(context.Background(), req.GetBuscaId(), req.GetOwnerUid(), collectionKeys, protoProducts)
 
 	return &collectorpb.CollectResponse{
 		Products:   source.ToProtoProducts(produtos),

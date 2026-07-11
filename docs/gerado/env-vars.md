@@ -12,8 +12,16 @@ Não edite manualmente. Rode `mise run docs:env` para regenerar.
 | `BQ_DATASET` | `internal/store/novo_gcp.go` | 15 |
 | `BQ_TABELA_SNAP` | `internal/store/novo_gcp.go` | 20 |
 | `BQ_TABELA` | `internal/store/novo_gcp.go` | 16 |
+| `BUSCA_CONTRACT_SCHEMA_PATH` | `services/cache/config.go` | 61 |
+| `CACHE_GRPC_ADDRESS` | `services/collector/divergence.go` | 40 |
+| `CACHE_GRPC_PORT` | `services/cache/config.go` | 33 |
+| `CACHE_MAX_BYTES` | `services/cache/config.go` | 41 |
+| `CACHE_TTL_SECONDS` | `services/cache/config.go` | 49 |
+| `CF_PURGE_TOKEN` | `services/collector/divergence.go` | 58 |
+| `CF_ZONE_ID` | `services/collector/divergence.go` | 57 |
 | `COLLECTOR_ADDR` | `services/scheduler/main.go` | 39 |
 | `COLLECTOR_CONFIG` | `services/collector/config.go` | 108 |
+| `COLLECTOR_GRPC_ADDRESS` | `services/cache/config.go` | 57 |
 | `ENCRYPTION_KEY` | `internal/crypto/crypto.go` | 26 |
 | `GCP_PROJECT_ID` | `internal/otel/sloghandler.go` | 23 |
 | `GOOGLE_CLOUD_PROJECT` | `internal/store/novo_gcp.go` | 14 |

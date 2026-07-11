@@ -35,6 +35,12 @@ services:
     http_port: 8054
     proto: protos/scheduler/v1/scheduler.proto
 
+  - id: cache-sidecar
+    name: "Cache Sidecar (Go)"
+    runtime: cloud-run-sidecar
+    port: 50055
+    proto: protos/cache/v1/cache.proto
+
   - id: analyzer
     name: "Analyzer (Python)"
     runtime: cloud-run-sidecar
@@ -232,6 +238,22 @@ boundaries:
     service: scheduler.v1.SchedulerService
     method: SetSchedule
     notes: "Registra/pausa job de coleta periódica ao criar/remover buscas agendadas."
+
+  - id: api-cache-get
+    source: csharp-api
+    target: cache-sidecar
+    protocol: grpc
+    service: cache.v1.CacheService
+    method: Get
+    notes: "Substituição de CollectorService.Fetch/FetchShop para leituras cacheadas."
+
+  - id: collector-cache-invalidate
+    source: collector
+    target: cache-sidecar
+    protocol: grpc
+    service: cache.v1.CacheService
+    method: Invalidate
+    notes: "Divergence-driven invalidation após Collect."
 
   # ── C# API → Python Analyzer (HTTP) ────────────────────────────────────────
   - id: api-analyzer-candidatos

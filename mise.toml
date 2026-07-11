@@ -206,6 +206,34 @@ run = "cd web && npx prettier --check src/ tests/"
 description = "Vitest (unit + contrast + theme) no frontend"
 run = "cd web && npx vitest run"
 
+[tasks."test:integration:cache"]
+description = "Integration test: cache sidecar + collector mock → Get miss→hit cycle + Invalidate"
+run = """
+echo "══════════════════════════════════════════════════"
+echo "  🧪 Integration: Cache Sidecar"
+echo "══════════════════════════════════════════════════"
+echo ""
+
+# Run Go cache unit + integration tests
+echo "── Go cache tests ──"
+go test ./services/cache/... -v -count=1
+
+echo ""
+echo "── Go collector tests (divergence) ──"
+go test ./services/collector/... -run "TestDivergence|TestPurge" -v -count=1
+
+echo ""
+echo "── C# tests ──"
+dotnet test --nologo --no-build src/Garimpei.sln 2>/dev/null || dotnet test --nologo src/Garimpei.sln
+
+echo ""
+echo "── Frontend tests ──"
+cd web && bunx vitest run
+
+echo ""
+echo "✅ All integration tests passed"
+"""
+
 [tasks."test:e2e"]
 description = "Playwright E2E com Firebase Auth Emulator (inicia automaticamente)"
 run = """

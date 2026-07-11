@@ -5,12 +5,25 @@
  *   /api/*   → C# Web App (Cloud Run garimpei-v2)
  *   /*       → Frontend SPA (Cloudflare Pages garimpei-web)
  *
+ * Caching (L1):
+ *   Cacheable GET routes are served from Workers Cache API when available.
+ *   Cache-Tag enables tag-based purge via Cloudflare API.
+ *   TTL: 5 minutes (max-age=300).
+ *
  * Environment variables:
  *   V2_ENABLED: "true" to route /api/* to C# (default: "true")
  *   V2_ORIGIN:  URL do serviço C# no Cloud Run
  *   V1_ORIGIN:  URL do Go legado (fallback, pode ser removido)
  *   PAGES_URL:  URL do Cloudflare Pages (garimpei-web.pages.dev)
+ *   CACHE_MAX_AGE: Cache TTL in seconds (default: "300")
  */
+
+// Routes eligible for caching (GET only).
+const CACHEABLE_ROUTES = [
+  '/api/v2/curadoria/ranking',
+  '/api/candidatos',
+  '/api/lojas/novidades',
+];
 
 export default {
   async fetch(request, env) {
@@ -22,6 +35,7 @@ export default {
     const v1Origin = env.V1_ORIGIN || '';
     const pagesUrl = env.PAGES_URL || 'https://garimpei-web.pages.dev';
     const docsUrl = env.DOCS_URL || 'https://garimpei-docs.pages.dev';
+    const cacheMaxAge = parseInt(env.CACHE_MAX_AGE || '300', 10);
 
     // API routes → Cloud Run (C#)
     if (path.startsWith('/api/')) {
@@ -29,6 +43,12 @@ export default {
       if (!origin) {
         return new Response('No backend configured', { status: 503 });
       }
+
+      // Check if this is a cacheable GET request
+      if (request.method === 'GET' && isCacheableRoute(path)) {
+        return handleCachedRequest(request, url, origin, cacheMaxAge);
+      }
+
       return proxyTo(request, url, origin, 'csharp');
     }
 
@@ -55,9 +75,85 @@ export default {
 }
 
 /**
- * Proxy the request to the target origin.
+ * Check if the given path matches a cacheable route.
  */
-async function proxyTo(request, url, origin, backend) {
+function isCacheableRoute(path) {
+  return CACHEABLE_ROUTES.some(route => path.startsWith(route));
+}
+
+/**
+ * Extract busca_id from query params or path for Cache-Tag.
+ * Tries: ?keyword=..., ?busca_id=..., ?shop_id=...
+ */
+function extractBuscaTag(url) {
+  const keyword = url.searchParams.get('keyword');
+  if (keyword) return `busca:keyword-${keyword.toLowerCase().trim()}`;
+
+  const buscaId = url.searchParams.get('busca_id');
+  if (buscaId) return `busca:${buscaId}`;
+
+  const shopId = url.searchParams.get('shop_id');
+  if (shopId) return `busca:shop-${shopId}`;
+
+  const shopIds = url.searchParams.get('shop_ids');
+  if (shopIds) return `busca:shops-${shopIds}`;
+
+  return null;
+}
+
+/**
+ * Handle a cacheable GET request using Workers Cache API.
+ */
+async function handleCachedRequest(request, url, origin, cacheMaxAge) {
+  const cache = caches.default;
+
+  // Use the full URL as cache key
+  const cacheKey = new Request(url.toString(), request);
+
+  // Try cache hit
+  let response = await cache.match(cacheKey);
+  if (response) {
+    // Cache HIT — return with status header
+    const cached = new Response(response.body, response);
+    cached.headers.set('X-Cache-Status', 'HIT');
+    cached.headers.set('X-Garimpei-Backend', 'csharp');
+    return cached;
+  }
+
+  // Cache MISS — fetch from origin
+  response = await proxyToRaw(request, url, origin);
+
+  // Only cache successful responses
+  if (response.status === 200) {
+    const buscaTag = extractBuscaTag(url);
+    const cacheResponse = new Response(response.body, response);
+
+    cacheResponse.headers.set('Cache-Control', `public, max-age=${cacheMaxAge}`);
+    if (buscaTag) {
+      cacheResponse.headers.set('Cache-Tag', buscaTag);
+    }
+    cacheResponse.headers.set('X-Cache-Status', 'MISS');
+    cacheResponse.headers.set('X-Garimpei-Backend', 'csharp');
+
+    // Store in cache (non-blocking)
+    const cacheClone = cacheResponse.clone();
+    // Ensure the response stored in cache has proper headers
+    cache.put(cacheKey, cacheClone);
+
+    return cacheResponse;
+  }
+
+  // Non-200 — pass through without caching
+  const passthrough = new Response(response.body, response);
+  passthrough.headers.set('X-Cache-Status', 'BYPASS');
+  passthrough.headers.set('X-Garimpei-Backend', 'csharp');
+  return passthrough;
+}
+
+/**
+ * Proxy the request to the target origin (returns raw Response).
+ */
+async function proxyToRaw(request, url, origin) {
   const target = new URL(origin);
   url.hostname = target.hostname;
   url.port = target.port;
@@ -70,7 +166,14 @@ async function proxyTo(request, url, origin, backend) {
   });
   newRequest.headers.set('Host', target.hostname);
 
-  const response = await fetch(newRequest);
+  return await fetch(newRequest);
+}
+
+/**
+ * Proxy the request to the target origin.
+ */
+async function proxyTo(request, url, origin, backend) {
+  const response = await proxyToRaw(request, url, origin);
 
   const modifiedResponse = new Response(response.body, response);
   modifiedResponse.headers.set('X-Garimpei-Backend', backend);

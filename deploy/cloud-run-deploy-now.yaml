@@ -11,7 +11,7 @@ spec:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "2"
         run.googleapis.com/execution-environment: gen2
-        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","scheduler","analyzer"]}'
+        run.googleapis.com/container-dependencies: '{"garimpei-api":["collector","publisher","scheduler","analyzer","cache-sidecar"]}'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -37,6 +37,8 @@ spec:
               value: "http://localhost:50051"
             - name: Grpc__PublisherAddress
               value: "http://localhost:50052"
+            - name: Grpc__CacheAddress
+              value: "http://localhost:50055"
             - name: AdminEmails
               value: "mandacaruestudio@gmail.com"
             - name: OTEL_SERVICE_NAME
@@ -58,6 +60,18 @@ spec:
           env:
             - name: PORT
               value: "50051"
+            - name: CACHE_GRPC_ADDRESS
+              value: "localhost:50055"
+            - name: CF_ZONE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: CF_ZONE_ID
+                  key: latest
+            - name: CF_PURGE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: CF_PURGE_TOKEN
+                  key: latest
             - name: SHOPEE_APP_ID
               valueFrom:
                 secretKeyRef:
@@ -164,4 +178,29 @@ spec:
               port: 8060
             periodSeconds: 3
             failureThreshold: 10
+
+        - name: cache-sidecar
+          image: southamerica-east1-docker.pkg.dev/garimpo-500114/garimpo/cache-sidecar:latest
+          env:
+            - name: CACHE_MAX_BYTES
+              value: "268435456"
+            - name: CACHE_TTL_SECONDS
+              value: "1800"
+            - name: COLLECTOR_GRPC_ADDRESS
+              value: "localhost:50051"
+            - name: CACHE_GRPC_PORT
+              value: "50055"
+            - name: OTEL_SERVICE_NAME
+              value: "cache-sidecar"
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 512Mi
+          startupProbe:
+            grpc:
+              port: 50055
+              service: cache.v1.CacheService
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            failureThreshold: 5
 

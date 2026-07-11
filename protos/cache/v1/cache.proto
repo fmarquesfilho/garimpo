@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package cache.v1;
+
+option go_package = "github.com/fmarquesfilho/garimpo/gen/go/cache/v1;cachev1";
+option csharp_namespace = "Garimpei.Protos.Cache.V1";
+
+import "collector/v1/collector.proto";
+
+// CacheService fornece cache in-memory para dados de produto.
+// Deploy: sidecar no mesmo pod Cloud Run (localhost:50055).
+service CacheService {
+  // Get busca produtos por collection_keys. Cache miss dispara fetch ao Collector.
+  rpc Get(GetRequest) returns (GetResponse);
+  // Invalidate remove entries do cache por busca_id e/ou collection_keys.
+  rpc Invalidate(InvalidateRequest) returns (InvalidateResponse);
+  // Healthz retorna status e métricas do cache para health probes e circuit breaker.
+  rpc Healthz(HealthzRequest) returns (HealthzResponse);
+}
+
+message GetRequest {
+  // Collection keys derivadas via DeriveCollectionKeys (sorted, normalized).
+  repeated string collection_keys = 1;
+  // UUID da busca — usado para registrar no reverse index.
+  string busca_id = 2;
+  // Marketplace para direcionar o fetch em caso de miss.
+  collector.v1.Marketplace marketplace = 3;
+  // Owner UID do tenant (prefixo para tenant isolation).
+  string owner_uid = 4;
+}
+
+message GetResponse {
+  // Produtos encontrados (mesma mensagem do Collector).
+  repeated collector.v1.Product products = 1;
+  // True se todos os collection_keys estavam no cache.
+  bool cache_hit = 2;
+  // Timestamp RFC3339 de quando os dados foram obtidos.
+  string fetched_at = 3;
+  // Versão do BuscaContract JSON Schema usada na validação.
+  string schema_version = 4;
+}
+
+message InvalidateRequest {
+  // UUID da busca — invalida todas as keys no reverse index.
+  string busca_id = 1;
+  // Collection keys explícitas para invalidação granular (opcional).
+  repeated string collection_keys = 2;
+  // Owner UID do tenant (prefixo para tenant isolation).
+  string owner_uid = 3;
+}
+
+message InvalidateResponse {
+  // Número de entries removidas do cache.
+  int32 keys_removed = 1;
+  // Sempre true (operação idempotente).
+  bool success = 2;
+}
+
+message HealthzRequest {}
+
+message HealthzResponse {
+  // True quando o cache está pronto para receber requests.
+  bool ready = 1;
+  // Tamanho atual do cache em bytes.
+  int64 cache_size_bytes = 2;
+  // Total de cache hits desde o boot.
+  int64 hits_total = 3;
+  // Total de cache misses desde o boot.
+  int64 misses_total = 4;
+  // Número de entries atualmente no cache.
+  int64 entries_count = 5;
+}

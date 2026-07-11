@@ -288,6 +288,8 @@ jobs:
           pids+=($!)
           build_image analyzer services/analyzer/Dockerfile services/analyzer/ &
           pids+=($!)
+          build_image cache-sidecar services/cache/Dockerfile . &
+          pids+=($!)
 
           # Wait for all parallel builds
           failed=0
