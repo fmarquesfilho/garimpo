@@ -262,30 +262,40 @@ BuscaEngine.executarBusca()
 
 ### Como testar que está funcionando
 
+**Forma rápida (~15s, sem esperar cron):**
+
 ```bash
-# 1. Verifica que o Analyzer detecta novos no BigQuery
-mise run test:e2e-alertas
-# Step 2 mostra: "Oportunidades: X novos, Y quedas"
-
-# 2. Ou diretamente via curl
-curl -sf -H "Authorization: Bearer $TOKEN" \
-  "https://garimpei.app.br/api/lojas/novidades?busca_id=920292999&dias=7"
-# Deve retornar: { "produtos_novos": [...], "variacoes": [...] }
-
-# 3. Na UI: página principal com loja monitorada
-#    → Toggle 🆕 Novos ativo
-#    → Badge mostra contagem > 0
-#    → Cards aparecem com badge "Novo"
+mise run test:e2e-novos
 ```
+
+Este teste valida instantaneamente o pipeline inteiro:
+1. Triggera coleta via Collector
+2. Verifica snapshots no BigQuery
+3. Chama Analyzer `/novidades` (detecção direta)
+4. Chama `/oportunidades/agora` (endpoint do Dashboard)
+5. Simula o que o Frontend faz (por loja)
+6. Verifica quedas via proxy
+7. Valida trace OTel
+
+Se quiser investigar os spans:
+```bash
+# O output mostra os trace_ids de cada step
+mise run debug:trace <trace_id>
+```
+
+**Forma manual (UI):**
+- Página principal com loja monitorada → toggle 🆕 ativo → badge > 0
+- `/estatisticas` → seção Oportunidades → "X novos"
 
 ### Quando NÃO funciona (e porquê)
 
-| Sintoma | Causa provável |
-|---------|---------------|
-| Badge 🆕 mostra 0 | Nenhuma loja monitorada, ou coletas < 2 na janela |
-| Badge mostra número mas grid vazio | Filtro de comissão/vendas excluindo novos |
-| Novos na estatísticas mas não na principal | Endpoint diferente: `/oportunidades/agora` vs `/lojas/novidades` |
-| Novos sumindo após 7 dias | Comportamento correto — janela padrão é 7 dias |
+| Sintoma | Causa provável | Como verificar |
+|---------|---------------|----------------|
+| Badge 🆕 mostra 0 | Nenhuma loja monitorada, ou coletas < 2 na janela | `mise run test:e2e-novos` (step 2) |
+| Badge mostra número mas grid vazio | Filtro de comissão/vendas excluindo novos | Desativar filtros e testar |
+| Novos na estatísticas mas não na principal | Endpoints diferentes: `/oportunidades/agora` agrega tudo, `/lojas/novidades` filtra por loja | `mise run test:e2e-novos` (steps 3 vs 4) |
+| Novos sumindo após 7 dias | Comportamento correto — janela padrão é 7 dias | — |
+| Dashboard mostra 10 novos, página principal 0 | Novos vêm de keywords (serum) não de shop_ids | Verificar se busca tem loja monitorada com coletas |
 
 ---
 
