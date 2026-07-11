@@ -15,7 +15,6 @@ _Nenhuma tarefa em andamento._
 - **T-0033** Validar multi-marketplace + coupon monitoring com banco limpo · E-003 · M
 - **T-0041** UI polish: format:check no CI + dark mode audit + Lighthouse · qualidade · P
 - **T-0045** Encriptar credenciais do tenant (Shopee, Telegram, WhatsApp) · seguranca · M
-- **T-0046** Validar todos os 11 fluxos end-to-end em produção · qualidade · M
 - **T-0048** Limpeza final: código morto, warnings, deps desatualizadas · qualidade · S
 - **T-0049** Reconciliação: sincronizar buscas existentes no PG com Scheduler · backend · S
 - **T-0050** Testar envio real: Telegram + WhatsApp (Publisher end-to-end) · qualidade · S
@@ -67,6 +66,7 @@ _Nenhuma tarefa em andamento._
 - **T-0042** Sistema de layout consistente + auditoria dark mode · E-001 · M
 - **T-0043** Fix: deploy Cloud Run não criava nova revision + binding JSON quebrado · migracao-arch · M
 - **T-0044** Testar fluxo de variação de preços end-to-end · migracao-arch · M
+- **T-0046** Validar todos os 11 fluxos end-to-end em produção · qualidade · M
 - **T-0047** Observabilidade: structured logging + métricas de negócio · operacao · M
 - **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
 - **T-0056** Corrigir bugs visuais e funcionais da página Descobrir v3 · E-001 · M
