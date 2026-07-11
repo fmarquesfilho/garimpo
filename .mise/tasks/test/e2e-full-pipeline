@@ -1,0 +1,241 @@
+#!/usr/bin/env bash
+# mise description="E2E Full Pipeline: exercita TODO o fluxo cross-service em sequência com trace único"
+set -euo pipefail
+
+# shellcheck source=.mise/tasks/test/e2e-lib
+source "$(dirname "$0")/e2e-lib"
+
+echo "═══════════════════════════════════════════════"
+echo "  🔗 E2E Full Pipeline (trace único)"
+echo "═══════════════════════════════════════════════"
+echo ""
+echo "  Simula um ciclo completo sem esperar cron:"
+echo ""
+echo "    ┌─ 1. Criar busca agendada"
+echo "    ├─ 2. Triggerar coleta (simula cron → Collect RPC)"
+echo "    ├─ 3. Verificar snapshot no BigQuery (via Analyzer)"
+echo "    ├─ 4. Verificar oportunidades detectadas"
+echo "    ├─ 5. Verificar dashboard/changes reflete a coleta"
+echo "    ├─ 6. Verificar alertas (detecção de quedas)"
+echo "    ├─ 7. Testar publicação de oportunidade"
+echo "    ├─ 8. Verificar performance (conversões)"
+echo "    ├─ 9. Isolamento multi-tenant"
+echo "    └─ 10. Cleanup"
+echo ""
+echo "  Um TRACE ID único percorre todo o fluxo — investigável no Cloud Trace."
+echo ""
+
+e2e_auth
+
+# ─── Trace raiz para toda a execução ─────────────────────────────────────────
+e2e_new_trace "full-pipeline"
+ROOT_TP="$E2E_LAST_TRACEPARENT"
+ROOT_TRACE="$E2E_LAST_TRACE_ID"
+echo "  🔭 Trace raiz: $ROOT_TRACE"
+echo "     traceparent: $ROOT_TP"
+echo ""
+
+KEYWORD="e2e-pipeline-$(date +%s)"
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo "── 1/10 Criar busca agendada ─────────────────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+CREATE_RESP=$(e2e_post "/api/buscas" \
+  "{\"keywords\":[\"$KEYWORD\"],\"cron\":\"0 */12 * * *\",\"shop_names\":{}}" \
+  "$ROOT_TP")
+
+if echo "$CREATE_RESP" | jq -e '.id' > /dev/null 2>&1; then
+  BUSCA_ID=$(echo "$CREATE_RESP" | jq -r '.id')
+  e2e_ok "Busca criada: $BUSCA_ID (keyword: $KEYWORD)"
+else
+  e2e_fail "Criar busca" "$(echo "$CREATE_RESP" | head -c 200)"
+  BUSCA_ID=""
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 2/10 Triggerar coleta (Collect RPC) ───────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Simula o que o Scheduler faria: chama /api/candidatos que por trás usa Collect
+# Em produção: Scheduler chama Collector.Collect gRPC diretamente
+# No teste: usamos o proxy HTTP que também persiste via Collect RPC
+e2e_new_trace "trigger-collect"
+COLLECT_RESP=$(e2e_get "/api/candidatos?keyword=serum&top=5" "$E2E_LAST_TRACEPARENT")
+COLLECT_TOTAL=$(echo "$COLLECT_RESP" | jq '.total_bruto // 0' 2>/dev/null || echo "0")
+
+if [ "$COLLECT_TOTAL" -gt 0 ]; then
+  e2e_ok "Collect retornou $COLLECT_TOTAL produtos"
+else
+  e2e_warn "Collect retornou 0 (rate limit Shopee)" \
+    "Continuando com dados existentes no BigQuery"
+fi
+
+# Aguarda propagação do snapshot para BigQuery (~2-3s streaming insert)
+echo "     ⏳ Aguardando propagação BigQuery (3s)..."
+sleep 3
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 3/10 Verificar snapshots no BigQuery ──────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_new_trace "verify-snapshots"
+COLETAS_RESP=$(e2e_get "/api/coletas?dias=1" "$E2E_LAST_TRACEPARENT")
+
+if echo "$COLETAS_RESP" | grep -q '"coletas"'; then
+  TOTAL_COLETAS=$(echo "$COLETAS_RESP" | jq '.total // 0' 2>/dev/null || echo "0")
+  e2e_ok "Analyzer /coletas responde ($TOTAL_COLETAS coletas no último dia)"
+else
+  e2e_fail "Analyzer /coletas indisponível" "$(echo "$COLETAS_RESP" | head -c 200)"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 4/10 Verificar oportunidades detectadas ───"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_new_trace "verify-oportunidades"
+OPORT_RESP=$(e2e_get "/api/oportunidades/agora?dias=7" "$E2E_LAST_TRACEPARENT")
+
+if echo "$OPORT_RESP" | grep -q '"quedas"\|"novos"'; then
+  QUEDAS=$(echo "$OPORT_RESP" | jq '.total_quedas // 0' 2>/dev/null)
+  NOVOS=$(echo "$OPORT_RESP" | jq '.total_novos // 0' 2>/dev/null)
+  ALTO=$(echo "$OPORT_RESP" | jq '.total_alto_valor // 0' 2>/dev/null)
+  e2e_ok "Oportunidades: $QUEDAS quedas, $NOVOS novos, $ALTO alto-valor"
+else
+  e2e_fail "/api/oportunidades/agora falhou" "$(echo "$OPORT_RESP" | head -c 200)"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 5/10 Dashboard change detection ───────────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_new_trace "dashboard-changes"
+CHANGES_RESP=$(e2e_get "/api/dashboard/changes" "$E2E_LAST_TRACEPARENT")
+
+if echo "$CHANGES_RESP" | grep -q "saude_updated_at"; then
+  SAUDE_TS=$(echo "$CHANGES_RESP" | jq -r '.saude_updated_at // "null"')
+  OPORT_TS=$(echo "$CHANGES_RESP" | jq -r '.oportunidades_updated_at // "null"')
+  PERF_TS=$(echo "$CHANGES_RESP" | jq -r '.performance_updated_at // "null"')
+  e2e_ok "Change detection: saude=$SAUDE_TS"
+
+  if [ "$SAUDE_TS" != "null" ]; then
+    e2e_ok "Saúde tem timestamp (snapshots existem no BigQuery)"
+  else
+    e2e_warn "Saúde sem timestamp (Collect pode não ter persistido ainda)"
+  fi
+else
+  e2e_fail "/api/dashboard/changes não responde" "$(echo "$CHANGES_RESP" | head -c 200)"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 6/10 Saúde + Alertas/Quedas ───────────────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_new_trace "saude-alertas"
+SAUDE_RESP=$(e2e_get "/api/coletas/saude" "$E2E_LAST_TRACEPARENT")
+
+if echo "$SAUDE_RESP" | grep -q '"status"'; then
+  STATUS=$(echo "$SAUDE_RESP" | jq -r '.status' 2>/dev/null)
+  COLETAS24=$(echo "$SAUDE_RESP" | jq '.coletas_24h // 0' 2>/dev/null)
+  e2e_ok "Saúde: status=$STATUS, coletas_24h=$COLETAS24"
+else
+  e2e_fail "/api/coletas/saude falhou" "$(echo "$SAUDE_RESP" | head -c 200)"
+fi
+
+EFIC_RESP=$(e2e_get "/api/alertas/eficacia?dias=7" "$E2E_LAST_TRACEPARENT")
+if echo "$EFIC_RESP" | grep -q '"quedas_detectadas"'; then
+  QUEDAS_DET=$(echo "$EFIC_RESP" | jq '.quedas_detectadas // 0' 2>/dev/null)
+  e2e_ok "Eficácia alertas: $QUEDAS_DET quedas detectadas na janela"
+else
+  e2e_fail "/api/alertas/eficacia falhou" "$(echo "$EFIC_RESP" | head -c 200)"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 7/10 Publicação de oportunidade ───────────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_new_trace "publicar-oportunidade"
+TIMESTAMP=$(date +%s)
+PUB_BODY="{
+  \"produto_id\": \"e2e-pipeline-${TIMESTAMP}\",
+  \"nome\": \"[E2E Pipeline] Produto Teste\",
+  \"preco\": 1.00,
+  \"link\": \"https://example.com/e2e-pipeline\",
+  \"imagem\": \"https://cf.shopee.com.br/file/placeholder1.jpg\",
+  \"destino\": \"e2e-test\"
+}"
+
+PUB_RESP=$(e2e_post "/api/publicar" "$PUB_BODY" "$E2E_LAST_TRACEPARENT")
+
+if echo "$PUB_RESP" | grep -q '"success":true\|"published"\|"message_id"\|"publicacao_id"'; then
+  e2e_ok "Publicação enviada (Publisher gRPC → Telegram)"
+elif echo "$PUB_RESP" | grep -q '"success":false'; then
+  e2e_warn "Publicação falhou (destino não configurado — esperado em teste)"
+else
+  e2e_warn "Resposta inesperada" "$(echo "$PUB_RESP" | head -c 200)"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 8/10 Performance / Conversões ─────────────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_new_trace "performance"
+CONV_RESP=$(e2e_get "/api/conversoes/resumo?dias=30" "$E2E_LAST_TRACEPARENT")
+
+if echo "$CONV_RESP" | grep -q '"comissao_total"\|"status"'; then
+  COMISSAO=$(echo "$CONV_RESP" | jq '.comissao_total // 0' 2>/dev/null)
+  CONV_STATUS=$(echo "$CONV_RESP" | jq -r '.status // "?"' 2>/dev/null)
+  e2e_ok "Performance: comissão=R$$COMISSAO, status=$CONV_STATUS"
+else
+  e2e_fail "/api/conversoes/resumo falhou" "$(echo "$CONV_RESP" | head -c 200)"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 9/10 Isolamento multi-tenant ──────────────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_assert_no_leak "/api/buscas" "buscas" "Buscas requer auth"
+e2e_assert_no_leak "/api/dashboard/changes" "saude" "Change detection requer auth"
+e2e_assert_no_leak "/api/oportunidades/agora" "quedas" "Oportunidades requer auth"
+e2e_assert_no_leak "/api/coletas/saude" "status" "Saúde requer auth"
+e2e_assert_no_leak "/api/conversoes/resumo" "comissao" "Conversões requer auth"
+e2e_assert_no_leak "/api/alertas/eficacia" "quedas" "Eficácia requer auth"
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "── 10/10 Cleanup ─────────────────────────────"
+# ══════════════════════════════════════════════════════════════════════════════
+
+e2e_new_trace "cleanup"
+REMOVE_RESP=$(e2e_post "/api/buscas?remover=true" \
+  "{\"keywords\":[\"$KEYWORD\"]}" \
+  "$E2E_LAST_TRACEPARENT")
+
+if echo "$REMOVE_RESP" | grep -q '"removida"'; then
+  e2e_ok "Busca de teste removida"
+else
+  e2e_warn "Falha ao remover busca" "$(echo "$REMOVE_RESP" | head -c 200)"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "═══════════════════════════════════════════════"
+echo "  🔭 TRACE RAIZ: $ROOT_TRACE"
+echo "     Todos os steps acima participam deste trace."
+echo ""
+echo "  Para investigar no Cloud Trace:"
+echo "     mise run debug:trace $ROOT_TRACE"
+echo ""
+echo "  Ou diretamente:"
+echo "     https://console.cloud.google.com/traces/list?project=garimpo-500114&tid=$ROOT_TRACE"
+echo "═══════════════════════════════════════════════"
+
+e2e_summary "E2E Full Pipeline"
