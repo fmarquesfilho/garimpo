@@ -105,6 +105,8 @@ public static partial class EndpointExtensions
         });
 
         // GET /api/v2/curadoria/novos — recently detected products
+        // DEPRECATED: Use /api/lojas/novidades instead (same Analyzer endpoint).
+        // Kept for backward compat — both use busca_id UUID exact match.
         curadoria.MapGet("/novos", async (
             HttpClient httpClient,
             IConfiguration config,

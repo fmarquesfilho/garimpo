@@ -1,3 +1,4 @@
+using Garimpei.Domain;
 using Garimpei.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -57,6 +58,8 @@ public static class SchedulerJobs
     public static Scheduler.V1.SetScheduleRequest BuildRequest(Busca busca, bool enabled)
     {
         var hasShop = busca.ShopIds is { Length: > 0 };
+        var hasKeywords = busca.Keywords is { Length: > 0 }
+            || (!hasShop && !string.IsNullOrWhiteSpace(busca.Keyword));
 
         var req = new Scheduler.V1.SetScheduleRequest
         {
@@ -65,10 +68,21 @@ public static class SchedulerJobs
             Enabled = enabled
         };
 
+        // busca_id: ALWAYS present (BuscaContract requirement)
+        req.Params.Add("busca_id", busca.Id.ToString());
+
+        // Determine type based on actual fields
+        var type = (hasShop, hasKeywords) switch
+        {
+            (true, true) => "mixed",
+            (true, false) => "shop_collection",
+            _ => "keyword_search"
+        };
+
         if (hasShop)
             req.Params.Add("shop_id", busca.ShopIds![0].ToString());
         req.Params.Add("owner_uid", busca.OwnerUid);
-        req.Params.Add("type", hasShop ? "shop_collection" : "keyword_search");
+        req.Params.Add("type", type);
 
         var keywords = busca.Keywords is { Length: > 0 }
             ? busca.Keywords
@@ -78,6 +92,10 @@ public static class SchedulerJobs
 
         if (keywords is { Length: > 0 })
             req.Params.Add("keywords", string.Join(",", keywords));
+
+        // collection_keys: ALWAYS present (BuscaContract requirement)
+        var collectionKeys = CollectionKeys.Derive(busca.ShopIds, keywords, busca.Categorias);
+        req.Params.Add("collection_keys", string.Join(",", collectionKeys));
 
         return req;
     }

@@ -135,6 +135,53 @@ func TestFetchShop_ZeroShopId_ReturnsInvalidArgument(t *testing.T) {
 	}
 }
 
+func TestCollect_EmptyBuscaId_ReturnsInvalidArgument(t *testing.T) {
+	srv := newTestCollectorServer(t)
+
+	_, err := srv.Collect(context.Background(), &collectorpb.CollectRequest{
+		Target:  &collectorpb.CollectRequest_Keyword{Keyword: "serum"},
+		Limit:   10,
+		BuscaId: "",
+	})
+
+	if err == nil {
+		t.Fatal("expected error for empty busca_id, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got: %v", err)
+	}
+	if st.Code() != codes.InvalidArgument {
+		t.Errorf("expected InvalidArgument, got %v: %s", st.Code(), st.Message())
+	}
+}
+
+func TestCollect_WithBuscaId_NoValidationError(t *testing.T) {
+	srv := newTestCollectorServer(t)
+
+	_, err := srv.Collect(context.Background(), &collectorpb.CollectRequest{
+		Target:      &collectorpb.CollectRequest_Keyword{Keyword: "serum"},
+		Limit:       10,
+		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
+		OwnerUid:    "user-123",
+		BuscaId:     "busca-keyword-serum",
+	})
+
+	if err == nil {
+		return // Success path if API is available
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got: %v", err)
+	}
+	// Should NOT be InvalidArgument — busca_id is provided
+	if st.Code() == codes.InvalidArgument {
+		t.Errorf("busca_id was provided but got InvalidArgument: %s", st.Message())
+	}
+}
+
 func TestFetch_UnconfiguredMarketplace_ReturnsUnimplemented(t *testing.T) {
 	// Pipeline sem ML configurado → deve retornar Unimplemented
 	srv := newTestCollectorServer(t)

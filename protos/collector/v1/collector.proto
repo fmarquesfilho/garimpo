@@ -119,6 +119,9 @@ message CollectRequest {
   string sort_by = 3;     // relevance, sales, price
   string owner_uid = 4;   // tenant UID (required for scoping)
   Marketplace marketplace = 5;
+  // UUID estável da busca que originou esta coleta. Obrigatório.
+  // Rejeitado com InvalidArgument se vazio.
+  string busca_id = 7;
 }
 
 // CollectResponse returns the collected products and indicates persistence status.

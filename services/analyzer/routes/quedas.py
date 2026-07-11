@@ -9,6 +9,7 @@ router = APIRouter(tags=["Quedas"])
 
 @router.get("/quedas")
 def get_quedas(
+    busca_id: str = Query("", description="ID da busca (opcional, filtra por busca)"),
     dias: int = Query(7, ge=1, le=90),
     threshold: float = Query(0.15, ge=0.01, le=0.99, description="Variação mínima (ex: 0.15 = 15%)"),
     limit: int = Query(50, ge=1, le=200),
@@ -21,6 +22,8 @@ def get_quedas(
     """Produtos com queda de preço acima do threshold na janela de dias."""
     ds = f"`{settings.bq_project}.{settings.bq_dataset}`"
 
+    busca_filter = "AND busca_id = @busca_id" if busca_id else ""
+
     sql = f"""
     WITH snapshots_janela AS (
       SELECT
@@ -31,6 +34,7 @@ def get_quedas(
           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS preco_atual
       FROM {ds}.snapshots
       WHERE coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
+        {busca_filter}
     ),
     com_variacao AS (
       SELECT DISTINCT
@@ -48,11 +52,15 @@ def get_quedas(
 
     from google.cloud.bigquery import ScalarQueryParameter
 
-    rows = bq_client.query(sql, params=[
+    params = [
         ScalarQueryParameter("dias", "INT64", dias),
         ScalarQueryParameter("threshold", "FLOAT64", threshold),
         ScalarQueryParameter("limit", "INT64", limit),
-    ])
+    ]
+    if busca_id:
+        params.append(ScalarQueryParameter("busca_id", "STRING", busca_id))
+
+    rows = bq_client.query(sql, params=params)
 
     quedas = [
         {

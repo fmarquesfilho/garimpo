@@ -26,6 +26,7 @@ erDiagram
 
     SNAPSHOTS {
         TIMESTAMP coletado_em
+        STRING busca_id
         STRING categoria
         STRING keyword
         STRING estrategia

@@ -23,21 +23,15 @@ public static partial class EndpointExtensions
                 buscas = buscas.Select(b =>
                 {
                     var hasShop = b.ShopIds is { Length: > 0 };
-                    // Loja: keywords são o filtro (b.Keywords) e o nome é o shop name (b.Keyword).
-                    // Keyword-only: keywords vêm do próprio b.Keyword (formato separado por vírgula).
-                    var keywords = hasShop
-                        ? (b.Keywords ?? Array.Empty<string>())
-                        : b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    // Keywords: usa Keywords[] se disponível; fallback para Keyword (legado).
+                    var keywords = b.Keywords is { Length: > 0 }
+                        ? b.Keywords
+                        : (hasShop
+                            ? Array.Empty<string>()
+                            : b.Keyword.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 
-                    // shop_names: usa o dict persistido (ShopNames). Fallback legacy: monta
-                    // a partir de Keyword (nome ambíguo) para buscas antigas sem ShopNames.
-                    Dictionary<string, string>? shopNames = null;
-                    if (hasShop)
-                    {
-                        shopNames = b.ShopNames ?? (b.Keyword is not null
-                            ? b.ShopIds!.ToDictionary(id => id.ToString(), _ => b.Keyword)
-                            : null);
-                    }
+                    // shop_names: usa o dict persistido (ShopNames). Sem fallback legacy.
+                    Dictionary<string, string>? shopNames = hasShop ? b.ShopNames : null;
 
                     return new
                     {
@@ -74,37 +68,52 @@ public static partial class EndpointExtensions
 
             if (remover)
             {
-                // Busca por keyword para desativar
-                var keyword = req.Keywords?.FirstOrDefault() ?? "";
-                var existente = await db.Buscas
-                    .FirstOrDefaultAsync(b => b.Keyword == keyword, ct);
+                // Desativar por ID (UUID) — contrato unificado
+                Busca? existente = null;
+                if (req.Id is not null && Guid.TryParse(req.Id, out var buscaGuid))
+                {
+                    existente = await db.Buscas.FindAsync([buscaGuid], ct);
+                }
+                else
+                {
+                    // Fallback legado: busca por keyword
+                    var keyword = req.Keywords?.FirstOrDefault() ?? req.Keyword ?? "";
+                    existente = await db.Buscas
+                        .FirstOrDefaultAsync(b => b.Keyword == keyword, ct);
+                }
 
                 if (existente is not null)
                 {
                     existente.Active = false;
                     existente.UpdatedAt = DateTime.UtcNow;
                     await db.SaveChangesAsync(ct);
-                    // Pausa o job periódico no Scheduler (se houver)
                     await SchedulerJobs.PauseAsync(schedulerClient, existente, logger, ct);
                 }
 
                 return Results.Ok(new { status = "removida" });
             }
 
-            // Salvar (upsert por keyword)
+            // Salvar (upsert por ID ou campos de identidade normalizados)
             var keywords = req.Keywords ?? (req.Keyword is not null ? [req.Keyword] : []);
             var keywordsArray = keywords.Where(k => !string.IsNullOrWhiteSpace(k)).ToArray();
             var kw = string.Join(",", keywordsArray);
-            if (string.IsNullOrWhiteSpace(kw))
-                return Results.BadRequest(new { error = "keyword é obrigatório" });
 
             // cron vazio = busca manual (sem agendamento). Só registra job se houver cron.
             var cron = string.IsNullOrWhiteSpace(req.Cron) ? null : req.Cron;
 
-            // Busca por match exato ou pela primeira keyword
-            var primeiraKw = keywords.FirstOrDefault() ?? kw;
-            var busca = await db.Buscas
-                .FirstOrDefaultAsync(b => b.Keyword == kw || b.Keyword == primeiraKw, ct);
+            // Busca existente: primeiro por ID explícito, depois por campos de identidade
+            Busca? busca = null;
+            if (req.Id is not null && Guid.TryParse(req.Id, out var reqGuid))
+            {
+                busca = await db.Buscas.FindAsync([reqGuid], ct);
+            }
+            if (busca is null && !string.IsNullOrWhiteSpace(kw))
+            {
+                // Fallback: match por keyword (backward compat)
+                var primeiraKw = keywords.FirstOrDefault() ?? kw;
+                busca = await db.Buscas
+                    .FirstOrDefaultAsync(b => b.Keyword == kw || b.Keyword == primeiraKw, ct);
+            }
 
             if (busca is null)
             {

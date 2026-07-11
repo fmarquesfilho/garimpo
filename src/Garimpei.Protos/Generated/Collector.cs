@@ -59,32 +59,33 @@ namespace Collector.V1 {
             "bnRQZXJjZW50Eh4KCmNvbW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoI",
             "Y2F0ZWdvcnkYDSABKAlSCGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsS",
             "OwoLbWFya2V0cGxhY2UYDyABKA4yGS5jb2xsZWN0b3IudjEuTWFya2V0cGxh",
-            "Y2VSC21hcmtldHBsYWNlItoBCg5Db2xsZWN0UmVxdWVzdBIaCgdrZXl3b3Jk",
+            "Y2VSC21hcmtldHBsYWNlIvUBCg5Db2xsZWN0UmVxdWVzdBIaCgdrZXl3b3Jk",
             "GAEgASgJSABSB2tleXdvcmQSGQoHc2hvcF9pZBgGIAEoA0gAUgZzaG9wSWQS",
             "FAoFbGltaXQYAiABKAVSBWxpbWl0EhcKB3NvcnRfYnkYAyABKAlSBnNvcnRC",
             "eRIbCglvd25lcl91aWQYBCABKAlSCG93bmVyVWlkEjsKC21hcmtldHBsYWNl",
             "GAUgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBsYWNlUgttYXJrZXRwbGFj",
-            "ZUIICgZ0YXJnZXQiogEKD0NvbGxlY3RSZXNwb25zZRIxCghwcm9kdWN0cxgB",
-            "IAMoCzIVLmNvbGxlY3Rvci52MS5Qcm9kdWN0Ughwcm9kdWN0cxIfCgt0b3Rh",
-            "bF9mb3VuZBgCIAEoBVIKdG90YWxGb3VuZBIdCgpmZXRjaGVkX2F0GAMgASgJ",
-            "UglmZXRjaGVkQXQSHAoJcGVyc2lzdGVkGAQgASgIUglwZXJzaXN0ZWQqeAoL",
-            "TWFya2V0cGxhY2USGwoXTUFSS0VUUExBQ0VfVU5TUEVDSUZJRUQQABIWChJN",
-            "QVJLRVRQTEFDRV9TSE9QRUUQARIWChJNQVJLRVRQTEFDRV9BTUFaT04QAhIc",
-            "ChhNQVJLRVRQTEFDRV9NRVJDQURPTElWUkUQAzKwAwoQQ29sbGVjdG9yU2Vy",
-            "dmljZRJSCgtSZXNvbHZlU2hvcBIgLmNvbGxlY3Rvci52MS5SZXNvbHZlU2hv",
-            "cFJlcXVlc3QaIS5jb2xsZWN0b3IudjEuUmVzb2x2ZVNob3BSZXNwb25zZRJw",
-            "ChVHZW5lcmF0ZUFmZmlsaWF0ZUxpbmsSKi5jb2xsZWN0b3IudjEuR2VuZXJh",
-            "dGVBZmZpbGlhdGVMaW5rUmVxdWVzdBorLmNvbGxlY3Rvci52MS5HZW5lcmF0",
-            "ZUFmZmlsaWF0ZUxpbmtSZXNwb25zZRJACgVGZXRjaBIaLmNvbGxlY3Rvci52",
-            "MS5GZXRjaFJlcXVlc3QaGy5jb2xsZWN0b3IudjEuRmV0Y2hSZXNwb25zZRJM",
-            "CglGZXRjaFNob3ASHi5jb2xsZWN0b3IudjEuRmV0Y2hTaG9wUmVxdWVzdBof",
-            "LmNvbGxlY3Rvci52MS5GZXRjaFNob3BSZXNwb25zZRJGCgdDb2xsZWN0Ehwu",
-            "Y29sbGVjdG9yLnYxLkNvbGxlY3RSZXF1ZXN0Gh0uY29sbGVjdG9yLnYxLkNv",
-            "bGxlY3RSZXNwb25zZUK1AQoQY29tLmNvbGxlY3Rvci52MUIOQ29sbGVjdG9y",
-            "UHJvdG9QAVpAZ2l0aHViLmNvbS9mbWFycXVlc2ZpbGhvL2dhcmltcG8vZ2Vu",
-            "L2dvL2NvbGxlY3Rvci92MTtjb2xsZWN0b3J2MaICA0NYWKoCDENvbGxlY3Rv",
-            "ci5WMcoCDENvbGxlY3RvclxWMeICGENvbGxlY3RvclxWMVxHUEJNZXRhZGF0",
-            "YeoCDUNvbGxlY3Rvcjo6VjFiBnByb3RvMw=="));
+            "ZRIZCghidXNjYV9pZBgHIAEoCVIHYnVzY2FJZEIICgZ0YXJnZXQiogEKD0Nv",
+            "bGxlY3RSZXNwb25zZRIxCghwcm9kdWN0cxgBIAMoCzIVLmNvbGxlY3Rvci52",
+            "MS5Qcm9kdWN0Ughwcm9kdWN0cxIfCgt0b3RhbF9mb3VuZBgCIAEoBVIKdG90",
+            "YWxGb3VuZBIdCgpmZXRjaGVkX2F0GAMgASgJUglmZXRjaGVkQXQSHAoJcGVy",
+            "c2lzdGVkGAQgASgIUglwZXJzaXN0ZWQqeAoLTWFya2V0cGxhY2USGwoXTUFS",
+            "S0VUUExBQ0VfVU5TUEVDSUZJRUQQABIWChJNQVJLRVRQTEFDRV9TSE9QRUUQ",
+            "ARIWChJNQVJLRVRQTEFDRV9BTUFaT04QAhIcChhNQVJLRVRQTEFDRV9NRVJD",
+            "QURPTElWUkUQAzKwAwoQQ29sbGVjdG9yU2VydmljZRJSCgtSZXNvbHZlU2hv",
+            "cBIgLmNvbGxlY3Rvci52MS5SZXNvbHZlU2hvcFJlcXVlc3QaIS5jb2xsZWN0",
+            "b3IudjEuUmVzb2x2ZVNob3BSZXNwb25zZRJwChVHZW5lcmF0ZUFmZmlsaWF0",
+            "ZUxpbmsSKi5jb2xsZWN0b3IudjEuR2VuZXJhdGVBZmZpbGlhdGVMaW5rUmVx",
+            "dWVzdBorLmNvbGxlY3Rvci52MS5HZW5lcmF0ZUFmZmlsaWF0ZUxpbmtSZXNw",
+            "b25zZRJACgVGZXRjaBIaLmNvbGxlY3Rvci52MS5GZXRjaFJlcXVlc3QaGy5j",
+            "b2xsZWN0b3IudjEuRmV0Y2hSZXNwb25zZRJMCglGZXRjaFNob3ASHi5jb2xs",
+            "ZWN0b3IudjEuRmV0Y2hTaG9wUmVxdWVzdBofLmNvbGxlY3Rvci52MS5GZXRj",
+            "aFNob3BSZXNwb25zZRJGCgdDb2xsZWN0EhwuY29sbGVjdG9yLnYxLkNvbGxl",
+            "Y3RSZXF1ZXN0Gh0uY29sbGVjdG9yLnYxLkNvbGxlY3RSZXNwb25zZUK1AQoQ",
+            "Y29tLmNvbGxlY3Rvci52MUIOQ29sbGVjdG9yUHJvdG9QAVpAZ2l0aHViLmNv",
+            "bS9mbWFycXVlc2ZpbGhvL2dhcmltcG8vZ2VuL2dvL2NvbGxlY3Rvci92MTtj",
+            "b2xsZWN0b3J2MaICA0NYWKoCDENvbGxlY3Rvci5WMcoCDENvbGxlY3RvclxW",
+            "MeICGENvbGxlY3RvclxWMVxHUEJNZXRhZGF0YeoCDUNvbGxlY3Rvcjo6VjFi",
+            "BnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Collector.V1.Marketplace), }, null, new pbr::GeneratedClrTypeInfo[] {
@@ -97,7 +98,7 @@ namespace Collector.V1 {
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchResponse), global::Collector.V1.FetchResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopResponse), global::Collector.V1.FetchShopResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.Product), global::Collector.V1.Product.Parser, new[]{ "ItemId", "ShopId", "Name", "Price", "OriginalPrice", "Sold", "Rating", "ImageUrl", "ProductUrl", "ShopName", "DiscountPercent", "Commission", "Category", "Link", "Marketplace" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.CollectRequest), global::Collector.V1.CollectRequest.Parser, new[]{ "Keyword", "ShopId", "Limit", "SortBy", "OwnerUid", "Marketplace" }, new[]{ "Target" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.CollectRequest), global::Collector.V1.CollectRequest.Parser, new[]{ "Keyword", "ShopId", "Limit", "SortBy", "OwnerUid", "Marketplace", "BuscaId" }, new[]{ "Target" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.CollectResponse), global::Collector.V1.CollectResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt", "Persisted" }, null, null, null, null)
           }));
     }
@@ -3097,6 +3098,7 @@ namespace Collector.V1 {
       sortBy_ = other.sortBy_;
       ownerUid_ = other.ownerUid_;
       marketplace_ = other.marketplace_;
+      buscaId_ = other.buscaId_;
       switch (other.TargetCase) {
         case TargetOneofCase.Keyword:
           Keyword = other.Keyword;
@@ -3230,6 +3232,22 @@ namespace Collector.V1 {
       }
     }
 
+    /// <summary>Field number for the "busca_id" field.</summary>
+    public const int BuscaIdFieldNumber = 7;
+    private string buscaId_ = "";
+    /// <summary>
+    /// UUID estável da busca que originou esta coleta. Obrigatório.
+    /// Rejeitado com InvalidArgument se vazio.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string BuscaId {
+      get { return buscaId_; }
+      set {
+        buscaId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     private object target_;
     /// <summary>Enum of possible cases for the "target" oneof.</summary>
     public enum TargetOneofCase {
@@ -3272,6 +3290,7 @@ namespace Collector.V1 {
       if (SortBy != other.SortBy) return false;
       if (OwnerUid != other.OwnerUid) return false;
       if (Marketplace != other.Marketplace) return false;
+      if (BuscaId != other.BuscaId) return false;
       if (TargetCase != other.TargetCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -3286,6 +3305,7 @@ namespace Collector.V1 {
       if (SortBy.Length != 0) hash ^= SortBy.GetHashCode();
       if (OwnerUid.Length != 0) hash ^= OwnerUid.GetHashCode();
       if (Marketplace != global::Collector.V1.Marketplace.Unspecified) hash ^= Marketplace.GetHashCode();
+      if (BuscaId.Length != 0) hash ^= BuscaId.GetHashCode();
       hash ^= (int) targetCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -3329,6 +3349,10 @@ namespace Collector.V1 {
         output.WriteRawTag(48);
         output.WriteInt64(ShopId);
       }
+      if (BuscaId.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(BuscaId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -3363,6 +3387,10 @@ namespace Collector.V1 {
         output.WriteRawTag(48);
         output.WriteInt64(ShopId);
       }
+      if (BuscaId.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(BuscaId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -3391,6 +3419,9 @@ namespace Collector.V1 {
       if (Marketplace != global::Collector.V1.Marketplace.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Marketplace);
       }
+      if (BuscaId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(BuscaId);
+      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -3414,6 +3445,9 @@ namespace Collector.V1 {
       }
       if (other.Marketplace != global::Collector.V1.Marketplace.Unspecified) {
         Marketplace = other.Marketplace;
+      }
+      if (other.BuscaId.Length != 0) {
+        BuscaId = other.BuscaId;
       }
       switch (other.TargetCase) {
         case TargetOneofCase.Keyword:
@@ -3467,6 +3501,10 @@ namespace Collector.V1 {
             ShopId = input.ReadInt64();
             break;
           }
+          case 58: {
+            BuscaId = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -3508,6 +3546,10 @@ namespace Collector.V1 {
           }
           case 48: {
             ShopId = input.ReadInt64();
+            break;
+          }
+          case 58: {
+            BuscaId = input.ReadString();
             break;
           }
         }

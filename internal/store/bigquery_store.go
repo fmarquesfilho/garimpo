@@ -83,6 +83,7 @@ func (s *BigQueryStore) Registrar(ctx context.Context, e Evento) error {
 // linhaSnapBQ mapeia cada item do snapshot para a tabela `snapshots`.
 type linhaSnapBQ struct {
 	ColetadoEm time.Time `bigquery:"coletado_em"`
+	BuscaID    string    `bigquery:"busca_id"`
 	Categoria  string    `bigquery:"categoria"`
 	Keyword    string    `bigquery:"keyword"`
 	Estrategia string    `bigquery:"estrategia"`
@@ -111,6 +112,7 @@ func (s *BigQueryStore) RegistrarSnapshot(ctx context.Context, snap Snapshot) er
 	for _, it := range snap.Itens {
 		linhas = append(linhas, linhaSnapBQ{
 			ColetadoEm: em,
+			BuscaID:    snap.BuscaID,
 			Categoria:  snap.Categoria,
 			Keyword:    snap.Keyword,
 			Estrategia: snap.Estrategia,

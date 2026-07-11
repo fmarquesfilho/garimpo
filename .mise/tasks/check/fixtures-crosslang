@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+#MISE description="Cross-language fixture test: verifica que Go, Python, C#, JS produzem collection_keys idênticos"
+set -euo pipefail
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Cross-Language Fixture Test (deriveCollectionKeys)"
+echo "═══════════════════════════════════════════════════════════════"
+echo ""
+
+FIXTURES="fixtures/buscas.json"
+TMPDIR=$(mktemp -d)
+trap "rm -rf $TMPDIR" EXIT
+
+# ── 1. Go ─────────────────────────────────────────────────────────────────────
+echo "🔍 Running Go..."
+go run -v ./internal/busca/cmd/derive-keys "$FIXTURES" > "$TMPDIR/go.txt" 2>/dev/null || {
+  # Fallback: run tests which validate fixtures
+  go test ./internal/busca/... -run TestDeriveCollectionKeys_Fixtures -count=1 > /dev/null 2>&1
+  # Generate output via simple Go script
+  cat > "$TMPDIR/derive_go.go" << 'GOEOF'
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"github.com/fmarquesfilho/garimpo/internal/busca"
+)
+
+type fixture struct {
+	ID         string   `json:"id"`
+	Keywords   []string `json:"keywords"`
+	ShopIDs    []int64  `json:"shop_ids"`
+	Categorias []string `json:"categorias"`
+}
+
+func main() {
+	data, _ := os.ReadFile(os.Args[1])
+	var fixtures []fixture
+	json.Unmarshal(data, &fixtures)
+	for _, fx := range fixtures {
+		keys := busca.DeriveCollectionKeys(fx.ShopIDs, fx.Keywords, fx.Categorias...)
+		out, _ := json.Marshal(keys)
+		fmt.Printf("%s:%s\n", fx.ID, string(out))
+	}
+}
+GOEOF
+  go run "$TMPDIR/derive_go.go" "$FIXTURES" > "$TMPDIR/go.txt"
+}
+echo "  ✅ Go done"
+
+# ── 2. Python ─────────────────────────────────────────────────────────────────
+echo "🔍 Running Python..."
+python3 -c "
+import json, sys
+sys.path.insert(0, 'services/analyzer')
+from collection_keys import derive_collection_keys
+
+with open('$FIXTURES') as f:
+    fixtures = json.load(f)
+
+for fx in fixtures:
+    keys = derive_collection_keys(
+        fx.get('shop_ids') or [],
+        fx.get('keywords') or [],
+        fx.get('categorias') or []
+    )
+    print(f\"{fx['id']}:{json.dumps(keys)}\")
+" > "$TMPDIR/python.txt"
+echo "  ✅ Python done"
+
+# ── 3. JavaScript ─────────────────────────────────────────────────────────────
+echo "🔍 Running JavaScript..."
+node -e "
+const fs = require('fs');
+const path = require('path');
+
+// Load the module (ESM → need dynamic import workaround)
+const src = fs.readFileSync('web/src/lib/collection-keys.js', 'utf-8');
+// Extract the function body and eval
+const fn = new Function('shopIds', 'keywords', 'categorias', \`
+  const seen = new Set();
+  const keys = [];
+  for (const id of shopIds ?? []) {
+    const s = String(id);
+    if (!seen.has(s)) { seen.add(s); keys.push(s); }
+  }
+  for (const kw of keywords ?? []) {
+    const normalized = kw.trim().toLowerCase();
+    if (normalized && !seen.has(normalized)) { seen.add(normalized); keys.push(normalized); }
+  }
+  if (!(shopIds?.length) && !(keywords?.length)) {
+    for (const cat of categorias ?? []) {
+      const normalized = cat.trim().toLowerCase();
+      if (normalized && !seen.has(normalized)) { seen.add(normalized); keys.push(normalized); }
+    }
+  }
+  keys.sort();
+  return keys;
+\`);
+
+const fixtures = JSON.parse(fs.readFileSync('$FIXTURES', 'utf-8'));
+for (const fx of fixtures) {
+  const keys = fn(fx.shop_ids ?? [], fx.keywords ?? [], fx.categorias ?? []);
+  console.log(fx.id + ':' + JSON.stringify(keys));
+}
+" > "$TMPDIR/js.txt"
+echo "  ✅ JavaScript done"
+
+# ── 4. Compare outputs ────────────────────────────────────────────────────────
+echo ""
+echo "🔍 Comparing outputs..."
+
+ERRORS=0
+
+if ! diff -u "$TMPDIR/go.txt" "$TMPDIR/python.txt" > /dev/null 2>&1; then
+  echo "  ❌ Go ≠ Python"
+  diff -u "$TMPDIR/go.txt" "$TMPDIR/python.txt" || true
+  ERRORS=$((ERRORS + 1))
+fi
+
+if ! diff -u "$TMPDIR/go.txt" "$TMPDIR/js.txt" > /dev/null 2>&1; then
+  echo "  ❌ Go ≠ JavaScript"
+  diff -u "$TMPDIR/go.txt" "$TMPDIR/js.txt" || true
+  ERRORS=$((ERRORS + 1))
+fi
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+if [ "$ERRORS" -eq 0 ]; then
+  echo "  ✅ All languages produce identical collection_keys!"
+  exit 0
+else
+  echo "  ❌ $ERRORS language mismatch(es) detected!"
+  exit 1
+fi

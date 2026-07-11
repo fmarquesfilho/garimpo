@@ -181,9 +181,12 @@ public class BuscasAgendadasTests : IDisposable
 
         Assert.Equal($"busca-{busca.Id}", req.JobId);
         Assert.True(req.Enabled);
-        Assert.Equal("shop_collection", req.Params["type"]);
+        // shop_ids + keywords = mixed (BuscaContract unificado)
+        Assert.Equal("mixed", req.Params["type"]);
         Assert.Equal("920292999", req.Params["shop_id"]);
         Assert.Equal("serum,protetor", req.Params["keywords"]);
+        Assert.True(req.Params.ContainsKey("busca_id"));
+        Assert.True(req.Params.ContainsKey("collection_keys"));
     }
 
     [Fact]

@@ -29,6 +29,7 @@ PARTITION BY DATE(em);
 --     É o pano de fundo para medir impacto de campanha (o mercado mudou em volta?).
 CREATE TABLE IF NOT EXISTS `SEU_PROJECT.garimpo.snapshots` (
   coletado_em  TIMESTAMP,
+  busca_id     STRING NOT NULL,
   categoria    STRING,
   keyword      STRING,
   estrategia   STRING,

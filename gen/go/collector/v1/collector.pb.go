@@ -737,11 +737,14 @@ type CollectRequest struct {
 	//
 	//	*CollectRequest_Keyword
 	//	*CollectRequest_ShopId
-	Target        isCollectRequest_Target `protobuf_oneof:"target"`
-	Limit         int32                   `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`                      // 1-500, default 50
-	SortBy        string                  `protobuf:"bytes,3,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`       // relevance, sales, price
-	OwnerUid      string                  `protobuf:"bytes,4,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"` // tenant UID (required for scoping)
-	Marketplace   Marketplace             `protobuf:"varint,5,opt,name=marketplace,proto3,enum=collector.v1.Marketplace" json:"marketplace,omitempty"`
+	Target      isCollectRequest_Target `protobuf_oneof:"target"`
+	Limit       int32                   `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`                      // 1-500, default 50
+	SortBy      string                  `protobuf:"bytes,3,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`       // relevance, sales, price
+	OwnerUid    string                  `protobuf:"bytes,4,opt,name=owner_uid,json=ownerUid,proto3" json:"owner_uid,omitempty"` // tenant UID (required for scoping)
+	Marketplace Marketplace             `protobuf:"varint,5,opt,name=marketplace,proto3,enum=collector.v1.Marketplace" json:"marketplace,omitempty"`
+	// UUID estável da busca que originou esta coleta. Obrigatório.
+	// Rejeitado com InvalidArgument se vazio.
+	BuscaId       string `protobuf:"bytes,7,opt,name=busca_id,json=buscaId,proto3" json:"busca_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -827,6 +830,13 @@ func (x *CollectRequest) GetMarketplace() Marketplace {
 		return x.Marketplace
 	}
 	return Marketplace_MARKETPLACE_UNSPECIFIED
+}
+
+func (x *CollectRequest) GetBuscaId() string {
+	if x != nil {
+		return x.BuscaId
+	}
+	return ""
 }
 
 type isCollectRequest_Target interface {
@@ -980,14 +990,15 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"commission\x12\x1a\n" +
 	"\bcategory\x18\r \x01(\tR\bcategory\x12\x12\n" +
 	"\x04link\x18\x0e \x01(\tR\x04link\x12;\n" +
-	"\vmarketplace\x18\x0f \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"\xda\x01\n" +
+	"\vmarketplace\x18\x0f \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"\xf5\x01\n" +
 	"\x0eCollectRequest\x12\x1a\n" +
 	"\akeyword\x18\x01 \x01(\tH\x00R\akeyword\x12\x19\n" +
 	"\ashop_id\x18\x06 \x01(\x03H\x00R\x06shopId\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x17\n" +
 	"\asort_by\x18\x03 \x01(\tR\x06sortBy\x12\x1b\n" +
 	"\towner_uid\x18\x04 \x01(\tR\bownerUid\x12;\n" +
-	"\vmarketplace\x18\x05 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplaceB\b\n" +
+	"\vmarketplace\x18\x05 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\x12\x19\n" +
+	"\bbusca_id\x18\a \x01(\tR\abuscaIdB\b\n" +
 	"\x06target\"\xa2\x01\n" +
 	"\x0fCollectResponse\x121\n" +
 	"\bproducts\x18\x01 \x03(\v2\x15.collector.v1.ProductR\bproducts\x12\x1f\n" +

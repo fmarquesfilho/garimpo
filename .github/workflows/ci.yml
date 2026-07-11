@@ -55,6 +55,7 @@ jobs:
               - 'web/**'
             contracts:
               - 'contracts/**'
+              - 'fixtures/**'
               - '.mise/tasks/check/**'
             backend:
               - 'src/**'
@@ -214,6 +215,8 @@ jobs:
           sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/bin/yq
       - run: mise run checks
+      - name: Cross-language fixture test
+        run: mise run check:fixtures-crosslang
 
   # ── Deploy Backend (Cloud Run) ──────────────────────────────────────────
   deploy-backend:

@@ -24,6 +24,11 @@ func (s *SchedulerServer) dispatchJob(job *registeredJob, params map[string]stri
 	case "scheduled_publish":
 		s.executeScheduledPublish(job, params)
 	default:
+		// Validate busca_id for collection jobs (required by BuscaContract)
+		if params["busca_id"] == "" {
+			s.logger.Error("job rejeitado: busca_id vazio", slog.String("job", job.name))
+			return
+		}
 		s.executeJob(job, params)
 	}
 }
@@ -79,6 +84,7 @@ func (s *SchedulerServer) executeJob(job *registeredJob, params map[string]strin
 func (s *SchedulerServer) executeShopCollection(ctx context.Context, job *registeredJob, params map[string]string) (int32, string) {
 	shopID := params["shop_id"]
 	keywords := params["keywords"]
+	buscaID := params["busca_id"]
 	keyword := shopID
 
 	if keywords != "" {
@@ -95,6 +101,7 @@ func (s *SchedulerServer) executeShopCollection(ctx context.Context, job *regist
 				Limit:       50,
 				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 				OwnerUid:    params["owner_uid"],
+				BuscaId:     buscaID,
 			})
 			if err != nil {
 				s.logger.Error("collect filtered falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
@@ -121,6 +128,7 @@ func (s *SchedulerServer) executeShopCollection(ctx context.Context, job *regist
 		Limit:       50,
 		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 		OwnerUid:    params["owner_uid"],
+		BuscaId:     buscaID,
 	})
 	if err != nil {
 		s.logger.Error("collect shop falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
@@ -132,6 +140,7 @@ func (s *SchedulerServer) executeShopCollection(ctx context.Context, job *regist
 // executeKeywordSearch coleta produtos por keywords (sem loja).
 // Suporta params["keywords"] (plural, comma-separated) ou params["keyword"] (singular, legado).
 func (s *SchedulerServer) executeKeywordSearch(ctx context.Context, job *registeredJob, params map[string]string) (int32, string) {
+	buscaID := params["busca_id"]
 	keywords := params["keywords"]
 	if keywords != "" {
 		var totalFound int32
@@ -146,6 +155,7 @@ func (s *SchedulerServer) executeKeywordSearch(ctx context.Context, job *registe
 				Limit:       50,
 				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 				OwnerUid:    params["owner_uid"],
+				BuscaId:     buscaID,
 			})
 			if err != nil {
 				s.logger.Error("collect keyword falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
@@ -167,6 +177,7 @@ func (s *SchedulerServer) executeKeywordSearch(ctx context.Context, job *registe
 		Limit:       50,
 		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 		OwnerUid:    params["owner_uid"],
+		BuscaId:     buscaID,
 	})
 	if err != nil {
 		s.logger.Error("collect falhou", slog.String("job", job.name), slog.String("erro", err.Error()))

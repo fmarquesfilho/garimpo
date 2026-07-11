@@ -271,6 +271,20 @@ boundaries:
     method: POST
     path: /detect-coupons
 
+  # ── Contrato Canônico BuscaContract ─────────────────────────────────────────
+  - id: busca-contract
+    source: csharp-api
+    target: analyzer
+    protocol: schema
+    schema: contracts/schemas/busca-contract.json
+    consumers:
+      - frontend
+      - csharp-api
+      - scheduler
+      - collector
+      - analyzer
+    notes: "Contrato canônico unificado. Define identidade e derivação de Busca cross-service."
+
 # ── Fluxos de orquestração ────────────────────────────────────────────────────
 # Cada fluxo documenta o caminho end-to-end de um processo de negócio.
 # O validador verifica que os boundary IDs referenciados existem acima.

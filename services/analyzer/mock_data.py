@@ -6,9 +6,10 @@ NOW = datetime.now(timezone.utc)
 THREE_DAYS_AGO = NOW - timedelta(days=3)
 
 KEYWORD = "perfumes-importados"
+BUSCA_ID = "busca-keyword-perfumes"
 
 NOVIDADES_RESPONSE = {
-    "busca_id": KEYWORD,
+    "busca_id": BUSCA_ID,
     "dias": 7,
     "produtos_novos": [
         {

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BuscaContract",
+  "description": "Contrato canônico unificado para o tipo Busca. Fonte de verdade cross-service.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identificador estável (UUID ou slug). PK no PostgreSQL."
+    },
+    "tipo": {
+      "type": "string",
+      "enum": ["keyword", "loja", "loja-multi", "categoria", "mista"],
+      "description": "Tipo derivado da busca baseado nos campos primários."
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Termos de busca (pode ser vazio)."
+    },
+    "shop_ids": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "IDs numéricos de lojas monitoradas (pode ser vazio)."
+    },
+    "shop_names": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Mapeamento shop_id (string) → nome legível."
+    },
+    "categorias": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Categorias de filtragem."
+    },
+    "collection_keys": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "DERIVADO: chaves usadas para indexar/consultar BigQuery. Nunca vazio."
+    },
+    "cron": {
+      "type": ["string", "null"],
+      "description": "Expressão cron para agendamento. Null = sem agendamento."
+    },
+    "marketplaces": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Marketplaces ativos (pelo menos 1)."
+    },
+    "owner_uid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "UID do tenant owner."
+    },
+    "comissao_min": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Comissão mínima (0-1). Null = sem filtro."
+    },
+    "vendas_min": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Vendas mínimas. Null = sem filtro."
+    },
+    "fontes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Fontes de dados ativas (pelo menos 1)."
+    }
+  },
+  "required": [
+    "id",
+    "tipo",
+    "keywords",
+    "shop_ids",
+    "collection_keys",
+    "marketplaces",
+    "owner_uid",
+    "fontes"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": { "tipo": { "const": "keyword" } }
+      },
+      "then": {
+        "properties": {
+          "keywords": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "tipo": { "const": "loja" } }
+      },
+      "then": {
+        "properties": {
+          "shop_ids": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "tipo": { "const": "loja-multi" } }
+      },
+      "then": {
+        "properties": {
+          "shop_ids": { "minItems": 2 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "tipo": { "const": "mista" } }
+      },
+      "then": {
+        "properties": {
+          "keywords": { "minItems": 1 },
+          "shop_ids": { "minItems": 1 }
+        }
+      }
+    }
+  ],
+  "x-naming": "snake_case"
+}

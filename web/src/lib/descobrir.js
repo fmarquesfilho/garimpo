@@ -113,10 +113,9 @@ export async function carregarOportunidades(buscasComLojas, nomesLojas) {
 
 	try {
 		const promises = buscasComLojas.map((b) => {
-			// O Analyzer filtra por keyword LIKE '%busca_id%' na tabela snapshots.
-			// O snapshot armazena a keyword literal (ou shop_id) usada na coleta,
-			// não o UUID da busca. Enviar o shop_id ou a primeira keyword.
-			const buscaId = b.shop_ids?.[0]?.toString() || b.keywords?.[0] || b.id;
+			// BuscaContract: sempre enviar o UUID da busca como busca_id.
+			// O Analyzer faz WHERE busca_id = @busca_id (exact match).
+			const buscaId = b.id;
 			return buscarNovidades({ buscaId, dias: 7 })
 				.then((r) => ({ ...r, loja: b.id }))
 				.catch(() => null);

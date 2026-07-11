@@ -324,6 +324,7 @@ type ItemSnapshot struct {
 // permite, depois, analisar o impacto das campanhas contra o pano de fundo do
 // mercado (preço/comissão/demanda mudaram em volta da publicação?).
 type Snapshot struct {
+	BuscaID    string
 	Categoria  string
 	Keyword    string
 	Estrategia string

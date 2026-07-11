@@ -143,6 +143,50 @@
         },
         "additionalProperties": false
       }
+    },
+    "inference": {
+      "type": "object",
+      "description": "Regras de inferência declarativas (shop→marketplace, shop→fontes, guard).",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "rule"],
+        "properties": {
+          "description": { "type": "string" },
+          "rule": { "type": "string" }
+        }
+      }
+    },
+    "derivation": {
+      "type": "object",
+      "description": "Regras de derivação de campos computados (collection_keys, tipo).",
+      "properties": {
+        "collection_keys": {
+          "type": "object",
+          "required": ["description", "algorithm"],
+          "properties": {
+            "description": { "type": "string" },
+            "algorithm": { "type": "string" }
+          }
+        },
+        "tipo": {
+          "type": "object",
+          "required": ["description", "rules"],
+          "properties": {
+            "description": { "type": "string" },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["condition", "result"],
+                "properties": {
+                  "condition": { "type": "string" },
+                  "result": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "additionalProperties": false

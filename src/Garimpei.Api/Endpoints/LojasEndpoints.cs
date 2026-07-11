@@ -24,9 +24,9 @@ public static partial class EndpointExtensions
                 lojas = buscas.Select(b => new
                 {
                     id = b.Id,
-                    keyword = b.Keyword,
                     shop_ids = b.ShopIds,
-                    keywords = b.Keywords,
+                    keywords = b.Keywords ?? Array.Empty<string>(),
+                    shop_names = b.ShopNames,
                     cron_expression = b.CronExpression,
                     source_url = b.SourceUrl,
                     ativo = b.Active,
@@ -104,7 +104,7 @@ public static partial class EndpointExtensions
             if (busca.ShopIds is { Length: > 0 })
                 await SchedulerJobs.RegisterAsync(schedulerClient, busca, logger, ct);
 
-            return Results.Ok(new { id = busca.Id, keyword = busca.Keyword, shop_ids = busca.ShopIds, source_url = busca.SourceUrl, status = "adicionada" });
+            return Results.Ok(new { id = busca.Id, keywords = busca.Keywords, shop_ids = busca.ShopIds, source_url = busca.SourceUrl, status = "adicionada" });
         }).RequireAuthorization().WithTags("Lojas");
 
         app.MapDelete("/api/lojas", async (

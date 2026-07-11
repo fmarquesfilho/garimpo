@@ -28,7 +28,7 @@ def get_novidades(
         ROW_NUMBER() OVER (PARTITION BY produto_id ORDER BY coletado_em DESC) AS rn_recent,
         COUNT(*) OVER (PARTITION BY produto_id) AS aparicoes
       FROM {ds}.snapshots
-      WHERE keyword LIKE @busca_id
+      WHERE busca_id = @busca_id
         AND coletado_em >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @dias DAY)
     ),
     primeiros AS (
@@ -60,7 +60,7 @@ def get_novidades(
     from google.cloud.bigquery import ScalarQueryParameter
 
     rows = bq_client.query(sql, params=[
-        ScalarQueryParameter("busca_id", "STRING", f"%{busca_id}%"),
+        ScalarQueryParameter("busca_id", "STRING", busca_id),
         ScalarQueryParameter("dias", "INT64", dias),
     ])
 

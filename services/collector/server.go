@@ -103,6 +103,10 @@ func (s *UnifiedCollectorServer) FetchShop(ctx context.Context, req *collectorpb
 // ─── Collect: search + persist ───────────────────────────────────────────────
 
 func (s *UnifiedCollectorServer) Collect(ctx context.Context, req *collectorpb.CollectRequest) (*collectorpb.CollectResponse, error) {
+	if req.GetBuscaId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "busca_id é obrigatório")
+	}
+
 	mkt := resolveMarketplace(req.GetMarketplace())
 	marketplace := source.ProtoToMarketplace(mkt)
 
@@ -155,6 +159,7 @@ func (s *UnifiedCollectorServer) Collect(ctx context.Context, req *collectorpb.C
 	persisted := false
 	if len(produtos) > 0 {
 		snap := store.Snapshot{
+			BuscaID:    req.GetBuscaId(),
 			Keyword:    keyword,
 			Estrategia: "coleta-agendada",
 			Em:         time.Now().UTC(),

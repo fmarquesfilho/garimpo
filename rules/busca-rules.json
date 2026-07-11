@@ -61,6 +61,36 @@
     "erroAoSalvar": true,
     "feedbackReativo": true
   },
+  "inference": {
+    "marketplaces_from_shops": {
+      "description": "Se shop_ids contém lojas de um marketplace, esse marketplace é incluído automaticamente.",
+      "rule": "marketplaces = union(marketplaces_explicit, marketplaces_inferred_from_shop_ids)"
+    },
+    "fontes_from_shops": {
+      "description": "Se shop_ids não está vazio, 'lojas' é incluído em fontes.",
+      "rule": "if shop_ids.length > 0 then fontes must include 'lojas'"
+    },
+    "marketplace_guard": {
+      "description": "Não pode desativar marketplace que tem shops ativos.",
+      "rule": "for each marketplace in marketplaces_to_remove: assert no shop_id belongs to that marketplace"
+    }
+  },
+  "derivation": {
+    "collection_keys": {
+      "description": "Derivado deterministicamente de shop_ids + keywords.",
+      "algorithm": "union(shop_ids.map(toString), keywords.map(trim.lowercase)).filter(nonEmpty).sort().dedupe()"
+    },
+    "tipo": {
+      "description": "Derivado dos campos primários populados.",
+      "rules": [
+        { "condition": "keywords.length > 0 && shop_ids.length == 0 && categorias.length == 0", "result": "keyword" },
+        { "condition": "shop_ids.length == 1 && keywords.length == 0", "result": "loja" },
+        { "condition": "shop_ids.length > 1 && keywords.length == 0", "result": "loja-multi" },
+        { "condition": "categorias.length > 0 && keywords.length == 0 && shop_ids.length == 0", "result": "categoria" },
+        { "condition": "keywords.length > 0 && shop_ids.length > 0", "result": "mista" }
+      ]
+    }
+  },
   "guards": {
     "temContextoBusca": { "requiresAny": ["keyword", "shopIds", "categorias"] },
     "podeSalvar": { "requiresAny": ["keyword", "shopIds", "categorias"] }
