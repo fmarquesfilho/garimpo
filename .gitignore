@@ -40,7 +40,7 @@ __pycache__
 docker-compose.override.yml
 
 # Go compiled binaries (local builds)
-collector
-publisher
-scheduler
-gen-board
+/collector
+/publisher
+/scheduler
+/gen-board
