@@ -34,13 +34,9 @@ namespace Garimpei.Infrastructure.Persistence.Migrations
                 table: "Buscas");
 
             // 4. Change Marketplaces column type to jsonb
-            migrationBuilder.AlterColumn<string>(
-                name: "Marketplaces",
-                table: "Buscas",
-                type: "jsonb",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
+            migrationBuilder.Sql("""
+                ALTER TABLE "Buscas" ALTER COLUMN "Marketplaces" TYPE jsonb USING "Marketplaces"::jsonb;
+                """);
         }
 
         /// <inheritdoc />

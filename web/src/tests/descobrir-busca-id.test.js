@@ -19,6 +19,9 @@ vi.mock('$lib/api.js', () => ({
 import { carregarOportunidades } from '$lib/descobrir.js';
 import { buscarNovidades } from '$lib/api.js';
 
+/** @type {import('vitest').Mock} */
+const mockBuscarNovidades = /** @type {any} */ (buscarNovidades);
+
 describe('carregarOportunidades - buscaId resolution', () => {
 	it('always passes busca.id as buscaId, not shop_ids[0]', async () => {
 		const buscas = [
@@ -32,7 +35,7 @@ describe('carregarOportunidades - buscaId resolution', () => {
 
 		await carregarOportunidades(buscas, {});
 
-		expect(buscarNovidades).toHaveBeenCalledWith({
+		expect(mockBuscarNovidades).toHaveBeenCalledWith({
 			buscaId: 'busca-loja-uuid-123',
 			dias: 7
 		});
@@ -48,10 +51,10 @@ describe('carregarOportunidades - buscaId resolution', () => {
 			}
 		];
 
-		buscarNovidades.mockClear();
+		mockBuscarNovidades.mockClear();
 		await carregarOportunidades(buscas, {});
 
-		const call = buscarNovidades.mock.calls[0][0];
+		const call = mockBuscarNovidades.mock.calls[0][0];
 		expect(call.buscaId).toBe('busca-specific-uuid');
 		expect(call.buscaId).not.toBe('111222333');
 	});
@@ -66,10 +69,10 @@ describe('carregarOportunidades - buscaId resolution', () => {
 			}
 		];
 
-		buscarNovidades.mockClear();
+		mockBuscarNovidades.mockClear();
 		await carregarOportunidades(buscas, {});
 
-		const call = buscarNovidades.mock.calls[0][0];
+		const call = mockBuscarNovidades.mock.calls[0][0];
 		expect(call.buscaId).toBe('busca-kw-uuid');
 		expect(call.buscaId).not.toBe('retinol');
 	});
