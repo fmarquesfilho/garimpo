@@ -89,15 +89,15 @@ func (s *SchedulerServer) executeShopCollection(ctx context.Context, job *regist
 			if kw == "" {
 				continue
 			}
-			s.logger.Info("fetching filtered", slog.String("job", job.name), slog.String("keyword", kw), slog.String("shop_id", shopID))
-			resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-				Keyword:     kw,
+			s.logger.Info("collecting filtered", slog.String("job", job.name), slog.String("keyword", kw), slog.String("shop_id", shopID))
+			resp, err := s.collector.Collect(ctx, &collectorpb.CollectRequest{
+				Target:      &collectorpb.CollectRequest_Keyword{Keyword: kw},
 				Limit:       50,
 				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 				OwnerUid:    params["owner_uid"],
 			})
 			if err != nil {
-				s.logger.Error("fetch filtered falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
+				s.logger.Error("collect filtered falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
 				continue
 			}
 			totalFound += resp.GetTotalFound()
@@ -109,21 +109,21 @@ func (s *SchedulerServer) executeShopCollection(ctx context.Context, job *regist
 		return 0, keyword
 	}
 
-	// Coleta completa da loja: usa FetchShop
+	// Coleta completa da loja: usa Collect com shop_id target
 	shopIDInt, err := strconv.ParseInt(shopID, 10, 64)
 	if err != nil {
 		s.logger.Error("shop_id inválido", slog.String("job", job.name), slog.String("shop_id", shopID))
 		return 0, keyword
 	}
-	s.logger.Info("fetching shop", slog.String("job", job.name), slog.Int64("shop_id", shopIDInt))
-	resp, err := s.collector.FetchShop(ctx, &collectorpb.FetchShopRequest{
-		ShopId:      shopIDInt,
+	s.logger.Info("collecting shop", slog.String("job", job.name), slog.Int64("shop_id", shopIDInt))
+	resp, err := s.collector.Collect(ctx, &collectorpb.CollectRequest{
+		Target:      &collectorpb.CollectRequest_ShopId{ShopId: shopIDInt},
 		Limit:       50,
 		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 		OwnerUid:    params["owner_uid"],
 	})
 	if err != nil {
-		s.logger.Error("fetch shop falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
+		s.logger.Error("collect shop falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
 		return 0, keyword
 	}
 	return resp.GetTotalFound(), keyword
@@ -140,15 +140,15 @@ func (s *SchedulerServer) executeKeywordSearch(ctx context.Context, job *registe
 			if kw == "" {
 				continue
 			}
-			s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", kw))
-			resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-				Keyword:     kw,
+			s.logger.Info("collecting keyword", slog.String("job", job.name), slog.String("keyword", kw))
+			resp, err := s.collector.Collect(ctx, &collectorpb.CollectRequest{
+				Target:      &collectorpb.CollectRequest_Keyword{Keyword: kw},
 				Limit:       50,
 				Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 				OwnerUid:    params["owner_uid"],
 			})
 			if err != nil {
-				s.logger.Error("keyword job falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
+				s.logger.Error("collect keyword falhou", slog.String("job", job.name), slog.String("keyword", kw), slog.String("erro", err.Error()))
 				continue
 			}
 			totalFound += resp.GetTotalFound()
@@ -161,15 +161,15 @@ func (s *SchedulerServer) executeKeywordSearch(ctx context.Context, job *registe
 	if keyword == "" {
 		keyword = job.name
 	}
-	s.logger.Info("executing keyword job", slog.String("job", job.name), slog.String("keyword", keyword))
-	resp, err := s.collector.Fetch(ctx, &collectorpb.FetchRequest{
-		Keyword:     keyword,
+	s.logger.Info("collecting keyword", slog.String("job", job.name), slog.String("keyword", keyword))
+	resp, err := s.collector.Collect(ctx, &collectorpb.CollectRequest{
+		Target:      &collectorpb.CollectRequest_Keyword{Keyword: keyword},
 		Limit:       50,
 		Marketplace: collectorpb.Marketplace_MARKETPLACE_SHOPEE,
 		OwnerUid:    params["owner_uid"],
 	})
 	if err != nil {
-		s.logger.Error("job falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
+		s.logger.Error("collect falhou", slog.String("job", job.name), slog.String("erro", err.Error()))
 		return 0, keyword
 	}
 	return resp.GetTotalFound(), keyword
