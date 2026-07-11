@@ -10,7 +10,6 @@ coverage.out
 docs-site/node_modules/
 docs-site/doc_build/
 docs-site/.rspress/
-docs-site/docs/
 
 # Binários Go compilados
 /gen-er
