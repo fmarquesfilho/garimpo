@@ -3,80 +3,15 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'docs/**'
-      - 'docs-site/**'
-      - 'backlog/**'
-      - '.kiro/**'
-      - '.vscode/**'
-      - '.mise/tasks/backlog/**'
-      - '*.md'
-      - 'LICENSE'
-      - '.gitignore'
-      - '.codacy.yml'
-      - '.semgrepignore'
-      - 'renovate.json'
   pull_request:
   workflow_dispatch:
 
 jobs:
-  # ── Detect changed paths ────────────────────────────────────────────────
-  changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    outputs:
-      go: ${{ steps.filter.outputs.go }}
-      csharp: ${{ steps.filter.outputs.csharp }}
-      python: ${{ steps.filter.outputs.python }}
-      proto: ${{ steps.filter.outputs.proto }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      contracts: ${{ steps.filter.outputs.contracts }}
-      backend: ${{ steps.filter.outputs.backend }}
-      web: ${{ steps.filter.outputs.web }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            go:
-              - 'services/**'
-              - 'internal/**'
-              - 'go.mod'
-              - 'go.sum'
-              - 'cmd/**'
-            csharp:
-              - 'src/**'
-            python:
-              - 'services/analyzer/**'
-            proto:
-              - 'protos/**'
-              - 'gen/**'
-            frontend:
-              - 'web/**'
-            contracts:
-              - 'contracts/**'
-              - 'fixtures/**'
-              - '.mise/tasks/check/**'
-            backend:
-              - 'src/**'
-              - 'services/**'
-              - 'internal/**'
-              - 'protos/**'
-              - 'go.mod'
-              - 'go.sum'
-              - 'deploy/**'
-              - '.github/workflows/**'
-            web:
-              - 'web/**'
-
   # ── Go (build + test + lint + arch) ──────────────────────────────────────
   go:
     name: Go
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [changes]
-    if: needs.changes.outputs.go == 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
@@ -91,8 +26,6 @@ jobs:
     name: C#
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    needs: [changes]
-    if: needs.changes.outputs.csharp == 'true'
     services:
       postgres:
         image: postgres:18-alpine
@@ -123,8 +56,6 @@ jobs:
     name: Python
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [changes]
-    if: needs.changes.outputs.python == 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
@@ -139,8 +70,6 @@ jobs:
     name: Proto
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes]
-    if: needs.changes.outputs.proto == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -182,8 +111,6 @@ jobs:
     name: Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes]
-    if: needs.changes.outputs.frontend == 'true'
     defaults:
       run:
         working-directory: web
@@ -206,8 +133,6 @@ jobs:
     name: Contracts
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes]
-    if: needs.changes.outputs.contracts == 'true' || needs.changes.outputs.csharp == 'true' || needs.changes.outputs.proto == 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
@@ -224,17 +149,15 @@ jobs:
     name: Deploy backend
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [changes, go, csharp, python, proto]
-    # Deploy quando backend mudou E seus jobs de validação passaram.
-    # Independente do frontend — stacks deployados separadamente.
+    needs: [go, csharp, python, proto]
     if: |
       always() &&
-      github.ref == 'refs/heads/main' && github.event_name == 'push' &&
-      needs.changes.outputs.backend == 'true' &&
-      (needs.go.result == 'success' || needs.go.result == 'skipped') &&
-      (needs.csharp.result == 'success' || needs.csharp.result == 'skipped') &&
-      (needs.python.result == 'success' || needs.python.result == 'skipped') &&
-      (needs.proto.result == 'success' || needs.proto.result == 'skipped')
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.go.result == 'success' &&
+      needs.csharp.result == 'success' &&
+      needs.python.result == 'success' &&
+      needs.proto.result == 'success'
     permissions:
       contents: read
       id-token: write
@@ -324,14 +247,12 @@ jobs:
     name: Deploy frontend
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    needs: [changes, frontend]
-    # Deploy quando frontend mudou E seu job de validação passou.
-    # Independente do backend — stacks deployados separadamente.
+    needs: [frontend]
     if: |
       always() &&
-      github.ref == 'refs/heads/main' && github.event_name == 'push' &&
-      needs.changes.outputs.web == 'true' &&
-      (needs.frontend.result == 'success')
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.frontend.result == 'success'
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
