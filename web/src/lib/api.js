@@ -391,3 +391,4 @@ export async function removerFavorito(produtoId) {
 	}
 	return resp.json();
 }
+// cache layer deployed
