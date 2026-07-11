@@ -73,8 +73,8 @@ else
 fi
 
 # Aguarda propagação do snapshot para BigQuery (~2-3s streaming insert)
-echo "     ⏳ Aguardando propagação BigQuery (3s)..."
-sleep 3
+echo "     ⏳ Aguardando propagação BigQuery (5s)..."
+sleep 5
 
 # ══════════════════════════════════════════════════════════════════════════════
 echo ""
