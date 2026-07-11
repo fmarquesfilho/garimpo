@@ -234,6 +234,11 @@ export function buscarEficaciaAlertas({ dias = 30 } = {}) {
 	return pegar(`/api/alertas/eficacia?dias=${dias}`);
 }
 
+/** Change detection para smart polling do dashboard. */
+export function buscarDashboardChanges() {
+	return pegar('/api/dashboard/changes');
+}
+
 /**
  * Envia um alerta de teste (verifica bot + chat_id).
  * @param {Object} [opts]

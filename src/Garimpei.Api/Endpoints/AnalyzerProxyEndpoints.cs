@@ -122,6 +122,33 @@ public static partial class EndpointExtensions
             }
         }).RequireAuthorization().WithTags("Analytics");
 
+        // /api/dashboard/changes — lightweight change detection for smart polling
+        app.MapGet("/api/dashboard/changes", async (
+            HttpClient httpClient,
+            IConfiguration config,
+            HttpContext context,
+            CancellationToken ct) =>
+        {
+            var analyzerUrl = config["Analyzer:BaseUrl"] ?? "http://localhost:8060";
+            try
+            {
+                var response = await httpClient.GetFromJsonAsync<object>(
+                    $"{analyzerUrl}/dashboard/changes", ct);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return Results.Ok(response);
+            }
+            catch
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return Results.Ok(new
+                {
+                    saude_updated_at = (string?)null,
+                    oportunidades_updated_at = (string?)null,
+                    performance_updated_at = (string?)null
+                });
+            }
+        }).RequireAuthorization().WithTags("Analytics");
+
         return app;
     }
 }

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from config import settings
 from routes import novidades, quedas, evolucao, estatisticas, coletas, conversoes, cupons
-from routes import saude, oportunidades, resumo_conversoes, eficacia
+from routes import saude, oportunidades, resumo_conversoes, eficacia, changes
 
 # Initialize OTel AFTER imports (ruff E402 compliance).
 # FastAPIInstrumentor.instrument() patches globally — works even after app creation.
@@ -28,6 +28,7 @@ app.include_router(saude.router)
 app.include_router(oportunidades.router)
 app.include_router(resumo_conversoes.router)
 app.include_router(eficacia.router)
+app.include_router(changes.router)
 
 
 @app.get("/health")
