@@ -208,12 +208,12 @@ generate_sidebar() {
   local dest="$1"
   local json="$dest/_sidebar.json"
 
-  # Helper: lista .md de um diretório como items JSON
+  # Helper: lista .md de um diretório como items JSON (sorted)
   dir_items() {
     local dir="$1"
     local prefix="$2"
     local first=true
-    for f in "$dir"/*.md; do
+    for f in $(ls "$dir"/*.md 2>/dev/null | sort); do
       [ -f "$f" ] || continue
       local basename=$(basename "$f" .md)
       [ "$basename" = "index" ] && continue
@@ -259,7 +259,7 @@ ENDJSON
   # Projeto (dinâmico)
   printf '  {"text":"Projeto","items":[' >> "$json"
   local proj_first=true
-  for f in "$dest/gerado"/*.md; do
+  for f in $(ls "$dest/gerado"/*.md 2>/dev/null | sort); do
     [ -f "$f" ] || continue
     local bn=$(basename "$f" .md)
     local t=""
@@ -282,7 +282,7 @@ ENDJSON
   # ADRs (dinâmico)
   printf '  {"text":"Decisões (ADRs)","items":[' >> "$json"
   local adr_first=true
-  for f in "$dest/decisoes"/*.md; do
+  for f in $(ls "$dest/decisoes"/*.md 2>/dev/null | sort); do
     [ -f "$f" ] || continue
     local bn=$(basename "$f" .md)
     local num=$(echo "$bn" | cut -d- -f1)
