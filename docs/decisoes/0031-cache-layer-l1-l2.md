@@ -21,6 +21,7 @@ Implementar cache em duas camadas:
 - TTL 30 minutos
 - Singleflight protege contra thundering herd
 - Valida BuscaContract antes de armazenar
+- Instrumentado com OpenTelemetry (spans em `cache.v1.CacheService/*`)
 
 ### Invalidação
 - Collector detecta divergência via hash SHA-256 após cada `Collect`
