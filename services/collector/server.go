@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"strconv"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -13,6 +15,7 @@ import (
 	"github.com/fmarquesfilho/garimpo/internal/couponsource"
 	"github.com/fmarquesfilho/garimpo/internal/domain"
 	"github.com/fmarquesfilho/garimpo/internal/source"
+	"github.com/fmarquesfilho/garimpo/internal/store"
 )
 
 // ─── Collector (produtos) ────────────────────────────────────────────────────
@@ -21,12 +24,19 @@ import (
 // Despacha para o ProductSource correto via Pipeline, baseado no marketplace do request.
 type UnifiedCollectorServer struct {
 	collectorpb.UnimplementedCollectorServiceServer
-	pipeline *Pipeline
-	logger   *slog.Logger
+	pipeline  *Pipeline
+	snapshots store.SnapshotRepo
+	exportCh  chan store.Snapshot
+	logger    *slog.Logger
 }
 
-func NewUnifiedCollectorServer(pipeline *Pipeline, logger *slog.Logger) *UnifiedCollectorServer {
-	return &UnifiedCollectorServer{pipeline: pipeline, logger: logger}
+func NewUnifiedCollectorServer(pipeline *Pipeline, snapshots store.SnapshotRepo, logger *slog.Logger) *UnifiedCollectorServer {
+	return &UnifiedCollectorServer{
+		pipeline:  pipeline,
+		snapshots: snapshots,
+		exportCh:  make(chan store.Snapshot, 64),
+		logger:    logger,
+	}
 }
 
 func (s *UnifiedCollectorServer) Fetch(ctx context.Context, req *collectorpb.FetchRequest) (*collectorpb.FetchResponse, error) {
@@ -88,6 +98,137 @@ func (s *UnifiedCollectorServer) FetchShop(ctx context.Context, req *collectorpb
 		TotalFound: source.SafeInt32(len(produtos)),
 		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
 	}, nil
+}
+
+// ─── Collect: search + persist ───────────────────────────────────────────────
+
+func (s *UnifiedCollectorServer) Collect(ctx context.Context, req *collectorpb.CollectRequest) (*collectorpb.CollectResponse, error) {
+	mkt := resolveMarketplace(req.GetMarketplace())
+	marketplace := source.ProtoToMarketplace(mkt)
+
+	var produtos []domain.Product
+	var keyword string
+	var err error
+
+	switch t := req.GetTarget().(type) {
+	case *collectorpb.CollectRequest_Keyword:
+		if t.Keyword == "" {
+			return nil, status.Error(codes.InvalidArgument, "keyword é obrigatório")
+		}
+		keyword = t.Keyword
+
+		src, ok := s.pipeline.GetProductSourceByMarketplace(marketplace)
+		if !ok {
+			return nil, status.Errorf(codes.Unimplemented, "marketplace %q sem receiver de produto", marketplace)
+		}
+		produtos, err = src.Search(source.SearchQuery{
+			Keyword: keyword,
+			Limit:   int(req.GetLimit()),
+			SortBy:  req.GetSortBy(),
+		})
+
+	case *collectorpb.CollectRequest_ShopId:
+		if t.ShopId == 0 {
+			return nil, status.Error(codes.InvalidArgument, "shop_id é obrigatório")
+		}
+		keyword = strconv.FormatInt(t.ShopId, 10)
+
+		src, ok := s.pipeline.GetProductSourceByMarketplace(marketplace)
+		if !ok {
+			return nil, status.Errorf(codes.Unimplemented, "marketplace %q sem receiver de produto", marketplace)
+		}
+		produtos, err = src.FetchShop(formatInt64(t.ShopId), int(req.GetLimit()))
+
+	default:
+		return nil, status.Error(codes.InvalidArgument, "target (keyword ou shop_id) é obrigatório")
+	}
+
+	if err != nil {
+		s.logger.Error("collect falhou",
+			slog.String("marketplace", marketplace),
+			slog.String("keyword", keyword),
+			slog.String("error", err.Error()))
+		return nil, status.Errorf(codes.Internal, "falha ao coletar: %v", err)
+	}
+
+	// Persist snapshot (non-blocking via channel)
+	persisted := false
+	if len(produtos) > 0 {
+		snap := store.Snapshot{
+			Keyword:    keyword,
+			Estrategia: "coleta-agendada",
+			Em:         time.Now().UTC(),
+			Itens:      toSnapshotItems(produtos),
+		}
+		persisted = s.enqueueExport(snap)
+	}
+
+	return &collectorpb.CollectResponse{
+		Products:   source.ToProtoProducts(produtos),
+		TotalFound: source.SafeInt32(len(produtos)),
+		FetchedAt:  time.Now().UTC().Format(time.RFC3339),
+		Persisted:  persisted,
+	}, nil
+}
+
+// enqueueExport sends a snapshot to the background export goroutine.
+// Returns true if accepted, false if buffer is full.
+func (s *UnifiedCollectorServer) enqueueExport(snap store.Snapshot) bool {
+	select {
+	case s.exportCh <- snap:
+		return true
+	default:
+		s.logger.Warn("export buffer full, snapshot dropped",
+			slog.String("keyword", snap.Keyword),
+			slog.Int("items", len(snap.Itens)))
+		return false
+	}
+}
+
+// RunExporter drains the export channel and persists snapshots to BigQuery.
+// Call as a goroutine; stops when ctx is cancelled (drains remaining first).
+func (s *UnifiedCollectorServer) RunExporter(ctx context.Context) {
+	for {
+		select {
+		case snap := <-s.exportCh:
+			if err := s.snapshots.RegistrarSnapshot(ctx, snap); err != nil {
+				s.logger.Error("snapshot export failed",
+					slog.String("keyword", snap.Keyword),
+					slog.Int("items", len(snap.Itens)),
+					slog.String("error", err.Error()))
+			}
+		case <-ctx.Done():
+			// Drain remaining snapshots on shutdown
+			for {
+				select {
+				case snap := <-s.exportCh:
+					_ = s.snapshots.RegistrarSnapshot(context.Background(), snap)
+				default:
+					return
+				}
+			}
+		}
+	}
+}
+
+// toSnapshotItems converts domain.Product slice to store.ItemSnapshot slice.
+func toSnapshotItems(produtos []domain.Product) []store.ItemSnapshot {
+	itens := make([]store.ItemSnapshot, 0, len(produtos))
+	for i, p := range produtos {
+		itens = append(itens, store.ItemSnapshot{
+			Posicao:   i + 1,
+			ProdutoID: fmt.Sprintf("shopee-%s-%s", p.ShopID, p.ID),
+			Nome:      p.Name,
+			Preco:     p.Price,
+			Comissao:  p.Commission,
+			Vendas:    p.Sales30d,
+			Nota:      p.Rating,
+			Imagem:    p.Image,
+			Link:      p.Link,
+			Loja:      p.ShopName,
+		})
+	}
+	return itens
 }
 
 // ─── Coupon Collector ────────────────────────────────────────────────────────
