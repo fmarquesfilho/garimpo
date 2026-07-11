@@ -82,8 +82,8 @@ Frontend (buscaId = busca.id, SEMPRE)
 
 ### Negativas / Riscos
 
-- **`Busca.Keyword` (singular) mantido no entity** — necessário para backward compat em buscas existentes no PostgreSQL. Será removido em migração futura (EF Core).
-- **`Busca.Marketplaces` continua string comma-separated** — migração para `string[]` (jsonb) requer EF Core migration que toca dados em produção. Planejado para próximo sprint.
+- ~~**`Busca.Keyword` (singular) mantido no entity**~~ ✅ **Resolvido** — campo removido na migração. Entity agora usa `Keywords` (string[] array).
+- ~~**`Busca.Marketplaces` continua string comma-separated**~~ ✅ **Resolvido** — migrado para `string[]` (jsonb). Entity usa `public string[] Marketplaces`.
 - **`db:reset` destrutivo** — dados antigos descartados. Aceitável porque MVP com 2 usuários e cron repopula em 8h.
 - **Sem protovalidate/CEL** — validação cross-field ficou no JSON Schema e no código (Go rejeita busca_id vazio). Protovalidate é evolução futura quando mais serviços consumirem o proto.
 
@@ -101,7 +101,7 @@ Frontend (buscaId = busca.id, SEMPRE)
 | LIKE com índice (busca_id LIKE pattern otimizado) | Resolve performance mas não resolve ambiguidade de identidade |
 | Proto como fonte de verdade (gRPC message como schema) | Proto não é consumido pelo Frontend; JSON Schema é mais acessível |
 | GraphQL para unificar contratos | Overengineering para 2 usuários; REST + JSON Schema é suficiente |
-| Remover Busca.Keyword agora | Requer EF Core migration + atualizar todos os seeders/testes — separado para limitar blast radius |
+| Remover Busca.Keyword agora | ~~Requer EF Core migration + atualizar todos os seeders/testes — separado para limitar blast radius~~ ✅ Já feito |
 
 ## Validação
 
