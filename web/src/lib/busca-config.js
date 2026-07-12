@@ -23,6 +23,7 @@ export const MARKETPLACES = rules.marketplaces;
 export const CONTEXTO_CATEGORIAS = rules.contextoCategorias;
 export const MODOS = rules.modos;
 export const BUSCA_DUPLICADA = rules.buscaDuplicada;
+export const OMNIBOX = rules.omnibox;
 
 // Tabela de intent no formato esperado pela engine
 export const INTENT_TABLE = rules.intent.map((r) => ({

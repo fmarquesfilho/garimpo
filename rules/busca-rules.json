@@ -91,6 +91,17 @@
       ]
     }
   },
+  "omnibox": {
+    "prefixos": {
+      "@": { "tipo": "loja", "fonte": "lojasMonitoradas", "campo": "nome" },
+      "#": { "tipo": "categoria", "fonte": "categoriasDisponiveis", "campo": "nome" },
+      "!": { "tipo": "marketplace", "fonte": "marketplaces.suportados", "campo": "nome" }
+    },
+    "minChars": 2,
+    "maxSugestoes": 7,
+    "matchBuscaSalva": true,
+    "debounceMs": 400
+  },
   "guards": {
     "temContextoBusca": { "requiresAny": ["keyword", "shopIds", "categorias"] },
     "podeSalvar": { "requiresAny": ["keyword", "shopIds", "categorias"] }

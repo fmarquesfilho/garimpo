@@ -87,6 +87,31 @@
       },
       "additionalProperties": false
     },
+    "omnibox": {
+      "type": "object",
+      "description": "Config do input unificado (omnibox) da página Descobrir.",
+      "required": ["prefixos", "minChars", "maxSugestoes", "matchBuscaSalva", "debounceMs"],
+      "properties": {
+        "prefixos": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["tipo", "fonte", "campo"],
+            "properties": {
+              "tipo": { "type": "string", "enum": ["loja", "categoria", "marketplace"] },
+              "fonte": { "type": "string" },
+              "campo": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "minChars": { "type": "integer", "minimum": 1 },
+        "maxSugestoes": { "type": "integer", "minimum": 1 },
+        "matchBuscaSalva": { "type": "boolean" },
+        "debounceMs": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
     "guards": {
       "type": "object",
       "additionalProperties": {
