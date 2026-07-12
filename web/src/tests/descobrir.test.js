@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	montarResultados,
-	agruparCategoriasPorMarketplace,
-} from '$lib/descobrir-logic.js';
+import { montarResultados, agruparCategoriasPorMarketplace } from '$lib/descobrir-logic.js';
 import { sourcesBusca } from '$lib/busca-config.js';
 
 /**
@@ -588,7 +585,6 @@ describe('Descobrir — Filtros combinados (avançado)', () => {
 	});
 });
 
-
 // ── Fonte Lojas (cenário unificação) ──────────────────────────────────────
 
 describe('Descobrir — Fonte Lojas (toggle e filtragem)', () => {
@@ -828,7 +824,6 @@ describe('agruparCategoriasPorMarketplace', () => {
 		expect(agruparCategoriasPorMarketplace(['Pet'])).toEqual([{ nome: 'Pet', marketplaces: [] }]);
 	});
 });
-
 
 describe('sourcesBusca — busca só-categorias é válida', () => {
 	it('categorias sem keyword/loja cai nos sources globais', () => {

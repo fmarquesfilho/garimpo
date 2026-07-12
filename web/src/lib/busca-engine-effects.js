@@ -56,7 +56,6 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 						busca: ctx.keyword,
 						comissaoMin: ctx.comissaoMin,
 						categorias: ctx.categorias,
-						buscasComLojas,
 						// Escopa a curadoria na loja recém-adicionada (fix #2 le botanic):
 						// com keyword + loja, busca DENTRO da loja, não global.
 						shopIds: ctx.shopIds

@@ -8,7 +8,15 @@
 	 */
 	import { cronLabel } from '$lib/busca-engine.svelte.js';
 
-	let { nome = '', marketplace = 'shopee', origem = null, monitorada = false, cron = '', tipo = '', onremover = null } = $props();
+	let {
+		nome = '',
+		marketplace = 'shopee',
+		origem = null,
+		monitorada = false,
+		cron = '',
+		tipo = '',
+		onremover = null
+	} = $props();
 
 	// origem pode vir como emoji ("🇰🇷"), código ("coreia") ou rótulo ("🇰🇷 Coreia")
 	const BANDEIRAS = {

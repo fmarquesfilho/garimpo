@@ -238,22 +238,24 @@ export class BuscaEngine {
 		return this.#executarBusca();
 	}
 
-	async #resolverLojaRemota(input, options = {}) {
+	async #resolverLojaRemota(input, _options = {}) {
 		if (!guards.resolucaoPermitida(this.ctx)) return;
-		
+
 		this.ctx.resolucaoLoja = { status: 'resolvendo' };
-		
+
 		try {
 			// Promise.race para timeout de 10s
-			const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout na resolução da loja (10s).')), 10000));
+			const timeout = new Promise((_, reject) =>
+				setTimeout(() => reject(new Error('Timeout na resolução da loja (10s).')), 10000)
+			);
 			const request = this.#effects.resolverLoja(input);
 			const r = await Promise.race([request, timeout]);
 
 			// Anexa a loja ao registro local se não estiver presente
-			if (!this.ctx.lojasDisponiveis.some(l => l.id === r.id)) {
+			if (!this.ctx.lojasDisponiveis.some((l) => l.id === r.id)) {
 				this.ctx.lojasDisponiveis = [...this.ctx.lojasDisponiveis, r];
 			}
-			
+
 			this.ctx.resolucaoLoja = { status: 'idle' };
 			return this.#adicionarLojaConhecida(r);
 		} catch (e) {
@@ -263,7 +265,7 @@ export class BuscaEngine {
 
 	async #adicionarLoja(event) {
 		if (event.loja?.id) return this.#adicionarLojaConhecida(event.loja);
-		
+
 		const input = (event.value ?? '').trim();
 		if (!guards.lojaInputValida(this.ctx, event)) return;
 

@@ -11,7 +11,7 @@ export { montarResultados } from './descobrir-logic.js';
  * Carrega produtos da curadoria (Shopee API).
  * Se o termo bate com uma loja monitorada, busca via shop_ids.
  */
-export async function carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas, shopIds = null }) {
+export async function carregarCuradoria({ busca, comissaoMin, categorias, shopIds = null }) {
 	try {
 		const termo = (busca ?? '').trim();
 		const cat0 = categorias?.length > 0 ? categorias[0] : undefined;
@@ -142,7 +142,7 @@ export async function carregarFontes({ fontes, busca, comissaoMin, categorias, b
 
 	if (fontes.curadoria && (busca.trim() || categorias.length > 0)) {
 		promises.push(
-			carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas }).then((r) => {
+			carregarCuradoria({ busca, comissaoMin, categorias }).then((r) => {
 				resultados.curadoria = r;
 			})
 		);

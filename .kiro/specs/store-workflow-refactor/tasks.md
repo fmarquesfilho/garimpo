@@ -83,7 +83,7 @@ lojas monitoradas e escopadas. 11 tasks ordenadas por dependência (backend-firs
   - Executar `bun run check && bunx vitest run && bun run build` + `dotnet test` — tudo verde
   - **Requirements: 1.1, 5.1, 5.5**
 
-- [ ] 11. Validação end-to-end e deploy
+- [x] 11. Validação end-to-end e deploy
   - Rodar suites completas: Vitest, dotnet test, check, build
   - Aplicar migration: `dotnet ef database update`
   - Playtest local com DEV_API_PROXY: autocomplete, resolver nova loja, badge monitorada, @gloryofseoul match

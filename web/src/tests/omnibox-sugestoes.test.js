@@ -63,7 +63,7 @@ describe('omnibox-sugestoes — prefixos filtram por tipo', () => {
 
 		/** @type {import('$lib/omnibox-parser.js').Token} */
 		const t1 = { tipo: 'loja', valor: '@gloryofseoul', completo: false };
-		// note que matchLojas no registry ignora '@', the query sent is 'gloryofseoul' 
+		// note que matchLojas no registry ignora '@', the query sent is 'gloryofseoul'
 		// wait, no! The query sent to gerarSugestoes is `valor.toLowerCase()`.
 		// so the query is '@gloryofseoul'. normalizarNome('@gloryofseoul') becomes 'gloryofseoul'
 		const r1 = gerarSugestoes(t1, ctx);
