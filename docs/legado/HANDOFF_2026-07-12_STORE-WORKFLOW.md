@@ -1,8 +1,8 @@
 # Handoff — Store Workflow Refactor (2026-07-12)
 
-> **Status: 📋 SPEC COMPLETA, PRONTA PARA IMPLEMENTAÇÃO.**
+> **Status: ✅ IMPLEMENTAÇÃO CONCLUÍDA (AGUARDANDO REVISÃO).**
 > Feature "Store Workflow Refactor" (T-0056). Spec em `.kiro/specs/store-workflow-refactor/`.
-> Este doc é o ponto de retomada para o próximo agente/dev.
+> Este doc é o ponto de retomada para o próximo agente/dev revisar o que foi feito.
 
 ## Contexto
 
@@ -24,7 +24,22 @@ Criação completa da spec (requirements → design → tasks):
 |---------|----------|
 | `.kiro/specs/store-workflow-refactor/requirements.md` | 6 requisitos com critérios de aceitação (EARS) |
 | `.kiro/specs/store-workflow-refactor/design.md` | Arquitetura, componentes, data models, contratos API, error handling, correctness properties, testing strategy |
-| `.kiro/specs/store-workflow-refactor/tasks.md` | 11 tasks em 7 waves de execução |
+| `.kiro/specs/store-workflow-refactor/tasks.md` | 11 tasks em 7 waves de execução (Todas concluídas) |
+
+### Execução (Atualização da Sessão)
+Nesta sessão, concluímos integralmente as 7 waves planejadas:
+- O banco de dados foi atualizado com a migration da nova tabela `Lojas`.
+- O C# expõe os endpoints `/api/lojas/registro` e `/api/lojas/resolver` conforme os contratos.
+- O frontend teve sua lógica refatorada (engine de busca unificada e normalização via `loja-registry.js`).
+- O código legado (`encontrarLojaPorNome`, etc.) foi purgado da base.
+- Todos os testes (Vitest para UI e xUnit para .NET) estão passando sem erros. O lint e o prettier foram executados.
+
+### Diretrizes para a próxima IA (Revisora)
+Olá, agente! Seu papel agora é **Revisão de Qualidade**. Por favor, execute as seguintes análises no código refatorado:
+1. **Documentação e Contracts**: Verifique se `lojas.request.json` e `lojas.response.json` estão perfeitamente alinhados com o backend e se a documentação da API em C# reflete essas mudanças.
+2. **Qualidade dos Testes**: O Vitest tem cobertura de testes razoável, mas verifique se existem edge cases em `loja-registry.js` ou em `busca-engine.svelte.js` (como timeout na resolução e race conditions de state) que possam não estar cobertos.
+3. **Ergonomia do Svelte**: Cheque se a implementação de `BuscaEngine.svelte.js` (Svelte 5 runes e state management) está usando os melhores padrões. O arquivo tem muitas linhas e foi atualizado intensamente; garanta que não há reatividade perdida.
+4. **Clean Code**: Se encontrar pequenos bad smells (variáveis não utilizadas, logs soltos ou dívidas técnicas menores deixadas durante a refatoração), sinta-se à vontade para corrigir e documentar.
 
 ### Decisões tomadas com o dono do produto
 

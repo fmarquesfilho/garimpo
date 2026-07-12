@@ -42,6 +42,8 @@ Autenticação: Bearer token (Firebase JWT). Exceto `/api/health` e `/internal/*
 | Get | `/api/health` | CoreEndpoints.cs |
 | Get | `/api/lojas/evolucao` | LojasEndpoints.cs |
 | Get | `/api/lojas/novidades` | LojasEndpoints.cs |
+| Get | `/api/lojas/registro` | LojasEndpoints.cs |
+| Post | `/api/lojas/resolver` | LojasEndpoints.cs |
 | Delete | `/api/lojas` | LojasEndpoints.cs |
 | Get | `/api/lojas` | LojasEndpoints.cs |
 | Post | `/api/lojas` | LojasEndpoints.cs |
