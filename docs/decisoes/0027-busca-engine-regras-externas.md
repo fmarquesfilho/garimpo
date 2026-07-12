@@ -355,9 +355,21 @@ declarativa — a FSM (BuscaEngine) não mudou**, o que valida de novo a arquite
 - **`Lane.svelte` removido**; `BuscaUnificada.svelte` reescrito (mesmos props → `+page.svelte`
   intocado). +51 testes.
 
-⚠️ **Débito aberto:** o subsistema de **lojas** (resolução/adição, nomes com espaço vs.
-tokens, derivação de monitoradas, escopo × marketplace) precisa de refactor — ver **T-0056**.
 Os **E2E locais/prod das raias** ficaram obsoletos — ver **T-0054**.
+
+## Atualização 2026-07-12 — v5: refactor do subsistema de lojas (T-0056)
+
+O ponto fraco do subsistema de lojas foi refatorado — decisão completa em
+**[ADR-0032](/decisoes/0032-store-workflow-registro-lojas)**. A **FSM em si não mudou**;
+apenas os handlers/estado de loja:
+
+- Estado `resolucaoLoja: { status }` substitui as flags planas `lojaResolvendo`/`lojaErro`.
+- Effect `carregarRegistroLojas` (registro server-side, tabela `Loja`) **substitui**
+  `listarLojasMonitoradas` (que derivava lojas das buscas salvas — mencionado na v2 acima).
+- `#adicionarLoja` separa **match local exato** (registro, síncrono) de **resolução remota**
+  (`POST /api/lojas/resolver`, assíncrona, com `AbortController` no timeout).
+- Normalização de nomes com paridade C#/JS (`loja-registry.js` ↔ `Loja.Normalizar`).
+- `rules.lojaRegistro` (`matchMinChars`) declarativo, consumido pelo código.
 
 ## Arquivos-chave
 
@@ -366,8 +378,9 @@ Os **E2E locais/prod das raias** ficaram obsoletos — ver **T-0054**.
 | `rules/busca-rules.json` | Fonte de verdade — regras declarativas (v3: modos, duplicatas, marketplaces) |
 | `rules/busca-rules.schema.json` | JSON Schema (atualizado para v3) |
 | `web/src/lib/busca-engine.svelte.js` | FSM headless (classe Svelte 5, v3: modos de interação) |
-| `web/src/lib/busca-engine-state.js` | Estado inicial, guards, constantes MODOS |
-| `web/src/lib/busca-engine-effects.js` | Effects injetáveis (API calls, buildBuscasComLojas) |
+| `web/src/lib/busca-engine-state.js` | Estado inicial, guards, constantes MODOS (v5: `resolucaoLoja`) |
+| `web/src/lib/busca-engine-effects.js` | Effects injetáveis (v5: `carregarRegistroLojas`) |
+| `web/src/lib/loja-registry.js` | v5: normalização + match de lojas (paridade C#) — ver ADR-0032 |
 | `web/src/lib/busca-config.js` | Adapter: JSON → formato da engine + funções puras (proximoModo, fingerprint, buscarDuplicada) |
 | `web/src/lib/descobrir-logic.js` | Filtragem client-side (funções puras) |
 | `web/src/lib/components/BuscaUnificada.svelte` | View burra (v4: omnibox + filtros + escopo; raias removidas) |

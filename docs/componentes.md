@@ -136,9 +136,9 @@ adicionar (categorias, lojas…). Cada opção é renderizada por um snippet `op
 permite mostrar metadados (ex.: nome à esquerda + marketplaces à direita).
 
 Suporta **entrada livre** (`allowFree`): quando o texto não casa com nenhum item e
-`isFree(texto)` retorna `true`, oferece uma opção extra que chama `onfree(texto)`. É o
-mecanismo do "↳ resolver e adicionar loja" na raia de Lojas (colar link/ID de loja nova).
-Navegação por teclado (↑/↓/Enter/Esc).
+`isFree(texto)` retorna `true`, oferece uma opção extra que chama `onfree(texto)` — o padrão
+"resolver e adicionar por link/ID". (Na página Descobrir o **Omnibox** substituiu esse uso;
+ver ADR-0027 §v4 e ADR-0032.) Navegação por teclado (↑/↓/Enter/Esc).
 
 ```svelte
 <Combobox
@@ -152,7 +152,7 @@ Navegação por teclado (↑/↓/Enter/Esc).
   {/snippet}
 </Combobox>
 
-<!-- Com entrada livre (raia de Lojas) -->
+<!-- Com entrada livre: resolver por link/ID -->
 <Combobox
   items={lojasDisponiveis}
   allowFree isFree={pareceLoja}
@@ -321,30 +321,29 @@ Além da base em `ui/`, os componentes de domínio e layout (localizados em `$li
 - **LandingHero** / **HeroProduto**: Headers principais da interface, com suporte a dark mode.
 - **PainelAlertas**: Gestão de alertas de preço — usa `Input` e `Checkbox`.
 
-### Busca e Filtragem — página Descobrir em raias
+### Busca e Filtragem — página Descobrir (Omnibox)
 
-A página Descobrir (`/`) é organizada em **raias horizontais** (metáfora de piscina).
-Ver **ADR-0004** para o layout e **ADR-0027** para a máquina de estados.
+A página Descobrir (`/`) usa um **input unificado (Omnibox)** que substituiu as raias
+(metáfora de piscina, ADR-0004, descontinuada). Ver
+**[ADR-0027](/decisoes/0027-busca-engine-regras-externas)** (FSM + omnibox §v4) e
+**[ADR-0032](/decisoes/0032-store-workflow-registro-lojas)** (subsistema de lojas).
 
-- **BuscaUnificada**: view das 4 raias. É "burra" — só despacha `engine.send(event)` e
-  renderiza `engine.ctx`/getters. Estrutura:
-  - **Console superior** — input de keyword + 3 botões de grupo (Filtros/Lojas/Buscas)
-    com contador (`engine.contadorFiltros/Lojas/Buscas`), além de "colapsar tudo" e
-    "limpar tudo". Cada botão abre/fecha sua raia.
-  - **Raia Filtros** — 2 sub-raias: em cima toggles de fontes (Novos/Quedas/Favoritos) +
-    quantitativos (comissão mín., vendas mín.); embaixo `Combobox` de categorias + cards.
-  - **Raia Lojas** — `Combobox` (lojas monitoradas + entrada livre p/ resolver loja nova
-    por link/ID) + `LojaCard`s no escopo.
-  - **Raia Buscas** — `BuscaCard`s salvas/agendadas + salvar/editar (edit mode).
-  - **`busca-unificada-logic.js`** — funções puras: `configToPayload` (carrega `id` p/
-    update in-place, inclui `shop_names`), `payloadToConfig` (usa `shop_names` dict),
-    `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`, `gerarLabelBusca`.
-- **Lane**: casca de uma raia — cabeçalho (título, tag, contador, ações) + corpo
-  colapsável (`open` bindable, para permitir o "colapsar tudo").
-- **CategoriaCard**: categoria adicionada ao filtro — nome + badges dos marketplaces a
-  que a categoria pertence (multi-marketplace).
+- **BuscaUnificada**: view. É "burra" — só despacha `engine.send(event)` e renderiza
+  `engine.ctx`/getters. Estrutura: `<Omnibox>` no topo + filtros numéricos (fontes
+  Novos/Quedas/Favoritos, comissão mín., vendas mín., marketplaces) + cards de escopo
+  (`LojaCard`/`CategoriaCard`) + painel de buscas salvas. **Sem raias / `Lane` (removido).**
+- **Omnibox** (`Omnibox.svelte`): campo único com inferência de tipo + prefixos opcionais
+  `@loja` / `#categoria` / `!marketplace`. Dropdown agrupado por tipo (buscas salvas
+  primeiro), ARIA combobox, navegação por teclado. Puro: `omnibox-parser.js` (tokeniza) +
+  `omnibox-sugestoes.js` (sugestões) + `loja-registry.js` (normalização/match de lojas).
+  Texto literal no campo (sem chips); ao selecionar loja/categoria/marketplace, emite o
+  evento e a seleção vira card abaixo.
+- **`busca-unificada-logic.js`** — funções puras: `configToPayload`/`payloadToConfig`
+  (via `shop_names` dict), `gerarResumo`, `contarFiltrosAtivos`, `cronLabel`, `gerarLabelBusca`.
+- **CategoriaCard**: categoria no filtro — nome + badges dos marketplaces (multi-marketplace).
 - **LojaCard**: loja no escopo — nome, marketplace, bandeira de origem (🇰🇷/🇯🇵/🇨🇳,
-  ver Operação Shopee) e indicador de monitoramento (⏱ com o ciclo, ou "sem monitor").
+  ver Operação Shopee) e tipo **monitorada** (⏱ com cron) vs **escopada** (só filtro,
+  ver ADR-0032).
 
 ### Cards e Componentes de Domínio
 - **ProductCard**: Exibição central de ofertas.
@@ -454,15 +453,18 @@ A página Garimpar (`routes/+page.svelte`) é controlada por uma máquina de est
 | `lib/busca-engine-effects.js` | **Effects** (Ports & Adapters) — chamadas de API isoladas e injetáveis. `buildBuscasComLojas` combina store + ctx para oportunidades. |
 | `lib/busca-config.js` | **Config declarativa** — importa `rules/busca-rules.json` e re-exporta. Funções puras: normalização, guards, `intentBusca`, `sourcesBusca`, `proximoModo`, `fingerprint`, `buscarDuplicada`. |
 | `rules/busca-rules.json` | **Regras externas** (v3) — intent table, guards, normalização, defaults, transições, marketplaces, **modos de interação**, **detecção de duplicatas**. Testável por E2E e validado em CI. |
-| `lib/loja-registry.js` | **Registro de Lojas** — módulo puro. Encapsula normalização e matching de lojas, espelhando a entidade backend. |
+| `lib/loja-registry.js` | **Registro de Lojas** — módulo puro; normalização + matching de lojas (paridade com o backend, ver ADR-0032). |
+| `lib/{omnibox-parser,omnibox-sugestoes}.js` | Puros: tokeniza o input do Omnibox / gera sugestões agrupadas (ADR-0027 §v4). |
 | `lib/busca-unificada-logic.js` | Funções puras (payload↔config, labels, resumo). |
-| `components/BuscaUnificada.svelte` | **View burra** — 4 raias; só despacha events e renderiza `engine.ctx`/getters. |
+| `components/BuscaUnificada.svelte` | **View burra** — Omnibox + filtros + escopo; só despacha events e renderiza `engine.ctx`/getters. |
+| `components/Omnibox.svelte` | **Input unificado** — parser + sugestões + dropdown agrupado (ARIA combobox). |
 | `components/BuscasSalvasPanel.svelte` | Painel de buscas salvas (modos vinculada/editando, indicador visual). |
 | `components/MarketplaceFilter.svelte` | Filtro multi-marketplace (toggle de 🟠 Shopee / 🔵 ML / 🟡 Amazon). |
-| `components/{Lane,CategoriaCard,LojaCard,BuscaCard}.svelte` | Componentes de raia (casca, cards de categoria/loja/busca salva). |
+| `components/{CategoriaCard,LojaCard,BuscaCard}.svelte` | Cards de categoria / loja (monitorada vs escopada) / busca salva. |
 
-**Eventos da engine:** `INICIALIZAR`, `DIGITAR`, `ADICIONAR_LOJA` (por objeto monitorado ou
-por `value` a resolver), `REMOVER_LOJA`, `ADICIONAR_CATEGORIA`, `REMOVER_CATEGORIA`,
+**Eventos da engine:** `INICIALIZAR`, `DIGITAR`, `ADICIONAR_LOJA` (por objeto do registro,
+ou por `value` → match local exato no registro / resolução remota; ver ADR-0032),
+`REMOVER_LOJA`, `ADICIONAR_CATEGORIA`, `REMOVER_CATEGORIA`,
 `MUDAR_FILTRO`, `MUDAR_FONTES`, `MUDAR_MARKETPLACES`, `SALVAR` (cria ou atualiza via
 `editandoId`), `CARREGAR_SALVA`, `EDITAR_SALVA` (edit mode), `CANCELAR_EDICAO`,
 `REMOVER_SALVA`, `RETRY`, `LIMPAR`.
@@ -487,7 +489,7 @@ e resolve o próximo modo. A engine chama em cada `send()`.
 **Getters para a view:** `categoriaCards`, `lojaCards`, `contadorFiltros/Lojas/Buscas`,
 `fontesAtivas`, `intent`, `resumo`, `modo`.
 
-**Testes (298 unit + 24 E2E local + 15 E2E prod):**
+**Testes (367 unit via Vitest + E2E local/prod):**
 - `busca-engine.test.js` — engine core + modos v3
 - `busca-engine-cenarios.test.js` — cenários expandidos (doc TESTES_DESCOBRIR)
 - `busca-duplicata.test.js` — fingerprint + detecção de duplicatas
