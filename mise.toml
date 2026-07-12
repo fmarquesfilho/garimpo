@@ -117,7 +117,8 @@ depends = ["docs:er", "docs:env", "docs:board", "docs:sync"]
 
 [tasks."docs:er"]
 description = "Gera Mermaid ER do schema BigQuery"
-run = "go run ./cmd/gen-er > docs/gerado/ENTIDADES.md"
+# mkdir -p: docs/gerado/ é gitignored (não existe em checkout limpo do CI).
+run = "mkdir -p docs/gerado && go run ./cmd/gen-er > docs/gerado/ENTIDADES.md"
 
 [tasks."docs:board"]
 description = "Gera quadro Kanban do backlog"

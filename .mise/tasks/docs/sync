@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 #MISE description="Sincroniza docs canônicos para docs-site"
+#MISE depends=["docs:er", "docs:board", "docs:env"]
+# Depends garante que docs/gerado/ esteja fresco ANTES do sync copiar (via
+# `mise run docs`/`docs:sync`). `mise run docs` roda deps em paralelo, então sem
+# isto o sync corria junto dos geradores. Chamadas diretas via `bash` ignoram deps.
 # =============================================================================
 # sync-docs-to-site.sh — Sincroniza docs/ para docs-site/docs/ (Rspress)
 # =============================================================================

@@ -5,6 +5,8 @@
 set -euo pipefail
 
 OUTPUT="docs/gerado/env-vars.md"
+# docs/gerado/ é gitignored (não existe em checkout limpo do CI).
+mkdir -p "$(dirname "$OUTPUT")"
 
 {
 cat <<'HEADER'
