@@ -6,7 +6,6 @@
 import { buscarCandidatos, buscarNovidades } from './api.js';
 export { montarResultados } from './descobrir-logic.js';
 
-
 /**
  * Carrega produtos da curadoria (Shopee API).
  * Se o termo bate com uma loja monitorada, busca via shop_ids.

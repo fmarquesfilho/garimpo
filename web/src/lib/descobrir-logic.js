@@ -3,7 +3,6 @@
  * Sem dependências de API/Firebase — testável com Vitest diretamente.
  */
 
-
 /**
  * Monta a lista final de resultados aplicando todos os filtros client-side.
  * @param {Object} opts
@@ -84,7 +83,6 @@ export function agruparCategoriasPorMarketplace(categorias) {
 		.map(([nome, mkts]) => ({ nome, marketplaces: [...mkts].sort() }))
 		.sort((a, b) => a.nome.localeCompare(b.nome));
 }
-
 
 /**
  * Gera opções para o ToggleGroup de fontes com badges de contagem.

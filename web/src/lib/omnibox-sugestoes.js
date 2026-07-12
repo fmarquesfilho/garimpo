@@ -68,8 +68,13 @@ export function gerarSugestoes(ultimoToken, ctx = {}, config = {}) {
 
 function matchLojas(lojas, q, max) {
 	const normQ = normalizarNome(q);
-	return registryMatchLojas(normQ, lojas, max)
-		.map((l) => ({ tipo: 'loja', label: l.nome, valor: '@' + l.nome, icone: ICONE.loja, meta: l }));
+	return registryMatchLojas(normQ, lojas, max).map((l) => ({
+		tipo: 'loja',
+		label: l.nome,
+		valor: '@' + l.nome,
+		icone: ICONE.loja,
+		meta: l
+	}));
 }
 
 function matchCategorias(categorias, q, max) {
