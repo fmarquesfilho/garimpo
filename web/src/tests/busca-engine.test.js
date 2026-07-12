@@ -11,7 +11,7 @@ function mockEffects(overrides = {}) {
 		carregarBuscasSalvas: vi.fn().mockResolvedValue([]),
 		carregarCategorias: vi.fn().mockResolvedValue([{ nome: 'Cosméticos' }, { nome: 'Perfumaria' }]),
 		executarBusca: vi.fn().mockResolvedValue({ curadoria: [], quedas: [], novos: [], lojas: [], favoritos: [] }),
-		resolverLoja: vi.fn().mockResolvedValue({ shop_ids: [920292999], keyword: 'Le Botanic' }),
+		resolverLoja: vi.fn().mockResolvedValue({ id: 920292999, nome: 'Le Botanic', marketplace: 'shopee' }),
 		salvarBusca: vi.fn().mockResolvedValue({}),
 		removerBusca: vi.fn().mockResolvedValue({}),
 		sincronizarStoreExterno: vi.fn().mockResolvedValue(undefined),
@@ -104,16 +104,14 @@ describe('BuscaEngine — Adicionar loja + keyword', () => {
 		expect(ctxPassado.shopIds).toContain(920292999);
 	});
 
-	it('ADICIONAR_LOJA com erro mostra lojaErro', async () => {
+	it('ADICIONAR_LOJA com erro altera resolucaoLoja para status erro', async () => {
 		const effects = mockEffects({
 			resolverLoja: vi.fn().mockRejectedValue(new Error('Loja não encontrada'))
 		});
 		const engine = new BuscaEngine(effects);
-
 		await engine.send({ type: 'ADICIONAR_LOJA', value: 'invalida' });
-
-		expect(engine.ctx.lojaErro).toBe('Loja não encontrada');
-		expect(engine.ctx.shopIds).toHaveLength(0);
+		expect(engine.ctx.resolucaoLoja.erro).toBe('Loja não encontrada');
+		expect(engine.ctx.resolucaoLoja.status).toBe('erro');
 	});
 
 	it('REMOVER_LOJA remove shopId e redispara busca', async () => {

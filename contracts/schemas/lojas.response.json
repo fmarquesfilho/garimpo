@@ -3,29 +3,35 @@
   "type": "object",
   "properties": {
     "id": {
+      "type": ["integer", "string"],
+      "description": "ID da loja no banco de dados"
+    },
+    "nome": {
       "type": "string",
-      "format": "uuid",
-      "description": "UUID da busca/loja criada"
+      "description": "Nome canônico da loja"
     },
-    "keyword": {
+    "nome_normalizado": {
       "type": "string",
-      "description": "Nome da loja resolvido ou keyword original"
+      "description": "Nome normalizado para busca"
     },
-    "shop_ids": {
-      "type": "array",
-      "items": { "type": "integer" },
-      "description": "IDs numéricos da loja no marketplace"
+    "marketplace": {
+      "type": "string",
+      "description": "Marketplace da loja"
     },
-    "source_url": {
+    "cron": {
       "type": ["string", "null"],
-      "description": "URL original fornecida pelo usuário (pode conter parâmetros de afiliada)"
+      "description": "Expressão cron de monitoramento"
     },
-    "status": {
-      "type": "string",
-      "enum": ["adicionada"],
-      "description": "Status da operação"
+    "origem": {
+      "type": ["string", "null"],
+      "description": "Origem (país) da loja"
+    },
+    "monitorada": {
+      "type": "boolean",
+      "description": "True se possui cron ativo"
     }
   },
-  "required": ["id", "keyword", "status"],
+  "required": ["id", "nome", "nome_normalizado", "marketplace", "monitorada"],
   "additionalProperties": false
 }
+

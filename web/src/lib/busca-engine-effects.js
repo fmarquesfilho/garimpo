@@ -5,10 +5,10 @@
  * @typedef {ReturnType<typeof criarEffects>} Effects
  */
 
-import { adicionarLoja, sincronizarBusca, listarBuscasServidor } from './api.js';
+import { resolverLoja as resolverLojaApi, sincronizarBusca, listarBuscasServidor, listarRegistroLojas } from './api.js';
 import { buscarCategorias } from './categorias.js';
 import { carregarCuradoria, carregarOportunidades, carregarProdutosLojas } from './descobrir.js';
-import { agruparCategoriasPorMarketplace, listarLojasMonitoradas } from './descobrir-logic.js';
+import { agruparCategoriasPorMarketplace } from './descobrir-logic.js';
 
 /**
  * Cria effects concretos para produção.
@@ -36,9 +36,10 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 			return agruparCategoriasPorMarketplace(cruas);
 		},
 
-		/** Lista lojas monitoradas (deriva das buscas salvas) para o autocomplete da raia Lojas. */
-		listarLojasMonitoradas() {
-			return listarLojasMonitoradas(getBuscasSalvas());
+		/** Carrega o registro central de lojas do servidor. */
+		async carregarRegistroLojas() {
+			const r = await listarRegistroLojas();
+			return r?.lojas ?? [];
 		},
 
 		/** Executa busca em todas as fontes ativas. */
@@ -92,7 +93,7 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 
 		/** Resolve URL/ID de loja via Collector. */
 		async resolverLoja(input) {
-			return adicionarLoja({ input });
+			return resolverLojaApi({ input });
 		},
 
 		/** Salva busca no servidor. */

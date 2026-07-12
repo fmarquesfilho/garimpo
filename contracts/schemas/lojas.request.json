@@ -4,22 +4,18 @@
   "properties": {
     "input": {
       "type": "string",
-      "description": "URL ou username da loja (ex: https://shopee.com.br/loja_exemplo ou loja_exemplo)"
+      "description": "URL ou username da loja"
     },
-    "cron": {
+    "marketplace": {
       "type": "string",
-      "description": "Expressão cron para agendamento (default: a cada 8h)."
+      "description": "Marketplace da loja"
     },
-    "origem_padrao": {
+    "origem": {
       "type": "string",
-      "description": "Marketplace de origem padrão (ex: shopee)."
-    },
-    "keywords": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "Keywords para filtrar coleta (se vazio, coleta todos os produtos da loja)."
+      "description": "Origem padrão"
     }
   },
   "required": ["input"],
   "additionalProperties": false
 }
+

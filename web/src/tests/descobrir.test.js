@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	montarResultados,
-	encontrarLojaPorNome,
 	agruparCategoriasPorMarketplace,
-	listarLojasMonitoradas
 } from '$lib/descobrir-logic.js';
 import { sourcesBusca } from '$lib/busca-config.js';
 
@@ -590,41 +588,6 @@ describe('Descobrir — Filtros combinados (avançado)', () => {
 	});
 });
 
-// ── Detecção de loja por nome ─────────────────────────────────────────────
-
-describe('Descobrir — Detecção de loja por nome', () => {
-	const lojas = [
-		{ id: 'loja-123', nome: 'SKIN1004 Official', shop_ids: [123] },
-		{ id: 'loja-456', nome: 'Belezura Distribuidora', shop_ids: [456] },
-		{ id: 'loja-789', nome: 'COSRX Store', shop_ids: [789] }
-	];
-
-	it('encontra loja por nome exato', () => {
-		const r = encontrarLojaPorNome('Belezura Distribuidora', lojas);
-		expect(r).not.toBeNull();
-		expect(r.shop_ids).toEqual([456]);
-	});
-
-	it('encontra loja por parte do nome (case-insensitive)', () => {
-		const r = encontrarLojaPorNome('belezura', lojas);
-		expect(r).not.toBeNull();
-		expect(r.id).toBe('loja-456');
-	});
-
-	it('encontra loja por match parcial bidirecional', () => {
-		const r = encontrarLojaPorNome('SKIN1004', lojas);
-		expect(r).not.toBeNull();
-		expect(r.id).toBe('loja-123');
-	});
-
-	it('retorna null se não encontrar', () => {
-		expect(encontrarLojaPorNome('inexistente', lojas)).toBeNull();
-	});
-
-	it('retorna null se termo vazio', () => {
-		expect(encontrarLojaPorNome('', lojas)).toBeNull();
-	});
-});
 
 // ── Fonte Lojas (cenário unificação) ──────────────────────────────────────
 
@@ -866,17 +829,6 @@ describe('agruparCategoriasPorMarketplace', () => {
 	});
 });
 
-describe('listarLojasMonitoradas', () => {
-	it('deriva lojas das buscas salvas, dedup por id, monitorada = tem cron', () => {
-		const r = listarLojasMonitoradas([
-			{ shop_ids: ['10'], nome: 'Le Botanic', marketplaces: 'shopee', origem_padrao: '🇰🇷', cron: '0 */6 * * *' },
-			{ shop_ids: ['10', '20'], nome: 'Outra', marketplaces: 'amazon' }
-		]);
-		expect(r).toHaveLength(2);
-		expect(r.find((l) => l.id === '10')).toMatchObject({ nome: 'Le Botanic', origem: '🇰🇷', monitorada: true });
-		expect(r.find((l) => l.id === '20')).toMatchObject({ monitorada: false });
-	});
-});
 
 describe('sourcesBusca — busca só-categorias é válida', () => {
 	it('categorias sem keyword/loja cai nos sources globais', () => {

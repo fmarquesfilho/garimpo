@@ -61,6 +61,11 @@
     "erroAoSalvar": true,
     "feedbackReativo": true
   },
+  "lojaRegistro": {
+    "normalizacao": "NFD_strip_nonalphanum_lowercase",
+    "matchMinChars": 2,
+    "fonte": "api"
+  },
   "inference": {
     "marketplaces_from_shops": {
       "description": "Se shop_ids contém lojas de um marketplace, esse marketplace é incluído automaticamente.",

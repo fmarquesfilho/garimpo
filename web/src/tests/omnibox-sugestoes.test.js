@@ -53,6 +53,28 @@ describe('omnibox-sugestoes — prefixos filtram por tipo', () => {
 		expect([...m.keys()]).toEqual(['loja']);
 	});
 
+	it('loja retorna sugestão para nomes normalizados (ex: @gloryofseoul -> Glory of Seoul)', () => {
+		const ctx = {
+			lojasMonitoradas: [
+				{ id: 1, nome: 'Glory of Seoul', nome_normalizado: 'gloryofseoul' },
+				{ id: 2, nome: 'Le Botanic', nome_normalizado: 'lebotanic' }
+			]
+		};
+
+		/** @type {import('$lib/omnibox-parser.js').Token} */
+		const t1 = { tipo: 'loja', valor: '@gloryofseoul', completo: false };
+		// note que matchLojas no registry ignora '@', the query sent is 'gloryofseoul' 
+		// wait, no! The query sent to gerarSugestoes is `valor.toLowerCase()`.
+		// so the query is '@gloryofseoul'. normalizarNome('@gloryofseoul') becomes 'gloryofseoul'
+		const r1 = gerarSugestoes(t1, ctx);
+		expect(r1.get('loja')[0].label).toBe('Glory of Seoul');
+
+		/** @type {import('$lib/omnibox-parser.js').Token} */
+		const t2 = { tipo: 'loja', valor: '@le', completo: false };
+		const r2 = gerarSugestoes(t2, ctx);
+		expect(r2.get('loja')[0].label).toBe('Le Botanic');
+	});
+
 	it('# filtra só categorias', () => {
 		const m = sugerir('#bel');
 		expect([...m.keys()]).toEqual(['categoria']);

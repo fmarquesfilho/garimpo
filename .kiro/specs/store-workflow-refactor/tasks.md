@@ -16,7 +16,7 @@ lojas monitoradas e escopadas. 11 tasks ordenadas por dependência (backend-firs
   - Testes xUnit para `Loja.Normalizar()` com pares parametrizados
   - **Requirements: 1.1, 1.2, 3.1, 5.1**
 
-- [ ] 2. Implementar endpoints GET /api/lojas/registro e POST /api/lojas/resolver
+- [x] 2. Implementar endpoints GET /api/lojas/registro e POST /api/lojas/resolver
   - Criar `ResolverLojaRequest` record (Input required, Marketplace optional, Origem optional)
   - GET /api/lojas/registro: lista Lojas do tenant → {id, nome, nome_normalizado, marketplace, monitorada, cron, origem}
   - POST /api/lojas/resolver: resolve via Collector gRPC, upsert na tabela Lojas, retorna loja registrada
@@ -38,7 +38,7 @@ lojas monitoradas e escopadas. 11 tasks ordenadas por dependência (backend-firs
   - Verificar `bun run check` passa
   - **Requirements: 4.7, 6.3**
 
-- [ ] 5. Refatorar effects — novo carregarRegistroLojas, remover listarLojasMonitoradas
+- [x] 5. Refatorar effects — novo carregarRegistroLojas, remover listarLojasMonitoradas
   - Adicionar effect `carregarRegistroLojas()` → GET /api/lojas/registro
   - Alterar effect `resolverLoja(input)` → POST /api/lojas/resolver
   - Remover effect `listarLojasMonitoradas()`
@@ -46,7 +46,7 @@ lojas monitoradas e escopadas. 11 tasks ordenadas por dependência (backend-firs
   - Atualizar mocks nos testes existentes
   - **Requirements: 1.3, 1.4**
 
-- [ ] 6. Refatorar #adicionarLoja na BuscaEngine — separar caminhos sync/async
+- [x] 6. Refatorar #adicionarLoja na BuscaEngine — separar caminhos sync/async
   - Renomear `#adicionarLojaMonitorada` → `#adicionarLojaConhecida` com campo `tipo` no shopMeta
   - Criar `#resolverLojaRemota(input)`: guard concorrência, timeout 10s, validação marketplace, populate contexto
   - Refatorar `#adicionarLoja(event)` como router: loja.id → sync; value → checar registro → sync ou async; inválido → erro
@@ -54,7 +54,7 @@ lojas monitoradas e escopadas. 11 tasks ordenadas por dependência (backend-firs
   - Testes: caminho sync, async sucesso, timeout, guard concorrência, marketplace inválido, payload inválido, retry
   - **Requirements: 4.1–4.10, 5.2–5.6, 6.1–6.5**
 
-- [ ] 7. Refatorar inicialização — carregar registro de lojas em paralelo
+- [x] 7. Refatorar inicialização — carregar registro de lojas em paralelo
   - Adicionar `carregarRegistroLojas()` ao Promise.all em `#inicializar()`
   - Atribuir a `ctx.lojasDisponiveis`
   - Remover chamada legada a `listarLojasMonitoradas`
@@ -62,20 +62,20 @@ lojas monitoradas e escopadas. 11 tasks ordenadas por dependência (backend-firs
   - Atualizar testes de inicialização
   - **Requirements: 1.3, 1.4**
 
-- [ ] 8. Atualizar omnibox-sugestoes.js para usar normalização robusta
+- [x] 8. Atualizar omnibox-sugestoes.js para usar normalização robusta
   - Importar `normalizarNome`, `matchLojas` de `loja-registry.js`
   - Refatorar `matchLojas()` local para usar normalização + delegation
   - Atualizar testes: @gloryofseoul encontra "Glory of Seoul", @glory idem, @le encontra "Le Botanic"
   - Garantir que `sugestoesCtx.lojasMonitoradas` usa formato com `nome_normalizado`
   - **Requirements: 3.2, 3.3, 3.4, 3.5, 3.6**
 
-- [ ] 9. Implementar distinção visual monitorada/escopada nos loja cards
+- [x] 9. Implementar distinção visual monitorada/escopada nos loja cards
   - Atualizar getter `lojaCards` para incluir `tipo` no output
   - Em `BuscaUnificada.svelte`: badge ⏱ com title cron para monitoradas
   - Acessibilidade: title descritivo no badge, aria-label no botão remover
   - **Requirements: 2.1, 2.2, 2.3, 2.4**
 
-- [ ] 10. Limpar código legado e atualizar rules/contracts
+- [x] 10. Limpar código legado e atualizar rules/contracts
   - Remover `listarLojasMonitoradas` e `encontrarLojaPorNome` de `descobrir-logic.js`
   - Remover testes associados de `descobrir.test.js`
   - Atualizar `rules/busca-rules.json` com bloco `lojaRegistro`

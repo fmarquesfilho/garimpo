@@ -28,7 +28,7 @@ function mockEffects(overrides = {}) {
 			lojas: [],
 			favoritos: []
 		}),
-		resolverLoja: vi.fn().mockResolvedValue({ shop_ids: [920292999], keyword: 'Le Botanic' }),
+		resolverLoja: vi.fn().mockResolvedValue({ id: 920292999, nome: 'Le Botanic', marketplace: 'shopee' }),
 		salvarBusca: vi.fn().mockResolvedValue({}),
 		removerBusca: vi.fn().mockResolvedValue({}),
 		sincronizarStoreExterno: vi.fn().mockResolvedValue(undefined),

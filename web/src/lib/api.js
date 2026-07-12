@@ -255,6 +255,27 @@ export function adicionarLoja({ input, cron, origemPadrao, keywords }) {
 	return postar('/api/lojas', corpo);
 }
 
+/**
+ * Retorna o registro completo de lojas do tenant.
+ */
+export function listarRegistroLojas() {
+	return pegar('/api/lojas/registro');
+}
+
+/**
+ * Resolve e faz upsert de uma loja (usado pelo Store Workflow).
+ * @param {Object} opts
+ * @param {string} opts.input
+ * @param {string} [opts.marketplace]
+ * @param {string} [opts.origem]
+ */
+export function resolverLoja({ input, marketplace, origem }) {
+	const corpo = { input };
+	if (marketplace) corpo.marketplace = marketplace;
+	if (origem) corpo.origem = origem;
+	return postar('/api/lojas/resolver', corpo);
+}
+
 /** Remove uma loja do monitoramento. */
 export async function removerLoja(id) {
 	const headers = { ...(await authHeaders()) };

@@ -8,7 +8,7 @@
 	 */
 	import { cronLabel } from '$lib/busca-engine.svelte.js';
 
-	let { nome = '', marketplace = 'shopee', origem = null, monitorada = false, cron = '', onremover = null } = $props();
+	let { nome = '', marketplace = 'shopee', origem = null, monitorada = false, cron = '', tipo = '', onremover = null } = $props();
 
 	// origem pode vir como emoji ("🇰🇷"), código ("coreia") ou rótulo ("🇰🇷 Coreia")
 	const BANDEIRAS = {
@@ -40,15 +40,17 @@
 		<span class="font-[var(--mono)] text-xs text-muted-foreground">{marketplace}</span>
 		<span class="flex items-center gap-2">
 			{#if bandeira}<span class="text-base" title="Origem cadastrada">{bandeira}</span>{/if}
-			{#if monitorada}
+			{#if tipo === 'monitorada' || monitorada}
 				<span
+					title={cron ? `Monitorada: ${cron}` : 'Loja monitorada'}
 					class="inline-flex items-center gap-1 rounded-full border border-[var(--sucesso-borda)] bg-[var(--sucesso-fundo)] px-1.5 py-0.5 font-[var(--mono)] text-[0.68rem] text-[var(--sucesso-texto)]"
 					>⏱ {cronLabel(cron) || 'monitorada'}</span
 				>
 			{:else}
 				<span
+					title="Loja apenas escopada (sem monitoramento ativo)"
 					class="inline-flex items-center gap-1 rounded-full border border-border bg-card px-1.5 py-0.5 font-[var(--mono)] text-[0.68rem] text-muted-foreground"
-					>○ sem monitor</span
+					>○ escopada</span
 				>
 			{/if}
 		</span>

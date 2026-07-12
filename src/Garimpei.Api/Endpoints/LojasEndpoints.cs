@@ -11,6 +11,131 @@ public static partial class EndpointExtensions
 {
     public static WebApplication MapLojasEndpoints(this WebApplication app)
     {
+        // /api/lojas/registro — lista o registro central de lojas do tenant
+        app.MapGet("/api/lojas/registro", async (AppDbContext db, CancellationToken ct) =>
+        {
+            var lojas = await db.Lojas
+                .OrderByDescending(l => l.CreatedAt)
+                .Select(l => new
+                {
+                    id = l.Id,
+                    nome = l.Nome,
+                    nome_normalizado = l.NomeNormalizado,
+                    marketplace = l.Marketplace,
+                    cron = l.CronExpression,
+                    origem = l.OrigemPadrao,
+                    monitorada = !string.IsNullOrEmpty(l.CronExpression)
+                })
+                .ToListAsync(ct);
+
+            return Results.Ok(new { lojas, total = lojas.Count });
+        }).RequireAuthorization().WithTags("Lojas");
+
+        // /api/lojas/resolver — resolve via Collector e faz upsert no registro de Lojas
+        app.MapPost("/api/lojas/resolver", async (
+            AppDbContext db,
+            Collector.V1.CollectorService.CollectorServiceClient collectorClient,
+            ResolverLojaRequest req,
+            CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(req.Input))
+                return Results.BadRequest(new { error = "O input da loja é obrigatório." });
+
+            var marketplaceInput = req.Marketplace?.ToLowerInvariant();
+            var marketplace = marketplaceInput switch
+            {
+                "amazon" => Collector.V1.Marketplace.Amazon,
+                "mercadolivre" or "ml" => Collector.V1.Marketplace.Mercadolivre,
+                "shopee" => Collector.V1.Marketplace.Shopee,
+                null or "" => Collector.V1.Marketplace.Shopee,
+                _ => Collector.V1.Marketplace.Unspecified
+            };
+
+            if (marketplace == Collector.V1.Marketplace.Unspecified)
+                return Results.BadRequest(new { error = $"Marketplace '{req.Marketplace}' não suportado." });
+
+            try
+            {
+                var resolveResp = await collectorClient.ResolveShopAsync(new Collector.V1.ResolveShopRequest
+                {
+                    UsernameOrUrl = req.Input,
+                    Marketplace = marketplace
+                }, cancellationToken: ct);
+
+                if (resolveResp.ShopId > 0)
+                {
+                    var mktStr = marketplace.ToString().ToLowerInvariant();
+                    var nomeNormalizado = Loja.Normalizar(resolveResp.ShopName);
+
+                    var existingLoja = await db.Lojas.FirstOrDefaultAsync(l =>
+                        l.ShopId == resolveResp.ShopId &&
+                        l.Marketplace == mktStr, ct);
+
+                    if (existingLoja != null)
+                    {
+                        if (existingLoja.Nome != resolveResp.ShopName || existingLoja.NomeNormalizado != nomeNormalizado)
+                        {
+                            existingLoja.Nome = resolveResp.ShopName;
+                            existingLoja.NomeNormalizado = nomeNormalizado;
+                            existingLoja.UpdatedAt = DateTime.UtcNow;
+                            await db.SaveChangesAsync(ct);
+                        }
+                        return Results.Ok(new
+                        {
+                            id = existingLoja.Id,
+                            nome = existingLoja.Nome,
+                            nome_normalizado = existingLoja.NomeNormalizado,
+                            marketplace = existingLoja.Marketplace,
+                            cron = existingLoja.CronExpression,
+                            origem = existingLoja.OrigemPadrao,
+                            monitorada = !string.IsNullOrEmpty(existingLoja.CronExpression)
+                        });
+                    }
+
+                    var novaLoja = new Loja
+                    {
+                        OwnerUid = "", // Será populado pelo interceptor do EF
+                        ShopId = resolveResp.ShopId,
+                        Nome = resolveResp.ShopName,
+                        NomeNormalizado = nomeNormalizado,
+                        Marketplace = mktStr,
+                        OrigemPadrao = req.Origem,
+                        SourceUrl = req.Input.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? req.Input : null
+                    };
+
+                    db.Lojas.Add(novaLoja);
+                    await db.SaveChangesAsync(ct);
+
+                    return Results.Ok(new
+                    {
+                        id = novaLoja.Id,
+                        nome = novaLoja.Nome,
+                        nome_normalizado = novaLoja.NomeNormalizado,
+                        marketplace = novaLoja.Marketplace,
+                        cron = novaLoja.CronExpression,
+                        origem = novaLoja.OrigemPadrao,
+                        monitorada = !string.IsNullOrEmpty(novaLoja.CronExpression)
+                    });
+                }
+
+                return Results.BadRequest(new { error = $"Loja não encontrada ou link inválido no marketplace {marketplace.ToString().ToLowerInvariant()}." });
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound || ex.StatusCode == Grpc.Core.StatusCode.InvalidArgument)
+            {
+                var mktStr = marketplace.ToString().ToLowerInvariant();
+                return Results.BadRequest(new { error = $"Loja não encontrada ou link inválido no marketplace {mktStr}." });
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Unimplemented)
+            {
+                var mktStr = marketplace.ToString().ToLowerInvariant();
+                return Results.BadRequest(new { error = $"Resolução de loja ainda não suportada para {mktStr}." });
+            }
+            catch
+            {
+                return Results.BadRequest(new { error = "Falha ao resolver o ID da loja via Collector." });
+            }
+        }).RequireAuthorization().WithTags("Lojas");
+
         // /api/lojas — listar/adicionar/remover lojas monitoradas (buscas com ShopIDs)
         app.MapGet("/api/lojas", async (AppDbContext db, CancellationToken ct) =>
         {
@@ -204,4 +329,11 @@ public sealed record AdicionarLojaRequest
     public string? Cron { get; init; }
     public string? OrigemPadrao { get; init; }
     public string[]? Keywords { get; init; }
+}
+
+public sealed record ResolverLojaRequest
+{
+    public required string Input { get; init; }
+    public string? Marketplace { get; init; }
+    public string? Origem { get; init; }
 }

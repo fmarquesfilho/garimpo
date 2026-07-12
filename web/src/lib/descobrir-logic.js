@@ -3,19 +3,6 @@
  * Sem dependências de API/Firebase — testável com Vitest diretamente.
  */
 
-/**
- * Detecta se o termo de busca é nome de uma loja monitorada.
- */
-export function encontrarLojaPorNome(termo, buscasComLojas) {
-	if (!termo) return null;
-	const t = termo.toLowerCase();
-	return (
-		buscasComLojas.find((b) => {
-			const nome = (b.nome || b.id || '').toLowerCase();
-			return nome.includes(t) || t.includes(nome);
-		}) ?? null
-	);
-}
 
 /**
  * Monta a lista final de resultados aplicando todos os filtros client-side.
@@ -98,35 +85,6 @@ export function agruparCategoriasPorMarketplace(categorias) {
 		.sort((a, b) => a.nome.localeCompare(b.nome));
 }
 
-/**
- * Deriva a lista de lojas monitoradas para o autocomplete, a partir das buscas
- * salvas (uma busca pode conter várias lojas). Dedup por shopId.
- * @param {any[]} buscasSalvas — registros de /api/buscas
- * @returns {{id:string, nome:string, marketplace:string, origem:string|null, monitorada:boolean, cron:string}[]}
- */
-export function listarLojasMonitoradas(buscasSalvas) {
-	const vistos = new Map();
-	for (const b of buscasSalvas ?? []) {
-		const ids = b.shop_ids ?? b.shopIds ?? [];
-		const nomes = b.shop_names ?? b.shopNomes ?? {};
-		for (const id of ids) {
-			if (vistos.has(id)) continue;
-			vistos.set(id, buildLojaEntry(id, nomes, b));
-		}
-	}
-	return [...vistos.values()].sort((a, b) => a.nome.localeCompare(b.nome));
-}
-
-function buildLojaEntry(id, nomes, busca) {
-	return {
-		id: String(id),
-		nome: nomes[String(id)] || nomes[id] || busca.nome || String(id),
-		marketplace: busca.marketplaces || busca.marketplace || 'shopee',
-		origem: busca.origem_padrao ?? busca.origemPadrao ?? null,
-		monitorada: Boolean(busca.cron),
-		cron: busca.cron ?? ''
-	};
-}
 
 /**
  * Gera opções para o ToggleGroup de fontes com badges de contagem.

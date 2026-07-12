@@ -4,25 +4,18 @@
  * Funções puras (testáveis) estão em descobrir-logic.js.
  */
 import { buscarCandidatos, buscarNovidades } from './api.js';
-export { montarResultados, encontrarLojaPorNome } from './descobrir-logic.js';
-import { encontrarLojaPorNome } from './descobrir-logic.js';
+export { montarResultados } from './descobrir-logic.js';
+
 
 /**
  * Carrega produtos da curadoria (Shopee API).
  * Se o termo bate com uma loja monitorada, busca via shop_ids.
  */
-// Escopo de loja: prioriza os shopIds explícitos do contexto (loja recém
-// adicionada, mesmo não salva); senão tenta casar o termo com uma loja salva.
-function resolverLojaIds(termo, shopIds, buscasComLojas) {
-	if (shopIds?.length > 0) return shopIds;
-	return encontrarLojaPorNome(termo, buscasComLojas)?.shop_ids ?? null;
-}
-
 export async function carregarCuradoria({ busca, comissaoMin, categorias, buscasComLojas, shopIds = null }) {
 	try {
 		const termo = (busca ?? '').trim();
 		const cat0 = categorias?.length > 0 ? categorias[0] : undefined;
-		const lojaIds = resolverLojaIds(termo, shopIds, buscasComLojas);
+		const lojaIds = shopIds?.length > 0 ? shopIds : null;
 		const params = buildCuradoriaParams(lojaIds, termo, comissaoMin, cat0);
 
 		const r = await buscarCandidatos(params);

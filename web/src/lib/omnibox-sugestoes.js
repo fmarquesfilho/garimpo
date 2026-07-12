@@ -4,6 +4,7 @@
  *
  * Sem runes / sem DOM. Separa a lógica de match do componente visual.
  */
+import { normalizarNome, matchLojas as registryMatchLojas } from './loja-registry.js';
 
 /**
  * @typedef {import('./omnibox-parser.js').Token} Token
@@ -22,7 +23,7 @@ const ORDEM = ['busca_salva', 'loja', 'categoria', 'marketplace'];
 
 /**
  * @typedef {Object} SugestoesContext
- * @property {Array<{id:string,nome:string,marketplace?:string}>} [lojasMonitoradas]
+ * @property {Array<{id:number|string,nome:string,nome_normalizado?:string,marketplace?:string}>} [lojasMonitoradas]
  * @property {Array<{nome:string,marketplaces?:string[]}|string>} [categoriasDisponiveis]
  * @property {string[]} [marketplaces]
  * @property {Array} [buscasSalvas]
@@ -66,13 +67,8 @@ export function gerarSugestoes(ultimoToken, ctx = {}, config = {}) {
 }
 
 function matchLojas(lojas, q, max) {
-	return (lojas ?? [])
-		.filter((l) =>
-			String(l.nome ?? '')
-				.toLowerCase()
-				.includes(q)
-		)
-		.slice(0, max)
+	const normQ = normalizarNome(q);
+	return registryMatchLojas(normQ, lojas, max)
 		.map((l) => ({ tipo: 'loja', label: l.nome, valor: '@' + l.nome, icone: ICONE.loja, meta: l }));
 }
 

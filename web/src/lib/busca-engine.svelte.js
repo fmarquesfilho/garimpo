@@ -35,7 +35,8 @@ import {
 	buscarDuplicada,
 	BUSCA_DUPLICADA
 } from './busca-config.js';
-import { STATES, MODOS, criarContextoInicial, guards } from './busca-engine-state.js';
+import { normalizarNome, matchLojas } from './loja-registry.js';
+import { criarContextoInicial, guards, STATES, MODOS } from './busca-engine-state.js';
 
 // Re-export para consumidores que importavam da engine.
 export { STATES, MODOS, guards };
@@ -97,11 +98,15 @@ export class BuscaEngine {
 
 	/** Cards de loja no escopo: `{ id, nome, marketplace, origem, monitorada, cron }[]`. */
 	get lojaCards() {
-		return this.ctx.shopIds.map((id) => ({
-			id,
-			nome: this.ctx.shopNomes[id] || id,
-			...(this.ctx.shopMeta[id] ?? { marketplace: 'shopee', origem: null, monitorada: false, cron: '' })
-		}));
+		return this.ctx.shopIds.map((id) => {
+			const meta = this.ctx.shopMeta[id] ?? { marketplace: 'shopee', origem: null, monitorada: false, cron: '' };
+			return {
+				id,
+				nome: this.ctx.shopNomes[id] || id,
+				...meta,
+				tipo: meta.tipo ?? (meta.cron ? 'monitorada' : 'escopada')
+			};
+		});
 	}
 
 	/** Contador da raia Filtros: fontes ativas não-default + quantitativos + categorias. */
@@ -184,18 +189,17 @@ export class BuscaEngine {
 	async #inicializar() {
 		this.status = STATES.SEARCHING;
 		try {
-			const [buscas, categorias] = await Promise.all([
+			const [buscas, categorias, lojas] = await Promise.all([
 				this.#effects.carregarBuscasSalvas(),
-				this.#effects.carregarCategorias()
+				this.#effects.carregarCategorias(),
+				this.#effects.carregarRegistroLojas?.() ?? Promise.resolve([])
 			]);
 			this.ctx.buscasSalvas = (buscas ?? []).map(payloadToConfig);
 			this.ctx.categoriasDisponiveis = categorias ?? [];
+			this.ctx.lojasDisponiveis = lojas ?? [];
 
 			// Sincroniza o store externo para que executarBusca veja as buscas com lojas
 			await this.#effects.sincronizarStoreExterno();
-
-			// Lojas monitoradas para o autocomplete da raia Lojas (deriva das buscas salvas)
-			this.ctx.lojasDisponiveis = this.#effects.listarLojasMonitoradas?.() ?? [];
 
 			// Só executa busca automática se há contexto explícito (keyword, loja no escopo, categoria).
 			// Sem contexto: fica em IDLE. O usuário inicia a busca ao digitar, clicar pill, ou adicionar loja.
@@ -215,9 +219,9 @@ export class BuscaEngine {
 		this.#debounce();
 	}
 
-	/** Loja já-monitorada escolhida no dropdown: adiciona direto, sem resolver. */
-	#adicionarLojaMonitorada(loja) {
-		const { id, nome, marketplace, origem, monitorada, cron } = loja;
+	/** Loja já-monitorada escolhida no dropdown ou match exato: adiciona direto, sem resolver. */
+	#adicionarLojaConhecida(loja) {
+		const { id, nome, marketplace, origem, cron } = loja;
 		if (this.ctx.shopIds.includes(id)) return;
 		this.ctx.shopIds = [...this.ctx.shopIds, id];
 		this.ctx.shopNomes = { ...this.ctx.shopNomes, [id]: nome };
@@ -226,41 +230,54 @@ export class BuscaEngine {
 			[id]: {
 				marketplace: marketplace ?? 'shopee',
 				origem: origem ?? null,
-				monitorada: Boolean(monitorada),
-				cron: cron ?? ''
+				monitorada: Boolean(cron),
+				cron: cron ?? '',
+				tipo: cron ? 'monitorada' : 'escopada'
 			}
 		};
 		return this.#executarBusca();
 	}
 
-	async #adicionarLoja(event) {
-		if (event.loja?.id) return this.#adicionarLojaMonitorada(event.loja);
-		if (!guards.lojaInputValida(this.ctx, event)) return;
-		this.ctx.lojaResolvendo = true;
-		this.ctx.lojaErro = '';
+	async #resolverLojaRemota(input, options = {}) {
+		if (!guards.resolucaoPermitida(this.ctx)) return;
+		
+		this.ctx.resolucaoLoja = { status: 'resolvendo' };
+		
 		try {
-			const r = await this.#effects.resolverLoja(event.value);
-			if (r.shop_ids?.length) {
-				const id = r.shop_ids[0];
-				this.ctx.shopIds = [...this.ctx.shopIds, ...r.shop_ids];
-				this.ctx.shopNomes = { ...this.ctx.shopNomes, [id]: r.keyword };
-				this.ctx.shopMeta = {
-					...this.ctx.shopMeta,
-					[id]: {
-						marketplace: r.marketplace ?? event.marketplace ?? 'shopee',
-						origem: r.origem ?? r.origem_padrao ?? event.origem ?? null,
-						monitorada: Boolean(r.cron),
-						cron: r.cron ?? ''
-					}
-				};
+			// Promise.race para timeout de 10s
+			const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout na resolução da loja (10s).')), 10000));
+			const request = this.#effects.resolverLoja(input);
+			const r = await Promise.race([request, timeout]);
+
+			// Anexa a loja ao registro local se não estiver presente
+			if (!this.ctx.lojasDisponiveis.some(l => l.id === r.id)) {
+				this.ctx.lojasDisponiveis = [...this.ctx.lojasDisponiveis, r];
 			}
-			this.ctx.lojaResolvendo = false;
-			// Busca imediata (sem debounce) com keyword + nova loja
-			await this.#executarBusca();
+			
+			this.ctx.resolucaoLoja = { status: 'idle' };
+			return this.#adicionarLojaConhecida(r);
 		} catch (e) {
-			this.ctx.lojaErro = e?.message ?? 'Falha ao resolver loja';
-			this.ctx.lojaResolvendo = false;
+			this.ctx.resolucaoLoja = { status: 'erro', erro: e?.message ?? 'Falha ao resolver loja' };
 		}
+	}
+
+	async #adicionarLoja(event) {
+		if (event.loja?.id) return this.#adicionarLojaConhecida(event.loja);
+		
+		const input = (event.value ?? '').trim();
+		if (!guards.lojaInputValida(this.ctx, event)) return;
+
+		// Verifica se há um match local exato no registro de lojas disponíveis
+		const norm = normalizarNome(input);
+		const matches = matchLojas(norm, this.ctx.lojasDisponiveis, 1);
+		if (matches.length > 0) {
+			const match = matches[0].meta; // matchLojas returns an object with `meta: loja`
+			if (norm === match.nome_normalizado || norm === normalizarNome(match.nome)) {
+				return this.#adicionarLojaConhecida(match);
+			}
+		}
+
+		return this.#resolverLojaRemota(input, { marketplace: event.marketplace, origem: event.origem });
 	}
 
 	#removerLoja(event) {
