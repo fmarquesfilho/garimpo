@@ -6,9 +6,13 @@ on:
     paths:
       - 'docs/**'
       - 'docs-site/**'
-      - 'backlog/**'
-      - 'docs-site/docs/api.md'
+      - 'backlog/**'          # tarefas → BOARD/ROADMAP/tarefas
+      - 'cmd/gen-board/**'     # gerador do board/roadmap
+      - 'cmd/gen-er/**'        # gerador do ER (ENTIDADES)
+      - 'internal/store/**'    # schema → ENTIDADES
+      - 'deploy/**'            # env → env-vars
       - '.mise/tasks/docs/**'
+      - '.mise/tasks/gen/**'
       - '.github/workflows/docs.yml'
 
 jobs:
@@ -18,15 +22,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # mise fornece Go (geradores gen-board/gen-er) e Node via mise.toml.
+      - uses: jdx/mise-action@v4
+
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: docs-site/package-lock.json
 
-      - name: Install & build docs-site
+      - name: Regenerate & build docs-site
         run: |
-          .mise/tasks/docs/sync
+          # docs/gerado/* e docs-site/docs/ NÃO são commitados (ver .gitignore).
+          # `mise run docs` regenera tudo (ER + env + board + sync) antes do build.
+          mise run docs
           cd docs-site && npm ci && npm run build
 
       - name: Validate build output

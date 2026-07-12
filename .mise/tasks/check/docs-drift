@@ -1,18 +1,23 @@
 #!/usr/bin/env bash
-#MISE description="Verifica que documentação gerada está sincronizada com as fontes"
+#MISE description="Smoke da pipeline de docs: geradores + sync rodam e produzem saída completa"
 # =============================================================================
-# check/docs-drift — Detecta drift entre fontes canônicas e docs gerados
+# check/docs-drift — Valida que a pipeline de documentação está saudável.
 # =============================================================================
-# Fontes:
-#   - backlog/tasks/*.yaml → docs/gerado/BOARD.md, docs/gerado/ROADMAP.md
-#   - internal/store/ → docs/gerado/ENTIDADES.md
-#   - deploy/, services/ → docs/gerado/env-vars.md
-#   - docs/**/*.md → docs-site/docs/ (via sync)
+# Desde 2026-07-12 os artefatos gerados NÃO são commitados (ver .gitignore):
+#   - docs-site/docs/**      → 100% recriado por `docs/sync`
+#   - docs/gerado/{BOARD,ROADMAP,ENTIDADES,env-vars}.md → geradores
+# A CI (.github/workflows/docs.yml) regenera tudo (`mise run docs`) antes de
+# buildar/deployar, então não há mais "drift" entre fonte e artefato commitado.
 #
-# O check regenera tudo e verifica se docs/gerado/ tem diff.
-# Se tiver: o desenvolvedor esqueceu de rodar `mise run docs`.
+# Este check virou um SMOKE TEST: regenera + sincroniza e verifica que a saída
+# está completa (sidebar válido, ADRs, docs esperados, links do index resolvem).
+# Não faz git diff nem exige nada commitado. Exit 1 = pipeline quebrada.
 #
-# Roda no pre-push e no CI. Exit 1 = drift detectado.
+# Fontes → geradores:
+#   - backlog/tasks/*.yaml → BOARD.md, ROADMAP.md   (cmd/gen-board)
+#   - internal/store/      → ENTIDADES.md            (cmd/gen-er)
+#   - deploy/, services/   → env-vars.md             (.mise/tasks/docs/env)
+#   - docs/**, backlog/**  → docs-site/docs/**       (.mise/tasks/docs/sync)
 # =============================================================================
 
 set -euo pipefail
@@ -23,29 +28,19 @@ NC='\033[0m'
 ERRORS=0
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "  Docs Drift Check"
+echo "  Docs Pipeline Smoke"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
-# ── 1. Regenerar docs/gerado/ ─────────────────────────────────────────────────
+# ── 1. Regenerar docs/gerado/ (falha do gerador aborta via set -e) ────────────
 echo "🔍 Regenerando docs gerados..."
 go run ./cmd/gen-board > /dev/null 2>&1
 go run ./cmd/gen-er > docs/gerado/ENTIDADES.md 2>/dev/null
 bash .mise/tasks/docs/env > /dev/null 2>&1 || true
 bash .mise/tasks/gen/api-reference > /dev/null 2>&1 || true
+echo -e "${GREEN}   ✓ Geradores executaram${NC}"
 
-# ── 2. Verificar drift em docs/gerado/ ────────────────────────────────────────
-echo ""
-echo "🔍 Verificando drift em docs/gerado/..."
-if ! git diff --quiet docs/gerado/ docs/09-api-reference.md 2>/dev/null; then
-  echo -e "${RED}   ✗ docs/gerado/ desatualizado:${NC}"
-  git diff --stat docs/gerado/
-  ERRORS=$((ERRORS + 1))
-else
-  echo -e "${GREEN}   ✓ docs/gerado/ em dia${NC}"
-fi
-
-# ── 3. Verificar que docs/sync roda sem erros ─────────────────────────────────
+# ── 2. Rodar docs/sync (recria docs-site/docs a partir das fontes) ────────────
 echo ""
 echo "🔍 Verificando docs/sync..."
 if ! bash .mise/tasks/docs/sync > /dev/null 2>&1; then
@@ -55,17 +50,7 @@ else
   echo -e "${GREEN}   ✓ docs/sync executou com sucesso${NC}"
 fi
 
-# ── 3b. Verificar que docs-site/ não tem arquivos dirty/untracked após sync ───
-DIRTY_DOCS=$(git status --porcelain docs-site/docs/ 2>/dev/null | head -5)
-if [ -n "$DIRTY_DOCS" ]; then
-  echo -e "${RED}   ✗ docs-site/docs/ tem arquivos não commitados após sync:${NC}"
-  echo "$DIRTY_DOCS"
-  echo ""
-  echo "   Correção: git add docs-site/docs/ && git commit --amend --no-edit"
-  ERRORS=$((ERRORS + 1))
-fi
-
-# ── 4. Verificar que todos os docs esperados existem após sync ────────────────
+# ── 3. Verificar que todos os docs esperados existem após sync ────────────────
 echo ""
 echo "🔍 Verificando completude do docs-site..."
 MISSING=0
@@ -91,7 +76,7 @@ else
   echo -e "${GREEN}   ✓ $ADR_DEST ADRs sincronizadas${NC}"
 fi
 
-# Docs gerados devem existir
+# Docs gerados devem existir (regenerados no passo 1 + copiados pelo sync)
 for f in BOARD.md ROADMAP.md ENTIDADES.md env-vars.md; do
   if [ ! -f "docs-site/docs/gerado/$f" ]; then
     echo -e "${RED}   ✗ Faltando: gerado/$f${NC}"
@@ -119,7 +104,7 @@ else
   ERRORS=$((ERRORS + MISSING))
 fi
 
-# ── 5. Verificar links internos no index ──────────────────────────────────────
+# ── 4. Verificar links internos no index ──────────────────────────────────────
 echo ""
 echo "🔍 Verificando links quebrados no docs-site..."
 BROKEN=0
@@ -147,11 +132,11 @@ fi
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
 if [ "$ERRORS" -eq 0 ]; then
-  echo -e "${GREEN}✅ Docs sincronizadas — sem drift.${NC}"
+  echo -e "${GREEN}✅ Pipeline de docs saudável.${NC}"
   exit 0
 else
-  echo -e "${RED}❌ ${ERRORS} problema(s) de drift detectado(s)!${NC}"
+  echo -e "${RED}❌ ${ERRORS} problema(s) na pipeline de docs!${NC}"
   echo ""
-  echo "   Correção: mise run docs && git add docs/ docs-site/"
+  echo "   Rode localmente: mise run docs   (regenera docs/gerado + docs-site/docs)"
   exit 1
 fi
