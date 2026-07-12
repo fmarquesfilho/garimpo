@@ -113,8 +113,17 @@ func (s *UnifiedCollectorServer) ResolveShop(ctx context.Context, req *collector
 	var data struct {
 		Error int `json:"error"`
 		Data  struct {
-			ShopID int64  `json:"shopid"`
-			Name   string `json:"name"`
+			ShopID        int64  `json:"shopid"`
+			Name          string `json:"name"`
+			FollowerCount int32  `json:"follower_count"`
+			ItemCount     int32  `json:"item_count"`
+			RatingStar    float64 `json:"rating_star"`
+			ShopLocation  string `json:"shop_location"`
+			Description   string `json:"description"`
+			Account       struct {
+				Portrait string `json:"portrait"`
+			} `json:"account"`
+			Cover string `json:"cover"`
 		} `json:"data"`
 	}
 
@@ -126,9 +135,26 @@ func (s *UnifiedCollectorServer) ResolveShop(ctx context.Context, req *collector
 		return nil, status.Errorf(codes.NotFound, "loja não encontrada (error=%d)", data.Error)
 	}
 
+	// Resolve image URL: avatar (portrait) > cover
+	imageURL := ""
+	if data.Data.Account.Portrait != "" {
+		imageURL = "https://down-br.img.susercontent.com/" + data.Data.Account.Portrait
+	}
+	coverURL := ""
+	if data.Data.Cover != "" {
+		coverURL = "https://down-br.img.susercontent.com/" + data.Data.Cover
+	}
+
 	return &collectorpb.ResolveShopResponse{
-		ShopId:   data.Data.ShopID,
-		ShopName: data.Data.Name,
+		ShopId:        data.Data.ShopID,
+		ShopName:      data.Data.Name,
+		FollowerCount: data.Data.FollowerCount,
+		ItemCount:     data.Data.ItemCount,
+		RatingStar:    data.Data.RatingStar,
+		ImageUrl:      imageURL,
+		CoverUrl:      coverURL,
+		ShopLocation:  data.Data.ShopLocation,
+		Description:   data.Data.Description,
 	}, nil
 }
 

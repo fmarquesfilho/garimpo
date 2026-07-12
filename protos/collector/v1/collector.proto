@@ -51,6 +51,14 @@ message ResolveShopRequest {
 message ResolveShopResponse {
   int64 shop_id = 1;
   string shop_name = 2;
+  // Campos enriquecidos (Shopee get_shop_detail — opcionais para outros marketplaces)
+  int32 follower_count = 3;
+  int32 item_count = 4;
+  double rating_star = 5;
+  string image_url = 6;      // avatar/portrait da loja
+  string cover_url = 7;      // imagem de capa
+  string shop_location = 8;  // localização registrada (cidade/estado)
+  string description = 9;    // bio da loja
 }
 
 // GenerateAffiliateLink — gera link curto de afiliada via Shopee generateShortLink.

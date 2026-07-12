@@ -35,64 +35,69 @@ namespace Collector.V1 {
             "cmtldHBsYWNlUgttYXJrZXRwbGFjZSJ5ChJSZXNvbHZlU2hvcFJlcXVlc3QS",
             "JgoPdXNlcm5hbWVfb3JfdXJsGAEgASgJUg11c2VybmFtZU9yVXJsEjsKC21h",
             "cmtldHBsYWNlGAIgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBsYWNlUgtt",
-            "YXJrZXRwbGFjZSJLChNSZXNvbHZlU2hvcFJlc3BvbnNlEhcKB3Nob3BfaWQY",
-            "ASABKANSBnNob3BJZBIbCglzaG9wX25hbWUYAiABKAlSCHNob3BOYW1lIrQB",
-            "ChxHZW5lcmF0ZUFmZmlsaWF0ZUxpbmtSZXF1ZXN0EiEKDG9yaWdpbmFsX3Vy",
-            "bBgBIAEoCVILb3JpZ2luYWxVcmwSFwoHc3ViX2lkcxgCIAMoCVIGc3ViSWRz",
-            "EjsKC21hcmtldHBsYWNlGAMgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBs",
-            "YWNlUgttYXJrZXRwbGFjZRIbCglvd25lcl91aWQYBCABKAlSCG93bmVyVWlk",
-            "IlsKHUdlbmVyYXRlQWZmaWxpYXRlTGlua1Jlc3BvbnNlEh0KCnNob3J0X2xp",
-            "bmsYASABKAlSCXNob3J0TGluaxIbCglsb25nX2xpbmsYAiABKAlSCGxvbmdM",
-            "aW5rIoIBCg1GZXRjaFJlc3BvbnNlEjEKCHByb2R1Y3RzGAEgAygLMhUuY29s",
+            "YXJrZXRwbGFjZSKzAgoTUmVzb2x2ZVNob3BSZXNwb25zZRIXCgdzaG9wX2lk",
+            "GAEgASgDUgZzaG9wSWQSGwoJc2hvcF9uYW1lGAIgASgJUghzaG9wTmFtZRIl",
+            "Cg5mb2xsb3dlcl9jb3VudBgDIAEoBVINZm9sbG93ZXJDb3VudBIdCgppdGVt",
+            "X2NvdW50GAQgASgFUglpdGVtQ291bnQSHwoLcmF0aW5nX3N0YXIYBSABKAFS",
+            "CnJhdGluZ1N0YXISGwoJaW1hZ2VfdXJsGAYgASgJUghpbWFnZVVybBIbCglj",
+            "b3Zlcl91cmwYByABKAlSCGNvdmVyVXJsEiMKDXNob3BfbG9jYXRpb24YCCAB",
+            "KAlSDHNob3BMb2NhdGlvbhIgCgtkZXNjcmlwdGlvbhgJIAEoCVILZGVzY3Jp",
+            "cHRpb24itAEKHEdlbmVyYXRlQWZmaWxpYXRlTGlua1JlcXVlc3QSIQoMb3Jp",
+            "Z2luYWxfdXJsGAEgASgJUgtvcmlnaW5hbFVybBIXCgdzdWJfaWRzGAIgAygJ",
+            "UgZzdWJJZHMSOwoLbWFya2V0cGxhY2UYAyABKA4yGS5jb2xsZWN0b3IudjEu",
+            "TWFya2V0cGxhY2VSC21hcmtldHBsYWNlEhsKCW93bmVyX3VpZBgEIAEoCVII",
+            "b3duZXJVaWQiWwodR2VuZXJhdGVBZmZpbGlhdGVMaW5rUmVzcG9uc2USHQoK",
+            "c2hvcnRfbGluaxgBIAEoCVIJc2hvcnRMaW5rEhsKCWxvbmdfbGluaxgCIAEo",
+            "CVIIbG9uZ0xpbmsiggEKDUZldGNoUmVzcG9uc2USMQoIcHJvZHVjdHMYASAD",
+            "KAsyFS5jb2xsZWN0b3IudjEuUHJvZHVjdFIIcHJvZHVjdHMSHwoLdG90YWxf",
+            "Zm91bmQYAiABKAVSCnRvdGFsRm91bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJ",
+            "ZmV0Y2hlZEF0IoYBChFGZXRjaFNob3BSZXNwb25zZRIxCghwcm9kdWN0cxgB",
+            "IAMoCzIVLmNvbGxlY3Rvci52MS5Qcm9kdWN0Ughwcm9kdWN0cxIfCgt0b3Rh",
+            "bF9mb3VuZBgCIAEoBVIKdG90YWxGb3VuZBIdCgpmZXRjaGVkX2F0GAMgASgJ",
+            "UglmZXRjaGVkQXQiywMKB1Byb2R1Y3QSFwoHaXRlbV9pZBgBIAEoA1IGaXRl",
+            "bUlkEhcKB3Nob3BfaWQYAiABKANSBnNob3BJZBISCgRuYW1lGAMgASgJUgRu",
+            "YW1lEhQKBXByaWNlGAQgASgBUgVwcmljZRIlCg5vcmlnaW5hbF9wcmljZRgF",
+            "IAEoAVINb3JpZ2luYWxQcmljZRISCgRzb2xkGAYgASgFUgRzb2xkEhYKBnJh",
+            "dGluZxgHIAEoAVIGcmF0aW5nEhsKCWltYWdlX3VybBgIIAEoCVIIaW1hZ2VV",
+            "cmwSHwoLcHJvZHVjdF91cmwYCSABKAlSCnByb2R1Y3RVcmwSGwoJc2hvcF9u",
+            "YW1lGAogASgJUghzaG9wTmFtZRIpChBkaXNjb3VudF9wZXJjZW50GAsgASgB",
+            "Ug9kaXNjb3VudFBlcmNlbnQSHgoKY29tbWlzc2lvbhgMIAEoAVIKY29tbWlz",
+            "c2lvbhIaCghjYXRlZ29yeRgNIAEoCVIIY2F0ZWdvcnkSEgoEbGluaxgOIAEo",
+            "CVIEbGluaxI7CgttYXJrZXRwbGFjZRgPIAEoDjIZLmNvbGxlY3Rvci52MS5N",
+            "YXJrZXRwbGFjZVILbWFya2V0cGxhY2Ui9QEKDkNvbGxlY3RSZXF1ZXN0EhoK",
+            "B2tleXdvcmQYASABKAlIAFIHa2V5d29yZBIZCgdzaG9wX2lkGAYgASgDSABS",
+            "BnNob3BJZBIUCgVsaW1pdBgCIAEoBVIFbGltaXQSFwoHc29ydF9ieRgDIAEo",
+            "CVIGc29ydEJ5EhsKCW93bmVyX3VpZBgEIAEoCVIIb3duZXJVaWQSOwoLbWFy",
+            "a2V0cGxhY2UYBSABKA4yGS5jb2xsZWN0b3IudjEuTWFya2V0cGxhY2VSC21h",
+            "cmtldHBsYWNlEhkKCGJ1c2NhX2lkGAcgASgJUgdidXNjYUlkQggKBnRhcmdl",
+            "dCKiAQoPQ29sbGVjdFJlc3BvbnNlEjEKCHByb2R1Y3RzGAEgAygLMhUuY29s",
             "bGVjdG9yLnYxLlByb2R1Y3RSCHByb2R1Y3RzEh8KC3RvdGFsX2ZvdW5kGAIg",
             "ASgFUgp0b3RhbEZvdW5kEh0KCmZldGNoZWRfYXQYAyABKAlSCWZldGNoZWRB",
-            "dCKGAQoRRmV0Y2hTaG9wUmVzcG9uc2USMQoIcHJvZHVjdHMYASADKAsyFS5j",
-            "b2xsZWN0b3IudjEuUHJvZHVjdFIIcHJvZHVjdHMSHwoLdG90YWxfZm91bmQY",
-            "AiABKAVSCnRvdGFsRm91bmQSHQoKZmV0Y2hlZF9hdBgDIAEoCVIJZmV0Y2hl",
-            "ZEF0IssDCgdQcm9kdWN0EhcKB2l0ZW1faWQYASABKANSBml0ZW1JZBIXCgdz",
-            "aG9wX2lkGAIgASgDUgZzaG9wSWQSEgoEbmFtZRgDIAEoCVIEbmFtZRIUCgVw",
-            "cmljZRgEIAEoAVIFcHJpY2USJQoOb3JpZ2luYWxfcHJpY2UYBSABKAFSDW9y",
-            "aWdpbmFsUHJpY2USEgoEc29sZBgGIAEoBVIEc29sZBIWCgZyYXRpbmcYByAB",
-            "KAFSBnJhdGluZxIbCglpbWFnZV91cmwYCCABKAlSCGltYWdlVXJsEh8KC3By",
-            "b2R1Y3RfdXJsGAkgASgJUgpwcm9kdWN0VXJsEhsKCXNob3BfbmFtZRgKIAEo",
-            "CVIIc2hvcE5hbWUSKQoQZGlzY291bnRfcGVyY2VudBgLIAEoAVIPZGlzY291",
-            "bnRQZXJjZW50Eh4KCmNvbW1pc3Npb24YDCABKAFSCmNvbW1pc3Npb24SGgoI",
-            "Y2F0ZWdvcnkYDSABKAlSCGNhdGVnb3J5EhIKBGxpbmsYDiABKAlSBGxpbmsS",
-            "OwoLbWFya2V0cGxhY2UYDyABKA4yGS5jb2xsZWN0b3IudjEuTWFya2V0cGxh",
-            "Y2VSC21hcmtldHBsYWNlIvUBCg5Db2xsZWN0UmVxdWVzdBIaCgdrZXl3b3Jk",
-            "GAEgASgJSABSB2tleXdvcmQSGQoHc2hvcF9pZBgGIAEoA0gAUgZzaG9wSWQS",
-            "FAoFbGltaXQYAiABKAVSBWxpbWl0EhcKB3NvcnRfYnkYAyABKAlSBnNvcnRC",
-            "eRIbCglvd25lcl91aWQYBCABKAlSCG93bmVyVWlkEjsKC21hcmtldHBsYWNl",
-            "GAUgASgOMhkuY29sbGVjdG9yLnYxLk1hcmtldHBsYWNlUgttYXJrZXRwbGFj",
-            "ZRIZCghidXNjYV9pZBgHIAEoCVIHYnVzY2FJZEIICgZ0YXJnZXQiogEKD0Nv",
-            "bGxlY3RSZXNwb25zZRIxCghwcm9kdWN0cxgBIAMoCzIVLmNvbGxlY3Rvci52",
-            "MS5Qcm9kdWN0Ughwcm9kdWN0cxIfCgt0b3RhbF9mb3VuZBgCIAEoBVIKdG90",
-            "YWxGb3VuZBIdCgpmZXRjaGVkX2F0GAMgASgJUglmZXRjaGVkQXQSHAoJcGVy",
-            "c2lzdGVkGAQgASgIUglwZXJzaXN0ZWQqeAoLTWFya2V0cGxhY2USGwoXTUFS",
-            "S0VUUExBQ0VfVU5TUEVDSUZJRUQQABIWChJNQVJLRVRQTEFDRV9TSE9QRUUQ",
-            "ARIWChJNQVJLRVRQTEFDRV9BTUFaT04QAhIcChhNQVJLRVRQTEFDRV9NRVJD",
-            "QURPTElWUkUQAzKwAwoQQ29sbGVjdG9yU2VydmljZRJSCgtSZXNvbHZlU2hv",
-            "cBIgLmNvbGxlY3Rvci52MS5SZXNvbHZlU2hvcFJlcXVlc3QaIS5jb2xsZWN0",
-            "b3IudjEuUmVzb2x2ZVNob3BSZXNwb25zZRJwChVHZW5lcmF0ZUFmZmlsaWF0",
-            "ZUxpbmsSKi5jb2xsZWN0b3IudjEuR2VuZXJhdGVBZmZpbGlhdGVMaW5rUmVx",
-            "dWVzdBorLmNvbGxlY3Rvci52MS5HZW5lcmF0ZUFmZmlsaWF0ZUxpbmtSZXNw",
-            "b25zZRJACgVGZXRjaBIaLmNvbGxlY3Rvci52MS5GZXRjaFJlcXVlc3QaGy5j",
-            "b2xsZWN0b3IudjEuRmV0Y2hSZXNwb25zZRJMCglGZXRjaFNob3ASHi5jb2xs",
-            "ZWN0b3IudjEuRmV0Y2hTaG9wUmVxdWVzdBofLmNvbGxlY3Rvci52MS5GZXRj",
-            "aFNob3BSZXNwb25zZRJGCgdDb2xsZWN0EhwuY29sbGVjdG9yLnYxLkNvbGxl",
-            "Y3RSZXF1ZXN0Gh0uY29sbGVjdG9yLnYxLkNvbGxlY3RSZXNwb25zZUK1AQoQ",
-            "Y29tLmNvbGxlY3Rvci52MUIOQ29sbGVjdG9yUHJvdG9QAVpAZ2l0aHViLmNv",
-            "bS9mbWFycXVlc2ZpbGhvL2dhcmltcG8vZ2VuL2dvL2NvbGxlY3Rvci92MTtj",
-            "b2xsZWN0b3J2MaICA0NYWKoCDENvbGxlY3Rvci5WMcoCDENvbGxlY3RvclxW",
-            "MeICGENvbGxlY3RvclxWMVxHUEJNZXRhZGF0YeoCDUNvbGxlY3Rvcjo6VjFi",
-            "BnByb3RvMw=="));
+            "dBIcCglwZXJzaXN0ZWQYBCABKAhSCXBlcnNpc3RlZCp4CgtNYXJrZXRwbGFj",
+            "ZRIbChdNQVJLRVRQTEFDRV9VTlNQRUNJRklFRBAAEhYKEk1BUktFVFBMQUNF",
+            "X1NIT1BFRRABEhYKEk1BUktFVFBMQUNFX0FNQVpPThACEhwKGE1BUktFVFBM",
+            "QUNFX01FUkNBRE9MSVZSRRADMrADChBDb2xsZWN0b3JTZXJ2aWNlElIKC1Jl",
+            "c29sdmVTaG9wEiAuY29sbGVjdG9yLnYxLlJlc29sdmVTaG9wUmVxdWVzdBoh",
+            "LmNvbGxlY3Rvci52MS5SZXNvbHZlU2hvcFJlc3BvbnNlEnAKFUdlbmVyYXRl",
+            "QWZmaWxpYXRlTGluaxIqLmNvbGxlY3Rvci52MS5HZW5lcmF0ZUFmZmlsaWF0",
+            "ZUxpbmtSZXF1ZXN0GisuY29sbGVjdG9yLnYxLkdlbmVyYXRlQWZmaWxpYXRl",
+            "TGlua1Jlc3BvbnNlEkAKBUZldGNoEhouY29sbGVjdG9yLnYxLkZldGNoUmVx",
+            "dWVzdBobLmNvbGxlY3Rvci52MS5GZXRjaFJlc3BvbnNlEkwKCUZldGNoU2hv",
+            "cBIeLmNvbGxlY3Rvci52MS5GZXRjaFNob3BSZXF1ZXN0Gh8uY29sbGVjdG9y",
+            "LnYxLkZldGNoU2hvcFJlc3BvbnNlEkYKB0NvbGxlY3QSHC5jb2xsZWN0b3Iu",
+            "djEuQ29sbGVjdFJlcXVlc3QaHS5jb2xsZWN0b3IudjEuQ29sbGVjdFJlc3Bv",
+            "bnNlQrUBChBjb20uY29sbGVjdG9yLnYxQg5Db2xsZWN0b3JQcm90b1ABWkBn",
+            "aXRodWIuY29tL2ZtYXJxdWVzZmlsaG8vZ2FyaW1wby9nZW4vZ28vY29sbGVj",
+            "dG9yL3YxO2NvbGxlY3RvcnYxogIDQ1hYqgIMQ29sbGVjdG9yLlYxygIMQ29s",
+            "bGVjdG9yXFYx4gIYQ29sbGVjdG9yXFYxXEdQQk1ldGFkYXRh6gINQ29sbGVj",
+            "dG9yOjpWMWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Collector.V1.Marketplace), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchRequest), global::Collector.V1.FetchRequest.Parser, new[]{ "Keyword", "Limit", "SortBy", "OwnerUid", "Marketplace" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchShopRequest), global::Collector.V1.FetchShopRequest.Parser, new[]{ "ShopId", "Limit", "OwnerUid", "Marketplace" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.ResolveShopRequest), global::Collector.V1.ResolveShopRequest.Parser, new[]{ "UsernameOrUrl", "Marketplace" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.ResolveShopResponse), global::Collector.V1.ResolveShopResponse.Parser, new[]{ "ShopId", "ShopName" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.ResolveShopResponse), global::Collector.V1.ResolveShopResponse.Parser, new[]{ "ShopId", "ShopName", "FollowerCount", "ItemCount", "RatingStar", "ImageUrl", "CoverUrl", "ShopLocation", "Description" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.GenerateAffiliateLinkRequest), global::Collector.V1.GenerateAffiliateLinkRequest.Parser, new[]{ "OriginalUrl", "SubIds", "Marketplace", "OwnerUid" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.GenerateAffiliateLinkResponse), global::Collector.V1.GenerateAffiliateLinkResponse.Parser, new[]{ "ShortLink", "LongLink" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Collector.V1.FetchResponse), global::Collector.V1.FetchResponse.Parser, new[]{ "Products", "TotalFound", "FetchedAt" }, null, null, null, null),
@@ -1055,6 +1060,13 @@ namespace Collector.V1 {
     public ResolveShopResponse(ResolveShopResponse other) : this() {
       shopId_ = other.shopId_;
       shopName_ = other.shopName_;
+      followerCount_ = other.followerCount_;
+      itemCount_ = other.itemCount_;
+      ratingStar_ = other.ratingStar_;
+      imageUrl_ = other.imageUrl_;
+      coverUrl_ = other.coverUrl_;
+      shopLocation_ = other.shopLocation_;
+      description_ = other.description_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1088,6 +1100,105 @@ namespace Collector.V1 {
       }
     }
 
+    /// <summary>Field number for the "follower_count" field.</summary>
+    public const int FollowerCountFieldNumber = 3;
+    private int followerCount_;
+    /// <summary>
+    /// Campos enriquecidos (Shopee get_shop_detail — opcionais para outros marketplaces)
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int FollowerCount {
+      get { return followerCount_; }
+      set {
+        followerCount_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "item_count" field.</summary>
+    public const int ItemCountFieldNumber = 4;
+    private int itemCount_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int ItemCount {
+      get { return itemCount_; }
+      set {
+        itemCount_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "rating_star" field.</summary>
+    public const int RatingStarFieldNumber = 5;
+    private double ratingStar_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double RatingStar {
+      get { return ratingStar_; }
+      set {
+        ratingStar_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "image_url" field.</summary>
+    public const int ImageUrlFieldNumber = 6;
+    private string imageUrl_ = "";
+    /// <summary>
+    /// avatar/portrait da loja
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ImageUrl {
+      get { return imageUrl_; }
+      set {
+        imageUrl_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "cover_url" field.</summary>
+    public const int CoverUrlFieldNumber = 7;
+    private string coverUrl_ = "";
+    /// <summary>
+    /// imagem de capa
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string CoverUrl {
+      get { return coverUrl_; }
+      set {
+        coverUrl_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "shop_location" field.</summary>
+    public const int ShopLocationFieldNumber = 8;
+    private string shopLocation_ = "";
+    /// <summary>
+    /// localização registrada (cidade/estado)
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ShopLocation {
+      get { return shopLocation_; }
+      set {
+        shopLocation_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "description" field.</summary>
+    public const int DescriptionFieldNumber = 9;
+    private string description_ = "";
+    /// <summary>
+    /// bio da loja
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Description {
+      get { return description_; }
+      set {
+        description_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -1105,6 +1216,13 @@ namespace Collector.V1 {
       }
       if (ShopId != other.ShopId) return false;
       if (ShopName != other.ShopName) return false;
+      if (FollowerCount != other.FollowerCount) return false;
+      if (ItemCount != other.ItemCount) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(RatingStar, other.RatingStar)) return false;
+      if (ImageUrl != other.ImageUrl) return false;
+      if (CoverUrl != other.CoverUrl) return false;
+      if (ShopLocation != other.ShopLocation) return false;
+      if (Description != other.Description) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1114,6 +1232,13 @@ namespace Collector.V1 {
       int hash = 1;
       if (ShopId != 0L) hash ^= ShopId.GetHashCode();
       if (ShopName.Length != 0) hash ^= ShopName.GetHashCode();
+      if (FollowerCount != 0) hash ^= FollowerCount.GetHashCode();
+      if (ItemCount != 0) hash ^= ItemCount.GetHashCode();
+      if (RatingStar != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(RatingStar);
+      if (ImageUrl.Length != 0) hash ^= ImageUrl.GetHashCode();
+      if (CoverUrl.Length != 0) hash ^= CoverUrl.GetHashCode();
+      if (ShopLocation.Length != 0) hash ^= ShopLocation.GetHashCode();
+      if (Description.Length != 0) hash ^= Description.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1140,6 +1265,34 @@ namespace Collector.V1 {
         output.WriteRawTag(18);
         output.WriteString(ShopName);
       }
+      if (FollowerCount != 0) {
+        output.WriteRawTag(24);
+        output.WriteInt32(FollowerCount);
+      }
+      if (ItemCount != 0) {
+        output.WriteRawTag(32);
+        output.WriteInt32(ItemCount);
+      }
+      if (RatingStar != 0D) {
+        output.WriteRawTag(41);
+        output.WriteDouble(RatingStar);
+      }
+      if (ImageUrl.Length != 0) {
+        output.WriteRawTag(50);
+        output.WriteString(ImageUrl);
+      }
+      if (CoverUrl.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(CoverUrl);
+      }
+      if (ShopLocation.Length != 0) {
+        output.WriteRawTag(66);
+        output.WriteString(ShopLocation);
+      }
+      if (Description.Length != 0) {
+        output.WriteRawTag(74);
+        output.WriteString(Description);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1158,6 +1311,34 @@ namespace Collector.V1 {
         output.WriteRawTag(18);
         output.WriteString(ShopName);
       }
+      if (FollowerCount != 0) {
+        output.WriteRawTag(24);
+        output.WriteInt32(FollowerCount);
+      }
+      if (ItemCount != 0) {
+        output.WriteRawTag(32);
+        output.WriteInt32(ItemCount);
+      }
+      if (RatingStar != 0D) {
+        output.WriteRawTag(41);
+        output.WriteDouble(RatingStar);
+      }
+      if (ImageUrl.Length != 0) {
+        output.WriteRawTag(50);
+        output.WriteString(ImageUrl);
+      }
+      if (CoverUrl.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(CoverUrl);
+      }
+      if (ShopLocation.Length != 0) {
+        output.WriteRawTag(66);
+        output.WriteString(ShopLocation);
+      }
+      if (Description.Length != 0) {
+        output.WriteRawTag(74);
+        output.WriteString(Description);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1173,6 +1354,27 @@ namespace Collector.V1 {
       }
       if (ShopName.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(ShopName);
+      }
+      if (FollowerCount != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(FollowerCount);
+      }
+      if (ItemCount != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ItemCount);
+      }
+      if (RatingStar != 0D) {
+        size += 1 + 8;
+      }
+      if (ImageUrl.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ImageUrl);
+      }
+      if (CoverUrl.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(CoverUrl);
+      }
+      if (ShopLocation.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ShopLocation);
+      }
+      if (Description.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Description);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1191,6 +1393,27 @@ namespace Collector.V1 {
       }
       if (other.ShopName.Length != 0) {
         ShopName = other.ShopName;
+      }
+      if (other.FollowerCount != 0) {
+        FollowerCount = other.FollowerCount;
+      }
+      if (other.ItemCount != 0) {
+        ItemCount = other.ItemCount;
+      }
+      if (other.RatingStar != 0D) {
+        RatingStar = other.RatingStar;
+      }
+      if (other.ImageUrl.Length != 0) {
+        ImageUrl = other.ImageUrl;
+      }
+      if (other.CoverUrl.Length != 0) {
+        CoverUrl = other.CoverUrl;
+      }
+      if (other.ShopLocation.Length != 0) {
+        ShopLocation = other.ShopLocation;
+      }
+      if (other.Description.Length != 0) {
+        Description = other.Description;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1219,6 +1442,34 @@ namespace Collector.V1 {
             ShopName = input.ReadString();
             break;
           }
+          case 24: {
+            FollowerCount = input.ReadInt32();
+            break;
+          }
+          case 32: {
+            ItemCount = input.ReadInt32();
+            break;
+          }
+          case 41: {
+            RatingStar = input.ReadDouble();
+            break;
+          }
+          case 50: {
+            ImageUrl = input.ReadString();
+            break;
+          }
+          case 58: {
+            CoverUrl = input.ReadString();
+            break;
+          }
+          case 66: {
+            ShopLocation = input.ReadString();
+            break;
+          }
+          case 74: {
+            Description = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -1244,6 +1495,34 @@ namespace Collector.V1 {
           }
           case 18: {
             ShopName = input.ReadString();
+            break;
+          }
+          case 24: {
+            FollowerCount = input.ReadInt32();
+            break;
+          }
+          case 32: {
+            ItemCount = input.ReadInt32();
+            break;
+          }
+          case 41: {
+            RatingStar = input.ReadDouble();
+            break;
+          }
+          case 50: {
+            ImageUrl = input.ReadString();
+            break;
+          }
+          case 58: {
+            CoverUrl = input.ReadString();
+            break;
+          }
+          case 66: {
+            ShopLocation = input.ReadString();
+            break;
+          }
+          case 74: {
+            Description = input.ReadString();
             break;
           }
         }

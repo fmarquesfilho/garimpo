@@ -1,0 +1,69 @@
+id: T-0060
+titulo: "Omnibox Smart Search — Headless UI Controller + Store Cards"
+epic: E-001
+status: ready
+prioridade: alta
+estimativa: L
+sprint: ""
+criado_em: "2026-07-12"
+atualizada_em: "2026-07-12"
+valor: |
+  Evolui o Omnibox para inferir intenção do usuário a partir de texto livre.
+  O dropdown mostra opções contextuais (Pesquisar Produtos, Pesquisar Lojas,
+  Resolver Link, Categoria) sem depender de prefixos. Inclui Store Cards com
+  dados enriquecidos (imagem, seguidores, bandeira de origem) e monitoramento
+  inline.
+
+  Mudança arquitetural: a BuscaEngine se torna o controlador único de toda a
+  UI (padrão Headless UI Controller). Componentes viram renderizadores puros.
+  Comportamento configurável via JSON, verificável em CI, observável via OTel.
+
+  Spec completa: .kiro/specs/omnibox-smart-search/
+  Handoff: docs/legado/HANDOFF_2026-07-12_SMART-SEARCH.md
+
+  Infra já implementada (proto + Collector + C# response enriquecido).
+  14 tasks em 6 waves.
+descricao: |
+  ## Escopo
+
+  1. Migration: persistir campos enriquecidos na tabela Lojas
+  2. Endpoint GET /api/lojas/buscar (local-only)
+  3. Módulo omnibox-intencao.js (detecção de intenção pura)
+  4. Sub-estado ui na engine + migrar UI state existente
+  5. Handlers OMNIBOX_* na engine (controle completo)
+  6. Handler BUSCAR_LOJAS + modoResultados
+  7. Handler MONITORAR_LOJA
+  8. Reescrever Omnibox.svelte como renderizador puro
+  9. StoreCard.svelte configurável por marketplace
+  10. Atualizar BuscaUnificada.svelte
+  11. OTel spans por evento
+  12. Expandir rules/busca-rules.json + schema
+  13. Contracts + drift checks
+  14. Validação E2E + commit
+
+  ## Decisões tomadas
+  - Engine como Headless UI Controller (todo estado na engine)
+  - Busca de lojas local-only (Shopee não tem API de busca por nome)
+  - Bandeira de origem manual (origem_padrao)
+  - Campos enriquecidos persistidos (opção B — migration)
+  - OTel spans por evento para observabilidade
+  - Schema validation em CI
+
+criterios_aceite:
+  - Digitar texto livre → dropdown mostra opções de intenção (Produtos, Lojas, Categoria)
+  - Colar link → dropdown mostra "Resolver Link" → Store Card com imagem
+  - "Pesquisar em Lojas" → Store Cards com dados enriquecidos nos resultados
+  - Monitorar loja inline (sem scroll pro topo)
+  - Prefixos (@, #, !) continuam funcionando como antes
+  - Omnibox.svelte tem zero $state local (renderizador puro)
+  - OTel spans gerados para cada evento da engine
+  - Schema validation passa no CI
+  - Todos os testes existentes continuam passando + novos testes para cada task
+
+dependencias:
+  - T-0056
+tags:
+  - frontend
+  - backend
+  - ux
+  - arquitetura

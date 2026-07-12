@@ -273,9 +273,17 @@ func (x *ResolveShopRequest) GetMarketplace() Marketplace {
 }
 
 type ResolveShopResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShopId        int64                  `protobuf:"varint,1,opt,name=shop_id,json=shopId,proto3" json:"shop_id,omitempty"`
-	ShopName      string                 `protobuf:"bytes,2,opt,name=shop_name,json=shopName,proto3" json:"shop_name,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	ShopId   int64                  `protobuf:"varint,1,opt,name=shop_id,json=shopId,proto3" json:"shop_id,omitempty"`
+	ShopName string                 `protobuf:"bytes,2,opt,name=shop_name,json=shopName,proto3" json:"shop_name,omitempty"`
+	// Campos enriquecidos (Shopee get_shop_detail — opcionais para outros marketplaces)
+	FollowerCount int32   `protobuf:"varint,3,opt,name=follower_count,json=followerCount,proto3" json:"follower_count,omitempty"`
+	ItemCount     int32   `protobuf:"varint,4,opt,name=item_count,json=itemCount,proto3" json:"item_count,omitempty"`
+	RatingStar    float64 `protobuf:"fixed64,5,opt,name=rating_star,json=ratingStar,proto3" json:"rating_star,omitempty"`
+	ImageUrl      string  `protobuf:"bytes,6,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`             // avatar/portrait da loja
+	CoverUrl      string  `protobuf:"bytes,7,opt,name=cover_url,json=coverUrl,proto3" json:"cover_url,omitempty"`             // imagem de capa
+	ShopLocation  string  `protobuf:"bytes,8,opt,name=shop_location,json=shopLocation,proto3" json:"shop_location,omitempty"` // localização registrada (cidade/estado)
+	Description   string  `protobuf:"bytes,9,opt,name=description,proto3" json:"description,omitempty"`                       // bio da loja
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -320,6 +328,55 @@ func (x *ResolveShopResponse) GetShopId() int64 {
 func (x *ResolveShopResponse) GetShopName() string {
 	if x != nil {
 		return x.ShopName
+	}
+	return ""
+}
+
+func (x *ResolveShopResponse) GetFollowerCount() int32 {
+	if x != nil {
+		return x.FollowerCount
+	}
+	return 0
+}
+
+func (x *ResolveShopResponse) GetItemCount() int32 {
+	if x != nil {
+		return x.ItemCount
+	}
+	return 0
+}
+
+func (x *ResolveShopResponse) GetRatingStar() float64 {
+	if x != nil {
+		return x.RatingStar
+	}
+	return 0
+}
+
+func (x *ResolveShopResponse) GetImageUrl() string {
+	if x != nil {
+		return x.ImageUrl
+	}
+	return ""
+}
+
+func (x *ResolveShopResponse) GetCoverUrl() string {
+	if x != nil {
+		return x.CoverUrl
+	}
+	return ""
+}
+
+func (x *ResolveShopResponse) GetShopLocation() string {
+	if x != nil {
+		return x.ShopLocation
+	}
+	return ""
+}
+
+func (x *ResolveShopResponse) GetDescription() string {
+	if x != nil {
+		return x.Description
 	}
 	return ""
 }
@@ -946,10 +1003,19 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\vmarketplace\x18\x04 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"y\n" +
 	"\x12ResolveShopRequest\x12&\n" +
 	"\x0fusername_or_url\x18\x01 \x01(\tR\rusernameOrUrl\x12;\n" +
-	"\vmarketplace\x18\x02 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"K\n" +
+	"\vmarketplace\x18\x02 \x01(\x0e2\x19.collector.v1.MarketplaceR\vmarketplace\"\xb3\x02\n" +
 	"\x13ResolveShopResponse\x12\x17\n" +
 	"\ashop_id\x18\x01 \x01(\x03R\x06shopId\x12\x1b\n" +
-	"\tshop_name\x18\x02 \x01(\tR\bshopName\"\xb4\x01\n" +
+	"\tshop_name\x18\x02 \x01(\tR\bshopName\x12%\n" +
+	"\x0efollower_count\x18\x03 \x01(\x05R\rfollowerCount\x12\x1d\n" +
+	"\n" +
+	"item_count\x18\x04 \x01(\x05R\titemCount\x12\x1f\n" +
+	"\vrating_star\x18\x05 \x01(\x01R\n" +
+	"ratingStar\x12\x1b\n" +
+	"\timage_url\x18\x06 \x01(\tR\bimageUrl\x12\x1b\n" +
+	"\tcover_url\x18\a \x01(\tR\bcoverUrl\x12#\n" +
+	"\rshop_location\x18\b \x01(\tR\fshopLocation\x12 \n" +
+	"\vdescription\x18\t \x01(\tR\vdescription\"\xb4\x01\n" +
 	"\x1cGenerateAffiliateLinkRequest\x12!\n" +
 	"\foriginal_url\x18\x01 \x01(\tR\voriginalUrl\x12\x17\n" +
 	"\asub_ids\x18\x02 \x03(\tR\x06subIds\x12;\n" +

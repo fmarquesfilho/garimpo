@@ -90,7 +90,14 @@ public static partial class EndpointExtensions
                             marketplace = existingLoja.Marketplace,
                             cron = existingLoja.CronExpression,
                             origem = existingLoja.OrigemPadrao,
-                            monitorada = !string.IsNullOrEmpty(existingLoja.CronExpression)
+                            monitorada = !string.IsNullOrEmpty(existingLoja.CronExpression),
+                            // Campos enriquecidos (Shopee get_shop_detail)
+                            seguidores = (int?)resolveResp.FollowerCount,
+                            total_produtos = (int?)resolveResp.ItemCount,
+                            avaliacao = resolveResp.RatingStar > 0 ? (double?)resolveResp.RatingStar : null,
+                            imagem = !string.IsNullOrEmpty(resolveResp.ImageUrl) ? resolveResp.ImageUrl : null,
+                            capa = !string.IsNullOrEmpty(resolveResp.CoverUrl) ? resolveResp.CoverUrl : null,
+                            localizacao = !string.IsNullOrEmpty(resolveResp.ShopLocation) ? resolveResp.ShopLocation : null
                         });
                     }
 
@@ -116,7 +123,14 @@ public static partial class EndpointExtensions
                         marketplace = novaLoja.Marketplace,
                         cron = novaLoja.CronExpression,
                         origem = novaLoja.OrigemPadrao,
-                        monitorada = !string.IsNullOrEmpty(novaLoja.CronExpression)
+                        monitorada = !string.IsNullOrEmpty(novaLoja.CronExpression),
+                        // Campos enriquecidos (Shopee get_shop_detail)
+                        seguidores = (int?)resolveResp.FollowerCount,
+                        total_produtos = (int?)resolveResp.ItemCount,
+                        avaliacao = resolveResp.RatingStar > 0 ? (double?)resolveResp.RatingStar : null,
+                        imagem = !string.IsNullOrEmpty(resolveResp.ImageUrl) ? resolveResp.ImageUrl : null,
+                        capa = !string.IsNullOrEmpty(resolveResp.CoverUrl) ? resolveResp.CoverUrl : null,
+                        localizacao = !string.IsNullOrEmpty(resolveResp.ShopLocation) ? resolveResp.ShopLocation : null
                     });
                 }
 
