@@ -61,14 +61,33 @@ A revisão de qualidade foi executada e **todos os achados foram corrigidos**.
 de timeout); erro de resolução limpo ao reiniciar; teste de timeout adicionado.
 
 **Limpeza:** binários `web/.wrangler/*.sqlite` removidos do git + gitignore; linhas em
-branco do `api.js` restauradas; dead code `adicionarLoja` (0 callers) removido; condição
+branco do `api.js` restauradas; dead code removido (`adicionarLoja` e `buildFonteOpcoes`,
+ambos 0 callers — o segundo era órfão do UI de fontes das raias antigas); condição
 redundante simplificada; `rules.lojaRegistro.matchMinChars` agora consumido (antes
 hardcoded); resolver `@loja` do Enter alinhado ao match normalizado do dropdown.
 
-**Decisão de tipo (desvio do design §Data Models):** `ctx.shopIds` é **número**, não
-`string[]`. O backend é numérico ponta-a-ponta (`Busca.ShopIds` = `long[]`, Collector
-`long`); número evita coerção na saída (save) e casa com buscas salvas. O `id` string
-da API é coagido a número na entrada (`Number(loja.id)`).
+**Varredura de dead code (knip + grep):** sem exports/arquivos mortos restantes no
+frontend. Achado pré-existente NÃO removido (fora do escopo, mexe em package.json/lock):
+dep `@opentelemetry/semantic-conventions` não tem imports — candidata a remoção futura.
+Endpoint `POST /api/lojas` (+ `AdicionarLojaRequest`) NÃO é morto: os e2e
+(`lojas-resolve-shop.spec.js`, `buscas-agendadas.spec.js`) o exercitam direto — mantido.
+
+**Decisão de tipo (a melhor combinação, não o que o design §Data Models dizia):**
+- **API transporta `id` como STRING** (`ShopId.ToString()`, design §11). Correto: o
+  `ShopId` é um `long` (64-bit) e JS só garante inteiros até 2^53 — transportar `long`
+  como string é o padrão robusto contra perda de precisão (mesma razão de IDs snowflake).
+- **`ctx.shopIds` é NÚMERO** (desvio do §Data Models, que dizia `string[]`). Motivo: o
+  save vai direto para `Busca.ShopIds` (`long[]`) — número serializa sem coerção nem
+  mudança no backend; string exigiria `AllowReadingFromString` no C# ou coerção de saída.
+  Buscas salvas também chegam numéricas.
+- **Coerção num único ponto:** `Number(loja.id)` na entrada (a resposta da API é string).
+  Válido porque shop_ids reais (Shopee/ML/Amazon) têm ~9-10 dígitos (« 2^53). Se algum
+  marketplace passar a usar IDs > 2^53, só este ponto de coerção precisa mudar (o
+  transporte string já preserva a precisão). Fingerprint de duplicata coage `String()`
+  nos dois lados, então independe da origem (número vs string).
+
+Ou seja: string no fio (precisão) + número no ctx (casa com `long[]`, zero coerção no
+save) é a decisão mais robusta — não a que o design especificava, mas a mais inteligente.
 
 **Verificação:** vitest 367 · svelte-check 0/0 · build ✓ · lint js/css ✓ · dotnet build
 0 erros · 88 testes C# ✓ · file-size ✓.

@@ -6,6 +6,12 @@ Refatoração do subsistema de lojas da página Descobrir. Cria entidade Loja in
 implementa normalização robusta de nomes, estados de resolução explícitos, e separação clara entre
 lojas monitoradas e escopadas. 11 tasks ordenadas por dependência (backend-first, frontend depois).
 
+> ✅ **Concluído + revisado (2026-07-12).** As 11 tasks foram implementadas e uma revisão
+> de qualidade corrigiu 2 bugs críticos (id=Guid quebrava o escopo da busca; TypeError no
+> match local) + robustez e limpeza. Ver `docs/legado/HANDOFF_2026-07-12_STORE-WORKFLOW.md`
+> (seção "Revisão aplicada"). Nota de design: `ctx.shopIds` ficou **número** (não `string[]`
+> como abaixo), pois casa com `Busca.ShopIds` = `long[]` sem coerção no save.
+
 ## Tasks
 
 - [x] 1. Criar entidade Loja no domain e configurar persistência EF Core

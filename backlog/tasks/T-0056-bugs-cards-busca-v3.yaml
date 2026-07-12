@@ -18,19 +18,22 @@ valor: |
   Omnibox — feedback do dono do produto: **"a engine looks good"**. As demais
   partes da página estão "getting there".
 
-  ⚠️ **PENDENTE — o workflow de lojas (store) precisa de refactor e correção.**
-  É o ponto fraco atual da página Descobrir. Sintomas/áreas a revisar:
-    - Resolução/adição de loja (via `@loja` no omnibox e via link/ID) e o
-      caminho `ADICIONAR_LOJA` (monitorada vs. resolver nova via Collector).
-    - Nomes de loja com espaço (`Glory of Seoul`) não casam com token sem espaço
-      (`@glory` casa por match parcial; `@gloryofseoul` não) — a UX de completar
-      loja no omnibox contorna removendo o token e mostrando card, mas o modelo
-      de dados/derivação de lojas monitoradas (`listarLojasMonitoradas` a partir
-      de buscas salvas) e o escopo por loja (`shopIds` × marketplace) merecem
-      um desenho mais consistente.
-    - Estados `lojaResolvendo`/`lojaErro` e o fluxo de "loja nova por URL/ID".
-  Recomenda-se uma task dedicada de refactor do subsistema de lojas (escopo,
-  resolução, nomes, monitoramento) antes de novas features de busca.
+  ✅ **CONCLUÍDO — o workflow de lojas (store) foi refatorado e revisado (2026-07-12).**
+  Feito via a spec `.kiro/specs/store-workflow-refactor/` (11 tasks) + uma revisão de
+  qualidade que corrigiu 2 bugs críticos (id=Guid quebrava o escopo; TypeError no match
+  local). O que mudou:
+    - Registro de lojas server-side (tabela `Loja` PostgreSQL) — substitui a derivação
+      via buscas salvas (`listarLojasMonitoradas` removido).
+    - Endpoints `GET /api/lojas/registro` e `POST /api/lojas/resolver` (upsert por
+      ShopId+Marketplace+OwnerUid); `id` da resposta = ShopId (string), coagido a número
+      no ctx (casa com `Busca.ShopIds` long[]).
+    - Normalização robusta (`loja-registry.js` ↔ `Loja.Normalizar` C#, paridade testada
+      via `fixtures/normalizacao-pares.json` nos dois lados): `@gloryofseoul` casa
+      "Glory of Seoul" no dropdown E no Enter.
+    - Estado explícito `resolucaoLoja: {status}` (substitui `lojaResolvendo`/`lojaErro`);
+      timeout com AbortController.
+    - Distinção monitorada (cron) vs escopada nos loja cards.
+  Ver `docs/legado/HANDOFF_2026-07-12_STORE-WORKFLOW.md` (seção "Revisão aplicada").
 descricao: |
   ## Bugs identificados e corrigidos
 
