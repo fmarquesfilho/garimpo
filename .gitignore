@@ -12,15 +12,12 @@ docs-site/doc_build/
 docs-site/.rspress/
 
 # Docs gerados — NÃO commitados; regenerados na CI antes do deploy.
-# docs-site/docs/ é 100% recriado por `docs/sync`; docs/gerado/* vêm dos geradores.
+# docs-site/docs/ é 100% recriado por `docs/sync`; docs/gerado/* vêm dos geradores
+# (BOARD/ROADMAP/TAREFAS ← cmd/gen-board, ENTIDADES ← cmd/gen-er, env-vars ← docs/env).
 # A CI (.github/workflows/docs.yml) roda `mise run docs` antes de buildar/deployar,
-# então commitar esses artefatos era redundante. Ver ADR/handoff docs.
-# (docs/gerado/TAREFAS.md é mantido no git — órfão estático linkado no sidebar.)
+# então commitar esses artefatos era redundante. Ver memory docs-generation / handoff.
 docs-site/docs/
-docs/gerado/BOARD.md
-docs/gerado/ROADMAP.md
-docs/gerado/ENTIDADES.md
-docs/gerado/env-vars.md
+docs/gerado/
 
 # Binários Go compilados
 /gen-er

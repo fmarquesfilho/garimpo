@@ -1,4 +1,4 @@
-// cmd/gen-board gera docs/gerado/BOARD.md e docs/gerado/ROADMAP.md a partir de backlog/tasks/*.yaml.
+// cmd/gen-board gera docs/gerado/{BOARD,ROADMAP,TAREFAS}.md a partir de backlog/tasks/*.yaml.
 //
 // Uso: go run ./cmd/gen-board
 // Ou via Makefile: mise run docs:board
@@ -42,6 +42,7 @@ func main() {
 	sprintFile := "backlog/sprint.txt"
 	outBoard := "docs/gerado/BOARD.md"
 	outRoadmap := "docs/gerado/ROADMAP.md"
+	outTarefas := "docs/gerado/TAREFAS.md"
 
 	sprint := readSprint(sprintFile)
 	tasks := loadTasks(tasksDir)
@@ -76,8 +77,9 @@ func main() {
 
 	generateBoard(outBoard, tasks, sprint)
 	generateRoadmap(outRoadmap, tasks)
+	generateTarefas(outTarefas, tasks)
 
-	fmt.Printf("✅ Board e roadmap gerados (%d tarefas, sprint %s)\n", len(tasks), sprint)
+	fmt.Printf("✅ Board, roadmap e tarefas gerados (%d tarefas, sprint %s)\n", len(tasks), sprint)
 }
 
 func readSprint(path string) string {
@@ -241,6 +243,42 @@ func generateRoadmap(path string, tasks []Task) {
 	}
 
 	writeFile(path, buf.String())
+}
+
+// generateTarefas escreve docs/gerado/TAREFAS.md — listagem completa de todas as
+// tarefas do backlog, agrupadas por status (linkadas para /tarefas/<ID>).
+func generateTarefas(path string, tasks []Task) {
+	var buf strings.Builder
+	buf.WriteString("# Tarefas do Backlog\n\n")
+	buf.WriteString("> Gerado automaticamente. Não edite — rode `mise run docs:board`.\n")
+	buf.WriteString(fmt.Sprintf("> Cada tarefa é um arquivo YAML em `backlog/tasks/`. Total: %d tarefas.\n\n", len(tasks)))
+
+	// Ordem de exibição: trabalho em andamento primeiro, concluídas por último.
+	order := []string{"blocked", "doing", "review", "next", "backlog", "done"}
+	for _, st := range order {
+		group := filterStatus(tasks, st)
+		if len(group) == 0 {
+			continue
+		}
+		buf.WriteString(fmt.Sprintf("## %s %s (%d)\n\n", statusEmoji[st], capitalize(st), len(group)))
+		buf.WriteString("| ID | Título | Prioridade | Estimativa |\n")
+		buf.WriteString("|----|--------|-----------|-----------|\n")
+		for _, t := range group {
+			buf.WriteString(fmt.Sprintf("| [%s](/tarefas/%s) | %s | %s | %s |\n",
+				t.ID, t.ID, t.Titulo, dash(t.Prioridade), dash(t.Estimativa)))
+		}
+		buf.WriteString("\n")
+	}
+
+	writeFile(path, buf.String())
+}
+
+// dash devolve "—" para strings vazias (células de tabela).
+func dash(s string) string {
+	if strings.TrimSpace(s) == "" {
+		return "—"
+	}
+	return s
 }
 
 func filterStatus(tasks []Task, statuses ...string) []Task {
