@@ -55,6 +55,16 @@ else
   echo -e "${GREEN}   ✓ docs/sync executou com sucesso${NC}"
 fi
 
+# ── 3b. Verificar que docs-site/ não tem arquivos dirty/untracked após sync ───
+DIRTY_DOCS=$(git status --porcelain docs-site/docs/ 2>/dev/null | head -5)
+if [ -n "$DIRTY_DOCS" ]; then
+  echo -e "${RED}   ✗ docs-site/docs/ tem arquivos não commitados após sync:${NC}"
+  echo "$DIRTY_DOCS"
+  echo ""
+  echo "   Correção: git add docs-site/docs/ && git commit --amend --no-edit"
+  ERRORS=$((ERRORS + 1))
+fi
+
 # ── 4. Verificar que todos os docs esperados existem após sync ────────────────
 echo ""
 echo "🔍 Verificando completude do docs-site..."
