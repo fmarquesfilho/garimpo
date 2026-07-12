@@ -1,0 +1,14 @@
+{
+	"version": "0.0.1",
+	"configurations": [
+		{
+			"name": "web-dev-prod-api",
+			"runtimeExecutable": "bash",
+			"runtimeArgs": [
+				"-c",
+				"cd /Users/fernando/dev/garimpo/web && VITE_API_BASE= DEV_API_PROXY=https://garimpei.app.br bun run dev --port 5173 --strictPort"
+			],
+			"port": 5173
+		}
+	]
+}

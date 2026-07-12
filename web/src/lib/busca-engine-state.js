@@ -35,8 +35,7 @@ export function criarContextoInicial() {
 		contagens: { curadoria: 0, quedas: 0, novos: 0, lojas: 0 },
 		dadosBrutos: { curadoria: [], quedas: [], novos: [], lojas: [], favoritos: [] },
 		buscasSalvas: [],
-		lojaResolvendo: false,
-		lojaErro: '',
+		resolucaoLoja: { status: 'idle' },
 		error: null
 	};
 }
@@ -46,7 +45,11 @@ export function criarContextoInicial() {
 // sobre o event, então permanece imperativo.
 export const guards = {
 	temContextoBusca: (ctx) => checarGuard('temContextoBusca', ctx),
-	lojaInputValida: (_ctx, event) => (event.value ?? '').trim().length > 0,
+	lojaInputValida: (_ctx, event) => {
+		if (event.loja?.id) return Boolean(event.loja.marketplace);
+		return (event.value ?? '').trim().length > 0;
+	},
+	resolucaoPermitida: (ctx) => ctx.resolucaoLoja.status !== 'resolvendo',
 	podeSalvar: (ctx) => checarGuard('podeSalvar', ctx),
 
 	/**

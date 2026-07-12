@@ -27,18 +27,18 @@ VITE_API_BASE=http://localhost:5000 npm run dev
 
 ## Páginas
 
-| Rota | Descrição |
-|------|-----------|
-| `/` | Landing page (exige login) |
-| `/publicar` | Curadoria + publicação (4 fontes: busca, quedas, novos, favoritos) |
-| `/lojas` | Monitoramento de lojas (novidades, evolução) |
-| `/oportunidades` | Feed unificado de variações de preço |
-| `/canais` | Configurar destinos (Telegram/WhatsApp) |
-| `/publicacoes` | Histórico de publicações |
-| `/coletas` | Histórico de coletas |
-| `/estatisticas` | Dashboard analytics |
-| `/configurar` | Onboarding + configuração de conta (multi-step) |
-| `/admin` | Painel admin |
+| Rota             | Descrição                                                          |
+| ---------------- | ------------------------------------------------------------------ |
+| `/`              | Landing page (exige login)                                         |
+| `/publicar`      | Curadoria + publicação (4 fontes: busca, quedas, novos, favoritos) |
+| `/lojas`         | Monitoramento de lojas (novidades, evolução)                       |
+| `/oportunidades` | Feed unificado de variações de preço                               |
+| `/canais`        | Configurar destinos (Telegram/WhatsApp)                            |
+| `/publicacoes`   | Histórico de publicações                                           |
+| `/coletas`       | Histórico de coletas                                               |
+| `/estatisticas`  | Dashboard analytics                                                |
+| `/configurar`    | Onboarding + configuração de conta (multi-step)                    |
+| `/admin`         | Painel admin                                                       |
 
 ## Testes
 

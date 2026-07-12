@@ -1,0 +1,10 @@
+[
+  {"input": "Glory of Seoul", "expected": "gloryofseoul"},
+  {"input": "Le Botanic", "expected": "lebotanic"},
+  {"input": "Loja 123!", "expected": "loja123"},
+  {"input": "Água com Açúcar", "expected": "aguacomacucar"},
+  {"input": "🇰🇷 Seul Shop 100%", "expected": "seulshop100"},
+  {"input": "  espaços  ", "expected": "espacos"}, 
+  {"input": "São Paulo", "expected": "saopaulo"},
+  {"input": "", "expected": ""}
+]

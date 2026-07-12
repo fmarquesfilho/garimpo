@@ -1,12 +1,5 @@
 {
-  "entry": ["src/routes/**/+*.{js,ts,svelte}", "src/lib/**/*.{js,ts,svelte}"],
-  "project": ["src/**/*.{js,ts,svelte}"],
-  "ignoreDependencies": [
-    "@axe-core/playwright",
-    "@tailwindcss/vite",
-    "axe-core",
-    "csstype",
-    "fast-check",
-    "vitest-axe"
-  ]
+	"entry": ["src/routes/**/+*.{js,ts,svelte}", "src/lib/**/*.{js,ts,svelte}"],
+	"project": ["src/**/*.{js,ts,svelte}"],
+	"ignoreDependencies": ["@axe-core/playwright", "@tailwindcss/vite", "axe-core", "csstype", "fast-check", "vitest-axe"]
 }

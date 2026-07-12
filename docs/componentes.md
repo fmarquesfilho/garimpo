@@ -454,6 +454,7 @@ A página Garimpar (`routes/+page.svelte`) é controlada por uma máquina de est
 | `lib/busca-engine-effects.js` | **Effects** (Ports & Adapters) — chamadas de API isoladas e injetáveis. `buildBuscasComLojas` combina store + ctx para oportunidades. |
 | `lib/busca-config.js` | **Config declarativa** — importa `rules/busca-rules.json` e re-exporta. Funções puras: normalização, guards, `intentBusca`, `sourcesBusca`, `proximoModo`, `fingerprint`, `buscarDuplicada`. |
 | `rules/busca-rules.json` | **Regras externas** (v3) — intent table, guards, normalização, defaults, transições, marketplaces, **modos de interação**, **detecção de duplicatas**. Testável por E2E e validado em CI. |
+| `lib/loja-registry.js` | **Registro de Lojas** — módulo puro. Encapsula normalização e matching de lojas, espelhando a entidade backend. |
 | `lib/busca-unificada-logic.js` | Funções puras (payload↔config, labels, resumo). |
 | `components/BuscaUnificada.svelte` | **View burra** — 4 raias; só despacha events e renderiza `engine.ctx`/getters. |
 | `components/BuscasSalvasPanel.svelte` | Painel de buscas salvas (modos vinculada/editando, indicador visual). |
