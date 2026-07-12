@@ -297,9 +297,11 @@ Isso fecha o ciclo: regra declarada → código obedece → testes provam.
 
 - O spec original (`.kiro/specs/rules-service/`) permanece como referência
   futura caso a complexidade justifique
-- **Autocomplete no input de busca** (T-0055) — feature planejada que segue o
-  mesmo padrão: regras em `rules.autocomplete` + função pura `gerarSugestoes`
-  + novo event `SELECIONAR_SUGESTAO`. Validará a extensibilidade do pattern.
+- ✅ **Autocomplete no input de busca** (T-0055) — implementado como a feature
+  **Omnibox** (ver seção "Atualização 2026-07-12" abaixo). Confirmou a
+  extensibilidade do pattern: regras em `rules.omnibox` + funções puras
+  (`parsearInput`, `gerarSugestoes`, `tokensParaContexto`), **reusando os eventos
+  existentes** da engine (sem `SELECIONAR_SUGESTAO`).
 
 ## Lojas de teste (validação real)
 
@@ -334,6 +336,29 @@ de forma aditiva e ainda validada pelo drift check:
 
 Ver `componentes.md` para a lista de eventos/getters e os componentes de raia.
 
+## Atualização 2026-07-12 — v4: omnibox substitui as raias (T-0055)
+
+A página Descobrir deixou de usar **raias (lanes)**: um **input unificado (omnibox)**
+passou a compor a busca a partir de um único campo com inferência de tipo e prefixos
+opcionais (`@loja`, `#categoria`, `!marketplace`). É uma mudança **só de view + config
+declarativa — a FSM (BuscaEngine) não mudou**, o que valida de novo a arquitetura headless.
+
+- **Novo bloco `rules.omnibox`** (`prefixos`, `minChars`, `maxSugestoes`, `matchBuscaSalva`,
+  `debounceMs`), validado pelo schema/drift check. Exportado como `OMNIBOX` em `busca-config.js`.
+- **Funções puras** (testáveis sem DOM): `parsearInput`/`serializarTokens`/`tokensParaContexto`
+  (`omnibox-parser.js`) e `gerarSugestoes` (`omnibox-sugestoes.js`).
+- **Zero eventos novos na engine.** A view (`Omnibox.svelte`) despacha os eventos já
+  existentes: `DIGITAR` (só a keyword, mantendo o debounce 400ms), `ADICIONAR_LOJA`,
+  `ADICIONAR_CATEGORIA`, `MUDAR_MARKETPLACES`, `CARREGAR_SALVA`.
+- **Componente hand-rolled** (não Bits UI Combobox): o modelo de `value`/`inputValue` do
+  Bits UI conflita com texto literal multi-token; seguiu-se o padrão do `ui/Combobox.svelte`.
+- **`Lane.svelte` removido**; `BuscaUnificada.svelte` reescrito (mesmos props → `+page.svelte`
+  intocado). +51 testes.
+
+⚠️ **Débito aberto:** o subsistema de **lojas** (resolução/adição, nomes com espaço vs.
+tokens, derivação de monitoradas, escopo × marketplace) precisa de refactor — ver **T-0056**.
+Os **E2E locais/prod das raias** ficaram obsoletos — ver **T-0054**.
+
 ## Arquivos-chave
 
 | Arquivo | Papel |
@@ -345,7 +370,10 @@ Ver `componentes.md` para a lista de eventos/getters e os componentes de raia.
 | `web/src/lib/busca-engine-effects.js` | Effects injetáveis (API calls, buildBuscasComLojas) |
 | `web/src/lib/busca-config.js` | Adapter: JSON → formato da engine + funções puras (proximoModo, fingerprint, buscarDuplicada) |
 | `web/src/lib/descobrir-logic.js` | Filtragem client-side (funções puras) |
-| `web/src/lib/components/BuscaUnificada.svelte` | View burra (v3: raias, MarketplaceFilter) |
+| `web/src/lib/components/BuscaUnificada.svelte` | View burra (v4: omnibox + filtros + escopo; raias removidas) |
+| `web/src/lib/components/Omnibox.svelte` | v4: input unificado + dropdown agrupado (ARIA, teclado) |
+| `web/src/lib/omnibox-parser.js` | v4: parsearInput / serializarTokens / tokensParaContexto (puro) |
+| `web/src/lib/omnibox-sugestoes.js` | v4: gerarSugestoes agrupadas (puro) |
 | `web/src/lib/components/BuscasSalvasPanel.svelte` | Painel de buscas salvas (v3: modos vinculada/editando) |
 | `web/src/lib/components/MarketplaceFilter.svelte` | Filtro multi-marketplace (v3) |
 | `.mise/tasks/check/rules-schema` | CI drift check |

@@ -21,7 +21,7 @@ _Nenhuma tarefa em andamento._
 - **T-0051** Documentação final: consolidar estado pós-migração · documentacao · S
 - **T-0052** OpenAPI spec integrada: Swagger com todas as APIs (C# + Go gRPC) · documentacao · M
 - **T-0053** Avaliar alternativas ao GitHub Actions (CI/CD + hosting de git) · operacao · S
-- **T-0055** Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) · E-001 · M
+- **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
 
 ## ⚪ Later (radar)
 
@@ -69,7 +69,7 @@ _Nenhuma tarefa em andamento._
 - **T-0044** Testar fluxo de variação de preços end-to-end · migracao-arch · M
 - **T-0046** Validar todos os 11 fluxos end-to-end em produção · qualidade · M
 - **T-0047** Observabilidade: structured logging + métricas de negócio · operacao · M
-- **T-0054** E2E locais: reescrever para a página Descobrir em raias · E-001 · M
+- **T-0055** Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) · E-001 · M
 - **T-0056** Corrigir bugs visuais e funcionais da página Descobrir v3 · E-001 · M
 - **T-0057** Fixtures compartilhados + contract tests cross-stack · E-001 · G
 - **T-0058** Cache layer L1 + L2: Cloudflare edge + Go sidecar · qualidade · G

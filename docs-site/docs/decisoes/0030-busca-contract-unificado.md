@@ -129,6 +129,21 @@ Acceptance criteria do fix imediato:
 - ~~**Inference engine no Frontend:** aplicar `rules/busca-rules.json` inference em tempo real (shop → marketplace automático)~~ ✅ Implementado (BuscaEngine FSM aplica inference via rules)
 - **Cache Layer (ADR-0031):** CacheService.Get usa collection_keys derivadas para cache lookup, validando BuscaContract antes de armazenar
 
+## Atualização 2026-07-12 — Omnibox (T-0055) compõe o mesmo contrato
+
+A substituição das raias pelo **omnibox** (input unificado; ver ADR-0027 v4 e
+`.kiro/specs/omnibox-input/`) é **puramente de frontend e NÃO altera o BuscaContract**.
+O omnibox apenas oferece uma nova forma de *compor* o mesmo contexto de busca:
+
+- `parsearInput` tokeniza o texto (`@loja`/`#categoria`/`!marketplace`/keyword) e
+  `tokensParaContexto` resolve os tokens para `{ keyword, shopIds, categorias,
+  marketplacesFiltro }` — exatamente os campos de identidade que alimentam
+  `deriveCollectionKeys` e o `busca_id`.
+- A resolução/persistência de busca continua via BuscaEngine + endpoints existentes
+  (`ADICIONAR_LOJA`, `DIGITAR`, `POST /api/buscas`), então `busca_id`, collection_keys
+  e o read/write path descritos acima permanecem idênticos. Zero mudança de schema,
+  proto, BigQuery ou fixtures.
+
 ## Arquivos-Chave
 
 | Arquivo | O quê |

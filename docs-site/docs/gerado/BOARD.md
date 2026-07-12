@@ -28,7 +28,7 @@ T-0058 ✅
 | | T-0051 Documentação final: consolidar estado pós-migração (S) | | | T-0013 C# Web App — auth middleware + health + CI (M) |
 | | T-0052 OpenAPI spec integrada: Swagger com todas as APIs (C# + Go gRPC) (M) | | | T-0014 PostgreSQL schema + EF Core migrations (dados transacionais) (M) |
 | | T-0053 Avaliar alternativas ao GitHub Actions (CI/CD + hosting de git) (S) | | | T-0015 Multi-tenant em C# (EF Core + PostgreSQL) (G) |
-| | T-0055 Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) (M) | | | T-0016 Curadoria controller + scoring port em C# (G) |
+| | T-0054 E2E locais: reescrever para a página Descobrir em raias (M) | | | T-0016 Curadoria controller + scoring port em C# (G) |
 | | | | | T-0017 Routing split (Cloudflare Worker v1→v2) (P) |
 | | | | | T-0018 Migrar handlers de publicação para C# (G) |
 | | | | | T-0019 Migrar handlers de lojas/buscas para C# (G) |
@@ -53,7 +53,7 @@ T-0058 ✅
 | | | | | T-0044 Testar fluxo de variação de preços end-to-end (M) |
 | | | | | T-0046 Validar todos os 11 fluxos end-to-end em produção (M) |
 | | | | | T-0047 Observabilidade: structured logging + métricas de negócio (M) |
-| | | | | T-0054 E2E locais: reescrever para a página Descobrir em raias (M) |
+| | | | | T-0055 Autocomplete no input de busca: parser de tokens com prefixos (@, #, !) (M) |
 | | | | | T-0056 Corrigir bugs visuais e funcionais da página Descobrir v3 (M) |
 | | | | | T-0057 Fixtures compartilhados + contract tests cross-stack (G) |
 | | | | | T-0058 Cache layer L1 + L2: Cloudflare edge + Go sidecar (G) |

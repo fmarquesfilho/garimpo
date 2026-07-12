@@ -1,17 +1,62 @@
 id: T-0055
 titulo: "Autocomplete no input de busca: parser de tokens com prefixos (@, #, !)"
 epic: E-001
-status: next
+status: done
 prioridade: alta
 estimativa: M
 sprint: ""
 criado_em: "2026-07-09"
-atualizada_em: "2026-07-09"
+atualizada_em: "2026-07-12"
 valor: |
-  O input de busca hoje é texto livre sem indicação de escopo. Com o parser de
+  ✅ IMPLEMENTADO e em produção (2026-07-12) como a feature "Omnibox" — spec
+  `.kiro/specs/omnibox-input/`, merge em main (commit `3a0f938`), deploy verde.
+
+  O input de busca era texto livre sem indicação de escopo. Com o parser de
   tokens, o usuário compõe buscas complexas de forma natural (como CLI/Slack):
   `serum @lebotanic #beleza !shopee`. Melhora descobribilidade e reduz cliques.
+  O omnibox SUBSTITUIU o sistema de raias (lanes) da página Descobrir.
 descricao: |
+  ## ✅ Implementação (2026-07-12) — feature "Omnibox"
+
+  Entregue como substituição direta das raias (não apenas um autocomplete). Spec
+  em `.kiro/specs/omnibox-input/` (requirements + design + tasks). Testes: +51
+  (365 vitest no total). Gates verdes; merge em main; deploy prod OK.
+
+  ### Arquivos criados
+  - `web/src/lib/omnibox-parser.js` — `parsearInput` (tokeniza), `serializarTokens`
+    (round-trip), `tokensParaContexto` (resolve tokens → ctx da engine)
+  - `web/src/lib/omnibox-sugestoes.js` — `gerarSugestoes` (Map agrupado por tipo,
+    buscas salvas primeiro, minChars/maxSugestoes, match case-insensitive)
+  - `web/src/lib/components/Omnibox.svelte` — input + dropdown agrupado, ARIA
+    combobox completo, navegação por teclado
+  - `web/src/tests/omnibox-parser.test.js`, `omnibox-sugestoes.test.js`, `omnibox.test.js`
+
+  ### Arquivos modificados / removidos
+  - `web/src/lib/components/BuscaUnificada.svelte` — reescrito: Omnibox + filtros
+    numéricos + cards de escopo + buscas salvas (mesmos props → +page.svelte intocado)
+  - `rules/busca-rules.json` (+ schema) — bloco declarativo `omnibox`
+  - `web/src/lib/busca-config.js` — exporta `OMNIBOX`
+  - `web/src/lib/components/Lane.svelte` — **removido** (morto após remoção das raias)
+
+  ### Desvios em relação ao plano original (registrar para o próximo dev)
+  - **Config em `rules.omnibox`**, não `rules.autocomplete` (nome final).
+  - **Componente hand-rolled**, não Bits UI Combobox: o Combobox do Bits UI suporta
+    groups, mas seu modelo de `value`/`inputValue` (seleção autopreenche o campo)
+    conflita com o requisito de texto literal multi-token. Seguiu-se o padrão do
+    `ui/Combobox.svelte` (que já é hand-rolled pelo mesmo motivo). Zero deps novas;
+    `cmdk-sv` avaliado e dispensado.
+  - **Sem eventos novos** (`APLICAR_TOKENS`/`SELECIONAR_SUGESTAO` não foram criados):
+    a seleção reusa os eventos existentes da engine — `ADICIONAR_LOJA`,
+    `ADICIONAR_CATEGORIA`, `MUDAR_MARKETPLACES`, `CARREGAR_SALVA`, `DIGITAR`.
+  - **Seleção não reinsere `@nome` no campo**: ao escolher loja/categoria/marketplace,
+    o token ativo é removido e a seleção vira card abaixo (como o `ui/Combobox.svelte`).
+    Evita o bug de nomes com espaço (`Glory of Seoul` → `@Glory of Seoul` quebraria a
+    tokenização). ⚠️ Ver "workflow de lojas precisa de refactor" no handoff / T-0056.
+
+  ---
+
+  ## Plano original (referência)
+
   Implementar parser de tokens no input principal da página Descobrir.
   O input funciona como uma mini-CLI onde prefixos ativam completions contextuais.
 
