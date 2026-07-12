@@ -8,6 +8,8 @@
  * Sem runes / sem DOM — testável isoladamente.
  */
 
+import { normalizarNome, matchLojas } from './loja-registry.js';
+
 /**
  * @typedef {Object} Token
  * @property {'keyword'|'loja'|'categoria'|'marketplace'} tipo
@@ -88,7 +90,10 @@ export function tokensParaContexto(tokens, ctx = {}) {
 /** Resolvers por tipo de token — mantêm `tokensParaContexto` com baixa complexidade. */
 const RESOLVERS = {
 	loja(q, ctx, out) {
-		const loja = casar(ctx.lojasMonitoradas ?? [], (l) => l.nome, q);
+		// Usa o match normalizado do registry (mesmo do dropdown) para consistência:
+		// `@gloryofseoul` deve resolver "Glory of Seoul" tanto no dropdown quanto no Enter.
+		// A fonte de escopo real é `lojasResolvidas` (a engine coage o id para número).
+		const [loja] = matchLojas(normalizarNome(q), ctx.lojasMonitoradas ?? [], 1);
 		if (loja && !out.shopIds.includes(loja.id)) {
 			out.shopIds.push(loja.id);
 			out.lojasResolvidas.push(loja);

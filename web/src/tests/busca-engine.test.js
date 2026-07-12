@@ -11,7 +11,9 @@ function mockEffects(overrides = {}) {
 		carregarBuscasSalvas: vi.fn().mockResolvedValue([]),
 		carregarCategorias: vi.fn().mockResolvedValue([{ nome: 'Cosméticos' }, { nome: 'Perfumaria' }]),
 		executarBusca: vi.fn().mockResolvedValue({ curadoria: [], quedas: [], novos: [], lojas: [], favoritos: [] }),
-		resolverLoja: vi.fn().mockResolvedValue({ id: 920292999, nome: 'Le Botanic', marketplace: 'shopee' }),
+		// id é o ShopId numérico COMO STRING (contrato real do /api/lojas/resolver).
+		resolverLoja: vi.fn().mockResolvedValue({ id: '920292999', nome: 'Le Botanic', marketplace: 'shopee' }),
+		carregarRegistroLojas: vi.fn().mockResolvedValue([]),
 		salvarBusca: vi.fn().mockResolvedValue({}),
 		removerBusca: vi.fn().mockResolvedValue({}),
 		sincronizarStoreExterno: vi.fn().mockResolvedValue(undefined),
@@ -85,7 +87,9 @@ describe('BuscaEngine — Adicionar loja + keyword', () => {
 		engine.ctx.keyword = 'serum';
 		await engine.send({ type: 'ADICIONAR_LOJA', value: 'https://s.shopee.com.br/8fQYnxWQqu' });
 
-		expect(effects.resolverLoja).toHaveBeenCalledWith('https://s.shopee.com.br/8fQYnxWQqu');
+		// resolverLoja é chamado com (input, signal) — signal do AbortController de timeout.
+		expect(effects.resolverLoja).toHaveBeenCalledWith('https://s.shopee.com.br/8fQYnxWQqu', expect.anything());
+		// id string da API vira número no escopo (Busca.ShopIds = long[]).
 		expect(engine.ctx.shopIds).toContain(920292999);
 		expect(engine.ctx.shopNomes[920292999]).toBe('Le Botanic');
 	});
@@ -112,6 +116,43 @@ describe('BuscaEngine — Adicionar loja + keyword', () => {
 		await engine.send({ type: 'ADICIONAR_LOJA', value: 'invalida' });
 		expect(engine.ctx.resolucaoLoja.erro).toBe('Loja não encontrada');
 		expect(engine.ctx.resolucaoLoja.status).toBe('erro');
+	});
+
+	it('ADICIONAR_LOJA via dropdown (event.loja) usa ShopId string como escopo', async () => {
+		const engine = new BuscaEngine(mockEffects());
+		await engine.send({
+			type: 'ADICIONAR_LOJA',
+			loja: { id: '282170857', nome: 'Le Botanic', marketplace: 'shopee' }
+		});
+		expect(engine.ctx.shopIds).toContain(282170857);
+		expect(engine.ctx.shopMeta[282170857].tipo).toBe('escopada');
+	});
+
+	it('ADICIONAR_LOJA com match local exato adiciona sem resolver (regressão .meta)', async () => {
+		const loja = {
+			id: '920292999',
+			nome: 'Glory of Seoul',
+			nome_normalizado: 'gloryofseoul',
+			marketplace: 'shopee'
+		};
+		const effects = mockEffects({ carregarRegistroLojas: vi.fn().mockResolvedValue([loja]) });
+		const engine = new BuscaEngine(effects);
+		await engine.send({ type: 'INICIALIZAR' });
+
+		// Antes do fix, este path acessava matches[0].meta (undefined) → TypeError.
+		await engine.send({ type: 'ADICIONAR_LOJA', value: 'gloryofseoul' });
+
+		expect(effects.resolverLoja).not.toHaveBeenCalled();
+		expect(engine.ctx.shopIds).toContain(920292999);
+	});
+
+	it('ADICIONAR_LOJA com timeout (abort) reporta mensagem de timeout', async () => {
+		const abortErr = Object.assign(new Error('aborted'), { name: 'AbortError' });
+		const effects = mockEffects({ resolverLoja: vi.fn().mockRejectedValue(abortErr) });
+		const engine = new BuscaEngine(effects);
+		await engine.send({ type: 'ADICIONAR_LOJA', value: 'algumaloja' });
+		expect(engine.ctx.resolucaoLoja.status).toBe('erro');
+		expect(engine.ctx.resolucaoLoja.erro).toContain('Timeout');
 	});
 
 	it('REMOVER_LOJA remove shopId e redispara busca', async () => {

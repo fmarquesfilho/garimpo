@@ -1,3 +1,8 @@
+import { LOJA_REGISTRO } from './busca-config.js';
+
+/** Mínimo de caracteres para matching — de rules.lojaRegistro (fonte da verdade). */
+const MATCH_MIN_CHARS = LOJA_REGISTRO?.matchMinChars ?? 2;
+
 /**
  * Normaliza nome para matching: NFD → remove diacríticos → remove non-[a-z0-9] → lowercase.
  * Idêntica à implementação C# `Loja.Normalizar()`.
@@ -23,7 +28,7 @@ export function normalizarNome(nome) {
  * @returns {Array} lojas que casam
  */
 export function matchLojas(inputNormalizado, lojas, max = 7) {
-	if (!inputNormalizado || inputNormalizado.length < 2) return [];
+	if (!inputNormalizado || inputNormalizado.length < MATCH_MIN_CHARS) return [];
 	return (lojas ?? [])
 		.filter(
 			(l) =>

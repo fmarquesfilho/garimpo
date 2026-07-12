@@ -3,8 +3,8 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": ["integer", "string"],
-      "description": "ID da loja no banco de dados"
+      "type": "string",
+      "description": "ShopId numérico do marketplace (como string) — chave de escopo da busca. NÃO é o Guid PK do registro."
     },
     "nome": {
       "type": "string",

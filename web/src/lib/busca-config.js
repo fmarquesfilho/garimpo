@@ -24,6 +24,7 @@ export const CONTEXTO_CATEGORIAS = rules.contextoCategorias;
 export const MODOS = rules.modos;
 export const BUSCA_DUPLICADA = rules.buscaDuplicada;
 export const OMNIBOX = rules.omnibox;
+export const LOJA_REGISTRO = rules.lojaRegistro;
 
 // Tabela de intent no formato esperado pela engine
 export const INTENT_TABLE = rules.intent.map((r) => ({
@@ -155,8 +156,9 @@ export function fingerprint(ctx) {
 			if (norm === 'sort_lowercase') {
 				return JSON.stringify([...val].map((s) => String(s).toLowerCase()).sort());
 			}
-			// sort (numérico ou string)
-			return JSON.stringify([...val].map((v) => (typeof v === 'number' ? v : String(v))).sort());
+			// sort — coage a string para o fingerprint casar independente da origem
+			// (shopIds de busca salva chegam numéricos; do registro, como string).
+			return JSON.stringify([...val].map((v) => String(v)).sort());
 		}
 		if (typeof val === 'string') return val.trim().toLowerCase();
 		return String(val);

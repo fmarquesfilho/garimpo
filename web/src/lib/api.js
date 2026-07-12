@@ -1,11 +1,13 @@
 import { getIdToken } from './firebase.js';
 const BASE = import.meta.env.VITE_API_BASE ?? (import.meta.env.PROD ? '' : 'http://localhost:8080');
+
 /** Headers com token de auth (se logado). */
 async function authHeaders() {
 	const token = await getIdToken();
 	if (token) return { Authorization: `Bearer ${token}` };
 	return {};
 }
+
 async function pegar(caminho) {
 	const headers = await authHeaders();
 	const resp = await fetch(`${BASE}${caminho}`, { headers });
@@ -14,6 +16,7 @@ async function pegar(caminho) {
 	}
 	return resp.json();
 }
+
 /**
  * Lista priorizada de uma estratégia.
  * @param {Object} opts
@@ -57,18 +60,26 @@ export function buscarCandidatos({
 	if (semFiltro) p.set('sem_filtro', 'true');
 	return pegar(`/api/candidatos?${p}`);
 }
-async function postar(caminho, corpo) {
+
+/**
+ * @param {string} caminho
+ * @param {any} corpo
+ * @param {{ signal?: AbortSignal }} [opts]
+ */
+async function postar(caminho, corpo, { signal } = {}) {
 	const headers = { 'Content-Type': 'application/json', ...(await authHeaders()) };
 	const resp = await fetch(`${BASE}${caminho}`, {
 		method: 'POST',
 		headers,
-		body: JSON.stringify(corpo)
+		body: JSON.stringify(corpo),
+		signal
 	});
 	if (!resp.ok) {
 		throw await parseProblem(resp, caminho);
 	}
 	return resp.json();
 }
+
 /**
  * Parseia uma resposta de erro no formato RFC 9457 (Problem Details).
  * Retorna um Error enriquecido com campos úteis para o frontend.
@@ -92,6 +103,7 @@ async function parseProblem(resp, caminho) {
 	err.endpoint = caminho;
 	return err;
 }
+
 /**
  * Publica a oferta no canal (Telegram/WhatsApp/Mock) e devolve o Resultado.
  * @param {Object} candidato
@@ -105,14 +117,17 @@ export function publicar(candidato, { destinoId, templateId } = {}) {
 	if (templateId) corpo.template_id = templateId;
 	return postar('/api/publicar', corpo);
 }
+
 /** Lista os destinos de publicação cadastrados (Telegram, WhatsApp, etc.). */
 export function listarDestinos() {
 	return pegar('/api/destinos');
 }
+
 /** Salva (cria/atualiza) um destino de publicação. */
 export function salvarDestino(destino) {
 	return postar('/api/destinos', destino);
 }
+
 /** Remove um destino por ID. */
 export async function deletarDestino(id) {
 	const headers = { ...(await authHeaders()) };
@@ -125,14 +140,17 @@ export async function deletarDestino(id) {
 	}
 	return resp.json();
 }
+
 /** Lista os templates de mensagem disponíveis. */
 export function listarTemplates() {
 	return pegar('/api/templates');
 }
+
 /** Salva (cria/atualiza) um template de mensagem. */
 export function salvarTemplate(template) {
 	return postar('/api/templates', template);
 }
+
 /** Remove um template por ID. */
 export async function deletarTemplate(id) {
 	const headers = { ...(await authHeaders()) };
@@ -145,46 +163,55 @@ export async function deletarTemplate(id) {
 	}
 	return resp.json();
 }
+
 /** Renderiza um preview de template com dados do produto. */
 export function previewTemplate(dados) {
 	return postar('/api/templates/preview', dados);
 }
+
 /** Relatório de conversões (publicações por canal/destino). */
 export function buscarConversoes({ dias = 30 } = {}) {
 	return pegar(`/api/conversoes?dias=${dias}`);
 }
-/** Logs recentes para o dashboard de admin. */
+
 /** Verifica se o usuário logado é admin. */
 export function verificarAdmin() {
 	return pegar('/api/admin/me');
 }
+
 /** Lista publicações por status (agendada|enviada|erro; vazio = todas). */
 export function listarPublicacoes({ status = '' } = {}) {
 	const qs = status ? `?status=${status}` : '';
 	return pegar(`/api/publicacoes${qs}`);
 }
+
 /** Agenda ou envia imediatamente uma publicação. */
 export function agendarPublicacao(pub) {
 	return postar('/api/publicacoes', pub);
 }
+
 /** Resumo descritivo dos snapshots coletados (por categoria), janela em dias. */
 export function buscarEstatisticas({ dias = 30 } = {}) {
 	return pegar(`/api/estatisticas?dias=${dias}`);
 }
+
 /** Novidades de lojas monitoradas (produtos novos + variações de preço). */
 export function buscarNovidades({ buscaId = '', dias = 7 } = {}) {
 	const p = new URLSearchParams({ dias: String(dias) });
 	if (buscaId) p.set('busca_id', buscaId);
 	return pegar(`/api/lojas/novidades?${p}`);
 }
+
 /** Evolução de preço das lojas monitoradas ao longo do tempo. */
 export function buscarEvolucaoLojas({ dias = 30 } = {}) {
 	return pegar(`/api/lojas/evolucao?dias=${dias}`);
 }
+
 /** Configuração atual dos alertas de preço. */
 export function buscarAlertasConfig() {
 	return pegar('/api/alertas');
 }
+
 /**
  * Envia um alerta de teste (verifica bot + chat_id).
  * @param {Object} [opts]
@@ -194,6 +221,7 @@ export function testarAlertas({ buscaId } = {}) {
 	const corpo = buscaId ? { busca_id: buscaId } : {};
 	return postar('/api/alertas/testar', corpo);
 }
+
 /**
  * Atualiza configuração de alertas em runtime.
  * @param {Object} opts
@@ -208,40 +236,29 @@ export function configurarAlertas({ chatId, threshold, apenasQuedas } = {}) {
 	if (apenasQuedas != null) corpo.apenas_quedas = apenasQuedas;
 	return postar('/api/alertas/configurar', corpo);
 }
-/**
- * Adiciona uma loja ao monitoramento (aceita URL ou ID numérico).
- * @param {Object} opts
- * @param {string} opts.input
- * @param {string} [opts.cron]
- * @param {string} [opts.origemPadrao]
- * @param {string[]} [opts.keywords]
- */
-export function adicionarLoja({ input, cron, origemPadrao, keywords }) {
-	const corpo = { input };
-	if (cron) corpo.cron = cron;
-	if (origemPadrao) corpo.origem_padrao = origemPadrao;
-	if (keywords && keywords.length > 0) corpo.keywords = keywords;
-	return postar('/api/lojas', corpo);
-}
+
 /**
  * Retorna o registro completo de lojas do tenant.
  */
 export function listarRegistroLojas() {
 	return pegar('/api/lojas/registro');
 }
+
 /**
  * Resolve e faz upsert de uma loja (usado pelo Store Workflow).
  * @param {Object} opts
  * @param {string} opts.input
  * @param {string} [opts.marketplace]
  * @param {string} [opts.origem]
+ * @param {{ signal?: AbortSignal }} [http] permite abortar no timeout
  */
-export function resolverLoja({ input, marketplace, origem }) {
+export function resolverLoja({ input, marketplace, origem }, { signal } = {}) {
 	const corpo = { input };
 	if (marketplace) corpo.marketplace = marketplace;
 	if (origem) corpo.origem = origem;
-	return postar('/api/lojas/resolver', corpo);
+	return postar('/api/lojas/resolver', corpo, { signal });
 }
+
 /** Remove uma loja do monitoramento. */
 export async function removerLoja(id) {
 	const headers = { ...(await authHeaders()) };
@@ -254,26 +271,32 @@ export async function removerLoja(id) {
 	}
 	return resp.json();
 }
+
 /** Resolve um link curto da Shopee para obter URL final + dados do produto. */
 export function resolverLinkShopee(url) {
 	return postar('/api/resolver-link', { url });
 }
+
 /** Histórico de coletas executadas (snapshots por execução), janela em dias. */
 export function buscarColetas({ dias = 30 } = {}) {
 	return pegar(`/api/coletas?dias=${dias}`);
 }
+
 /** Status do onboarding do tenant atual. */
 export function onboardingStatus() {
 	return pegar('/api/onboarding/status');
 }
+
 /** Step 1: Aceitar termos de uso. */
 export function onboardingTermos() {
 	return postar('/api/onboarding/termos', { aceito: true });
 }
+
 /** Step 2: Salvar credenciais Shopee. */
 export function onboardingShopee({ appId, secret }) {
 	return postar('/api/onboarding/shopee', { app_id: appId, secret });
 }
+
 /**
  * Step 3: Configurar Telegram (ou pular).
  * @param {Object} opts
@@ -285,6 +308,7 @@ export function onboardingTelegram({ token, chatId, pular = false } = {}) {
 	if (pular) return postar('/api/onboarding/telegram', { pular: true });
 	return postar('/api/onboarding/telegram', { token, chat_id: chatId });
 }
+
 /**
  * Step 3 (alternativo): Configurar WhatsApp Meta (ou pular).
  * @param {Object} opts
@@ -296,14 +320,17 @@ export function onboardingWhatsapp({ phoneNumberId, accessToken, pular = false }
 	if (pular) return postar('/api/onboarding/whatsapp', { pular: true });
 	return postar('/api/onboarding/whatsapp', { phone_number_id: phoneNumberId, access_token: accessToken });
 }
+
 /** Step 4: Validar credenciais Shopee com chamada de teste. */
 export function onboardingValidar() {
 	return postar('/api/onboarding/validar', {});
 }
+
 /** Excluir conta e dados (LGPD). */
 export function excluirConta() {
 	return postar('/api/onboarding/excluir-conta', { confirmar: true });
 }
+
 /** Conversões reais da Shopee (conversionReport). */
 export async function buscarConversoesReais({ dias = 30 } = {}) {
 	const controller = new AbortController();
@@ -323,10 +350,12 @@ export async function buscarConversoesReais({ dias = 30 } = {}) {
 		throw err;
 	}
 }
+
 /** Lista os perfis de busca sincronizados no servidor (BigQuery). */
 export function listarBuscasServidor() {
 	return pegar('/api/buscas');
 }
+
 /** Salva (sync) um perfil de busca no servidor. Best-effort. */
 export async function sincronizarBusca(busca, { remover = false } = {}) {
 	const qs = remover ? '?remover' : '';
@@ -340,14 +369,17 @@ export async function sincronizarBusca(busca, { remover = false } = {}) {
 		/* sync não pode travar o uso local */
 	});
 }
+
 /** Lista os favoritos do usuário logado. */
 export function listarFavoritos() {
 	return pegar('/api/favoritos');
 }
+
 /** Salva um produto como favorito. */
 export function salvarFavorito(produto) {
 	return postar('/api/favoritos', produto);
 }
+
 /** Remove um produto dos favoritos. */
 export async function removerFavorito(produtoId) {
 	const headers = { ...(await authHeaders()) };

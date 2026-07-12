@@ -121,7 +121,8 @@
 			marketplaces: MARKETPLACES?.suportados ?? []
 		});
 		for (const loja of ctx.lojasResolvidas) {
-			if (!engine.ctx.shopIds.includes(loja.id)) engine.send({ type: 'ADICIONAR_LOJA', loja });
+			// ctx.shopIds é numérico (a engine coage o id do registro); compara já coagido.
+			if (!engine.ctx.shopIds.includes(Number(loja.id))) engine.send({ type: 'ADICIONAR_LOJA', loja });
 		}
 		for (const nome of ctx.categorias) {
 			if (!engine.ctx.categorias.includes(nome)) engine.send({ type: 'ADICIONAR_CATEGORIA', nome });

@@ -18,7 +18,9 @@ public static partial class EndpointExtensions
                 .OrderByDescending(l => l.CreatedAt)
                 .Select(l => new
                 {
-                    id = l.Id,
+                    // id = ShopId numérico (chave de escopo da busca), NÃO o Guid PK.
+                    // Ver design.md §11 e a revisão do store workflow (bug de escopo).
+                    id = l.ShopId.ToString(),
                     nome = l.Nome,
                     nome_normalizado = l.NomeNormalizado,
                     marketplace = l.Marketplace,
@@ -82,7 +84,7 @@ public static partial class EndpointExtensions
                         }
                         return Results.Ok(new
                         {
-                            id = existingLoja.Id,
+                            id = existingLoja.ShopId.ToString(),
                             nome = existingLoja.Nome,
                             nome_normalizado = existingLoja.NomeNormalizado,
                             marketplace = existingLoja.Marketplace,
@@ -108,7 +110,7 @@ public static partial class EndpointExtensions
 
                     return Results.Ok(new
                     {
-                        id = novaLoja.Id,
+                        id = novaLoja.ShopId.ToString(),
                         nome = novaLoja.Nome,
                         nome_normalizado = novaLoja.NomeNormalizado,
                         marketplace = novaLoja.Marketplace,

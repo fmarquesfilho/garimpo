@@ -41,6 +41,38 @@ Olá, agente! Seu papel agora é **Revisão de Qualidade**. Por favor, execute a
 3. **Ergonomia do Svelte**: Cheque se a implementação de `BuscaEngine.svelte.js` (Svelte 5 runes e state management) está usando os melhores padrões. O arquivo tem muitas linhas e foi atualizado intensamente; garanta que não há reatividade perdida.
 4. **Clean Code**: Se encontrar pequenos bad smells (variáveis não utilizadas, logs soltos ou dívidas técnicas menores deixadas durante a refatoração), sinta-se à vontade para corrigir e documentar.
 
+## ✅ Revisão aplicada (2026-07-12) — branch `fix/store-workflow-review`
+
+A revisão de qualidade foi executada e **todos os achados foram corrigidos**.
+
+**Críticos (quebravam produção; estavam mascarados pelos mocks):**
+1. **`id` = Guid → escopo de busca quebrado.** Os endpoints retornavam `id = l.Id`
+   (Guid) em vez de `l.ShopId.ToString()` (design §11). `ctx.shopIds` recebia Guids
+   → a busca não escopava por loja. **Fix:** endpoints alinhados ao design
+   (`ShopId.ToString()`); `lojas.response.json.id` = string; `ctx.shopIds` padronizado
+   como **número** (coagido na entrada). Os testes usavam `id` numérico coincidente,
+   escondendo o bug — agora usam `id` string (contrato real) + asseguram a coerção.
+2. **`matches[0].meta` → TypeError** no match local exato: a engine importa `matchLojas`
+   do `loja-registry` (retorna lojas cruas, sem `.meta`). **Fix:** `matches[0]` direto;
+   regressão coberta por teste que popula o registro (antes nenhum teste populava
+   `lojasDisponiveis`, por isso o crash passava despercebido).
+
+**Médios:** timeout com `AbortController` real (cancela o fetch; `AbortError` → mensagem
+de timeout); erro de resolução limpo ao reiniciar; teste de timeout adicionado.
+
+**Limpeza:** binários `web/.wrangler/*.sqlite` removidos do git + gitignore; linhas em
+branco do `api.js` restauradas; dead code `adicionarLoja` (0 callers) removido; condição
+redundante simplificada; `rules.lojaRegistro.matchMinChars` agora consumido (antes
+hardcoded); resolver `@loja` do Enter alinhado ao match normalizado do dropdown.
+
+**Decisão de tipo (desvio do design §Data Models):** `ctx.shopIds` é **número**, não
+`string[]`. O backend é numérico ponta-a-ponta (`Busca.ShopIds` = `long[]`, Collector
+`long`); número evita coerção na saída (save) e casa com buscas salvas. O `id` string
+da API é coagido a número na entrada (`Number(loja.id)`).
+
+**Verificação:** vitest 367 · svelte-check 0/0 · build ✓ · lint js/css ✓ · dotnet build
+0 erros · 88 testes C# ✓ · file-size ✓.
+
 ### Decisões tomadas com o dono do produto
 
 1. **Registro de Lojas é server-side** — nova tabela PostgreSQL + endpoints REST na API C#.

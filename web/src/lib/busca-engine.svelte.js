@@ -219,15 +219,17 @@ export class BuscaEngine {
 		this.#debounce();
 	}
 
-	/** Loja já-monitorada escolhida no dropdown ou match exato: adiciona direto, sem resolver. */
+	/** Loja já-conhecida (dropdown ou match exato do registro): adiciona direto, sem resolver. */
 	#adicionarLojaConhecida(loja) {
-		const { id, nome, marketplace, origem, cron } = loja;
-		if (this.ctx.shopIds.includes(id)) return;
-		this.ctx.shopIds = [...this.ctx.shopIds, id];
-		this.ctx.shopNomes = { ...this.ctx.shopNomes, [id]: nome };
+		// id é o ShopId (string na API); o escopo usa número, como o backend (Busca.ShopIds = long[]).
+		const shopId = Number(loja.id);
+		if (loja.id == null || Number.isNaN(shopId) || this.ctx.shopIds.includes(shopId)) return;
+		const { nome, marketplace, origem, cron } = loja;
+		this.ctx.shopIds = [...this.ctx.shopIds, shopId];
+		this.ctx.shopNomes = { ...this.ctx.shopNomes, [shopId]: nome };
 		this.ctx.shopMeta = {
 			...this.ctx.shopMeta,
-			[id]: {
+			[shopId]: {
 				marketplace: marketplace ?? 'shopee',
 				origem: origem ?? null,
 				monitorada: Boolean(cron),
@@ -238,48 +240,46 @@ export class BuscaEngine {
 		return this.#executarBusca();
 	}
 
-	async #resolverLojaRemota(input, _options = {}) {
+	async #resolverLojaRemota(input) {
 		if (!guards.resolucaoPermitida(this.ctx)) return;
-
 		this.ctx.resolucaoLoja = { status: 'resolvendo' };
-
+		// AbortController cancela o fetch no timeout (evita resolução órfã em background).
+		const controller = new AbortController();
+		const timer = setTimeout(() => controller.abort(), 10000);
 		try {
-			// Promise.race para timeout de 10s
-			const timeout = new Promise((_, reject) =>
-				setTimeout(() => reject(new Error('Timeout na resolução da loja (10s).')), 10000)
-			);
-			const request = this.#effects.resolverLoja(input);
-			const r = await Promise.race([request, timeout]);
-
-			// Anexa a loja ao registro local se não estiver presente
-			if (!this.ctx.lojasDisponiveis.some((l) => l.id === r.id)) {
+			const r = await this.#effects.resolverLoja(input, controller.signal);
+			// Anexa a loja resolvida ao registro local, se ainda não presente.
+			if (!this.ctx.lojasDisponiveis.some((l) => String(l.id) === String(r.id))) {
 				this.ctx.lojasDisponiveis = [...this.ctx.lojasDisponiveis, r];
 			}
-
 			this.ctx.resolucaoLoja = { status: 'idle' };
 			return this.#adicionarLojaConhecida(r);
 		} catch (e) {
-			this.ctx.resolucaoLoja = { status: 'erro', erro: e?.message ?? 'Falha ao resolver loja' };
+			const abortou = e?.name === 'AbortError' || controller.signal.aborted;
+			const erro = abortou ? 'Timeout na resolução da loja (10s).' : (e?.message ?? 'Falha ao resolver loja');
+			this.ctx.resolucaoLoja = { status: 'erro', erro };
+		} finally {
+			clearTimeout(timer);
 		}
 	}
 
 	async #adicionarLoja(event) {
-		if (event.loja?.id) return this.#adicionarLojaConhecida(event.loja);
+		if (event.loja?.id != null) return this.#adicionarLojaConhecida(event.loja);
 
 		const input = (event.value ?? '').trim();
 		if (!guards.lojaInputValida(this.ctx, event)) return;
 
-		// Verifica se há um match local exato no registro de lojas disponíveis
+		// Nova tentativa limpa o erro de resolução anterior.
+		if (this.ctx.resolucaoLoja.status === 'erro') this.ctx.resolucaoLoja = { status: 'idle' };
+
+		// Match local exato no registro → adiciona sem rede. matchLojas retorna lojas cruas (sem `.meta`).
 		const norm = normalizarNome(input);
-		const matches = matchLojas(norm, this.ctx.lojasDisponiveis, 1);
-		if (matches.length > 0) {
-			const match = matches[0].meta; // matchLojas returns an object with `meta: loja`
-			if (norm === match.nome_normalizado || norm === normalizarNome(match.nome)) {
-				return this.#adicionarLojaConhecida(match);
-			}
+		const [match] = matchLojas(norm, this.ctx.lojasDisponiveis, 1);
+		if (match && norm === (match.nome_normalizado || normalizarNome(match.nome))) {
+			return this.#adicionarLojaConhecida(match);
 		}
 
-		return this.#resolverLojaRemota(input, { marketplace: event.marketplace, origem: event.origem });
+		return this.#resolverLojaRemota(input);
 	}
 
 	#removerLoja(event) {

@@ -6,3 +6,6 @@ build/
 test-results/
 tests/.auth/
 emulator.log
+
+# Wrangler / miniflare local state (build artifacts)
+.wrangler/

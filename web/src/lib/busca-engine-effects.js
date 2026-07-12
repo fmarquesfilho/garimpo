@@ -90,9 +90,9 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 			return resultado;
 		},
 
-		/** Resolve URL/ID de loja via Collector. */
-		async resolverLoja(input) {
-			return resolverLojaApi({ input });
+		/** Resolve URL/ID de loja via Collector. `signal` permite abortar no timeout. */
+		async resolverLoja(input, signal) {
+			return resolverLojaApi({ input }, { signal });
 		},
 
 		/** Salva busca no servidor. */
