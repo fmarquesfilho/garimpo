@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# mise description="E2E Smart Search: fluxos do Omnibox refatorado (local, mocks)"
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  🔎 E2E Smart Search (local)"
+echo "═══════════════════════════════════════"
+
+cd web
+
+# Build se necessário
+if [ ! -d "build" ] || [ "$(find src -newer build -name '*.svelte' -o -name '*.js' | head -1)" ]; then
+  echo "  📦 Building..."
+  bun run build
+fi
+
+echo "  🎬 Running Smart Search E2E..."
+bunx playwright test --config=playwright.local.config.js tests/local/smart-search.spec.js "$@"
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ Smart Search E2E passed"
+echo "═══════════════════════════════════════"

@@ -19,7 +19,7 @@ const rules = JSON.parse(readFileSync(resolve(__dirname, '../../../rules/busca-r
 test.describe('Produção — Boot', () => {
 	test('página carrega autenticada', async ({ authedPage: page }) => {
 		await page.goto('/');
-		await expect(page.locator('input[type="search"]')).toBeVisible({ timeout: 15000 });
+		await expect(page.getByRole('combobox')).toBeVisible({ timeout: 15000 });
 		await expect(page.getByRole('button', { name: /Entrar com Google/i })).toHaveCount(0);
 	});
 });
@@ -31,8 +31,9 @@ test.describe('Produção — Boot', () => {
 test.describe('Produção — Busca', () => {
 	test('busca por keyword retorna produtos', async ({ authedPage: page }) => {
 		await page.goto('/');
-		const input = page.locator('input[type="search"]');
+		const input = page.getByRole('combobox');
 		await input.pressSequentially('serum', { delay: 80 });
+		await input.press('Enter');
 
 		// Resultado: contagem de produtos OU empty state
 		await expect(page.getByText(/\d+ produto|Nenhum resultado/i).first()).toBeVisible({ timeout: 20000 });
@@ -45,12 +46,13 @@ test.describe('Produção — Busca', () => {
 		await expect(page.getByText(/Nenhum resultado/i)).toBeVisible({ timeout: 5000 });
 	});
 
-	test('ESC limpa keyword', async ({ authedPage: page }) => {
+	test('ESC fecha dropdown', async ({ authedPage: page }) => {
 		await page.goto('/');
-		const input = page.locator('input[type="search"]');
+		const input = page.getByRole('combobox');
 		await input.fill('serum');
+		await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 });
 		await input.press('Escape');
-		await expect(input).toHaveValue('');
+		await expect(page.getByRole('listbox')).not.toBeVisible();
 	});
 });
 

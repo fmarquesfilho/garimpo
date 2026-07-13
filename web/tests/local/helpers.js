@@ -9,7 +9,7 @@ import { expect } from '@playwright/test';
 // ── Seletores ────────────────────────────────────────────────────────────────
 
 export const SEL = {
-	searchInput: 'input[type="search"]',
+	searchInput: '[role="combobox"]',
 	lojaInput: 'input[placeholder*="loja"]',
 
 	btnFiltros: 'button:has-text("⚙️ Filtros")',
