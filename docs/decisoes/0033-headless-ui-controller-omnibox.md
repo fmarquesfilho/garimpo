@@ -104,3 +104,6 @@ A engine chama essas funções e aplica as mutações no `$state` reativo.
 - svelte-check: 0 erros
 - Mutation testing baseline disponível via `mise run test:mutate`
 - Coverage thresholds por módulo (engine ≥70%, intencao ≥85%)
+- ESLint `no-restricted-syntax` bane $state em pure-renderers (compile-time enforcement)
+- Teste arquitetural `arch-pure-renderers.test.js` detecta automaticamente novos componentes sem cobertura
+- `mise run check:pure-renderers` para validação rápida independente

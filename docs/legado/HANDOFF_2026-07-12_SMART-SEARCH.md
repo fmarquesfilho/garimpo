@@ -1,8 +1,9 @@
 # Handoff — Omnibox Smart Search (2026-07-12)
 
-> **Status: ✅ IMPLEMENTADO. Waves 1-5 completas. Deploy pendente.**
-> Feature "Omnibox Smart Search". Spec em `.kiro/specs/omnibox-smart-search/`.
+> **Status: ✅ IMPLEMENTADO + INLINE CHIPS. Deploy em produção.**
+> Feature "Omnibox Smart Search" + "Inline Chips". Specs em `.kiro/specs/`.
 > ADR-0033 documenta o pattern Headless UI Controller.
+> Enforcement: ESLint + teste arquitetural bloqueiam $state em pure-renderers.
 
 ## Resumo
 
