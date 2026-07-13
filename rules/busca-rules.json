@@ -154,6 +154,18 @@
     "BUSCAR_LOJAS": { "refetch": true, "imediato": true },
     "MONITORAR_LOJA": { "refetch": true, "imediato": true }
   },
+  "feedDefault": {
+    "habilitado": true,
+    "estrategia": "categoria_top_vendidos",
+    "categorias": [
+      { "marketplace": "shopee", "categoryId": 100630, "nome": "Beleza", "keyword": "beleza" },
+      { "marketplace": "shopee", "categoryId": 100664, "nome": "Cuidados com a Pele", "keyword": "skincare" },
+      { "marketplace": "shopee", "categoryId": 100640, "nome": "Perfumaria", "keyword": "perfume" }
+    ],
+    "rotacao": "random",
+    "limit": 20,
+    "sortBy": "sales"
+  },
   "storeCard": {
     "camposVisiveis": {
       "shopee": ["imagem", "nome", "origem", "seguidores", "total_produtos", "avaliacao", "monitorada"],

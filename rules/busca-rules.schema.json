@@ -247,6 +247,34 @@
         "fonte": { "type": "string" }
       }
     },
+    "feedDefault": {
+      "type": "object",
+      "description": "Config do feed automático exibido ao abrir a página sem contexto de busca.",
+      "required": ["habilitado", "estrategia", "categorias", "rotacao", "limit", "sortBy"],
+      "properties": {
+        "habilitado": { "type": "boolean" },
+        "estrategia": { "type": "string", "enum": ["categoria_top_vendidos"] },
+        "categorias": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["marketplace", "categoryId", "nome", "keyword"],
+            "properties": {
+              "marketplace": { "type": "string" },
+              "categoryId": { "type": "integer" },
+              "nome": { "type": "string" },
+              "keyword": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "rotacao": { "type": "string", "enum": ["random", "sequential"] },
+        "limit": { "type": "integer", "minimum": 1 },
+        "sortBy": { "type": "string", "enum": ["sales", "price", "relevance"] }
+      },
+      "additionalProperties": false
+    },
     "storeCard": {
       "type": "object",
       "description": "Config do Store Card nos resultados de busca por loja.",

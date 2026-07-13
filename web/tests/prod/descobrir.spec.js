@@ -48,7 +48,13 @@ test.describe('Producao — Busca', () => {
 	test('empty state sem keyword', async ({ authedPage: page }) => {
 		await page.goto('/');
 		await expect(page.getByRole('combobox')).toBeVisible({ timeout: 15000 });
-		await expect(page.getByText(/Nenhum resultado/i)).toBeVisible({ timeout: 10000 });
+		// Com feed default ativo, deve mostrar produtos OU fallback se API retorna vazio
+		await expect(
+			page
+				.getByText(/\d+ produto/i)
+				.or(page.getByText(/Nenhum resultado/i))
+				.or(page.getByRole('article'))
+		).toBeVisible({ timeout: 15000 });
 	});
 
 	test('Escape fecha dropdown', async ({ authedPage: page }) => {

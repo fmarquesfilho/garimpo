@@ -26,7 +26,8 @@ import {
 	proximoModo,
 	buscarDuplicada,
 	BUSCA_DUPLICADA,
-	MARKETPLACES
+	MARKETPLACES,
+	FEED_DEFAULT
 } from './busca-config.js';
 import { criarContextoInicial, criarUIInicial, guards, STATES, MODOS } from './busca-engine-state.js';
 import {
@@ -103,6 +104,12 @@ export class BuscaEngine {
 	}
 	get contadorLojas() {
 		return this.ctx.shopIds.length;
+	}
+	get isFeedDefault() {
+		return this.ctx._feedDefault === true;
+	}
+	get feedDefaultCategoria() {
+		return this.ctx._feedDefaultCategoria;
 	}
 	get contadorBuscas() {
 		return this.ctx.buscasSalvas.length;
@@ -209,6 +216,9 @@ export class BuscaEngine {
 			await this.#effects.sincronizarStoreExterno();
 			if (this.ctx.keyword.trim() || this.ctx.shopIds.length > 0 || this.ctx.categorias.length > 0) {
 				await this.#executarBusca();
+			} else if (this.#devUsarFeedDefault()) {
+				this.#aplicarFeedDefault();
+				await this.#executarBusca();
 			} else {
 				this.status = STATES.IDLE;
 			}
@@ -218,9 +228,39 @@ export class BuscaEngine {
 		}
 	}
 
+	/**
+	 * Decide se o feed default deve ser usado no boot.
+	 * Condições: feedDefault habilitado, tem categorias, e não há contexto ativo.
+	 */
+	#devUsarFeedDefault() {
+		if (!FEED_DEFAULT?.habilitado) return false;
+		if (!FEED_DEFAULT?.categorias?.length) return false;
+		return true;
+	}
+
+	/**
+	 * Aplica o feed default: seleciona categoria (rotação) e seta keyword.
+	 * O inputValue do omnibox NÃO é preenchido — input fica limpo para o
+	 * usuário digitar. Os resultados aparecem como feed sugerido.
+	 */
+	#aplicarFeedDefault() {
+		const cats = FEED_DEFAULT.categorias;
+		let cat;
+		if (FEED_DEFAULT.rotacao === 'random') {
+			cat = cats[Math.floor(Math.random() * cats.length)];
+		} else {
+			cat = cats[new Date().getDate() % cats.length];
+		}
+		this.ctx.keyword = cat.keyword;
+		this.ctx._feedDefault = true;
+		this.ctx._feedDefaultCategoria = cat.nome;
+	}
+
 	// ── Busca (keyword/filtros) ───────────────────────────────────────────
 	#digitar(event) {
 		this.ctx.keyword = event.value ?? '';
+		this.ctx._feedDefault = false;
+		this.ctx._feedDefaultCategoria = null;
 		if (this.ui.resultados.modo === 'lojas') this.ui.resultados.modo = 'produtos';
 		this.#debounce();
 	}

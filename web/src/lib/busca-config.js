@@ -26,6 +26,7 @@ export const BUSCA_DUPLICADA = rules.buscaDuplicada;
 export const OMNIBOX = rules.omnibox;
 export const INTENCAO_CONFIG = rules.omnibox?.intencao;
 export const LOJA_REGISTRO = rules.lojaRegistro;
+export const FEED_DEFAULT = rules.feedDefault;
 
 // Tabela de intent no formato esperado pela engine
 export const INTENT_TABLE = rules.intent.map((r) => ({

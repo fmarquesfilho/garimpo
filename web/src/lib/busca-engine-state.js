@@ -36,7 +36,9 @@ export function criarContextoInicial() {
 		dadosBrutos: { curadoria: [], quedas: [], novos: [], lojas: [], favoritos: [] },
 		buscasSalvas: [],
 		resolucaoLoja: { status: 'idle' },
-		error: null
+		error: null,
+		_feedDefault: false,
+		_feedDefaultCategoria: null
 	};
 }
 
