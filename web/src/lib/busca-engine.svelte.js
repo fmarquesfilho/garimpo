@@ -33,10 +33,18 @@ import {
 	intentBusca,
 	proximoModo,
 	buscarDuplicada,
-	BUSCA_DUPLICADA
+	BUSCA_DUPLICADA,
+	OMNIBOX,
+	MARKETPLACES
 } from './busca-config.js';
 import { normalizarNome, matchLojas } from './loja-registry.js';
-import { criarContextoInicial, guards, STATES, MODOS } from './busca-engine-state.js';
+import { criarContextoInicial, criarUIInicial, guards, STATES, MODOS } from './busca-engine-state.js';
+import { detectarIntencao } from './omnibox-intencao.js';
+import { parsearInput } from './omnibox-parser.js';
+import { gerarSugestoes } from './omnibox-sugestoes.js';
+import { trace } from '@opentelemetry/api';
+
+const tracer = trace.getTracer('busca-engine');
 
 // Re-export para consumidores que importavam da engine.
 export { STATES, MODOS, guards };
@@ -46,12 +54,16 @@ export class BuscaEngine {
 	// Estado reativo (Svelte 5 compila para getter/setter)
 	status = $state(STATES.IDLE);
 	ctx = $state(criarContextoInicial());
+	ui = $state(criarUIInicial());
 
-	// UI state (não faz parte da FSM formal mas é reativo)
-	filtrosAberto = $state(false);
-	salvarAberto = $state(false);
+	// UI state legado — agora delegam para ui.paineis (backwards-compatible)
+	get filtrosAberto() { return this.ui.paineis.filtrosAberto; }
+	set filtrosAberto(v) { this.ui.paineis.filtrosAberto = v; }
+	get salvarAberto() { return this.ui.paineis.salvarAberto; }
+	set salvarAberto(v) { this.ui.paineis.salvarAberto = v; }
+	get buscasPainelAberto() { return this.ui.paineis.buscasSalvasAberto; }
+	set buscasPainelAberto(v) { this.ui.paineis.buscasSalvasAberto = v; }
 	colapsado = $state(false);
-	buscasPainelAberto = $state(false);
 
 	// Derivados reativos
 	get loading() {
@@ -68,10 +80,18 @@ export class BuscaEngine {
 			.filter(([, v]) => v)
 			.map(([k]) => k);
 	}
-	/** Intent de busca derivado do contexto (keyword × loja) — ver busca-config.js. */
+	/** Intent de busca derivado do contexto (keyword x loja) — ver busca-config.js. */
 	get intent() {
 		return intentBusca(this.ctx);
 	}
+
+	// ── Derivados: Omnibox (sub-estado ui) ────────────────────────────────
+	/** Estado completo do Omnibox para o componente renderizar. */
+	get omnibox() { return this.ui.omnibox; }
+	/** Modo de exibicao dos resultados ('produtos' | 'lojas'). */
+	get modoResultados() { return this.ui.resultados.modo; }
+	/** Resultados de busca por loja (quando modoResultados === 'lojas'). */
+	get resultadosLojas() { return this.ui.resultados.lojas; }
 
 	// ── Derivados v3: modos e duplicata ───────────────────────────────────
 
@@ -158,30 +178,55 @@ export class BuscaEngine {
 			REMOVER_SALVA: (e) => this.#removerSalva(e),
 			CANCELAR_EDICAO: () => this.#cancelarEdicao(),
 			RETRY: () => this.#executarBusca(),
-			LIMPAR: () => this.#limpar()
+			LIMPAR: () => this.#limpar(),
+			// ── Smart Search handlers ──
+			OMNIBOX_INPUT: (e) => this.#omniboxInput(e),
+			OMNIBOX_KEYDOWN: (e) => this.#omniboxKeydown(e),
+			OMNIBOX_SELECIONAR: (e) => this.#omniboxSelecionar(e),
+			OMNIBOX_BLUR: () => this.#omniboxBlur(),
+			BUSCAR_LOJAS: (e) => this.#buscarLojas(e),
+			MONITORAR_LOJA: (e) => this.#monitorarLoja(e)
 		};
 	}
 
 	/**
 	 * Despacha um evento para a engine. Antes de executar o handler,
 	 * avalia a transição de modo via regras declarativas.
+	 * Cada evento gera um span OTel para observabilidade.
 	 */
 	async send(event) {
-		// Transição de modo (declarativa, via rules)
-		const novoModo = proximoModo(this.ctx.modo, event.type);
-		if (novoModo !== this.ctx.modo) {
-			this.ctx.modo = novoModo;
-			// Ao voltar para explorando via desvinculação, limpar vínculo
-			if (novoModo === MODOS.EXPLORANDO && event.type !== 'SALVAR') {
-				this.ctx.buscaSelecionadaId = null;
-				this.ctx.editandoId = null;
+		const span = tracer.startSpan(`engine.${event.type}`, {
+			attributes: {
+				'engine.event_type': event.type,
+				'engine.modo': this.ctx.modo,
+				'engine.status': this.status
 			}
+		});
+
+		try {
+			// Transição de modo (declarativa, via rules)
+			const novoModo = proximoModo(this.ctx.modo, event.type);
+			if (novoModo !== this.ctx.modo) {
+				this.ctx.modo = novoModo;
+				// Ao voltar para explorando via desvinculação, limpar vínculo
+				if (novoModo === MODOS.EXPLORANDO && event.type !== 'SALVAR') {
+					this.ctx.buscaSelecionadaId = null;
+					this.ctx.editandoId = null;
+				}
+			}
+
+			// Limpar erro de duplicata a cada interação
+			this.ctx.erroDuplicata = null;
+
+			const result = await this.#handlers[event.type]?.(event);
+			span.setStatus({ code: 0 }); // OK
+			return result;
+		} catch (e) {
+			span.setStatus({ code: 2, message: e?.message }); // ERROR
+			throw e;
+		} finally {
+			span.end();
 		}
-
-		// Limpar erro de duplicata a cada interação
-		this.ctx.erroDuplicata = null;
-
-		return this.#handlers[event.type]?.(event);
 	}
 
 	// ── Transições privadas ─────────────────────────────────────────────────
@@ -216,6 +261,9 @@ export class BuscaEngine {
 
 	#digitar(event) {
 		this.ctx.keyword = event.value ?? '';
+		if (this.ui.resultados.modo === 'lojas') {
+			this.ui.resultados.modo = 'produtos';
+		}
 		this.#debounce();
 	}
 
@@ -438,6 +486,209 @@ export class BuscaEngine {
 		this.ctx.categoriasDisponiveis = categoriasDispo;
 		this.ctx.buscasSalvas = salvas;
 		this.status = STATES.IDLE;
+	}
+
+	// ── Smart Search handlers (OMNIBOX_*, BUSCAR_LOJAS, MONITORAR_LOJA) ───
+
+	/** Contexto para detectarIntencao — derivado do ctx atual. */
+	get #intencaoCtx() {
+		return {
+			categoriasDisponiveis: this.ctx.categoriasDisponiveis,
+			marketplacesFiltro: this.ctx.marketplacesFiltro,
+			shopIds: this.ctx.shopIds,
+			shopNomes: this.ctx.shopNomes
+		};
+	}
+
+	#omniboxInput(event) {
+		const value = event.value ?? '';
+		this.ui.omnibox.inputValue = value;
+		this.ui.omnibox.highlightIdx = -1;
+		this.ui.omnibox.aberto = true;
+
+		// Parsing e roteamento
+		const tokens = parsearInput(value);
+		const ultimoToken = tokens[tokens.length - 1];
+
+		if (ultimoToken && ultimoToken.tipo !== 'keyword') {
+			// Token com prefixo -> sistema legado de sugestoes
+			this.ui.omnibox.modo = 'sugestoes';
+			this.ui.omnibox.opcoes = this.#gerarSugestoesLegado(ultimoToken);
+		} else {
+			// Texto livre -> detecao de intencao
+			this.ui.omnibox.modo = 'intencao';
+			const textoLivre = tokens.filter((t) => t.tipo === 'keyword').map((t) => t.valor).join(' ');
+			this.ui.omnibox.opcoes = detectarIntencao(textoLivre, this.#intencaoCtx);
+		}
+
+		// Keyword para a engine (debounce)
+		const kw = tokens.filter((t) => t.tipo === 'keyword').map((t) => t.valor).join(' ');
+		this.ctx.keyword = kw;
+		this.#debounce();
+	}
+
+	#omniboxKeydown(event) {
+		const { key, idx } = event;
+		const opcoes = this.ui.omnibox.opcoes;
+		const n = opcoes.length;
+
+		if (key === 'highlight' && idx != null) {
+			// Mouse hover highlight
+			this.ui.omnibox.highlightIdx = idx;
+		} else if (key === 'ArrowDown') {
+			this.ui.omnibox.aberto = true;
+			// -1 -> 0, then cycles 0..n-1
+			const cur = this.ui.omnibox.highlightIdx;
+			this.ui.omnibox.highlightIdx = n ? (cur + 1) % n : -1;
+		} else if (key === 'ArrowUp') {
+			this.ui.omnibox.aberto = true;
+			const cur = this.ui.omnibox.highlightIdx;
+			// -1 -> n-1 (last), then cycles n-1..0
+			this.ui.omnibox.highlightIdx = n ? (cur <= 0 ? n - 1 : cur - 1) : -1;
+		} else if (key === 'Enter') {
+			this.#omniboxExecutar();
+		} else if (key === 'Escape') {
+			this.ui.omnibox.aberto = false;
+			this.ui.omnibox.highlightIdx = -1;
+		}
+	}
+
+	#omniboxSelecionar(event) {
+		const { indice } = event;
+		const opcoes = this.ui.omnibox.opcoes;
+		if (indice >= 0 && indice < opcoes.length) {
+			this.ui.omnibox.aberto = false;
+			this.ui.omnibox.highlightIdx = -1;
+			const opcao = opcoes[indice];
+			if (this.ui.omnibox.modo === 'intencao') {
+				this.#executarIntencao(opcao);
+			} else {
+				this.#executarSugestaoLegado(opcao);
+			}
+		}
+	}
+
+	#omniboxBlur() {
+		this.ui.omnibox.aberto = false;
+		this.ui.omnibox.highlightIdx = -1;
+	}
+
+	#omniboxExecutar() {
+		const { opcoes, highlightIdx, modo } = this.ui.omnibox;
+		if (!opcoes.length) return;
+
+		const idx = highlightIdx >= 0 ? highlightIdx : 0;
+		const opcao = opcoes[idx];
+
+		this.ui.omnibox.aberto = false;
+		this.ui.omnibox.highlightIdx = -1;
+
+		if (modo === 'intencao') {
+			this.#executarIntencao(opcao);
+		} else {
+			this.#executarSugestaoLegado(opcao);
+		}
+	}
+
+	#executarIntencao(opcao) {
+		switch (opcao.tipo) {
+			case 'produtos':
+				this.ctx.keyword = opcao.payload.keyword ?? '';
+				this.ui.resultados.modo = 'produtos';
+				this.#executarBusca();
+				break;
+			case 'lojas':
+				this.#buscarLojas({ termo: opcao.payload.termo });
+				break;
+			case 'categoria':
+				this.#adicionarCategoria({ nome: opcao.payload.categoria });
+				this.ctx.keyword = '';
+				this.ui.omnibox.inputValue = '';
+				this.#executarBusca();
+				break;
+			case 'resolver_link':
+				this.#adicionarLoja({ value: opcao.payload.url });
+				this.ui.resultados.modo = 'lojas';
+				break;
+		}
+	}
+
+	#executarSugestaoLegado(sug) {
+		if (!sug) return;
+		switch (sug.tipo) {
+			case 'loja':
+				this.send({ type: 'ADICIONAR_LOJA', loja: sug.meta });
+				break;
+			case 'categoria':
+				this.send({ type: 'ADICIONAR_CATEGORIA', nome: sug.label, categoria: sug.meta });
+				break;
+			case 'marketplace': {
+				const mkts = [...new Set([...this.ctx.marketplacesFiltro, sug.meta.marketplace])];
+				this.send({ type: 'MUDAR_MARKETPLACES', marketplaces: mkts });
+				break;
+			}
+			case 'busca_salva':
+				this.send({ type: 'CARREGAR_SALVA', config: sug.meta.config });
+				this.ui.omnibox.inputValue = (sug.meta.config.keywords ?? [])[0] ?? '';
+				break;
+		}
+		// Remove token ativo do input
+		const tokens = parsearInput(this.ui.omnibox.inputValue);
+		tokens.pop();
+		this.ui.omnibox.inputValue = tokens.map((t) => {
+			const pfx = t.tipo === 'keyword' ? '' : { loja: '@', categoria: '#', marketplace: '!' }[t.tipo] ?? '';
+			return pfx + t.valor;
+		}).join(' ');
+	}
+
+	/** Gera sugestoes legado (prefixo) para o dropdown. */
+	#gerarSugestoesLegado(ultimoToken) {
+		const ctx = {
+			lojasMonitoradas: this.ctx.lojasDisponiveis,
+			categoriasDisponiveis: this.ctx.categoriasDisponiveis,
+			marketplaces: MARKETPLACES?.suportados ?? ['shopee', 'mercado_livre', 'amazon'],
+			buscasSalvas: this.ctx.buscasSalvas
+		};
+		const cfg = { minChars: OMNIBOX?.minChars ?? 2, maxSugestoes: OMNIBOX?.maxSugestoes ?? 7, matchBuscaSalva: OMNIBOX?.matchBuscaSalva ?? true };
+		const sugestoesMap = gerarSugestoes(ultimoToken, ctx, cfg);
+		// Flatten map to array for rendering
+		return [...sugestoesMap.values()].flat();
+	}
+
+	async #buscarLojas(event) {
+		const termo = (event.termo ?? '').trim();
+		if (termo.length < 2) return;
+
+		this.ui.resultados.modo = 'lojas';
+		this.status = STATES.SEARCHING;
+
+		try {
+			const resultado = await this.#effects.buscarLojasPorNome(termo);
+			this.ui.resultados.lojas = resultado?.lojas ?? [];
+			this.status = STATES.RESULTS;
+		} catch (e) {
+			this.ctx.error = e?.message ?? 'Falha ao buscar lojas';
+			this.ui.resultados.lojas = [];
+			this.status = STATES.ERROR;
+		}
+	}
+
+	async #monitorarLoja(event) {
+		const loja = event.loja;
+		if (!loja?.id) return;
+
+		this.ctx.resolucaoLoja = { status: 'resolvendo' };
+		try {
+			// Reutiliza logica de adicionar loja conhecida
+			await this.#adicionarLojaConhecida(loja);
+			// Atualiza o card no resultados lojas para refletir o novo status
+			this.ui.resultados.lojas = this.ui.resultados.lojas.map((l) =>
+				String(l.id) === String(loja.id) ? { ...l, monitorada: true } : l
+			);
+			this.ctx.resolucaoLoja = { status: 'idle' };
+		} catch (e) {
+			this.ctx.resolucaoLoja = { status: 'erro', erro: e?.message ?? 'Falha ao monitorar loja' };
+		}
 	}
 
 	// ── Internos ────────────────────────────────────────────────────────────

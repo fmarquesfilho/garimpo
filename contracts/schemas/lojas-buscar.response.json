@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "description": "Response de GET /api/lojas/buscar — busca local de lojas por nome",
+  "properties": {
+    "lojas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "ShopId numérico como string" },
+          "nome": { "type": "string" },
+          "nome_normalizado": { "type": "string" },
+          "marketplace": { "type": "string" },
+          "monitorada": { "type": "boolean" },
+          "origem": { "type": ["string", "null"] },
+          "imagem": { "type": ["string", "null"] },
+          "seguidores": { "type": ["integer", "null"] },
+          "total_produtos": { "type": ["integer", "null"] },
+          "avaliacao": { "type": ["number", "null"] }
+        },
+        "required": ["id", "nome", "nome_normalizado", "marketplace", "monitorada"]
+      }
+    },
+    "total": {
+      "type": "integer",
+      "description": "Total de resultados retornados"
+    }
+  },
+  "required": ["lojas", "total"]
+}

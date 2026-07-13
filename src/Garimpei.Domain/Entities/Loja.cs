@@ -29,6 +29,28 @@ public sealed class Loja : IOwnedEntity
     /// <summary>Origem geográfica padrão (ex: 🇰🇷, 🇧🇷).</summary>
     public string? OrigemPadrao { get; set; }
 
+    // ── Campos enriquecidos (Shopee get_shop_detail) ──────────────────────
+    /// <summary>URL do avatar da loja.</summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>URL da imagem de capa da loja.</summary>
+    public string? CoverUrl { get; set; }
+
+    /// <summary>Número de seguidores.</summary>
+    public int? FollowerCount { get; set; }
+
+    /// <summary>Quantidade total de produtos na loja.</summary>
+    public int? ItemCount { get; set; }
+
+    /// <summary>Avaliação média (0-5 estrelas).</summary>
+    public double? RatingStar { get; set; }
+
+    /// <summary>Localização reportada pela loja (ex: "São Paulo").</summary>
+    public string? ShopLocation { get; set; }
+
+    /// <summary>Descrição/bio da loja.</summary>
+    public string? Description { get; set; }
+
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

@@ -26,7 +26,45 @@ public static partial class EndpointExtensions
                     marketplace = l.Marketplace,
                     cron = l.CronExpression,
                     origem = l.OrigemPadrao,
-                    monitorada = !string.IsNullOrEmpty(l.CronExpression)
+                    monitorada = !string.IsNullOrEmpty(l.CronExpression),
+                    // Campos enriquecidos (persistidos)
+                    imagem = l.ImageUrl,
+                    seguidores = l.FollowerCount,
+                    total_produtos = l.ItemCount,
+                    avaliacao = l.RatingStar
+                })
+                .ToListAsync(ct);
+
+            return Results.Ok(new { lojas, total = lojas.Count });
+        }).RequireAuthorization().WithTags("Lojas");
+
+        // /api/lojas/buscar — busca lojas por nome no registro local (local-only)
+        app.MapGet("/api/lojas/buscar", async (AppDbContext db, string? q, string? marketplace, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+                return Results.BadRequest(new { error = "Parâmetro 'q' é obrigatório (mín. 2 caracteres)." });
+
+            var termoNorm = Loja.Normalizar(q);
+            var query = db.Lojas.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(marketplace))
+                query = query.Where(l => l.Marketplace == marketplace.ToLowerInvariant());
+
+            var lojas = await query
+                .Where(l => l.NomeNormalizado.Contains(termoNorm))
+                .OrderBy(l => l.Nome)
+                .Take(20)
+                .Select(l => new
+                {
+                    id = l.ShopId.ToString(),
+                    nome = l.Nome,
+                    nome_normalizado = l.NomeNormalizado,
+                    marketplace = l.Marketplace,
+                    monitorada = !string.IsNullOrEmpty(l.CronExpression),
+                    origem = l.OrigemPadrao,
+                    imagem = l.ImageUrl,
+                    seguidores = l.FollowerCount,
+                    total_produtos = l.ItemCount,
+                    avaliacao = l.RatingStar
                 })
                 .ToListAsync(ct);
 
@@ -75,10 +113,22 @@ public static partial class EndpointExtensions
 
                     if (existingLoja != null)
                     {
+                        var changed = false;
                         if (existingLoja.Nome != resolveResp.ShopName || existingLoja.NomeNormalizado != nomeNormalizado)
                         {
                             existingLoja.Nome = resolveResp.ShopName;
                             existingLoja.NomeNormalizado = nomeNormalizado;
+                            changed = true;
+                        }
+                        // Persist enriched fields from Collector
+                        if (!string.IsNullOrEmpty(resolveResp.ImageUrl)) { existingLoja.ImageUrl = resolveResp.ImageUrl; changed = true; }
+                        if (!string.IsNullOrEmpty(resolveResp.CoverUrl)) { existingLoja.CoverUrl = resolveResp.CoverUrl; changed = true; }
+                        if (resolveResp.FollowerCount > 0) { existingLoja.FollowerCount = (int)resolveResp.FollowerCount; changed = true; }
+                        if (resolveResp.ItemCount > 0) { existingLoja.ItemCount = (int)resolveResp.ItemCount; changed = true; }
+                        if (resolveResp.RatingStar > 0) { existingLoja.RatingStar = resolveResp.RatingStar; changed = true; }
+                        if (!string.IsNullOrEmpty(resolveResp.ShopLocation)) { existingLoja.ShopLocation = resolveResp.ShopLocation; changed = true; }
+                        if (changed)
+                        {
                             existingLoja.UpdatedAt = DateTime.UtcNow;
                             await db.SaveChangesAsync(ct);
                         }
@@ -91,13 +141,13 @@ public static partial class EndpointExtensions
                             cron = existingLoja.CronExpression,
                             origem = existingLoja.OrigemPadrao,
                             monitorada = !string.IsNullOrEmpty(existingLoja.CronExpression),
-                            // Campos enriquecidos (Shopee get_shop_detail)
-                            seguidores = (int?)resolveResp.FollowerCount,
-                            total_produtos = (int?)resolveResp.ItemCount,
-                            avaliacao = resolveResp.RatingStar > 0 ? (double?)resolveResp.RatingStar : null,
-                            imagem = !string.IsNullOrEmpty(resolveResp.ImageUrl) ? resolveResp.ImageUrl : null,
-                            capa = !string.IsNullOrEmpty(resolveResp.CoverUrl) ? resolveResp.CoverUrl : null,
-                            localizacao = !string.IsNullOrEmpty(resolveResp.ShopLocation) ? resolveResp.ShopLocation : null
+                            // Campos enriquecidos (persistidos)
+                            imagem = existingLoja.ImageUrl,
+                            capa = existingLoja.CoverUrl,
+                            seguidores = existingLoja.FollowerCount,
+                            total_produtos = existingLoja.ItemCount,
+                            avaliacao = existingLoja.RatingStar,
+                            localizacao = existingLoja.ShopLocation
                         });
                     }
 
@@ -109,7 +159,13 @@ public static partial class EndpointExtensions
                         NomeNormalizado = nomeNormalizado,
                         Marketplace = mktStr,
                         OrigemPadrao = req.Origem,
-                        SourceUrl = req.Input.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? req.Input : null
+                        SourceUrl = req.Input.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? req.Input : null,
+                        ImageUrl = !string.IsNullOrEmpty(resolveResp.ImageUrl) ? resolveResp.ImageUrl : null,
+                        CoverUrl = !string.IsNullOrEmpty(resolveResp.CoverUrl) ? resolveResp.CoverUrl : null,
+                        FollowerCount = resolveResp.FollowerCount > 0 ? (int)resolveResp.FollowerCount : null,
+                        ItemCount = resolveResp.ItemCount > 0 ? (int)resolveResp.ItemCount : null,
+                        RatingStar = resolveResp.RatingStar > 0 ? resolveResp.RatingStar : null,
+                        ShopLocation = !string.IsNullOrEmpty(resolveResp.ShopLocation) ? resolveResp.ShopLocation : null
                     };
 
                     db.Lojas.Add(novaLoja);
@@ -124,13 +180,13 @@ public static partial class EndpointExtensions
                         cron = novaLoja.CronExpression,
                         origem = novaLoja.OrigemPadrao,
                         monitorada = !string.IsNullOrEmpty(novaLoja.CronExpression),
-                        // Campos enriquecidos (Shopee get_shop_detail)
-                        seguidores = (int?)resolveResp.FollowerCount,
-                        total_produtos = (int?)resolveResp.ItemCount,
-                        avaliacao = resolveResp.RatingStar > 0 ? (double?)resolveResp.RatingStar : null,
-                        imagem = !string.IsNullOrEmpty(resolveResp.ImageUrl) ? resolveResp.ImageUrl : null,
-                        capa = !string.IsNullOrEmpty(resolveResp.CoverUrl) ? resolveResp.CoverUrl : null,
-                        localizacao = !string.IsNullOrEmpty(resolveResp.ShopLocation) ? resolveResp.ShopLocation : null
+                        // Campos enriquecidos (persistidos)
+                        imagem = novaLoja.ImageUrl,
+                        capa = novaLoja.CoverUrl,
+                        seguidores = novaLoja.FollowerCount,
+                        total_produtos = novaLoja.ItemCount,
+                        avaliacao = novaLoja.RatingStar,
+                        localizacao = novaLoja.ShopLocation
                     });
                 }
 

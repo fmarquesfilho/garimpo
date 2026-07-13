@@ -4,7 +4,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "ShopId numérico do marketplace (como string) — chave de escopo da busca. NÃO é o Guid PK do registro."
+      "description": "ShopId numérico do marketplace (como string)"
     },
     "nome": {
       "type": "string",
@@ -29,9 +29,24 @@
     "monitorada": {
       "type": "boolean",
       "description": "True se possui cron ativo"
+    },
+    "imagem": {
+      "type": ["string", "null"],
+      "description": "URL do avatar da loja"
+    },
+    "seguidores": {
+      "type": ["integer", "null"],
+      "description": "Número de seguidores"
+    },
+    "total_produtos": {
+      "type": ["integer", "null"],
+      "description": "Quantidade total de produtos"
+    },
+    "avaliacao": {
+      "type": ["number", "null"],
+      "description": "Avaliação média (0-5)"
     }
   },
   "required": ["id", "nome", "nome_normalizado", "marketplace", "monitorada"],
   "additionalProperties": false
 }
-

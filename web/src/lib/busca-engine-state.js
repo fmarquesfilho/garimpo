@@ -40,6 +40,29 @@ export function criarContextoInicial() {
 	};
 }
 
+// ── UI state inicial (separado de domínio) ────────────────────────────────
+export function criarUIInicial() {
+	return {
+		omnibox: {
+			inputValue: '',
+			aberto: false,
+			highlightIdx: -1,
+			modo: 'intencao', // 'intencao' | 'sugestoes'
+			opcoes: [],
+			placeholder: 'Buscar produtos, lojas ou categorias\u2026'
+		},
+		resultados: {
+			modo: 'produtos', // 'produtos' | 'lojas'
+			lojas: []
+		},
+		paineis: {
+			buscasSalvasAberto: false,
+			filtrosAberto: false,
+			salvarAberto: false
+		}
+	};
+}
+
 // ── Guards ────────────────────────────────────────────────────────────────
 // Delegam para a config declarativa (busca-config.js). `lojaInputValida` opera
 // sobre o event, então permanece imperativo.

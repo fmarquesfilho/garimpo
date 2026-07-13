@@ -127,6 +127,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.NomeNormalizado).HasMaxLength(200);
             entity.Property(e => e.Nome).HasMaxLength(200);
             entity.Property(e => e.Marketplace).HasMaxLength(50);
+            entity.Property(e => e.ImageUrl).HasMaxLength(500);
+            entity.Property(e => e.CoverUrl).HasMaxLength(500);
+            entity.Property(e => e.ShopLocation).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(2000);
         });
     }
 

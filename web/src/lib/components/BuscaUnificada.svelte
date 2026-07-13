@@ -18,6 +18,7 @@
 	import { BuscaEngine } from '$lib/busca-engine.svelte.js';
 	import { criarEffects } from '$lib/busca-engine-effects.js';
 	import Omnibox from './Omnibox.svelte';
+	import StoreCard from './StoreCard.svelte';
 	import CategoriaCard from './CategoriaCard.svelte';
 	import LojaCard from './LojaCard.svelte';
 	import MarketplaceFilter from './MarketplaceFilter.svelte';
@@ -61,7 +62,7 @@
 <div class="mb-4 space-y-3">
 	<!-- ══ Console: omnibox + filtros ══ -->
 	<div class="space-y-3 rounded-md border border-border bg-card p-3.5 shadow-sm">
-		<Omnibox {engine} lojasMonitoradas={engine.ctx.lojasDisponiveis} />
+		<Omnibox {engine} />
 
 		<!-- Filtros numéricos (fora do input) -->
 		<div class="flex flex-wrap items-end gap-3">
@@ -170,4 +171,20 @@
 
 	{#if engine.ctx.lojaResolvendo}<span class="block text-xs text-muted-foreground">resolvendo loja…</span>{/if}
 	{#if engine.ctx.lojaErro}<span class="block text-xs text-destructive">{engine.ctx.lojaErro}</span>{/if}
+
+	<!-- ══ Resultados: Store Cards (modo lojas) ══ -->
+	{#if engine.modoResultados === 'lojas'}
+		<div class="space-y-2">
+			{#if engine.resultadosLojas.length > 0}
+				{#each engine.resultadosLojas as loja (loja.id)}
+					<StoreCard {loja} {engine} />
+				{/each}
+			{:else if engine.status === 'results'}
+				<div class="rounded-md border border-border bg-card p-4 text-center text-sm text-muted-foreground">
+					<p>Nenhuma loja encontrada com esse termo.</p>
+					<p class="mt-1 text-xs">Tente colar o link da loja para adicioná-la ao registro.</p>
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>

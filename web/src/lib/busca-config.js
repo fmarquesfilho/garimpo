@@ -24,6 +24,7 @@ export const CONTEXTO_CATEGORIAS = rules.contextoCategorias;
 export const MODOS = rules.modos;
 export const BUSCA_DUPLICADA = rules.buscaDuplicada;
 export const OMNIBOX = rules.omnibox;
+export const INTENCAO_CONFIG = rules.omnibox?.intencao;
 export const LOJA_REGISTRO = rules.lojaRegistro;
 
 // Tabela de intent no formato esperado pela engine

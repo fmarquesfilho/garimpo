@@ -5,7 +5,7 @@
  * @typedef {ReturnType<typeof criarEffects>} Effects
  */
 
-import { resolverLoja as resolverLojaApi, sincronizarBusca, listarBuscasServidor, listarRegistroLojas } from './api.js';
+import { resolverLoja as resolverLojaApi, sincronizarBusca, listarBuscasServidor, listarRegistroLojas, buscarLojas as buscarLojasApi } from './api.js';
 import { buscarCategorias } from './categorias.js';
 import { carregarCuradoria, carregarOportunidades, carregarProdutosLojas } from './descobrir.js';
 import { agruparCategoriasPorMarketplace } from './descobrir-logic.js';
@@ -103,6 +103,11 @@ export function criarEffects({ getBuscasSalvas, getFavoritos, sincronizarStore }
 		/** Remove (desativa) uma busca salva. */
 		async removerBusca(config) {
 			return sincronizarBusca({ keywords: config.keywords }, { remover: true });
+		},
+
+		/** Busca lojas por nome no registro local. */
+		async buscarLojasPorNome(termo, marketplace) {
+			return buscarLojasApi(termo, marketplace);
 		}
 	};
 }

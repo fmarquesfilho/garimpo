@@ -102,6 +102,20 @@
       "#": { "tipo": "categoria", "fonte": "categoriasDisponiveis", "campo": "nome" },
       "!": { "tipo": "marketplace", "fonte": "marketplaces.suportados", "campo": "nome" }
     },
+    "intencao": {
+      "habilitado": true,
+      "minChars": 2,
+      "ordemOpcoes": ["produtos", "lojas", "categorias"],
+      "maxCategorias": 3,
+      "urlPatterns": ["^https?://"],
+      "enterSemSelecao": "primeira_opcao",
+      "navegacaoCiclica": true
+    },
+    "placeholders": {
+      "default": "Buscar produtos, lojas ou categorias\u2026",
+      "comLoja": "Buscar dentro de {loja}\u2026",
+      "comCategoria": "Buscar em {categoria}\u2026"
+    },
     "minChars": 2,
     "maxSugestoes": 7,
     "matchBuscaSalva": true,
@@ -133,6 +147,21 @@
     "MUDAR_FONTES": { "refetch": true, "imediato": false },
     "MUDAR_MARKETPLACES": { "refetch": true, "imediato": false },
     "CARREGAR_SALVA": { "refetch": true, "imediato": true },
-    "CANCELAR_EDICAO": { "refetch": false, "imediato": true }
+    "CANCELAR_EDICAO": { "refetch": false, "imediato": true },
+    "OMNIBOX_INPUT": { "refetch": false, "imediato": false },
+    "OMNIBOX_KEYDOWN": { "refetch": false, "imediato": true },
+    "OMNIBOX_SELECIONAR": { "refetch": false, "imediato": true },
+    "BUSCAR_LOJAS": { "refetch": true, "imediato": true },
+    "MONITORAR_LOJA": { "refetch": true, "imediato": true }
+  },
+  "storeCard": {
+    "camposVisiveis": {
+      "shopee": ["imagem", "nome", "origem", "seguidores", "total_produtos", "avaliacao", "monitorada"],
+      "mercado_livre": ["imagem", "nome", "origem", "monitorada"],
+      "amazon": ["imagem", "nome", "origem", "monitorada"],
+      "_fallback": ["nome", "marketplace", "monitorada"]
+    },
+    "layout": "horizontal",
+    "acoes": ["monitorar"]
   }
 }

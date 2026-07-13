@@ -245,6 +245,18 @@ export function listarRegistroLojas() {
 }
 
 /**
+ * Busca lojas por nome no registro local (local-only, Shopee nao expoe busca por nome).
+ * @param {string} q - termo de busca (min. 2 caracteres)
+ * @param {string} [marketplace] - filtro opcional por marketplace
+ * @returns {Promise<{lojas: Array, total: number}>}
+ */
+export function buscarLojas(q, marketplace) {
+	const p = new URLSearchParams({ q });
+	if (marketplace) p.set('marketplace', marketplace);
+	return pegar(`/api/lojas/buscar?${p}`);
+}
+
+/**
  * Resolve e faz upsert de uma loja (usado pelo Store Workflow).
  * @param {Object} opts
  * @param {string} opts.input
