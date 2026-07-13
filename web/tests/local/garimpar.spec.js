@@ -1,9 +1,9 @@
 /**
- * E2E LOCAL — Fluxos básicos da página Garimpar.
+ * E2E LOCAL — Fluxos basicos da pagina Garimpar.
  * Prova que o harness (auth bypass + API mock) funciona.
  */
 import { test, expect } from './fixtures.js';
-import { abrirRaiaLojas, adicionarLoja, waitForEngineReady, SEL } from './helpers.js';
+import { adicionarLojaViaOmnibox, waitForEngineReady, SEL } from './helpers.js';
 
 test.describe('Garimpar — E2E local', () => {
 	test('carrega autenticado (bypass), sem tela de login', async ({ authedPage: page }) => {
@@ -33,16 +33,26 @@ test.describe('Garimpar — E2E local', () => {
 		});
 		await page.goto('/');
 		await page.locator(SEL.searchInput).fill('serum');
+		await page.locator(SEL.searchInput).press('Enter');
 		await expect(page.getByText('Serum Vitamina C')).toBeVisible({ timeout: 10000 });
 	});
 
-	test('adicionar loja mostra badge', async ({ authedPage: page }) => {
+	test('adicionar loja via Omnibox mostra chip', async ({ authedPage: page }) => {
 		page.apiOverrides({
-			'/api/lojas': { id: 'loja-1', keyword: 'Le Botanic', shop_ids: [920292999], status: 'adicionada' }
+			'/api/lojas/resolver': {
+				id: '920292999',
+				nome: 'Le Botanic',
+				nome_normalizado: 'lebotanic',
+				marketplace: 'shopee',
+				monitorada: false,
+				imagem: null,
+				seguidores: null,
+				total_produtos: null,
+				avaliacao: null
+			}
 		});
 		await page.goto('/');
-		await abrirRaiaLojas(page);
-		await adicionarLoja(page, 'https://s.shopee.com.br/8fQYnxWQqu');
+		await adicionarLojaViaOmnibox(page, 'https://s.shopee.com.br/8fQYnxWQqu');
 		await expect(page.getByText('Le Botanic')).toBeVisible({ timeout: 10000 });
 	});
 });

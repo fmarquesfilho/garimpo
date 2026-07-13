@@ -145,7 +145,7 @@ test.describe('Fonte Lojas — toggle e resultados na página unificada', () => 
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(3000);
 
-		const badgeQuedas = page.locator('button:has-text("📉 Quedas") .fonte-badge');
+		const badgeQuedas = page.getByRole('button', { name: /Quedas/ });
 		await expect(badgeQuedas).toBeVisible({ timeout: 15000 });
 	});
 
@@ -155,7 +155,7 @@ test.describe('Fonte Lojas — toggle e resultados na página unificada', () => 
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(3000);
 
-		const badgeNovos = page.locator('button:has-text("🆕 Novos") .fonte-badge');
+		const badgeNovos = page.getByRole('button', { name: /Novos/ });
 		await expect(badgeNovos).toBeVisible({ timeout: 15000 });
 	});
 });

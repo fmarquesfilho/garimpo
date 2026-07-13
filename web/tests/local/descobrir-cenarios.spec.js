@@ -11,14 +11,7 @@
  *   7. Fluxo completo
  */
 import { test, expect } from './fixtures.js';
-import {
-	abrirPainelBuscas,
-	abrirRaiaFiltros,
-	abrirRaiaLojas,
-	adicionarLoja,
-	waitForEngineReady,
-	SEL
-} from './helpers.js';
+import { abrirPainelBuscas, adicionarLojaViaOmnibox, waitForEngineReady, SEL } from './helpers.js';
 
 const PRODUTOS_CURADORIA = [
 	{
@@ -144,9 +137,8 @@ test.describe('Descobrir — Filtros', () => {
 		await page.locator(SEL.searchInput).fill('serum');
 		await page.waitForTimeout(600);
 
-		await abrirRaiaFiltros(page);
-		// O Combobox de categorias está na raia com o placeholder
-		await expect(page.getByPlaceholder(/Adicionar categoria/i)).toBeVisible({ timeout: 10000 });
+		// Filtros agora sao inline (sempre visiveis) — categorias via Omnibox #prefixo
+		await expect(page.getByText('comissão mín.')).toBeVisible({ timeout: 10000 });
 	});
 });
 
@@ -325,9 +317,8 @@ test.describe('Descobrir — Fluxo completo', () => {
 		await page.locator(SEL.searchInput).fill('serum');
 		await expect(page.getByText('Serum Vitamina C SKIN1004')).toBeVisible({ timeout: 10000 });
 
-		// 2. Adiciona loja
-		await abrirRaiaLojas(page);
-		await adicionarLoja(page, 'https://s.shopee.com.br/8fQYnxWQqu');
+		// 2. Adiciona loja via Omnibox
+		await adicionarLojaViaOmnibox(page, 'https://s.shopee.com.br/8fQYnxWQqu');
 		await expect(page.getByText('Le Botanic')).toBeVisible({ timeout: 10000 });
 
 		// 3. Abre painel salvas e salva
