@@ -38,7 +38,10 @@ test.describe('Producao — Busca', () => {
 
 		// A UI deve reagir: loading, resultados, ou empty state
 		await expect(
-			page.getByText(/\d+ produto/i).or(page.getByText(/Nenhum resultado/i)).or(page.getByText(/Buscando/i))
+			page
+				.getByText(/\d+ produto/i)
+				.or(page.getByText(/Nenhum resultado/i))
+				.or(page.getByText(/Buscando/i))
 		).toBeVisible({ timeout: 15000 });
 	});
 
