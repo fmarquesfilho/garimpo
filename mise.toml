@@ -49,7 +49,7 @@ depends = ["test:go", "test:csharp", "test:web"]
 
 [tasks."test:go"]
 description = "Testes Go"
-run = "go test ./..."
+run = "go test $(go list ./... | grep -v node_modules)"
 
 [tasks."test:csharp"]
 description = "Testes C# (sobe PostgreSQL via Docker se necessário)"
