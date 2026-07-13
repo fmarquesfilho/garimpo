@@ -9,6 +9,11 @@ describe('isUrl', () => {
 		expect(isUrl('https://shopee.com.br/shop/12345')).toBe(true);
 	});
 
+	it('detects affiliate short links', () => {
+		expect(isUrl('https://s.shopee.com.br/8fQYnxWQqu')).toBe(true);
+		expect(isUrl('https://shp.ee/abc123')).toBe(true);
+	});
+
 	it('detects http URLs', () => {
 		expect(isUrl('http://shopee.com.br/shop/12345')).toBe(true);
 	});

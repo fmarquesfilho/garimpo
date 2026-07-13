@@ -172,6 +172,17 @@ test.describe('Smart Search — Resolver Link', () => {
 		await expect(options.first()).toContainText('Resolver Link');
 	});
 
+	test('link de afiliado (s.shopee.com.br) tambem mostra Resolver Link', async ({ authedPage: page }) => {
+		setupSmartSearch(page);
+		await page.goto('/');
+		const input = page.getByRole('combobox');
+		await input.fill('https://s.shopee.com.br/8fQYnxWQqu');
+
+		const options = page.getByRole('option');
+		expect(await options.count()).toBe(1);
+		await expect(options.first()).toContainText('Resolver Link');
+	});
+
 	test('selecionar Resolver Link chama API e mostra Store Card', async ({ authedPage: page }) => {
 		setupSmartSearch(page);
 		await page.goto('/');
