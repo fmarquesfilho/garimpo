@@ -67,6 +67,7 @@ TRUNCATE TABLE "Templates" CASCADE;
 TRUNCATE TABLE "Publicacoes" CASCADE;
 TRUNCATE TABLE "CouponAlertRules" CASCADE;
 TRUNCATE TABLE "CouponAlertHistories" CASCADE;
+TRUNCATE TABLE "Lojas" CASCADE;
 COMMIT;
 SQL
 
@@ -77,6 +78,7 @@ else
   DB_PORT="${PGPORT:-5432}"
   DB_NAME="${PGDATABASE:-garimpei}"
   DB_USER="${PGUSER:-garimpei}"
+  export PGPASSWORD="${PGPASSWORD:-garimpei_dev}"
   echo "  Host: $DB_HOST:$DB_PORT | DB: $DB_NAME | User: $DB_USER"
   echo ""
   read -r -p "  Digite 'reset' para confirmar: " confirm
@@ -96,6 +98,7 @@ TRUNCATE TABLE "Templates" CASCADE;
 TRUNCATE TABLE "Publicacoes" CASCADE;
 TRUNCATE TABLE "CouponAlertRules" CASCADE;
 TRUNCATE TABLE "CouponAlertHistories" CASCADE;
+TRUNCATE TABLE "Lojas" CASCADE;
 COMMIT;
 SQL
 fi
@@ -118,6 +121,11 @@ if [ "$BQ" = true ]; then
   echo "    - coupon_snapshots (dados de cupons)"
   echo "    - publicacoes (histórico de publicações)"
   echo "    - conversoes (dados de conversão Shopee)"
+  echo "    - eventos (curadoria/seleção)"
+  echo "    - buscas (réplica BQ)"
+  echo "    - destinos (réplica BQ)"
+  echo "    - templates (réplica BQ)"
+  echo "    - favoritos (réplica BQ)"
   echo ""
   read -r -p "  Digite 'RESET BQ' para confirmar: " bq_confirm
   if [[ "$bq_confirm" != "RESET BQ" ]]; then
@@ -134,9 +142,54 @@ if [ "$BQ" = true ]; then
     "TRUNCATE TABLE garimpo.publicacoes" 2>/dev/null || echo "  ⚠️  publicacoes: falhou ou não existe"
   bq query --use_legacy_sql=false --project_id=garimpo-500114 \
     "TRUNCATE TABLE garimpo.conversoes" 2>/dev/null || echo "  ⚠️  conversoes: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.eventos" 2>/dev/null || echo "  ⚠️  eventos: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.buscas" 2>/dev/null || echo "  ⚠️  buscas: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.destinos" 2>/dev/null || echo "  ⚠️  destinos: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.templates" 2>/dev/null || echo "  ⚠️  templates: falhou ou não existe"
+  bq query --use_legacy_sql=false --project_id=garimpo-500114 \
+    "TRUNCATE TABLE garimpo.favoritos" 2>/dev/null || echo "  ⚠️  favoritos: falhou ou não existe"
 
   echo ""
   echo "  ✅ BigQuery reset completo!"
+fi
+
+# Cloud Tasks purge (junto com --prod --bq)
+if [ "$PROD" = true ] && [ "$BQ" = true ]; then
+  echo ""
+  echo "══════════════════════════════════════════════"
+  echo "  🧹 Cloud Tasks PURGE"
+  echo "══════════════════════════════════════════════"
+  echo ""
+  QUEUE_ID="${ALERT_QUEUE_ID:-price-alerts}"
+  LOCATION="${CLOUD_TASKS_LOCATION:-southamerica-east1}"
+  echo "  Queue: $QUEUE_ID ($LOCATION)"
+  echo "  Remove todas as tasks pendentes (alertas enfileirados)."
+  echo ""
+  gcloud tasks queues purge "$QUEUE_ID" \
+    --project=garimpo-500114 \
+    --location="$LOCATION" \
+    --quiet 2>/dev/null && echo "  ✅ Cloud Tasks queue purgada!" \
+    || echo "  ⚠️  Purge falhou (queue vazia ou inexistente)"
+
+  echo ""
+  echo "══════════════════════════════════════════════"
+  echo "  📋 PRÓXIMO PASSO: Reiniciar o Scheduler"
+  echo "══════════════════════════════════════════════"
+  echo ""
+  echo "  O Scheduler guarda jobs em memória. Após limpar o PG,"
+  echo "  reinicie o Cloud Run service para limpar os crons:"
+  echo ""
+  echo "    gcloud run services update garimpei-v2 \\"
+  echo "      --region=southamerica-east1 \\"
+  echo "      --project=garimpo-500114 \\"
+  echo "      --update-env-vars=RESTART_EPOCH=$(date +%s)"
+  echo ""
+  echo "  Ou force new revision no console."
+  echo ""
 fi
 
 echo "══════════════════════════════════════════════"
