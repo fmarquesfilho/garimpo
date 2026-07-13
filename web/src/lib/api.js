@@ -17,22 +17,7 @@ async function pegar(caminho) {
 	return resp.json();
 }
 
-/**
- * Lista priorizada de uma estratégia.
- * @param {Object} opts
- * @param {string} [opts.estrategia]
- * @param {number} [opts.top]
- * @param {string} [opts.keyword]
- * @param {string} [opts.categoria]
- * @param {string} [opts.cat]
- * @param {number} [opts.comissaoMin]
- * @param {number} [opts.vendasMin]
- * @param {number} [opts.notaMin]
- * @param {boolean} [opts.exploracao]
- * @param {string} [opts.fonte]
- * @param {string|string[]} [opts.shopIds]
- * @param {boolean} [opts.semFiltro]
- */
+/** @param {{estrategia?:string, top?:number, keyword?:string, categoria?:string, cat?:any, comissaoMin?:number, vendasMin?:number, notaMin?:number, exploracao?:boolean, fonte?:string, shopIds?:string|string[], semFiltro?:boolean}} [opts] */
 export function buscarCandidatos({
 	estrategia = 'nicho',
 	top = 10,
