@@ -13,7 +13,7 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
   - Rodar `bunx vitest run --coverage` e verificar que relatório é gerado
   - **Requirements: 3.1, 3.2, 3.3, 3.4**
 
-- [ ] 2. Configurar StrykerJS (mutation testing frontend)
+- [x] 2. Configurar StrykerJS (mutation testing frontend)
   - Instalar `@stryker-mutator/core` e `@stryker-mutator/vitest-runner` como devDeps (pinned)
   - Criar `web/stryker.config.json` com mutate targeting módulos core (busca-engine, omnibox-intencao, busca-config, omnibox-parser, loja-registry)
   - Configurar thresholds: high=80, low=70, break=60
@@ -22,7 +22,7 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
   - Rodar `bunx stryker run` e verificar relatório gerado + mutation score
   - **Requirements: 2.1, 2.3, 2.5, 2.6**
 
-- [ ] 3. Configurar Stryker.NET (mutation testing backend)
+- [x] 3. Configurar Stryker.NET (mutation testing backend)
   - Instalar dotnet tool: `dotnet tool install dotnet-stryker`
   - Criar `src/stryker-config.json` targeting Garimpei.Domain com Garimpei.Tests
   - Configurar thresholds: high=80, low=70, break=60
@@ -30,7 +30,7 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
   - Rodar `dotnet stryker` e verificar mutation score do Domain (Loja.Normalizar, etc.)
   - **Requirements: 2.2, 2.3, 2.5**
 
-- [ ] 4. Expandir fixture de normalização + teste de paridade JS
+- [x] 4. Expandir fixture de normalização + teste de paridade JS
   - Expandir `fixtures/normalizacao-pares.json` com edge cases: emoji+texto, CJK, whitespace-only, diacríticos compostos (NFD), números puros, strings longas, null/empty
   - Criar `web/src/tests/normalizacao-parity.test.js` que importa `normalizarNome` de loja-registry.js e valida contra o mesmo fixture
   - Verificar que ambos os testes (C# LojaTests + JS parity) leem o fixture e passam
@@ -45,7 +45,7 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
   - Verificar que `bunx vitest run` (sem filtro) roda todos
   - **Requirements: 1.1, 1.2, 1.3, 1.5, 1.6**
 
-- [ ] 6. Criar testes faltantes da Smart Search (edge cases)
+- [x] 6. Criar testes faltantes da Smart Search (edge cases)
   - StoreCard.svelte: testes de componente (render com/sem imagem, monitorada, campos condicionais, click emite evento)
   - Engine edge cases: OMNIBOX_INPUT null/undefined, OMNIBOX_SELECIONAR fora de bounds, OMNIBOX_KEYDOWN com opcoes vazio, MONITORAR_LOJA com id null, BUSCAR_LOJAS whitespace
   - omnibox-intencao: categoria sem marketplaces relevantes (filtrada), intencao desabilitada, categoria como string pura
@@ -53,25 +53,25 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
   - `#executarSugestaoLegado` (todos os 4 tipos: loja, categoria, marketplace, busca_salva)
   - **Requirements: todos (cobertura)**
 
-- [ ] 7. Criar task mise `test:fast`
+- [x] 7. Criar task mise `test:fast`
   - Cria `.mise/tasks/test/fast`: vitest com --project unit + dotnet test filtrado por Architecture|Domain|CollectionKeys|Scheduler|Tenancy|Services
   - Target: <10s
   - **Requirements: 5.1**
 
-- [ ] 8. Criar tasks mise `test:integration`, `test:regression`, `test:parity`, `test:descobrir`
+- [x] 8. Criar tasks mise `test:integration`, `test:regression`, `test:parity`, `test:descobrir`
   - `test:integration`: vitest --project integration + dotnet test --filter Integration|Persistence
   - `test:regression`: vitest --project regression
   - `test:parity`: vitest normalizacao-parity.test.js + dotnet test --filter LojaTests
   - `test:descobrir`: vitest run filtrado para busca-engine-*, omnibox-*, busca-config, busca-duplicata, busca-unificada
   - **Requirements: 5.5, 1.2, 1.3, 4.2**
 
-- [ ] 9. Criar tasks mise `test:coverage`, `test:mutate`, `test:mutate-backend`
+- [x] 9. Criar tasks mise `test:coverage`, `test:mutate`, `test:mutate-backend`
   - `test:coverage`: vitest run --coverage (verifica thresholds, falha se abaixo)
   - `test:mutate`: StrykerJS com incremental mode (módulos core)
   - `test:mutate-backend`: Stryker.NET contra Domain
   - **Requirements: 2.1, 2.2, 3.1, 5.2**
 
-- [ ] 10. Criar tasks mise compostas `test:pre-push`, `test:ci`, `test:full`
+- [x] 10. Criar tasks mise compostas `test:pre-push`, `test:ci`, `test:full`
   - `test:pre-push`: depends=[test:unit, test:integration, test:regression, test:parity] + bun run check + bun run build
   - `test:ci`: depends=[test:pre-push, test:coverage]
   - `test:full`: depends=[test:ci, test:e2e-local]

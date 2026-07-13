@@ -10,7 +10,7 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
 
 ## Tasks
 
-- [ ] 1. Migration: persistir campos enriquecidos na tabela Lojas
+- [x] 1. Migration: persistir campos enriquecidos na tabela Lojas
   - Adicionar colunas à entidade `Loja.cs`: ImageUrl, CoverUrl, FollowerCount, ItemCount, RatingStar, ShopLocation, Description (todos nullable)
   - Configurar em `AppDbContext.OnModelCreating` (MaxLength para URLs/strings)
   - Gerar migration EF Core `AddLojaEnrichedFields`
@@ -19,7 +19,7 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - `dotnet test` — tudo verde
   - **Requirements: 5.2, 5.3, 6.1, 6.4**
 
-- [ ] 2. Endpoint `GET /api/lojas/buscar` (local-only)
+- [x] 2. Endpoint `GET /api/lojas/buscar` (local-only)
   - Implementar em LojasEndpoints.cs: recebe `q` (min 2 chars) e `marketplace` (opcional)
   - Busca por NomeNormalizado.Contains, retorna campos enriquecidos, max 20
   - HTTP 400 se q < 2 chars
@@ -27,14 +27,14 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - Teste xUnit: param validation, matching, filtro marketplace
   - **Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6**
 
-- [ ] 3. Módulo `omnibox-intencao.js` (detecção de intenção — função pura)
+- [x] 3. Módulo `omnibox-intencao.js` (detecção de intenção — função pura)
   - Criar com `detectarIntencao(texto, ctx)` → IntencaoOption[]
   - Detecção de URL (isUrl), opções base (produtos + lojas), match de categorias com sufixo contextual
   - Ler config de `rules.omnibox.intencao` (minChars, ordemOpcoes, maxCategorias, urlPatterns)
   - Testes Vitest: URL → resolver_link; texto → produtos + lojas; categoria match; < 2 chars → vazio; contexto marketplace/lojas
   - **Requirements: 1.1, 1.2, 1.3, 1.5, 1.6, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.5, 3.6**
 
-- [ ] 4. Sub-estado `ui` na engine + migrar UI state existente
+- [x] 4. Sub-estado `ui` na engine + migrar UI state existente
   - Criar `criarUIInicial()` em busca-engine-state.js com blocos: omnibox, resultados, paineis
   - Adicionar `ui = $state(criarUIInicial())` à BuscaEngine
   - Migrar campos existentes: `filtrosAberto` → `ui.paineis.filtrosAberto`, `buscasPainelAberto` → `ui.paineis.buscasSalvasAberto`, `salvarAberto` → `ui.paineis.salvarAberto`
@@ -43,7 +43,7 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - Testes: criarUIInicial retorna shape correto; getters expõem dados reativos
   - **Requirements: 10.1, 10.8**
 
-- [ ] 5. Handlers OMNIBOX_* na engine (controle completo do Omnibox)
+- [x] 5. Handlers OMNIBOX_* na engine (controle completo do Omnibox)
   - Implementar `#omniboxInput(event)`: seta ui.omnibox.inputValue, parseia tokens, roteia modo (intencao vs sugestoes), gera opcoes, atualiza ctx.keyword via debounce
   - Implementar `#omniboxKeydown(event)`: ArrowDown/Up (navegação cíclica), Enter (#omniboxExecutar), Escape (fecha)
   - Implementar `#omniboxSelecionar(event)`: executa opcao por índice
@@ -55,14 +55,14 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - Testes Vitest: INPUT seta ui.omnibox; KEYDOWN navega; Enter executa; prefixo ativa sugestoes legado; URL ativa resolver_link
   - **Requirements: 1.1, 1.2, 1.4, 1.6, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 9.1, 9.2, 9.3, 9.4, 9.5, 10.2, 10.3, 10.4**
 
-- [ ] 6. Handler BUSCAR_LOJAS + modoResultados
+- [x] 6. Handler BUSCAR_LOJAS + modoResultados
   - Implementar `#buscarLojas(event)`: guard min 2 chars, seta ui.resultados.modo='lojas', status SEARCHING, chama effect buscarLojasPorNome, popula ui.resultados.lojas
   - Atualizar `#digitar`: se modoResultados === 'lojas', restaurar para 'produtos'
   - Adicionar effect `buscarLojasPorNome(termo)` em effects.js
   - Testes: BUSCAR_LOJAS popula lojas; DIGITAR restaura modo; guard < 2 chars
   - **Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6**
 
-- [ ] 7. Handler MONITORAR_LOJA
+- [x] 7. Handler MONITORAR_LOJA
   - Implementar `#monitorarLoja(event)`: reutiliza lógica de #adicionarLojaConhecida + atualiza ui.resultados.lojas para refletir nova monitorada
   - Não rola página (zero scrollIntoView)
   - Erro inline via resolucaoLoja.erro (Store Card lê)
@@ -70,7 +70,7 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - Testes: MONITORAR_LOJA adiciona ao escopo; atualiza resultadosLojas; erro não trava
   - **Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6**
 
-- [ ] 8. Reescrever Omnibox.svelte como renderizador puro
+- [x] 8. Reescrever Omnibox.svelte como renderizador puro
   - Remover TODOS os $state locais (inputValue, aberto, highlightIdx)
   - Remover toda lógica de decisão (parsearInput, gerarSugestoes, onInput, selecionar, executarBusca, onKeydown)
   - Componente lê exclusivamente engine.omnibox.* (via getter)
@@ -80,7 +80,7 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - Teste component: renderiza engine.omnibox corretamente; emite eventos nos callbacks corretos
   - **Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 11.1, 11.2, 11.3, 11.4, 11.5**
 
-- [ ] 9. Componente StoreCard.svelte (configurável por marketplace)
+- [x] 9. Componente StoreCard.svelte (configurável por marketplace)
   - Criar com props: loja, engine
   - Ler `storeCard.camposVisiveis[marketplace]` da config para decidir quais campos renderizar
   - Layout: imagem circular (avatar ou fallback), nome + bandeira, info (marketplace, produtos, seguidores, avaliação), botão monitorar/status
@@ -89,14 +89,14 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - Testes: renderiza por config Shopee (todos campos); renderiza fallback (campos mínimos); botão emite evento
   - **Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7**
 
-- [ ] 10. Atualizar BuscaUnificada.svelte (renderização condicional + migrar estado)
+- [x] 10. Atualizar BuscaUnificada.svelte (renderização condicional + migrar estado)
   - Renderizar StoreCard quando engine.modoResultados === 'lojas'
   - Mensagem "Nenhuma loja encontrada" com sugestão de colar link
   - Migrar uso de engine.filtrosAberto → engine.ui.paineis.filtrosAberto etc
   - Remover qualquer estado local remanescente (TOGGLES pode virar config do JSON)
   - **Requirements: 4.3, 4.4, 7.3, 7.4, 10.8**
 
-- [ ] 11. Observabilidade: OTel spans por evento na engine
+- [x] 11. Observabilidade: OTel spans por evento na engine
   - Importar `@opentelemetry/api` trace (já no projeto)
   - Instrumentar `send()`: span por evento com atributos (type, modo, status)
   - Métricas: engine.events_total (counter), engine.event_duration_ms (histogram)
@@ -104,7 +104,7 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - Teste: mock tracer verifica que spans são criados por tipo
   - **Requirements: 10.6**
 
-- [ ] 12. Expandir rules/busca-rules.json + schema validation
+- [x] 12. Expandir rules/busca-rules.json + schema validation
   - Adicionar bloco completo `omnibox.intencao` (habilitado, minChars, ordemOpcoes, maxCategorias, urlPatterns, enterSemSelecao, navegacaoCiclica)
   - Adicionar bloco `omnibox.placeholders` (default, comLoja, comCategoria)
   - Adicionar bloco `storeCard` (camposVisiveis por marketplace, layout, acoes)
@@ -113,13 +113,13 @@ de intenção, Store Cards enriquecidos, busca local de lojas, e monitoramento i
   - `mise run check:rules-schema` passa
   - **Requirements: 10.5, 10.7**
 
-- [ ] 13. Atualizar contracts e drift checks
+- [x] 13. Atualizar contracts e drift checks
   - Criar `contracts/schemas/lojas-buscar.response.json`
   - Atualizar `contracts/schemas/lojas.response.json` com campos enriquecidos
   - Rodar `mise run checks` (api-contract, schema-sync, service-contracts) — tudo verde
   - **Requirements: 5.3**
 
-- [ ] 14. Validação end-to-end e commit
+- [x] 14. Validação end-to-end e commit
   - Suite completa: `bunx vitest run`, `dotnet test`, `bun run check`, `bun run build`, `mise run checks`
   - Aplicar migration: `dotnet ef database update`
   - Playtest: digitar "glory" → Smart Dropdown com opções; "Pesquisar em Lojas" → Store Cards; colar link → "Resolver Link" → Store Card com imagem; "Monitorar" inline; @prefixo → sugestões legado

@@ -35,7 +35,7 @@ while IFS= read -r file; do
 done < <(find . -name "*.go" -not -path "./vendor/*" -not -path "./.git/*" -not -path "./gen/*")
 
 # ── Frontend Svelte/JS/TS ──────────────────────────────────────────────────
-MAX_LINES_SVELTEJS=500  # .svelte.js encapsulam state machines (FSM classe inteira)
+MAX_LINES_SVELTEJS=600  # .svelte.js encapsulam state machines (classe + derivados reativos)
 while IFS= read -r file; do
     lines=$(wc -l < "$file")
     if [[ "$file" == *test* || "$file" == *spec* ]]; then

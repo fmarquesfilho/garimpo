@@ -113,13 +113,13 @@ func (s *UnifiedCollectorServer) ResolveShop(ctx context.Context, req *collector
 	var data struct {
 		Error int `json:"error"`
 		Data  struct {
-			ShopID        int64  `json:"shopid"`
-			Name          string `json:"name"`
-			FollowerCount int32  `json:"follower_count"`
-			ItemCount     int32  `json:"item_count"`
+			ShopID        int64   `json:"shopid"`
+			Name          string  `json:"name"`
+			FollowerCount int32   `json:"follower_count"`
+			ItemCount     int32   `json:"item_count"`
 			RatingStar    float64 `json:"rating_star"`
-			ShopLocation  string `json:"shop_location"`
-			Description   string `json:"description"`
+			ShopLocation  string  `json:"shop_location"`
+			Description   string  `json:"description"`
 			Account       struct {
 				Portrait string `json:"portrait"`
 			} `json:"account"`

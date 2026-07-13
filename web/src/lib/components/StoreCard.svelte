@@ -9,9 +9,7 @@
 
 	const mktIcone = $derived(MARKETPLACES?.icones?.[loja.marketplace] ?? '🛒');
 	const monitorando = $derived(engine.ctx.resolucaoLoja.status === 'resolvendo');
-	const erro = $derived(
-		engine.ctx.resolucaoLoja.status === 'erro' ? engine.ctx.resolucaoLoja.erro : null
-	);
+	const erro = $derived(engine.ctx.resolucaoLoja.status === 'erro' ? engine.ctx.resolucaoLoja.erro : null);
 </script>
 
 <div class="flex items-center gap-3 rounded-md border border-border bg-card p-3">
@@ -52,7 +50,7 @@
 			class="rounded-sm bg-primary/10 px-2 py-1 text-xs font-medium text-primary
 				   hover:bg-primary/20 disabled:opacity-50"
 			disabled={monitorando}
-			onclick={() => engine.send({type: 'MONITORAR_LOJA', loja})}
+			onclick={() => engine.send({ type: 'MONITORAR_LOJA', loja })}
 			aria-label="Monitorar loja {loja.nome}"
 		>
 			{monitorando ? '…' : '+ Monitorar'}

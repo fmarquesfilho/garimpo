@@ -1,8 +1,8 @@
 # Handoff — Omnibox Smart Search (2026-07-12)
 
-> **Status: 📋 SPEC COMPLETA + INFRA PARCIAL, PRONTA PARA IMPLEMENTAÇÃO.**
+> **Status: ✅ IMPLEMENTADO. Waves 1-5 completas. Deploy pendente.**
 > Feature "Omnibox Smart Search". Spec em `.kiro/specs/omnibox-smart-search/`.
-> Este doc é o ponto de retomada para o próximo agente/dev.
+> ADR-0033 documenta o pattern Headless UI Controller.
 
 ## Resumo
 

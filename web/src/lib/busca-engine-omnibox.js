@@ -32,11 +32,17 @@ export function processarOmniboxInput(value, intencaoCtx, sugestoesCtx) {
 		opcoes = gerarSugestoesPrefixo(ultimoToken, sugestoesCtx);
 	} else {
 		modo = 'intencao';
-		const textoLivre = tokens.filter((t) => t.tipo === 'keyword').map((t) => t.valor).join(' ');
+		const textoLivre = tokens
+			.filter((t) => t.tipo === 'keyword')
+			.map((t) => t.valor)
+			.join(' ');
 		opcoes = detectarIntencao(textoLivre, intencaoCtx);
 	}
 
-	const keyword = tokens.filter((t) => t.tipo === 'keyword').map((t) => t.valor).join(' ');
+	const keyword = tokens
+		.filter((t) => t.tipo === 'keyword')
+		.map((t) => t.valor)
+		.join(' ');
 
 	return { inputValue: value, aberto: true, highlightIdx: -1, modo, opcoes, keyword };
 }
@@ -123,7 +129,11 @@ export function classificarSugestaoPrefixo(sug, inputValue) {
 		case 'marketplace':
 			return { action: 'MUDAR_MARKETPLACES', payload: { marketplace: sug.meta.marketplace }, novoInput };
 		case 'busca_salva':
-			return { action: 'CARREGAR_SALVA', payload: { config: sug.meta.config }, novoInput: (sug.meta.config.keywords ?? [])[0] ?? '' };
+			return {
+				action: 'CARREGAR_SALVA',
+				payload: { config: sug.meta.config },
+				novoInput: (sug.meta.config.keywords ?? [])[0] ?? ''
+			};
 		default:
 			return { action: 'NOOP', payload: {}, novoInput };
 	}
@@ -144,8 +154,10 @@ function gerarSugestoesPrefixo(ultimoToken, ctx) {
 function removerTokenAtivo(inputValue) {
 	const tokens = parsearInput(inputValue);
 	tokens.pop();
-	return tokens.map((t) => {
-		const pfx = t.tipo === 'keyword' ? '' : { loja: '@', categoria: '#', marketplace: '!' }[t.tipo] ?? '';
-		return pfx + t.valor;
-	}).join(' ');
+	return tokens
+		.map((t) => {
+			const pfx = t.tipo === 'keyword' ? '' : ({ loja: '@', categoria: '#', marketplace: '!' }[t.tipo] ?? '');
+			return pfx + t.valor;
+		})
+		.join(' ');
 }
