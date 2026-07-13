@@ -183,7 +183,7 @@ test.describe('Smart Search — Resolver Link', () => {
 		await expect(options.first()).toContainText('Resolver Link');
 	});
 
-	test('selecionar Resolver Link chama API e mostra Store Card', async ({ authedPage: page }) => {
+	test('selecionar Resolver Link resolve e mostra chip da loja', async ({ authedPage: page }) => {
 		setupSmartSearch(page);
 		await page.goto('/');
 		const input = page.getByRole('combobox');
@@ -191,8 +191,8 @@ test.describe('Smart Search — Resolver Link', () => {
 
 		await page.getByRole('option').first().click();
 
-		// Store Card deve aparecer com o nome da loja resolvida
-		await expect(page.getByText('New Resolved Shop')).toBeVisible({ timeout: 10000 });
+		// Apos resolver: chip dourado aparece com nome da loja resolvida
+		await expect(page.getByLabel(/Loja:.*New Resolved Shop/)).toBeVisible({ timeout: 10000 });
 	});
 });
 

@@ -239,10 +239,12 @@ describe('BuscaEngine — executarIntencao edge cases', () => {
 		}
 	});
 
-	it('selecionar intencao resolver_link chama adicionarLoja e muda modo', () => {
+	it('selecionar intencao resolver_link chama adicionarLoja (resolve remota)', () => {
 		engine.send({ type: 'OMNIBOX_INPUT', value: 'https://shopee.com.br/shop/123' });
 		engine.send({ type: 'OMNIBOX_SELECIONAR', indice: 0 });
-		expect(engine.modoResultados).toBe('lojas');
+		// Resolver link dispara resolucao remota — modo permanece produtos (busca normal com loja no escopo)
+		expect(engine.modoResultados).toBe('produtos');
+		expect(engine.ctx.resolucaoLoja.status).toBe('resolvendo');
 	});
 
 	it('OMNIBOX_SELECIONAR com indice fora de bounds nao faz nada', () => {

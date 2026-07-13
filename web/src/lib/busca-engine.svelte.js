@@ -442,7 +442,6 @@ export class BuscaEngine {
 				this.#executarBusca();
 			} else if (action === 'RESOLVER_LINK') {
 				this.#adicionarLoja({ value: payload.url });
-				this.ui.resultados.modo = 'lojas';
 			}
 		} else {
 			const { action, payload, novoInput } = classificarSugestaoPrefixo(opcao, this.ui.omnibox.inputValue);
