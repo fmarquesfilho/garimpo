@@ -120,7 +120,7 @@ function buildBuscasComLojas(buscasSalvas, ctx) {
 	const buscasComLojas = (buscasSalvas ?? []).filter((b) => b.shop_ids?.length > 0);
 	const nomesLojas = Object.fromEntries(
 		buscasComLojas.map((b) => {
-			// Usa shop_names (novo) ou fallback para nome (legado)
+			// Usa shop_names (atual) ou fallback para nome (formato antigo)
 			const label = b.shop_names ? Object.values(b.shop_names)[0] : b.nome || b.id;
 			return [b.id, label];
 		})

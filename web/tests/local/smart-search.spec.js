@@ -265,7 +265,7 @@ test.describe('Smart Search — Monitorar Loja', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 test.describe('Smart Search — Prefixos', () => {
-	test('@loja mostra sugestões de loja (sistema legado)', async ({ authedPage: page }) => {
+	test('@loja mostra sugestões de loja (modo prefixo)', async ({ authedPage: page }) => {
 		setupSmartSearch(page);
 		await page.goto('/');
 		const input = page.getByRole('combobox');

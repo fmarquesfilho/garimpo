@@ -56,7 +56,7 @@ export class BuscaEngine {
 	ctx = $state(criarContextoInicial());
 	ui = $state(criarUIInicial());
 
-	// UI state legado — agora delegam para ui.paineis (backwards-compatible)
+	// UI state — delegam para ui.paineis
 	get filtrosAberto() { return this.ui.paineis.filtrosAberto; }
 	set filtrosAberto(v) { this.ui.paineis.filtrosAberto = v; }
 	get salvarAberto() { return this.ui.paineis.salvarAberto; }
@@ -511,9 +511,9 @@ export class BuscaEngine {
 		const ultimoToken = tokens[tokens.length - 1];
 
 		if (ultimoToken && ultimoToken.tipo !== 'keyword') {
-			// Token com prefixo -> sistema legado de sugestoes
+			// Token com prefixo -> modo prefixo (sugestoes contextuais)
 			this.ui.omnibox.modo = 'sugestoes';
-			this.ui.omnibox.opcoes = this.#gerarSugestoesLegado(ultimoToken);
+			this.ui.omnibox.opcoes = this.#gerarSugestoesPrefixo(ultimoToken);
 		} else {
 			// Texto livre -> detecao de intencao
 			this.ui.omnibox.modo = 'intencao';
@@ -563,7 +563,7 @@ export class BuscaEngine {
 			if (this.ui.omnibox.modo === 'intencao') {
 				this.#executarIntencao(opcao);
 			} else {
-				this.#executarSugestaoLegado(opcao);
+				this.#executarSugestaoPrefixo(opcao);
 			}
 		}
 	}
@@ -586,7 +586,7 @@ export class BuscaEngine {
 		if (modo === 'intencao') {
 			this.#executarIntencao(opcao);
 		} else {
-			this.#executarSugestaoLegado(opcao);
+			this.#executarSugestaoPrefixo(opcao);
 		}
 	}
 
@@ -613,7 +613,7 @@ export class BuscaEngine {
 		}
 	}
 
-	#executarSugestaoLegado(sug) {
+	#executarSugestaoPrefixo(sug) {
 		if (!sug) return;
 		switch (sug.tipo) {
 			case 'loja':
@@ -641,8 +641,8 @@ export class BuscaEngine {
 		}).join(' ');
 	}
 
-	/** Gera sugestoes legado (prefixo) para o dropdown. */
-	#gerarSugestoesLegado(ultimoToken) {
+	/** Gera sugestoes por prefixo (@loja, #categoria, !marketplace) para o dropdown. */
+	#gerarSugestoesPrefixo(ultimoToken) {
 		const ctx = {
 			lojasMonitoradas: this.ctx.lojasDisponiveis,
 			categoriasDisponiveis: this.ctx.categoriasDisponiveis,

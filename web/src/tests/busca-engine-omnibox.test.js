@@ -65,7 +65,7 @@ describe('BuscaEngine — OMNIBOX_* handlers', () => {
 			expect(tipos).toContain('lojas');
 		});
 
-		it('generates sugestoes legado for prefix token', () => {
+		it('generates sugestoes prefixo for prefix token', () => {
 			engine.send({ type: 'OMNIBOX_INPUT', value: '@gl' });
 			expect(engine.omnibox.modo).toBe('sugestoes');
 		});

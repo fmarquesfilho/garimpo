@@ -13,7 +13,7 @@
  * Environment variables:
  *   V2_ENABLED: "true" to route /api/* to C# (default: "true")
  *   V2_ORIGIN:  URL do serviço C# no Cloud Run
- *   V1_ORIGIN:  URL do Go legado (fallback, pode ser removido)
+ *   V1_ORIGIN:  URL do Go (fallback, descomissionar via T-0022)
  *   PAGES_URL:  URL do Cloudflare Pages (garimpei-web.pages.dev)
  *   CACHE_MAX_AGE: Cache TTL in seconds (default: "300")
  */
