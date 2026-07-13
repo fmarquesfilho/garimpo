@@ -35,7 +35,7 @@
 		"@tailwindcss/vite": "^4.3.2",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.4.2",
-		"@vitest/coverage-v8": "4.1.9",
+		"@vitest/coverage-v8": "4.1.10",
 		"axe-core": "^4.12.1",
 		"clsx": "^2.1.1",
 		"csstype": "^3.2.3",
