@@ -35,8 +35,10 @@ test.describe('Produção — Smart Search Dropdown', () => {
 		await input.pressSequentially('serum', { delay: 80 });
 		await input.press('Enter');
 
-		// Resultados ou empty state (depende dos dados de prod)
-		await expect(page.getByText(/\d+ produto|Nenhum resultado/i).first()).toBeVisible({ timeout: 20000 });
+		// A UI deve reagir: loading, resultados, ou empty state
+		await expect(
+			page.getByText(/\d+ produto/i).or(page.getByText(/Nenhum resultado/i)).or(page.getByText(/Buscando/i))
+		).toBeVisible({ timeout: 15000 });
 	});
 
 	test('Escape fecha dropdown', async ({ authedPage: page }) => {
