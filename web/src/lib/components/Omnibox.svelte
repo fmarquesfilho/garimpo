@@ -91,6 +91,9 @@
 		{om.aberto && om.opcoes.length > 0 ? `${om.opcoes.length} ${om.opcoes.length === 1 ? 'opção' : 'opções'}` : ''}
 	</span>
 
+	<!-- Aria-live: chip removal announcement -->
+	<span class="sr-only" aria-live="assertive">{om.chipRemovalMessage}</span>
+
 	<!-- Dropdown listbox -->
 	{#if om.aberto && om.opcoes.length > 0}
 		<ul

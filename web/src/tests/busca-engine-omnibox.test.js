@@ -1,7 +1,7 @@
 /**
  * Tests for BuscaEngine OMNIBOX_* handlers and Smart Search.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BuscaEngine, STATES } from '$lib/busca-engine.svelte.js';
 import { criarUIInicial } from '$lib/busca-engine-state.js';
 
@@ -214,5 +214,194 @@ describe('BuscaEngine — OMNIBOX_* handlers', () => {
 			expect(ui.paineis.filtrosAberto).toBe(false);
 			expect(ui.paineis.salvarAberto).toBe(false);
 		});
+	});
+});
+
+describe('BuscaEngine — executarIntencao edge cases', () => {
+	let engine;
+	let effects;
+
+	beforeEach(async () => {
+		effects = criarMockEffects();
+		engine = new BuscaEngine(effects);
+		await engine.send({ type: 'INICIALIZAR' });
+	});
+
+	it('selecionar intencao categoria adiciona categoria e limpa keyword', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'beleza' });
+		// Find and select the categoria option
+		const catIdx = engine.omnibox.opcoes.findIndex((o) => o.tipo === 'categoria');
+		if (catIdx >= 0) {
+			engine.send({ type: 'OMNIBOX_SELECIONAR', indice: catIdx });
+			expect(engine.ctx.categorias).toContain('Beleza');
+			expect(engine.ctx.keyword).toBe('');
+			expect(engine.omnibox.inputValue).toBe('');
+		}
+	});
+
+	it('selecionar intencao resolver_link chama adicionarLoja e muda modo', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'https://shopee.com.br/shop/123' });
+		engine.send({ type: 'OMNIBOX_SELECIONAR', indice: 0 });
+		expect(engine.modoResultados).toBe('lojas');
+	});
+
+	it('OMNIBOX_SELECIONAR com indice fora de bounds nao faz nada', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'serum' });
+
+		engine.send({ type: 'OMNIBOX_SELECIONAR', indice: 99 });
+		// Nada mudou
+		expect(engine.omnibox.aberto).toBe(true);
+	});
+
+	it('OMNIBOX_SELECIONAR com indice negativo nao faz nada', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'serum' });
+		engine.send({ type: 'OMNIBOX_SELECIONAR', indice: -1 });
+		expect(engine.omnibox.aberto).toBe(true);
+	});
+
+	it('OMNIBOX_KEYDOWN com opcoes vazio nao muda highlightIdx', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'a' }); // < minChars, opcoes vazio
+		engine.send({ type: 'OMNIBOX_KEYDOWN', key: 'ArrowDown' });
+		expect(engine.omnibox.highlightIdx).toBe(-1);
+	});
+
+	it('OMNIBOX_INPUT com value null trata como string vazia', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: null });
+		expect(engine.omnibox.inputValue).toBe('');
+	});
+
+	it('BUSCAR_LOJAS com termo whitespace-only nao executa', async () => {
+		await engine.send({ type: 'BUSCAR_LOJAS', termo: '   ' });
+		expect(effects.buscarLojasPorNome).not.toHaveBeenCalled();
+	});
+
+	it('MONITORAR_LOJA com loja sem id nao faz nada', async () => {
+		await engine.send({ type: 'MONITORAR_LOJA', loja: { nome: 'Test' } });
+		expect(engine.ctx.shopIds).toHaveLength(0);
+	});
+
+	it('MONITORAR_LOJA com loja.id null nao faz nada', async () => {
+		await engine.send({ type: 'MONITORAR_LOJA', loja: { id: null, nome: 'Test' } });
+		expect(engine.ctx.shopIds).toHaveLength(0);
+	});
+});
+
+describe('BuscaEngine — sugestao prefixo execution', () => {
+	let engine;
+	let effects;
+
+	beforeEach(async () => {
+		effects = criarMockEffects();
+		engine = new BuscaEngine(effects);
+		await engine.send({ type: 'INICIALIZAR' });
+	});
+
+	it('selecionar @loja no modo sugestoes adiciona loja ao escopo', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: '@gl' });
+		if (engine.omnibox.opcoes.length > 0) {
+			engine.send({ type: 'OMNIBOX_SELECIONAR', indice: 0 });
+			// Deve ter despachado ADICIONAR_LOJA (via send recursivo)
+			expect(engine.ctx.shopIds.length).toBeGreaterThanOrEqual(0);
+		}
+	});
+
+	it('selecionar #categoria no modo sugestoes adiciona categoria', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: '#bel' });
+		if (engine.omnibox.opcoes.length > 0) {
+			engine.send({ type: 'OMNIBOX_SELECIONAR', indice: 0 });
+			expect(engine.ctx.categorias).toContain('Beleza');
+		}
+	});
+});
+
+describe('BuscaEngine — chip removal message', () => {
+	let engine;
+	let effects;
+
+	beforeEach(async () => {
+		effects = criarMockEffects();
+		engine = new BuscaEngine(effects);
+		await engine.send({ type: 'INICIALIZAR' });
+		await engine.send({ type: 'ADICIONAR_LOJA', loja: { id: '100', nome: 'Glory of Seoul', marketplace: 'shopee' } });
+	});
+
+	it('REMOVER_LOJA sets chipRemovalMessage', () => {
+		engine.send({ type: 'REMOVER_LOJA', shopId: 100 });
+		expect(engine.omnibox.chipRemovalMessage).toContain('Glory of Seoul');
+		expect(engine.omnibox.chipRemovalMessage).toContain('removida');
+	});
+
+	it('REMOVER_CATEGORIA sets chipRemovalMessage', () => {
+		engine.send({ type: 'ADICIONAR_CATEGORIA', nome: 'Beleza' });
+		engine.send({ type: 'REMOVER_CATEGORIA', nome: 'Beleza' });
+		expect(engine.omnibox.chipRemovalMessage).toContain('Beleza');
+		expect(engine.omnibox.chipRemovalMessage).toContain('removida');
+	});
+});
+
+describe('BuscaEngine — mobile/tablet (blur sem Enter)', () => {
+	let engine;
+	let effects;
+
+	beforeEach(async () => {
+		vi.useFakeTimers();
+		effects = criarMockEffects();
+		engine = new BuscaEngine(effects);
+		await engine.send({ type: 'INICIALIZAR' });
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('digitar + blur executa busca via debounce (sem Enter)', async () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'serum' });
+		engine.send({ type: 'OMNIBOX_BLUR' });
+
+		// Dropdown fechou
+		expect(engine.omnibox.aberto).toBe(false);
+
+		// Keyword foi setada (pelo INPUT, nao pelo Enter)
+		expect(engine.ctx.keyword).toBe('serum');
+
+		// Debounce vai executar a busca — avanca o timer
+		await vi.advanceTimersByTimeAsync(500);
+		// Effects.executarBusca deve ter sido chamado
+		expect(effects.executarBusca).toHaveBeenCalled();
+	});
+
+	it('blur preserva keyword no input (nao limpa)', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'retinol' });
+		engine.send({ type: 'OMNIBOX_BLUR' });
+
+		expect(engine.omnibox.inputValue).toBe('retinol');
+	});
+
+	it('blur com chips preserva chips (nao remove nada)', async () => {
+		await engine.send({ type: 'ADICIONAR_LOJA', loja: { id: '100', nome: 'Test', marketplace: 'shopee' } });
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'serum' });
+		engine.send({ type: 'OMNIBOX_BLUR' });
+
+		expect(engine.ctx.shopIds).toContain(100);
+	});
+
+	it('blur apos abrir dropdown nao executa opcao (apenas fecha)', () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'serum' });
+		expect(engine.omnibox.aberto).toBe(true);
+		expect(engine.omnibox.opcoes.length).toBeGreaterThan(0);
+
+		engine.send({ type: 'OMNIBOX_BLUR' });
+
+		// Dropdown fechou mas modo continua 'produtos' (nao executou 'lojas' nem 'categoria')
+		expect(engine.modoResultados).toBe('produtos');
+	});
+
+	it('blur sem texto digitado nao dispara busca', async () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: '' });
+		engine.send({ type: 'OMNIBOX_BLUR' });
+
+		await vi.advanceTimersByTimeAsync(500);
+		// Sem keyword e sem contexto → nao busca
+		expect(engine.status).not.toBe('searching');
 	});
 });

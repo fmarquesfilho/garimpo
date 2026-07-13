@@ -49,7 +49,8 @@ export function criarUIInicial() {
 			highlightIdx: -1,
 			modo: 'intencao', // 'intencao' | 'sugestoes'
 			opcoes: [],
-			placeholder: 'Buscar produtos, lojas ou categorias\u2026'
+			placeholder: 'Buscar produtos, lojas ou categorias\u2026',
+			chipRemovalMessage: ''
 		},
 		resultados: {
 			modo: 'produtos', // 'produtos' | 'lojas'

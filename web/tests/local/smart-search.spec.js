@@ -411,3 +411,64 @@ test.describe('Smart Search — Transição de modo', () => {
 		await expect(page.getByText('Retinol ABC')).toBeVisible({ timeout: 10000 });
 	});
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. MOBILE — BLUR SEM ENTER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+test.describe('Smart Search — Mobile (blur sem Enter)', () => {
+	test('digitar + clicar fora fecha dropdown e busca executa via debounce', async ({ authedPage: page }) => {
+		setupSmartSearch(page, {
+			'/api/candidatos': {
+				candidatos: [
+					{
+						id: 'p1',
+						nome: 'Serum Mobile',
+						preco: 50,
+						comissao: 0.1,
+						vendas: 100,
+						loja: 'L',
+						link: '',
+						_fonte: 'curadoria'
+					}
+				],
+				total_bruto: 1,
+				estrategia: 'nicho'
+			}
+		});
+		await page.goto('/');
+		const input = page.getByRole('combobox');
+		await input.fill('serum');
+
+		// Dropdown esta aberto
+		await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 });
+
+		// Clicar fora (simula unfocus mobile)
+		await page.locator('h1').click();
+
+		// Dropdown fechou
+		await expect(page.getByRole('listbox')).not.toBeVisible();
+
+		// Busca executou via debounce (sem Enter)
+		await expect(page.getByText('Serum Mobile')).toBeVisible({ timeout: 10000 });
+	});
+
+	test('chip X funciona por tap (sem teclado)', async ({ authedPage: page }) => {
+		setupSmartSearch(page);
+		await page.goto('/');
+		const input = page.getByRole('combobox');
+
+		// Adiciona loja via @prefixo
+		await input.fill('@gl');
+		await page.getByText('Glory of Seoul').click();
+
+		// Chip dourado aparece
+		await expect(page.getByLabel(/Loja: Glory of Seoul/)).toBeVisible({ timeout: 5000 });
+
+		// Tap no X do chip
+		await page.getByLabel('Remover loja Glory of Seoul').click();
+
+		// Chip removido
+		await expect(page.getByLabel(/Loja: Glory of Seoul/)).not.toBeVisible();
+	});
+});

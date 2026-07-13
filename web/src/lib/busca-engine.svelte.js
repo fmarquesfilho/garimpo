@@ -255,6 +255,7 @@ export class BuscaEngine {
 		const meta = { ...this.ctx.categoriaMeta };
 		delete meta[event.nome];
 		this.ctx.categoriaMeta = meta;
+		this.ui.omnibox.chipRemovalMessage = event.nome ? `Categoria ${event.nome} removida do escopo` : '';
 		this.#debounce();
 	}
 
@@ -297,7 +298,9 @@ export class BuscaEngine {
 	}
 
 	#removerLoja(event) {
+		const nome = this.ctx.shopNomes[event.shopId] || '';
 		Object.assign(this.ctx, prepararRemoverLoja(event.shopId, this.ctx));
+		this.ui.omnibox.chipRemovalMessage = nome ? `Loja ${nome} removida do escopo` : '';
 		this.#debounce();
 	}
 
