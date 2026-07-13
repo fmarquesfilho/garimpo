@@ -16,6 +16,7 @@ fixtures/
 │   ├── api-buscas.json            ← Golden: GET /api/buscas (com shop_names!)
 │   ├── api-candidatos.json        ← Golden: GET /api/candidatos?keyword=serum
 │   ├── api-novidades.json         ← Golden: GET /api/novidades
+│   ├── dataset-descobrir.json     ← Dataset completo E2E: todos os cenários Descobrir
 │   └── frontend-ctx.json          ← Golden: engine.ctx após payloadToConfig
 └── README.md
 ```
@@ -42,7 +43,25 @@ const configs = apiBuscas.buscas.map(payloadToConfig);
 expect(configs).toEqual(frontendCtx.configs);
 ```
 
-### Frontend (mock API em E2E)
+### Frontend (E2E com dataset completo — cenários Descobrir)
+
+```javascript
+import dataset from '../../../fixtures/respostas/dataset-descobrir.json';
+
+// Carrega todos os endpoints com dados controlados
+page.apiOverrides({
+  '/api/candidatos': dataset.candidatos_serum,
+  '/api/lojas/novidades': dataset.novidades_glory,
+  '/api/lojas/registro': dataset.lojas_registro,
+  '/api/lojas/buscar': dataset.lojas_buscar_glory,
+  '/api/categorias': dataset.categorias,
+  '/api/buscas': dataset.buscas_salvas,
+  '/api/favoritos': dataset.favoritos,
+  '/api/lojas/resolver': dataset.resolver_loja
+});
+```
+
+### Frontend (mock API em E2E — cenário individual)
 
 ```javascript
 import apiCandidatos from '../../../fixtures/respostas/api-candidatos.json';

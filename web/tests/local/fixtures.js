@@ -42,6 +42,7 @@ export const FIXTURE_API_BUSCAS = loadFixture('respostas/api-buscas.json');
 export const FIXTURE_API_CANDIDATOS = loadFixture('respostas/api-candidatos.json');
 export const FIXTURE_API_NOVIDADES = loadFixture('respostas/api-novidades.json');
 export const FIXTURE_COLLECTOR_FETCHSHOP = loadFixture('respostas/collector-fetchshop.json');
+export const DATASET_DESCOBRIR = loadFixture('respostas/dataset-descobrir.json');
 
 export const TEST_USER = { uid: 'e2e-user', email: 'e2e@teste.dev', nome: 'Teste E2E', foto: null };
 
@@ -155,6 +156,26 @@ export const test = base.extend({
 						}
 					]
 				},
+				...overrides
+			});
+		};
+
+		/**
+		 * Carrega o dataset completo da Descobrir (dados realistas controlados).
+		 * Cobre todos os cenários do checklist TESTES_DESCOBRIR.
+		 * Aceita overrides para customizar endpoints específicos.
+		 */
+		page.apiFromDataset = (overrides = {}) => {
+			const ds = DATASET_DESCOBRIR;
+			Object.assign(responses, {
+				'/api/candidatos': ds.candidatos_serum,
+				'/api/lojas/novidades': ds.novidades_glory,
+				'/api/lojas/registro': ds.lojas_registro,
+				'/api/lojas/buscar': ds.lojas_buscar_glory,
+				'/api/lojas/resolver': ds.resolver_loja,
+				'/api/categorias': ds.categorias,
+				'/api/buscas': ds.buscas_salvas,
+				'/api/favoritos': ds.favoritos,
 				...overrides
 			});
 		};

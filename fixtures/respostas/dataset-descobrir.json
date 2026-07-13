@@ -1,0 +1,441 @@
+{
+  "_doc": "Dataset completo para E2E da página Descobrir. Mapeia cenários do checklist TESTES_DESCOBRIR.",
+  "_uso": "E2E local: page.apiFromFixtures() carrega tudo. E2E prod: valida schema against real data.",
+
+  "candidatos_serum": {
+    "_cenario": "#1: Busca keyword 'sérum' → curadoria",
+    "candidatos": [
+      {
+        "produto_id": "shopee-920292999-100001",
+        "nome": "Sérum Facial Vitamina C 30ml",
+        "preco": 49.90,
+        "preco_original": 79.90,
+        "comissao": 0.12,
+        "vendas": 1500,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd3s-serum-vc.jpg",
+        "link": "https://shopee.com.br/product/920292999/100001",
+        "shop_id": 920292999,
+        "loja": "Glory of Seoul",
+        "marketplace": "shopee",
+        "categoria": "Skincare",
+        "score": 0.85,
+        "_fonte": "curadoria"
+      },
+      {
+        "produto_id": "shopee-592884015-300001",
+        "nome": "COSRX Advanced Snail 96 Mucin Power Essence 100ml",
+        "preco": 89.90,
+        "preco_original": 119.90,
+        "comissao": 0.11,
+        "vendas": 5600,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd3s-cosrx-snail.jpg",
+        "link": "https://shopee.com.br/product/592884015/300001",
+        "shop_id": 592884015,
+        "loja": "COSRX Official",
+        "marketplace": "shopee",
+        "categoria": "Skincare",
+        "score": 0.82,
+        "_fonte": "curadoria"
+      },
+      {
+        "produto_id": "shopee-282170857-200004",
+        "nome": "Sérum Retinol 0.5% Anti-idade 30ml",
+        "preco": 42.90,
+        "preco_original": 42.90,
+        "comissao": 0.09,
+        "vendas": 780,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd3s-retinol.jpg",
+        "link": "https://shopee.com.br/product/282170857/200004",
+        "shop_id": 282170857,
+        "loja": "Le Botanic",
+        "marketplace": "shopee",
+        "categoria": "Skincare",
+        "score": 0.78,
+        "_fonte": "curadoria"
+      }
+    ],
+    "total_bruto": 3,
+    "estrategia": "nicho"
+  },
+
+  "candidatos_perfumaria": {
+    "_cenario": "#3, #16: Busca por categoria Perfumaria (sem keyword)",
+    "candidatos": [
+      {
+        "produto_id": "shopee-920292999-100005",
+        "nome": "Perfume Feminino Floral 100ml",
+        "preco": 89.90,
+        "preco_original": 129.90,
+        "comissao": 0.14,
+        "vendas": 2300,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-perfume-floral.jpg",
+        "link": "https://shopee.com.br/product/920292999/100005",
+        "shop_id": 920292999,
+        "loja": "Glory of Seoul",
+        "marketplace": "shopee",
+        "categoria": "Perfumaria",
+        "score": 0.79,
+        "_fonte": "curadoria"
+      },
+      {
+        "produto_id": "shopee-282170857-200005",
+        "nome": "Eau de Toilette Lavanda Provence 50ml",
+        "preco": 64.90,
+        "preco_original": 64.90,
+        "comissao": 0.10,
+        "vendas": 1100,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-lavanda.jpg",
+        "link": "https://shopee.com.br/product/282170857/200005",
+        "shop_id": 282170857,
+        "loja": "Le Botanic",
+        "marketplace": "shopee",
+        "categoria": "Perfumaria",
+        "score": 0.74,
+        "_fonte": "curadoria"
+      }
+    ],
+    "total_bruto": 2,
+    "estrategia": "nicho"
+  },
+
+  "novidades_glory": {
+    "_cenario": "#4-#7: Quedas e Novos da Glory of Seoul",
+    "variacoes": [
+      {
+        "produto_id": "shopee-920292999-100001",
+        "nome": "Sérum Facial Vitamina C 30ml",
+        "preco_atual": 49.90,
+        "preco_anterior": 59.90,
+        "variacao_pct": -16.7,
+        "detectado_em": "2026-07-12T14:00:00Z",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd3s-serum-vc.jpg",
+        "link": "https://shopee.com.br/product/920292999/100001",
+        "loja": "Glory of Seoul",
+        "comissao": 0.12,
+        "vendas": 1500,
+        "_fonte": "queda"
+      },
+      {
+        "produto_id": "shopee-920292999-100003",
+        "nome": "Máscara Facial Coreana Colágeno",
+        "preco_atual": 12.90,
+        "preco_anterior": 19.90,
+        "variacao_pct": -35.2,
+        "detectado_em": "2026-07-11T10:00:00Z",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-mascara.jpg",
+        "link": "https://shopee.com.br/product/920292999/100003",
+        "loja": "Glory of Seoul",
+        "comissao": 0.15,
+        "vendas": 8900,
+        "_fonte": "queda"
+      }
+    ],
+    "produtos_novos": [
+      {
+        "produto_id": "shopee-920292999-100004",
+        "nome": "Kit Skincare Coreano 5 Passos",
+        "preco": 149.90,
+        "comissao": 0.12,
+        "vendas": 670,
+        "detectado_em": "2026-07-13T08:00:00Z",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-kit.jpg",
+        "link": "https://shopee.com.br/product/920292999/100004",
+        "loja": "Glory of Seoul",
+        "_fonte": "novo"
+      },
+      {
+        "produto_id": "shopee-920292999-100006",
+        "nome": "Retinol Sérum Noturno 20ml",
+        "preco": 38.90,
+        "comissao": 0.11,
+        "vendas": 320,
+        "detectado_em": "2026-07-12T22:00:00Z",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-retinol-noturno.jpg",
+        "link": "https://shopee.com.br/product/920292999/100006",
+        "loja": "Glory of Seoul",
+        "_fonte": "novo"
+      }
+    ],
+    "dias_janela": 7
+  },
+
+  "novidades_multi": {
+    "_cenario": "#11-#12: Quedas+Novos de múltiplas lojas (Le Botanic + COSRX)",
+    "variacoes": [
+      {
+        "produto_id": "shopee-282170857-200001",
+        "nome": "Hidratante Facial Ácido Hialurônico 50ml",
+        "preco_atual": 59.90,
+        "preco_anterior": 69.90,
+        "variacao_pct": -14.3,
+        "detectado_em": "2026-07-13T06:00:00Z",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-hialuronico.jpg",
+        "link": "https://shopee.com.br/product/282170857/200001",
+        "loja": "Le Botanic",
+        "comissao": 0.08,
+        "vendas": 890,
+        "_fonte": "queda"
+      },
+      {
+        "produto_id": "shopee-592884015-300003",
+        "nome": "COSRX Low pH Good Morning Gel Cleanser 150ml",
+        "preco_atual": 54.90,
+        "preco_anterior": 64.90,
+        "variacao_pct": -15.4,
+        "detectado_em": "2026-07-12T18:00:00Z",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-cosrx-gel.jpg",
+        "link": "https://shopee.com.br/product/592884015/300003",
+        "loja": "COSRX Official",
+        "comissao": 0.10,
+        "vendas": 4200,
+        "_fonte": "queda"
+      }
+    ],
+    "produtos_novos": [
+      {
+        "produto_id": "shopee-282170857-200006",
+        "nome": "Óleo de Rosa Mosqueta Puro 15ml",
+        "preco": 29.90,
+        "comissao": 0.08,
+        "vendas": 210,
+        "detectado_em": "2026-07-13T10:00:00Z",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-rosa-mosqueta.jpg",
+        "link": "https://shopee.com.br/product/282170857/200006",
+        "loja": "Le Botanic",
+        "_fonte": "novo"
+      }
+    ],
+    "dias_janela": 7
+  },
+
+  "favoritos": {
+    "_cenario": "#8-#9, #22-#25: Produtos favoritados",
+    "favoritos": [
+      {
+        "produto_id": "shopee-920292999-100001",
+        "nome": "Sérum Facial Vitamina C 30ml",
+        "preco": 49.90,
+        "comissao": 0.12,
+        "vendas": 1500,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd3s-serum-vc.jpg",
+        "link": "https://shopee.com.br/product/920292999/100001",
+        "loja": "Glory of Seoul",
+        "marketplace": "shopee",
+        "categoria": "Skincare",
+        "favoritado_em": "2026-07-10T15:00:00Z"
+      },
+      {
+        "produto_id": "shopee-592884015-300001",
+        "nome": "COSRX Advanced Snail 96 Mucin Power Essence 100ml",
+        "preco": 89.90,
+        "comissao": 0.11,
+        "vendas": 5600,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd3s-cosrx-snail.jpg",
+        "link": "https://shopee.com.br/product/592884015/300001",
+        "loja": "COSRX Official",
+        "marketplace": "shopee",
+        "categoria": "Skincare",
+        "favoritado_em": "2026-07-09T11:00:00Z"
+      },
+      {
+        "produto_id": "shopee-282170857-200005",
+        "nome": "Eau de Toilette Lavanda Provence 50ml",
+        "preco": 64.90,
+        "comissao": 0.10,
+        "vendas": 1100,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-lavanda.jpg",
+        "link": "https://shopee.com.br/product/282170857/200005",
+        "loja": "Le Botanic",
+        "marketplace": "shopee",
+        "categoria": "Perfumaria",
+        "favoritado_em": "2026-07-11T20:00:00Z"
+      }
+    ]
+  },
+
+  "lojas_registro": {
+    "_cenario": "#14-#15: Lojas monitoradas com dados enriquecidos",
+    "lojas": [
+      {
+        "id": "920292999",
+        "nome": "Glory of Seoul",
+        "nome_normalizado": "gloryofseoul",
+        "marketplace": "shopee",
+        "cron": "0 */8 * * *",
+        "origem": "🇰🇷",
+        "monitorada": true,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-glory-avatar.jpg",
+        "seguidores": 45200,
+        "total_produtos": 387,
+        "avaliacao": 4.9
+      },
+      {
+        "id": "282170857",
+        "nome": "Le Botanic",
+        "nome_normalizado": "lebotanic",
+        "marketplace": "shopee",
+        "cron": "0 */12 * * *",
+        "origem": "🇧🇷",
+        "monitorada": true,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-botanic-avatar.jpg",
+        "seguidores": 12800,
+        "total_produtos": 156,
+        "avaliacao": 4.7
+      },
+      {
+        "id": "592884015",
+        "nome": "COSRX Official",
+        "nome_normalizado": "cosrxofficial",
+        "marketplace": "shopee",
+        "cron": "0 */8 * * *",
+        "origem": "🇰🇷",
+        "monitorada": true,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-cosrx-avatar.jpg",
+        "seguidores": 98500,
+        "total_produtos": 62,
+        "avaliacao": 4.8
+      }
+    ],
+    "total": 3
+  },
+
+  "lojas_buscar_glory": {
+    "_cenario": "Smart Search: buscar 'glory' retorna Store Card",
+    "lojas": [
+      {
+        "id": "920292999",
+        "nome": "Glory of Seoul",
+        "nome_normalizado": "gloryofseoul",
+        "marketplace": "shopee",
+        "monitorada": true,
+        "origem": "🇰🇷",
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-glory-avatar.jpg",
+        "seguidores": 45200,
+        "total_produtos": 387,
+        "avaliacao": 4.9
+      }
+    ],
+    "total": 1
+  },
+
+  "categorias": {
+    "_cenario": "#16-#21: Categorias disponíveis para filtro e autocomplete",
+    "marketplaces": [
+      {
+        "marketplace": "shopee",
+        "categorias": [
+          { "id": 100630, "nome": "Beleza" },
+          { "id": 100664, "nome": "Cuidados com a Pele" },
+          { "id": 100640, "nome": "Perfumaria" },
+          { "id": 100636, "nome": "Maquiagem" },
+          { "id": 100670, "nome": "Cabelos" }
+        ]
+      }
+    ]
+  },
+
+  "buscas_salvas": {
+    "_cenario": "#27-#37: Buscas salvas (pills, agendamento, fontes)",
+    "buscas": [
+      {
+        "id": "busca-keyword-serum",
+        "keywords": ["serum"],
+        "shop_ids": [],
+        "shop_names": null,
+        "categorias": [],
+        "collection_keys": ["serum"],
+        "cron": "0 */8 * * *",
+        "marketplaces": ["shopee"],
+        "status": "ativa",
+        "comissao_min": 0.07,
+        "vendas_min": 10,
+        "fontes": ["curadoria"]
+      },
+      {
+        "id": "busca-loja-glory",
+        "keywords": [],
+        "shop_ids": [920292999],
+        "shop_names": { "920292999": "Glory of Seoul" },
+        "categorias": [],
+        "collection_keys": ["920292999"],
+        "cron": "0 */8 * * *",
+        "marketplaces": ["shopee"],
+        "status": "ativa",
+        "comissao_min": null,
+        "vendas_min": null,
+        "fontes": ["curadoria", "lojas", "quedas", "novos"]
+      },
+      {
+        "id": "busca-categoria-skincare",
+        "keywords": [],
+        "shop_ids": [],
+        "shop_names": null,
+        "categorias": ["Skincare", "Beleza"],
+        "collection_keys": ["beleza", "skincare"],
+        "cron": null,
+        "marketplaces": ["shopee"],
+        "status": "ativa",
+        "comissao_min": 0.07,
+        "vendas_min": null,
+        "fontes": ["curadoria"]
+      }
+    ],
+    "total": 3
+  },
+
+  "resolver_loja": {
+    "_cenario": "Resolver link de afiliado → loja nova",
+    "id": "999888777",
+    "nome": "Loja Resolvida via Link",
+    "nome_normalizado": "lojaresolvidavialink",
+    "marketplace": "shopee",
+    "cron": null,
+    "origem": "🇧🇷",
+    "monitorada": false,
+    "imagem": "https://cf.shopee.com.br/file/sg-11134201-resolvida.jpg",
+    "seguidores": 3200,
+    "total_produtos": 89,
+    "avaliacao": 4.3,
+    "localizacao": "SP"
+  },
+
+  "feed_default_beleza": {
+    "_cenario": "Feed default: top vendidos Beleza",
+    "candidatos": [
+      {
+        "produto_id": "shopee-920292999-100001",
+        "nome": "Sérum Facial Vitamina C 30ml",
+        "preco": 49.90,
+        "preco_original": 79.90,
+        "comissao": 0.12,
+        "vendas": 1500,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd3s-serum-vc.jpg",
+        "link": "https://shopee.com.br/product/920292999/100001",
+        "shop_id": 920292999,
+        "loja": "Glory of Seoul",
+        "marketplace": "shopee",
+        "categoria": "Beleza",
+        "score": 0.85,
+        "_fonte": "curadoria"
+      },
+      {
+        "produto_id": "shopee-282170857-200003",
+        "nome": "Óleo Essencial Tea Tree 30ml",
+        "preco": 24.90,
+        "preco_original": 24.90,
+        "comissao": 0.08,
+        "vendas": 450,
+        "imagem": "https://cf.shopee.com.br/file/sg-11134201-teatree.jpg",
+        "link": "https://shopee.com.br/product/282170857/200003",
+        "shop_id": 282170857,
+        "loja": "Le Botanic",
+        "marketplace": "shopee",
+        "categoria": "Beleza",
+        "score": 0.71,
+        "_fonte": "curadoria"
+      }
+    ],
+    "total_bruto": 2,
+    "estrategia": "nicho"
+  }
+}
