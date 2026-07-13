@@ -247,6 +247,16 @@ describe('BuscaEngine — executarIntencao edge cases', () => {
 		expect(engine.ctx.resolucaoLoja.status).toBe('resolvendo');
 	});
 
+	it('resolver link limpa inputValue após resolução com sucesso', async () => {
+		engine.send({ type: 'OMNIBOX_INPUT', value: 'https://shopee.com.br/shop/123' });
+		expect(engine.omnibox.inputValue).toBe('https://shopee.com.br/shop/123');
+		await engine.send({ type: 'OMNIBOX_SELECIONAR', indice: 0 });
+		// Após resolver: input limpo, keyword vazia, loja adicionada via chip
+		expect(engine.omnibox.inputValue).toBe('');
+		expect(engine.ctx.keyword).toBe('');
+		expect(engine.ctx.shopIds).toContain(999);
+	});
+
 	it('OMNIBOX_SELECIONAR com indice fora de bounds nao faz nada', () => {
 		engine.send({ type: 'OMNIBOX_INPUT', value: 'serum' });
 

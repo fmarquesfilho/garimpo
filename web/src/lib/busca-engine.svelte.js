@@ -325,6 +325,12 @@ export class BuscaEngine {
 				this.ctx.lojasDisponiveis = [...this.ctx.lojasDisponiveis, r];
 			}
 			this.ctx.resolucaoLoja = { status: 'idle' };
+			// Limpa o input após resolução bem-sucedida (remove o link do omnibox)
+			this.ui.omnibox.inputValue = '';
+			// Só limpa keyword se ela é o próprio link (usuário colou URL no omnibox)
+			if (this.ctx.keyword === input || this.ctx.keyword.startsWith('http')) {
+				this.ctx.keyword = '';
+			}
 			return this.#adicionarLojaConhecida(r);
 		} catch (e) {
 			const abortou = e?.name === 'AbortError' || controller.signal.aborted;
