@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#MISE description="Regenera artefatos gerados e falha se há diff não commitado"
+set -euo pipefail
+
+echo "🔄 Regenerando artefatos..."
+
+# API Reference
+bash .mise/tasks/gen/api-reference > /dev/null 2>&1
+
+# Verifica se algo mudou
+if ! git diff --quiet docs/09-api-reference.md 2>/dev/null; then
+  echo ""
+  echo "❌ docs/09-api-reference.md foi alterado pela regeneração."
+  echo "   Commite antes de pushar:"
+  echo ""
+  echo "   git add docs/09-api-reference.md"
+  echo "   git commit --amend --no-edit"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Artefatos gerados estão atualizados."

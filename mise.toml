@@ -187,7 +187,7 @@ depends = ["build", "test", "lint", "checks", "check:file-size"]
 
 [tasks.prepush]
 description = "Verificação pré-push (rápido, ~1min)"
-depends = ["build", "test", "lint", "checks", "check:web", "check:file-size", "check:format"]
+depends = ["gen:auto", "build", "test", "lint", "checks", "check:web", "check:file-size", "check:format"]
 
 # ── Frontend (tasks específicas) ──────────────────────────────────────────────
 
