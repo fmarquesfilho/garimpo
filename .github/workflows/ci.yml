@@ -268,44 +268,4 @@ jobs:
           command: pages deploy .svelte-kit/cloudflare --project-name garimpei-web
           workingDirectory: web
 
-  # ── Mutation Testing (on merge to main or label) ─────────────────────────
-  mutation:
-    name: Mutation Testing
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [frontend, csharp]
-    if: |
-      github.ref == 'refs/heads/main' &&
-      github.event_name == 'push'
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-      - run: bun install --frozen-lockfile
-      - name: Restore Stryker incremental cache
-        uses: actions/cache@v4
-        with:
-          path: reports/mutation/stryker-incremental.json
-          key: stryker-incremental-${{ github.sha }}
-          restore-keys: stryker-incremental-
-      - name: StrykerJS (frontend)
-        run: bunx stryker run
-      - name: Stryker.NET (backend)
-        run: |
-          cd ../src
-          dotnet tool restore
-          dotnet stryker -f stryker-config.json
-        continue-on-error: true
-      - name: Upload mutation reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: mutation-reports
-          path: |
-            reports/mutation/
-            reports/mutation-dotnet/
+  # ── (Mutation testing removido — ver ADR-0034 / handoff 2026-07-13) ────
