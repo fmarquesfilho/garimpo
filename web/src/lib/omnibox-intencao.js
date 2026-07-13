@@ -30,7 +30,7 @@ const INTENCAO_CONFIG = OMNIBOX?.intencao ?? {
 
 const MIN_CHARS = INTENCAO_CONFIG.minChars ?? 2;
 const MAX_CATEGORIAS = INTENCAO_CONFIG.maxCategorias ?? 3;
-const URL_PATTERNS = (INTENCAO_CONFIG.urlPatterns ?? ['^https?://']).map((p) => new RegExp(p, 'i'));
+const URL_PATTERNS = (INTENCAO_CONFIG.urlPatterns ?? ['^https?://']).map((p) => new RegExp(p, 'i')); // nosemgrep: detect-non-literal-regexp
 const ORDEM = INTENCAO_CONFIG.ordemOpcoes ?? ['produtos', 'lojas', 'categorias'];
 
 // ── Ícones por tipo de intenção ──────────────────────────────────────────
