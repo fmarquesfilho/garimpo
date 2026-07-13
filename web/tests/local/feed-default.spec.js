@@ -12,9 +12,36 @@ import { test, expect } from './fixtures.js';
 
 const CANDIDATOS_FEED = {
 	candidatos: [
-		{ id: 'fd1', nome: 'Kit Beleza Completo Skincare', preco: 45.9, comissao: 0.12, vendas: 320, loja: 'Korean Beauty', link: 'https://shopee.com.br/1', _fonte: 'curadoria' },
-		{ id: 'fd2', nome: 'Perfume Importado Feminino', preco: 62.0, comissao: 0.09, vendas: 280, loja: 'Beleza Pro', link: 'https://shopee.com.br/2', _fonte: 'curadoria' },
-		{ id: 'fd3', nome: 'Skincare Hidratante Noturno', preco: 38.5, comissao: 0.11, vendas: 150, loja: 'Skin Lab', link: 'https://shopee.com.br/3', _fonte: 'curadoria' }
+		{
+			id: 'fd1',
+			nome: 'Kit Beleza Completo Skincare',
+			preco: 45.9,
+			comissao: 0.12,
+			vendas: 320,
+			loja: 'Korean Beauty',
+			link: 'https://shopee.com.br/1',
+			_fonte: 'curadoria'
+		},
+		{
+			id: 'fd2',
+			nome: 'Perfume Importado Feminino',
+			preco: 62.0,
+			comissao: 0.09,
+			vendas: 280,
+			loja: 'Beleza Pro',
+			link: 'https://shopee.com.br/2',
+			_fonte: 'curadoria'
+		},
+		{
+			id: 'fd3',
+			nome: 'Skincare Hidratante Noturno',
+			preco: 38.5,
+			comissao: 0.11,
+			vendas: 150,
+			loja: 'Skin Lab',
+			link: 'https://shopee.com.br/3',
+			_fonte: 'curadoria'
+		}
 	],
 	total_bruto: 3,
 	estrategia: 'nicho'
@@ -22,7 +49,16 @@ const CANDIDATOS_FEED = {
 
 const CANDIDATOS_BUSCA_MANUAL = {
 	candidatos: [
-		{ id: 'bm1', nome: 'Retinol Sérum 0.5%', preco: 55.0, comissao: 0.1, vendas: 200, loja: 'Dermato Shop', link: 'https://shopee.com.br/4', _fonte: 'curadoria' }
+		{
+			id: 'bm1',
+			nome: 'Retinol Sérum 0.5%',
+			preco: 55.0,
+			comissao: 0.1,
+			vendas: 200,
+			loja: 'Dermato Shop',
+			link: 'https://shopee.com.br/4',
+			_fonte: 'curadoria'
+		}
 	],
 	total_bruto: 1,
 	estrategia: 'nicho'
@@ -129,9 +165,7 @@ test.describe('Feed Default — Buscas salvas', () => {
 		page.apiOverrides({
 			'/api/candidatos': CANDIDATOS_FEED,
 			'/api/buscas': {
-				buscas: [
-					{ id: 'b1', keywords: ['serum'], shop_ids: [], status: 'ativa', collection_keys: ['serum'] }
-				],
+				buscas: [{ id: 'b1', keywords: ['serum'], shop_ids: [], status: 'ativa', collection_keys: ['serum'] }],
 				total: 1
 			}
 		});

@@ -48,6 +48,54 @@ export default [
 	{
 		ignores: ['build/', '.svelte-kit/', 'node_modules/']
 	},
+	// ── ADR-0034: Module boundary — Descobrir internals ─────────────────
+	// Arquivos fora do módulo Descobrir (e fora dos testes) não podem importar
+	// os internals diretamente. Devem usar `$lib/descobrir` (barrel).
+	{
+		files: ['src/**/*.{js,svelte}'],
+		ignores: [
+			'src/lib/busca-engine*.js',
+			'src/lib/busca-config.js',
+			'src/lib/busca-unificada-logic.js',
+			'src/lib/descobrir-logic.js',
+			'src/lib/descobrir.js',
+			'src/lib/omnibox-*.js',
+			'src/lib/loja-registry.js',
+			'src/lib/descobrir/**',
+			'src/tests/**',
+			'src/lib/components/BuscaUnificada.svelte',
+			'src/lib/components/Omnibox.svelte',
+			'src/lib/components/StoreCard.svelte',
+			'src/lib/components/BuscasSalvasPanel.svelte',
+			'src/lib/components/MarketplaceFilter.svelte',
+			'src/lib/components/BuscaCard.svelte',
+			'src/lib/components/LojaCard.svelte'
+		],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: [
+								'**/busca-engine.svelte.js',
+								'**/busca-engine.svelte',
+								'**/busca-engine-*.js',
+								'**/busca-config.js',
+								'**/descobrir-logic.js',
+								'**/descobrir.js',
+								'**/busca-unificada-logic.js',
+								'**/omnibox-intencao.js',
+								'**/omnibox-parser.js',
+								'**/omnibox-sugestoes.js'
+							],
+							message: 'Import de internal do módulo Descobrir. Use `$lib/descobrir` (public API barrel).'
+						}
+					]
+				}
+			]
+		}
+	},
 	// ── ADR-0033: Pure-renderer components — proibir $state local ────────
 	{
 		files: ['**/Omnibox.svelte', '**/StoreCard.svelte', '**/BuscaUnificada.svelte'],

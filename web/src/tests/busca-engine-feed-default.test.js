@@ -24,8 +24,26 @@ function criarMockEffects(overrides = {}) {
 		carregarRegistroLojas: vi.fn().mockResolvedValue([]),
 		executarBusca: vi.fn().mockResolvedValue({
 			curadoria: [
-				{ id: 'p1', nome: 'Sérum Vitamina C', preco: 45, comissao: 0.1, vendas: 200, loja: 'L1', link: '', _fonte: 'curadoria' },
-				{ id: 'p2', nome: 'Protetor Solar', preco: 60, comissao: 0.08, vendas: 150, loja: 'L2', link: '', _fonte: 'curadoria' }
+				{
+					id: 'p1',
+					nome: 'Sérum Vitamina C',
+					preco: 45,
+					comissao: 0.1,
+					vendas: 200,
+					loja: 'L1',
+					link: '',
+					_fonte: 'curadoria'
+				},
+				{
+					id: 'p2',
+					nome: 'Protetor Solar',
+					preco: 60,
+					comissao: 0.08,
+					vendas: 150,
+					loja: 'L2',
+					link: '',
+					_fonte: 'curadoria'
+				}
 			],
 			quedas: [],
 			novos: [],
