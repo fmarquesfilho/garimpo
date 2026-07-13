@@ -47,5 +47,18 @@ export default [
 	},
 	{
 		ignores: ['build/', '.svelte-kit/', 'node_modules/']
+	},
+	// ── ADR-0033: Pure-renderer components — proibir $state local ────────
+	{
+		files: ['**/Omnibox.svelte', '**/StoreCard.svelte', '**/BuscaUnificada.svelte'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector: 'CallExpression[callee.name="$state"]',
+					message: '$state proibido em pure-renderer (ADR-0033). Use engine.send() para mutar estado.'
+				}
+			]
+		}
 	}
 ];

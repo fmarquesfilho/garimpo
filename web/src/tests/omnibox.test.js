@@ -19,6 +19,8 @@ function fakeEngine(omniboxOverrides = {}) {
 			placeholder: 'Buscar produtos, lojas ou categorias…',
 			...omniboxOverrides
 		},
+		lojaCards: [],
+		categoriaCards: [],
 		send: vi.fn()
 	};
 }

@@ -19,8 +19,6 @@
 	import { criarEffects } from '$lib/busca-engine-effects.js';
 	import Omnibox from './Omnibox.svelte';
 	import StoreCard from './StoreCard.svelte';
-	import CategoriaCard from './CategoriaCard.svelte';
-	import LojaCard from './LojaCard.svelte';
 	import MarketplaceFilter from './MarketplaceFilter.svelte';
 	import BuscasSalvasPanel from './BuscasSalvasPanel.svelte';
 	import { Input, Select } from '$lib/components/ui';
@@ -145,29 +143,6 @@
 		</div>
 		<BuscasSalvasPanel {engine} bind:open={engine.buscasPainelAberto} />
 	</div>
-
-	<!-- ══ Escopo ativo: lojas + categorias selecionadas ══ -->
-	{#if engine.lojaCards.length || engine.categoriaCards.length}
-		<div class="flex flex-wrap gap-2.5">
-			{#each engine.lojaCards as l (l.id)}
-				<LojaCard
-					nome={l.nome}
-					marketplace={l.marketplace}
-					origem={l.origem}
-					monitorada={l.monitorada}
-					cron={l.cron}
-					onremover={() => engine.send({ type: 'REMOVER_LOJA', shopId: l.id })}
-				/>
-			{/each}
-			{#each engine.categoriaCards as c (c.nome)}
-				<CategoriaCard
-					nome={c.nome}
-					marketplaces={c.marketplaces}
-					onremover={() => engine.send({ type: 'REMOVER_CATEGORIA', nome: c.nome })}
-				/>
-			{/each}
-		</div>
-	{/if}
 
 	{#if engine.ctx.lojaResolvendo}<span class="block text-xs text-muted-foreground">resolvendo loja…</span>{/if}
 	{#if engine.ctx.lojaErro}<span class="block text-xs text-destructive">{engine.ctx.lojaErro}</span>{/if}

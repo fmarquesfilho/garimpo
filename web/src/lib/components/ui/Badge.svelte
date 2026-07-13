@@ -11,7 +11,9 @@
 		success: 'bg-sucesso-fundo text-sucesso border-sucesso-borda',
 		warning: 'bg-aviso-fundo text-aviso border-aviso-borda',
 		error: 'bg-erro-fundo text-erro border-erro-borda',
-		outline: 'border-border text-foreground'
+		outline: 'border-border text-foreground',
+		loja: 'bg-[var(--ouro-fundo)] text-[var(--ouro-escuro)] border-[var(--ouro-claro)]',
+		categoria: 'bg-[var(--rosa-fundo)] text-[var(--rosa)] border-border'
 	};
 
 	let { variant = 'default', class: className = '', children, ...rest } = $props();

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Verifica que componentes pure-renderer nao usam $state (ADR-0033)"
+set -uo pipefail
+
+COMPONENTS=(
+  "web/src/lib/components/Omnibox.svelte"
+  "web/src/lib/components/StoreCard.svelte"
+  "web/src/lib/components/BuscaUnificada.svelte"
+)
+
+VIOLATIONS=0
+for f in "${COMPONENTS[@]}"; do
+  if grep -n '\$state(' "$f" 2>/dev/null; then
+    echo "❌ $f contem \$state() — proibido em pure-renderer (ADR-0033)"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  fi
+done
+
+if (( VIOLATIONS > 0 )); then
+  echo ""
+  echo 'Pure-renderers devem ler estado da engine e emitir eventos via engine.send().'
+  echo 'Veja: docs/decisoes/0033-headless-ui-controller-omnibox.md'
+  exit 1
+fi
+
+echo '✅ Pure-renderers sem $state local.'
