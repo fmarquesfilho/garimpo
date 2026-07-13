@@ -6,7 +6,7 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
 
 ## Tasks
 
-- [ ] 1. Instalar dependências e configurar coverage
+- [x] 1. Instalar dependências e configurar coverage
   - Adicionar `@vitest/coverage-v8` como devDep (pinned) em web/package.json
   - Configurar coverage em vitest.config.js: provider 'v8', thresholds por módulo, reporter html+text+lcov
   - Adicionar `reports/` ao .gitignore
@@ -37,7 +37,7 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
   - Se divergências encontradas, corrigir a implementação (C# é autoritativa)
   - **Requirements: 4.1, 4.2, 4.3, 4.4**
 
-- [ ] 5. Classificar testes frontend via vitest workspace
+- [x] 5. Classificar testes frontend via vitest workspace
   - Adicionar configuração `test.workspace` em vitest.config.js com projects: unit, integration, regression
   - Definir globs para cada project conforme mapeamento no design.md
   - Verificar que `bunx vitest run --project unit` roda apenas testes unitários
@@ -79,13 +79,13 @@ Pipeline de qualidade de testes: classificação por camada, mutation testing (S
   - Atualizar `test:unit` existente para usar nova classificação
   - **Requirements: 5.2, 5.3, 5.4**
 
-- [ ] 11. Integrar com CI (GitHub Actions)
+- [x] 11. Integrar com CI (GitHub Actions)
   - Atualizar `.github/workflows/ci.yml`: step `mise run test:ci` no job de testes
   - Adicionar job condicional `mutation` que roda `mise run test:mutate` + `test:mutate-backend` apenas em merge para main ou label `run-mutation`
   - Cachear `reports/mutation/stryker-incremental.json` entre runs
   - **Requirements: 6.1, 6.2, 6.3, 6.5**
 
-- [ ] 12. Validação final e documentação
+- [x] 12. Validação final e documentação
   - Rodar cada task mise individualmente e verificar output correto
   - Medir tempos: test:fast <10s, test:unit <15s, test:integration <30s
   - Verificar mutation score baseline (anotar no design.md)
