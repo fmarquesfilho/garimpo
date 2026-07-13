@@ -13,17 +13,17 @@ function criarMockEffects() {
 			{ nome: 'Beleza', marketplaces: ['shopee'] },
 			{ nome: 'Moda', marketplaces: ['shopee', 'mercado_livre'] }
 		]),
-		carregarRegistroLojas: vi.fn().mockResolvedValue([
-			{ id: '100', nome: 'Glory of Seoul', nome_normalizado: 'gloryofseoul', marketplace: 'shopee' }
-		]),
+		carregarRegistroLojas: vi
+			.fn()
+			.mockResolvedValue([
+				{ id: '100', nome: 'Glory of Seoul', nome_normalizado: 'gloryofseoul', marketplace: 'shopee' }
+			]),
 		executarBusca: vi.fn().mockResolvedValue({ curadoria: [], quedas: [], novos: [], lojas: [], favoritos: [] }),
 		resolverLoja: vi.fn().mockResolvedValue({ id: '999', nome: 'New Shop', marketplace: 'shopee' }),
 		salvarBusca: vi.fn().mockResolvedValue({}),
 		removerBusca: vi.fn().mockResolvedValue({}),
 		buscarLojasPorNome: vi.fn().mockResolvedValue({
-			lojas: [
-				{ id: '100', nome: 'Glory of Seoul', marketplace: 'shopee', monitorada: false }
-			],
+			lojas: [{ id: '100', nome: 'Glory of Seoul', marketplace: 'shopee', monitorada: false }],
 			total: 1
 		})
 	};
@@ -184,9 +184,7 @@ describe('BuscaEngine — OMNIBOX_* handlers', () => {
 	describe('MONITORAR_LOJA', () => {
 		it('adds loja to scope and updates resultadosLojas', async () => {
 			// First set some results
-			engine.ui.resultados.lojas = [
-				{ id: '100', nome: 'Glory of Seoul', marketplace: 'shopee', monitorada: false }
-			];
+			engine.ui.resultados.lojas = [{ id: '100', nome: 'Glory of Seoul', marketplace: 'shopee', monitorada: false }];
 			await engine.send({ type: 'MONITORAR_LOJA', loja: { id: '100', nome: 'Glory of Seoul', marketplace: 'shopee' } });
 			expect(engine.ctx.shopIds).toContain(100);
 			expect(engine.resultadosLojas[0].monitorada).toBe(true);

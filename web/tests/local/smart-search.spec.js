@@ -235,7 +235,19 @@ test.describe('Smart Search — Monitorar Loja', () => {
 	test('botão Monitorar visível em loja não monitorada', async ({ authedPage: page }) => {
 		setupSmartSearch(page, {
 			'/api/lojas/buscar': {
-				lojas: [{ id: '281', nome: 'Le Botanic', marketplace: 'shopee', monitorada: false, origem: '🇧🇷', imagem: null, seguidores: null, total_produtos: null, avaliacao: null }],
+				lojas: [
+					{
+						id: '281',
+						nome: 'Le Botanic',
+						marketplace: 'shopee',
+						monitorada: false,
+						origem: '🇧🇷',
+						imagem: null,
+						seguidores: null,
+						total_produtos: null,
+						avaliacao: null
+					}
+				],
 				total: 1
 			}
 		});
@@ -306,7 +318,13 @@ test.describe('Smart Search — Prefixos', () => {
 test.describe('Smart Search — Teclado', () => {
 	test('Enter sem seleção executa primeira opção (Produtos)', async ({ authedPage: page }) => {
 		setupSmartSearch(page, {
-			'/api/candidatos': { candidatos: [{ id: 'p1', nome: 'Serum X', preco: 50, comissao: 0.1, vendas: 100, loja: 'L', link: '', _fonte: 'curadoria' }], total_bruto: 1, estrategia: 'nicho' }
+			'/api/candidatos': {
+				candidatos: [
+					{ id: 'p1', nome: 'Serum X', preco: 50, comissao: 0.1, vendas: 100, loja: 'L', link: '', _fonte: 'curadoria' }
+				],
+				total_bruto: 1,
+				estrategia: 'nicho'
+			}
 		});
 		await page.goto('/');
 		const input = page.getByRole('combobox');
@@ -362,7 +380,22 @@ test.describe('Smart Search — Teclado', () => {
 test.describe('Smart Search — Transição de modo', () => {
 	test('após buscar lojas, digitar keyword volta para produtos', async ({ authedPage: page }) => {
 		setupSmartSearch(page, {
-			'/api/candidatos': { candidatos: [{ id: 'p1', nome: 'Retinol ABC', preco: 40, comissao: 0.08, vendas: 50, loja: 'X', link: '', _fonte: 'curadoria' }], total_bruto: 1, estrategia: 'nicho' }
+			'/api/candidatos': {
+				candidatos: [
+					{
+						id: 'p1',
+						nome: 'Retinol ABC',
+						preco: 40,
+						comissao: 0.08,
+						vendas: 50,
+						loja: 'X',
+						link: '',
+						_fonte: 'curadoria'
+					}
+				],
+				total_bruto: 1,
+				estrategia: 'nicho'
+			}
 		});
 		await page.goto('/');
 		const input = page.getByRole('combobox');

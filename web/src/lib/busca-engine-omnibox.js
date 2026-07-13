@@ -11,7 +11,7 @@
 import { detectarIntencao } from './omnibox-intencao.js';
 import { parsearInput } from './omnibox-parser.js';
 import { gerarSugestoes } from './omnibox-sugestoes.js';
-import { OMNIBOX, MARKETPLACES } from './busca-config.js';
+import { OMNIBOX } from './busca-config.js';
 
 /**
  * Processa OMNIBOX_INPUT: parseia tokens, roteia entre intencao e prefixo,

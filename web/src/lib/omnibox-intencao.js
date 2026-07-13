@@ -146,7 +146,7 @@ function buildCategoriasOptions(texto, ctx) {
 	const categorias = ctx?.categoriasDisponiveis ?? [];
 	const marketplacesAtivos = ctx?.marketplacesFiltro?.length
 		? ctx.marketplacesFiltro
-		: MARKETPLACES?.suportados ?? [];
+		: (MARKETPLACES?.suportados ?? []);
 
 	const q = texto.toLowerCase();
 	const matches = categorias
@@ -156,60 +156,43 @@ function buildCategoriasOptions(texto, ctx) {
 		})
 		.slice(0, MAX_CATEGORIAS);
 
-	const opcoes = [];
-	for (const cat of matches) {
-		const nome = cat.nome ?? cat;
-		const catMarketplaces = cat.marketplaces ?? marketplacesAtivos;
-		// Filtra por marketplaces ativos
-		const mktsRelevantes = catMarketplaces.filter((m) => marketplacesAtivos.includes(m));
+	return matches.map((cat) => buildCategoriaOption(cat, marketplacesAtivos, ctx)).filter(Boolean);
+}
 
-		if (mktsRelevantes.length === 0) continue;
+/** @returns {IntencaoOption|null} */
+function buildCategoriaOption(cat, marketplacesAtivos, ctx) {
+	const nome = cat.nome ?? cat;
+	const catMarketplaces = cat.marketplaces ?? marketplacesAtivos;
+	const mktsRelevantes = catMarketplaces.filter((m) => marketplacesAtivos.includes(m));
 
-		// Contexto de lojas no escopo
-		const shopIds = ctx?.shopIds ?? [];
-		const shopNomes = ctx?.shopNomes ?? {};
+	if (mktsRelevantes.length === 0) return null;
 
-		if (shopIds.length === 1) {
-			// Buscar na loja específica
-			const nomeLoja = shopNomes[shopIds[0]] || String(shopIds[0]);
-			opcoes.push({
-				tipo: 'categoria',
-				label: `Pesquisar em #${nome} na ${nomeLoja}`,
-				labelAcessivel: `Pesquisar por categoria ${nome} na loja ${nomeLoja}`,
-				icone: ICONES.categoria,
-				payload: { categoria: nome, marketplaces: mktsRelevantes }
-			});
-		} else if (shopIds.length > 1) {
-			// Buscar nas lojas selecionadas
-			opcoes.push({
-				tipo: 'categoria',
-				label: `Pesquisar em #${nome} nas lojas selecionadas`,
-				labelAcessivel: `Pesquisar por categoria ${nome} nas lojas selecionadas`,
-				icone: ICONES.categoria,
-				payload: { categoria: nome, marketplaces: mktsRelevantes }
-			});
-		} else if (mktsRelevantes.length === 1) {
-			// Um marketplace ativo → específico
-			opcoes.push({
-				tipo: 'categoria',
-				label: `Pesquisar em #${nome} na ${mktsRelevantes[0]}`,
-				labelAcessivel: `Pesquisar por categoria ${nome} na ${mktsRelevantes[0]}`,
-				icone: ICONES.categoria,
-				payload: { categoria: nome, marketplaces: mktsRelevantes }
-			});
-		} else {
-			// Múltiplos marketplaces → genérico
-			opcoes.push({
-				tipo: 'categoria',
-				label: `Pesquisar em #${nome}`,
-				labelAcessivel: `Pesquisar por categoria ${nome} em todos os marketplaces`,
-				icone: ICONES.categoria,
-				payload: { categoria: nome, marketplaces: mktsRelevantes }
-			});
-		}
-	}
+	const shopIds = ctx?.shopIds ?? [];
+	const shopNomes = ctx?.shopNomes ?? {};
+	const label = buildCategoriaLabel(nome, shopIds, shopNomes, mktsRelevantes);
+	const labelAcessivel = buildCategoriaLabelAcessivel(nome, shopIds, shopNomes);
 
-	return opcoes;
+	return {
+		tipo: 'categoria',
+		label,
+		labelAcessivel,
+		icone: ICONES.categoria,
+		payload: { categoria: nome, marketplaces: mktsRelevantes }
+	};
+}
+
+function buildCategoriaLabel(nome, shopIds, shopNomes, mktsRelevantes) {
+	if (shopIds.length === 1) return `Pesquisar em #${nome} na ${shopNomes[shopIds[0]] || String(shopIds[0])}`;
+	if (shopIds.length > 1) return `Pesquisar em #${nome} nas lojas selecionadas`;
+	if (mktsRelevantes.length === 1) return `Pesquisar em #${nome} na ${mktsRelevantes[0]}`;
+	return `Pesquisar em #${nome}`;
+}
+
+function buildCategoriaLabelAcessivel(nome, shopIds, shopNomes) {
+	if (shopIds.length === 1)
+		return `Pesquisar por categoria ${nome} na loja ${shopNomes[shopIds[0]] || String(shopIds[0])}`;
+	if (shopIds.length > 1) return `Pesquisar por categoria ${nome} nas lojas selecionadas`;
+	return `Pesquisar por categoria ${nome} em todos os marketplaces`;
 }
 
 /**

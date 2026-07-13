@@ -65,9 +65,9 @@ test.describe('Produção — Busca de Lojas', () => {
 		await page.getByRole('option').filter({ hasText: 'Lojas' }).click();
 
 		// Deve mostrar ao menos uma loja OU mensagem de nenhuma encontrada
-		await expect(
-			page.getByText('Glory of Seoul').or(page.getByText(/Nenhuma loja encontrada/))
-		).toBeVisible({ timeout: 15000 });
+		await expect(page.getByText('Glory of Seoul').or(page.getByText(/Nenhuma loja encontrada/))).toBeVisible({
+			timeout: 15000
+		});
 	});
 });
 
@@ -87,9 +87,9 @@ test.describe('Produção — Resolver Link', () => {
 		await page.getByRole('option').first().click();
 
 		// Espera resolução: Store Card ou erro
-		await expect(
-			page.getByText(/Glory/).or(page.getByText(/não encontrada|falhou|inválido/i))
-		).toBeVisible({ timeout: 20000 });
+		await expect(page.getByText(/Glory/).or(page.getByText(/não encontrada|falhou|inválido/i))).toBeVisible({
+			timeout: 20000
+		});
 	});
 });
 

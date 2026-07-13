@@ -5,7 +5,13 @@
  * @typedef {ReturnType<typeof criarEffects>} Effects
  */
 
-import { resolverLoja as resolverLojaApi, sincronizarBusca, listarBuscasServidor, listarRegistroLojas, buscarLojas as buscarLojasApi } from './api.js';
+import {
+	resolverLoja as resolverLojaApi,
+	sincronizarBusca,
+	listarBuscasServidor,
+	listarRegistroLojas,
+	buscarLojas as buscarLojasApi
+} from './api.js';
 import { buscarCategorias } from './categorias.js';
 import { carregarCuradoria, carregarOportunidades, carregarProdutosLojas } from './descobrir.js';
 import { agruparCategoriasPorMarketplace } from './descobrir-logic.js';
