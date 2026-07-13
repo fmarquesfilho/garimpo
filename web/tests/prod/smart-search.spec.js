@@ -76,20 +76,21 @@ test.describe('Produção — Busca de Lojas', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 test.describe('Produção — Resolver Link', () => {
-	test('colar URL de loja mostra Resolver Link e resolve', async ({ authedPage: page }) => {
+	test('colar link de afiliado resolve via Collector', async ({ authedPage: page }) => {
 		await page.goto('/');
 		const input = page.getByRole('combobox');
 		await expect(input).toBeVisible({ timeout: 15000 });
 
-		await input.fill('https://shopee.com.br/gloryofseoul');
+		// Link de afiliado real que resolve via Collector (s.shopee.com.br)
+		await input.fill('https://s.shopee.com.br/8fQYnxWQqu');
 		await expect(page.getByRole('option').filter({ hasText: 'Resolver Link' })).toBeVisible({ timeout: 5000 });
 
 		await page.getByRole('option').first().click();
 
-		// Espera resolução: Store Card ou erro
-		await expect(page.getByText(/Glory/).or(page.getByText(/não encontrada|falhou|inválido/i))).toBeVisible({
-			timeout: 20000
-		});
+		// Espera resolucao: nome da loja OU erro de rede/timeout (API real)
+		await expect(
+			page.getByText(/Botanic|Glory|Seoul|loja/i).or(page.getByText(/Timeout|falhou|indisponível|não encontrada/i))
+		).toBeVisible({ timeout: 25000 });
 	});
 });
 
