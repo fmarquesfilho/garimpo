@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# mise description="Testes da página Descobrir (engine, omnibox, busca-config, store card)"
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  🔎 test:descobrir"
+echo "═══════════════════════════════════════"
+
+DESCOBRIR_FILES=(
+  "src/tests/busca-engine.test.js"
+  "src/tests/busca-engine-cenarios.test.js"
+  "src/tests/busca-engine-omnibox.test.js"
+  "src/tests/busca-config.test.js"
+  "src/tests/busca-duplicata.test.js"
+  "src/tests/busca-unificada.test.js"
+  "src/tests/omnibox.test.js"
+  "src/tests/omnibox-parser.test.js"
+  "src/tests/omnibox-sugestoes.test.js"
+  "src/tests/omnibox-intencao.test.js"
+  "src/tests/descobrir.test.js"
+  "src/tests/descobrir-busca-id.test.js"
+  "src/tests/StoreCard.test.js"
+)
+
+cd web && bunx vitest run "${DESCOBRIR_FILES[@]}"
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ test:descobrir passed"
+echo "═══════════════════════════════════════"

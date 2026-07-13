@@ -1,21 +1,16 @@
 #!/usr/bin/env bash
-# mise description="Roda testes unitários (frontend + C#)"
+# mise description="Coverage com thresholds (vitest + v8)"
 set -euo pipefail
 
 echo "═══════════════════════════════════════"
-echo "  🧪 Testes unitários"
+echo "  📊 test:coverage"
 echo "═══════════════════════════════════════"
 
-echo ""
-echo "── Frontend (vitest — all) ──"
-cd web && bunx vitest run
-cd ..
+cd web && bunx vitest run --coverage
 
 echo ""
-echo "── C# (todos) ──"
-dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore
-
+echo "  Relatório HTML: reports/coverage/index.html"
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ Unit tests passed"
+echo "  ✅ Coverage thresholds passed"
 echo "═══════════════════════════════════════"

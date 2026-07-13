@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-# mise description="Roda todos os testes: full (unit + integration + regression + parity + coverage + e2e-local)"
-# mise depends=["test:full"]
+# mise description="CI: pre-push + coverage (GitHub Actions)"
+# mise depends=["test:pre-push", "test:coverage"]
 set -euo pipefail
 
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ All tests passed"
+echo "  ✅ test:ci passed (unit + integration + regression + parity + coverage + check + build)"
 echo "═══════════════════════════════════════"
-echo ""
-echo "  Para mutation testing: mise run test:mutate"
-echo "  Para E2E produção:    mise run test:e2e-prod"

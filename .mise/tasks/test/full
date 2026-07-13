@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-# mise description="Roda todos os testes: full (unit + integration + regression + parity + coverage + e2e-local)"
-# mise depends=["test:full"]
+# mise description="Validação máxima local: ci + e2e-local"
+# mise depends=["test:ci", "test:e2e-local"]
 set -euo pipefail
 
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ All tests passed"
+echo "  ✅ test:full passed (ci + e2e-local)"
 echo "═══════════════════════════════════════"
-echo ""
-echo "  Para mutation testing: mise run test:mutate"
-echo "  Para E2E produção:    mise run test:e2e-prod"

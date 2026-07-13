@@ -1,0 +1,18 @@
+{
+  "stryker-config": {
+    "project": "Garimpei.Domain/Garimpei.Domain.csproj",
+    "test-projects": ["Garimpei.Tests/Garimpei.Tests.csproj"],
+    "reporters": ["html", "progress", "cleartext"],
+    "report-file-name": "../reports/mutation-dotnet/index",
+    "thresholds": {
+      "high": 80,
+      "low": 70,
+      "break": 60
+    },
+    "mutation-level": "Standard",
+    "since": {
+      "enabled": false,
+      "target": "main"
+    }
+  }
+}

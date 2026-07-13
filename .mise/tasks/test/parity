@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
-# mise description="Roda testes unitários (frontend + C#)"
+# mise description="Paridade cross-language: normalizarNome (JS) == Loja.Normalizar (C#)"
 set -euo pipefail
 
 echo "═══════════════════════════════════════"
-echo "  🧪 Testes unitários"
+echo "  🔄 test:parity (C# ↔ JS)"
 echo "═══════════════════════════════════════"
 
 echo ""
-echo "── Frontend (vitest — all) ──"
-cd web && bunx vitest run
+echo "── JS (loja-registry.normalizarNome) ──"
+cd web && bunx vitest run src/tests/normalizacao-parity.test.js
 cd ..
 
 echo ""
-echo "── C# (todos) ──"
-dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore
+echo "── C# (Loja.Normalizar) ──"
+dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore \
+  --filter "FullyQualifiedName~LojaTests"
 
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ Unit tests passed"
+echo "  ✅ Paridade confirmada"
 echo "═══════════════════════════════════════"

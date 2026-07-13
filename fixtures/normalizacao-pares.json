@@ -4,7 +4,20 @@
   {"input": "Loja 123!", "expected": "loja123"},
   {"input": "Água com Açúcar", "expected": "aguacomacucar"},
   {"input": "🇰🇷 Seul Shop 100%", "expected": "seulshop100"},
-  {"input": "  espaços  ", "expected": "espacos"}, 
+  {"input": "  espaços  ", "expected": "espacos"},
   {"input": "São Paulo", "expected": "saopaulo"},
-  {"input": "", "expected": ""}
+  {"input": "", "expected": ""},
+  {"input": "SKIN1004", "expected": "skin1004"},
+  {"input": "résumé", "expected": "resume"},
+  {"input": "café bonito", "expected": "cafebonito"},
+  {"input": "naïve", "expected": "naive"},
+  {"input": "12345", "expected": "12345"},
+  {"input": "   ", "expected": ""},
+  {"input": "A--B__C", "expected": "abc"},
+  {"input": "über cool", "expected": "ubercool"},
+  {"input": "日本語ショップ", "expected": ""},
+  {"input": "Mix 日本 123", "expected": "mix123"},
+  {"input": "L'Oréal Paris", "expected": "lorealparis"},
+  {"input": "H&M Store!", "expected": "hmstore"},
+  {"input": "Açaí & Tapioca 🇧🇷", "expected": "acaitapioca"}
 ]

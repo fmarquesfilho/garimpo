@@ -1,21 +1,24 @@
 #!/usr/bin/env bash
-# mise description="Roda testes unitários (frontend + C#)"
+# mise description="Validação pre-push: unit + integration + regression + parity + check + build"
+# mise depends=["test:fast", "test:integration", "test:regression", "test:parity"]
 set -euo pipefail
 
+echo ""
 echo "═══════════════════════════════════════"
-echo "  🧪 Testes unitários"
+echo "  🛡️  test:pre-push — validação completa"
 echo "═══════════════════════════════════════"
 
 echo ""
-echo "── Frontend (vitest — all) ──"
-cd web && bunx vitest run
+echo "── svelte-check ──"
+cd web && bun run check
 cd ..
 
 echo ""
-echo "── C# (todos) ──"
-dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore
+echo "── build ──"
+cd web && bun run build
+cd ..
 
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ Unit tests passed"
+echo "  ✅ pre-push passed (ready to push)"
 echo "═══════════════════════════════════════"

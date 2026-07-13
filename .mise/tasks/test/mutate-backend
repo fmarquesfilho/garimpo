@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-# mise description="Roda testes unitários (frontend + C#)"
+# mise description="Mutation testing backend (Stryker.NET — Domain)"
 set -euo pipefail
 
 echo "═══════════════════════════════════════"
-echo "  🧪 Testes unitários"
+echo "  🧬 test:mutate-backend (Stryker.NET)"
 echo "═══════════════════════════════════════"
+echo ""
+echo "  Project: Garimpei.Domain"
+echo "  Threshold: break < 60%"
+echo ""
+
+cd src && dotnet stryker -f stryker-config.json
 
 echo ""
-echo "── Frontend (vitest — all) ──"
-cd web && bunx vitest run
-cd ..
-
-echo ""
-echo "── C# (todos) ──"
-dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore
-
+echo "  Relatório: reports/mutation-dotnet/"
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ Unit tests passed"
+echo "  ✅ Mutation testing (backend) passed"
 echo "═══════════════════════════════════════"

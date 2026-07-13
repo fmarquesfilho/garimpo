@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# mise description="Testes de integração (componentes + engine + EF Core InMemory)"
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  🔗 test:integration"
+echo "═══════════════════════════════════════"
+
+INTEGRATION_FILES=(
+  "src/tests/busca-engine.test.js"
+  "src/tests/busca-engine-cenarios.test.js"
+  "src/tests/busca-engine-omnibox.test.js"
+  "src/tests/busca-unificada.test.js"
+  "src/tests/omnibox.test.js"
+  "src/tests/CandidateCard.test.js"
+  "src/tests/SeletorGrupo.test.js"
+  "src/tests/favoritos.test.js"
+  "src/tests/publicar.test.js"
+  "src/tests/StoreCard.test.js"
+)
+
+echo ""
+echo "── Frontend (vitest — integration) ──"
+cd web && bunx vitest run "${INTEGRATION_FILES[@]}"
+cd ..
+
+echo ""
+echo "── C# (Integration + Persistence) ──"
+dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore \
+  --filter "FullyQualifiedName~Integration|FullyQualifiedName~Persistence"
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ test:integration passed"
+echo "═══════════════════════════════════════"

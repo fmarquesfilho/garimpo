@@ -52,3 +52,4 @@ docker-compose.override.yml
 /scheduler
 /gen-board
 services/collector/collector
+reports/

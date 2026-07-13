@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-# mise description="Roda testes unitários (frontend + C#)"
+# mise description="Mutation testing frontend (StrykerJS — módulos core)"
 set -euo pipefail
 
 echo "═══════════════════════════════════════"
-echo "  🧪 Testes unitários"
+echo "  🧬 test:mutate (StrykerJS)"
 echo "═══════════════════════════════════════"
+echo ""
+echo "  Modules: busca-engine, omnibox-intencao, busca-config, omnibox-parser, loja-registry"
+echo "  Threshold: break < 60%"
+echo ""
+
+cd web && bunx stryker run ${1:+--incremental}
 
 echo ""
-echo "── Frontend (vitest — all) ──"
-cd web && bunx vitest run
-cd ..
-
-echo ""
-echo "── C# (todos) ──"
-dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore
-
+echo "  Relatório: reports/mutation/index.html"
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ Unit tests passed"
+echo "  ✅ Mutation testing passed"
 echo "═══════════════════════════════════════"

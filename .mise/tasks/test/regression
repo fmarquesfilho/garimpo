@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# mise description="Roda testes unitários (frontend + C#)"
+# mise description="Testes de regressão (bugs reproduzidos)"
 set -euo pipefail
 
 echo "═══════════════════════════════════════"
-echo "  🧪 Testes unitários"
+echo "  🐛 test:regression"
 echo "═══════════════════════════════════════"
 
-echo ""
-echo "── Frontend (vitest — all) ──"
-cd web && bunx vitest run
-cd ..
+REGRESSION_FILES=(
+  "src/tests/fixtures-contract.test.js"
+  "src/tests/loading-timeout.test.js"
+)
 
 echo ""
-echo "── C# (todos) ──"
-dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore
+echo "── Frontend (vitest — regression) ──"
+cd web && bunx vitest run "${REGRESSION_FILES[@]}"
 
 echo ""
 echo "═══════════════════════════════════════"
-echo "  ✅ Unit tests passed"
+echo "  ✅ test:regression passed"
 echo "═══════════════════════════════════════"

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# mise description="Testes unitários rápidos (<10s) — feedback loop de dev"
+set -euo pipefail
+
+echo "═══════════════════════════════════════"
+echo "  ⚡ test:fast (unit only)"
+echo "═══════════════════════════════════════"
+
+UNIT_FILES=(
+  "src/tests/busca-config.test.js"
+  "src/tests/busca-duplicata.test.js"
+  "src/tests/omnibox-parser.test.js"
+  "src/tests/omnibox-sugestoes.test.js"
+  "src/tests/omnibox-intencao.test.js"
+  "src/tests/descobrir.test.js"
+  "src/tests/descobrir-busca-id.test.js"
+  "src/tests/contrast.test.js"
+  "src/tests/theme.test.js"
+  "src/tests/oportunidades.test.js"
+  "src/tests/normalizacao-parity.test.js"
+)
+
+echo ""
+echo "── Frontend (vitest — unit) ──"
+cd web && bunx vitest run "${UNIT_FILES[@]}"
+cd ..
+
+echo ""
+echo "── C# (arch + domain) ──"
+dotnet test src/Garimpei.Tests/Garimpei.Tests.csproj --no-restore \
+  --filter "FullyQualifiedName~Architecture|FullyQualifiedName~Domain|FullyQualifiedName~CollectionKeys|FullyQualifiedName~Scheduler|FullyQualifiedName~Tenancy|FullyQualifiedName~Services"
+
+echo ""
+echo "═══════════════════════════════════════"
+echo "  ✅ test:fast passed"
+echo "═══════════════════════════════════════"
