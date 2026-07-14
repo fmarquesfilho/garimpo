@@ -5,7 +5,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -o /cache-sidecar ./services/cache
 
-FROM alpine:3.21
+FROM alpine:3.24
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /cache-sidecar /cache-sidecar
 COPY contracts/schemas/busca-contract.json /schemas/busca-contract.json
